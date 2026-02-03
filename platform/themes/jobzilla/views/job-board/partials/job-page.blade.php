@@ -1,0 +1,116 @@
+@php
+    Theme::asset()->usePath()->add('leaflet-markercluster-css', 'plugins/leaflet.markercluster/MarkerCluster.css');
+    Theme::asset()->usePath()->add('leaflet-css', 'plugins/leaflet/leaflet.css');
+    Theme::asset()->container('footer')->usePath()->add('leaflet-js', 'plugins/leaflet/leaflet.js');
+    Theme::asset()->container('footer')->usePath()->add('leaflet-markercluster-js', 'plugins/leaflet.markercluster/leaflet.markercluster.js');
+    Theme::asset()->container('footer')->usePath()->add('jobs-js', 'js/jobs.js', ['leaflet-js', 'leaflet-markercluster-js'], [], get_cms_version());
+    Theme::set('pageTitle', $page->name);
+    Theme::set('pageCoverImage', theme_option('background_breadcrumb_default'));
+    $layout = \Theme\Jobzilla\Supports\ThemeHelper::getCurrentLayout();
+@endphp
+
+{!! Theme::partial('page-header') !!}
+
+<div class="section-full p-t120 p-b90 site-bg-white jobs-container">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-12">
+                <div class="side-bar-filter">
+                    <div class="backdrop"></div>
+                    <div class="side-bar">
+                        <div class="sidebar-elements search-bx">
+                            <button class="d-md-none position-absolute btn btn-link btn-close-filter">
+                                <i class="feather-x"></i>
+                            </button>
+                            <form action="{{ $page->url  }}" method="get" id="jobs-filter-form" data-ajax-url="{{ route('public.ajax.jobs') }}">
+                                {!! Theme::partial('jobs.filters.keyword') !!}
+
+                                @if (! isset($type) || $type !== 'category')
+                                    {!! Theme::partial('jobs.filters.categories') !!}
+                                @endif
+
+                                {!! Theme::partial('jobs.filters.city') !!}
+
+                                {!! Theme::partial('jobs.filters.types') !!}
+
+                                {!! Theme::partial('jobs.filters.date_posted') !!}
+
+                                {!! Theme::partial('jobs.filters.experiences') !!}
+
+                                {!! Theme::partial('jobs.filters.skills') !!}
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {!! dynamic_sidebar('job_board_sidebar') !!}
+            </div>
+
+            <div class="col-lg-8 col-md-12 position-relative">
+                <div class="product-filter-wrap d-flex justify-content-between align-items-center m-b30">
+                    <div class="d-flex justify-content-between mb-3">
+                        <button type="submit" class="d-block d-md-none btn btn-open-filter">
+                            <i class="feather-filter"></i>
+                        </button>
+                        <span class="woocommerce-result-count-left">
+                        @if ($jobs->total())
+                                {{ __('Showing :from – :to of :total results', [
+                                    'from' => $jobs->firstItem(),
+                                    'to'=> $jobs->lastItem(),
+                                    'total' => $jobs->total(),
+                                ]) }}
+                            @endif
+                    </span>
+                    </div>
+
+                    <div class="woocommerce-ordering twm-filter-select gap-1">
+                        <select class="wt-select-bar-2 selectpicker" name="sort_by">
+                            @foreach(JobBoardHelper::getSortByParams() as $key => $value)
+                                <option value="{{ $key }}">{{ $value }}</option>
+                            @endforeach
+                        </select>
+                        <select class="wt-select-bar-2 selectpicker" name="per_page">
+                            @foreach(JobBoardHelper::getPerPageParams() as $item)
+                                <option value="{{ $item }}">{{ __('Show :number', ['number' => $item]) }}</option>
+                            @endforeach
+                        </select>
+                        <select class="wt-select-bar-2 selectpicker" name="layout">
+                            @foreach(\Theme\Jobzilla\Supports\ThemeHelper::getLayouts() as $key => $value)
+                                <option value="{{ $key }}" @selected(request()->query('layout') === $key)>{{ $value }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="loading">
+                    <div class="loading__inner">
+                        <div class="loading__content">
+                            <span class="spinner"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="twm-jobs-list-wrap jobs-listing">
+                    {!! Theme::partial("jobs.$layout", ['jobs' => $jobs, 'style' => 2]) !!}
+                </div>
+
+                <div id="map" style="display: none" data-center="{{ json_encode(JobBoardHelper::getMapCenterLatLng()) }}"></div>
+
+                <div class=job-board-street-map-container">
+                    @foreach($jobs as $job)
+                        <div
+                            class="job-board-street-map"
+                            data-job="{{ $job }}"
+                            data-map-icon="{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}"
+                            data-company-logo="{{ $job->company_logo_thumb }}"
+                            data-full-address="{{ $job->full_address }}"
+                            data-url="{{ $job->url }}"
+                        >
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
