@@ -107,7 +107,7 @@
                                             </a>
                                         </div>
                                         <div class="twm-nav-btn-right">
-                                            <a href="{{ route('public.account.jobs.create') }}" class="twm-nav-post-a-job">
+                                            <a href="{{ auth('account')->check() ? route('public.account.jobs.create') : route('public.account.register', ['account_type' => 'employer']) }}" class="twm-nav-post-a-job">
                                                 <i class="feather-briefcase"></i>
                                                 <span>{{ __('Post a job') }}</span>
                                             </a>

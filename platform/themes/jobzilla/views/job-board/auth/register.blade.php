@@ -4,6 +4,60 @@
 
 <!-- CRITICAL: Define handleNextStepClick IMMEDIATELY in body so it's available when button renders -->
 <script>
+    // Auto-select employer if account_type=employer is in URL
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const accountType = urlParams.get('account_type');
+        
+        if (accountType === 'employer') {
+            // Wait for DOM to be ready
+            function autoSelectEmployer() {
+                const employerRadio = document.querySelector('input[name="account_type"][value="employer"]');
+                const jobSeekerRadio = document.querySelector('input[name="account_type"][value="job-seeker"]');
+                
+                if (employerRadio && !employerRadio.checked) {
+                    employerRadio.checked = true;
+                    if (jobSeekerRadio) {
+                        jobSeekerRadio.checked = false;
+                    }
+                    
+                    // Trigger change event to update UI
+                    if (employerRadio) {
+                        employerRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    
+                    // Update card visual state
+                    const employerCard = employerRadio.closest('.account-type-card');
+                    const jobSeekerCard = jobSeekerRadio?.closest('.account-type-card');
+                    
+                    if (employerCard) {
+                        employerCard.classList.add('selected');
+                        employerCard.closest('.account-type-option')?.classList.add('selected');
+                    }
+                    if (jobSeekerCard) {
+                        jobSeekerCard.classList.remove('selected');
+                        jobSeekerCard.closest('.account-type-option')?.classList.remove('selected');
+                    }
+                    
+                    console.log('✅ Employer auto-selected from URL parameter');
+                }
+            }
+            
+            // Run immediately and after DOM ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    autoSelectEmployer();
+                    setTimeout(autoSelectEmployer, 100);
+                    setTimeout(autoSelectEmployer, 500);
+                });
+            } else {
+                autoSelectEmployer();
+                setTimeout(autoSelectEmployer, 100);
+                setTimeout(autoSelectEmployer, 500);
+            }
+        }
+    })();
+
     // IMMEDIATE: Hide resume field if employer is selected
     (function() {
         function hideResumeForEmployer() {
@@ -1020,6 +1074,34 @@
         .account-type-selection .account-type-card {
             min-height: 120px;
             padding: 16px 14px;
+            transition: all 0.3s ease;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .account-type-selection .account-type-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .account-type-selection .account-type-card.selected,
+        .account-type-selection input[type="radio"]:checked + label .account-type-card {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+        }
+
+        .account-type-selection .account-type-card.selected .account-type-content h6,
+        .account-type-selection input[type="radio"]:checked + label .account-type-card .account-type-content h6 {
+            color: #fff;
+        }
+
+        .account-type-selection .account-type-card.selected .account-type-content p,
+        .account-type-selection input[type="radio"]:checked + label .account-type-card .account-type-content p {
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .account-type-selection .account-type-icon {
@@ -1029,6 +1111,13 @@
         .account-type-selection .account-type-icon svg {
             width: 34px;
             height: 34px;
+            transition: all 0.3s ease;
+        }
+
+        .account-type-selection .account-type-card.selected .account-type-icon svg,
+        .account-type-selection input[type="radio"]:checked + label .account-type-card .account-type-icon svg {
+            color: #fff;
+            transform: scale(1.1);
         }
 
         /* Reduce extra bottom spacing between form items (let gutter handle spacing) */
@@ -1036,6 +1125,91 @@
         .step-content[data-step="1"] .mb-3,
         .step-content[data-step="1"] .form-item {
             margin-bottom: 0 !important;
+        }
+
+        /* Modern form styling for job seeker */
+        .step-content .form-control,
+        .step-content .form-select {
+            border-radius: 8px;
+            border: 1.5px solid #e0e0e0;
+            padding: 12px 16px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        .step-content .form-control:focus,
+        .step-content .form-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+            outline: none;
+        }
+
+        .step-content .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .step-content .form-control::placeholder {
+            color: #999;
+        }
+
+        /* Button styling improvements */
+        #next-step-btn,
+        #prev-step-btn,
+        button[type="submit"] {
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #next-step-btn:hover,
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Form container improvements */
+        .twm-log-reg-form-wrap .twm-log-reg-inner {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Step indicator improvements */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+
+        .step-indicator .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            background: #e0e0e0;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .step-indicator .step.active {
+            background: #007bff;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .step-indicator .step.completed {
+            background: #28a745;
+            color: #fff;
         }
 
         @media (max-width: 767px) {

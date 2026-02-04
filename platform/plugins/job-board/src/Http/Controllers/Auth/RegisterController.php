@@ -31,9 +31,17 @@ class RegisterController extends BaseController
 
     protected string $redirectTo = '/';
 
-    public function showRegistrationForm()
+    public function showRegistrationForm(Request $request)
     {
         abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+
+        // Get account_type from URL parameter (for employer registration)
+        $accountType = $request->query('account_type', 'job-seeker');
+        
+        // Store account_type in session for later use
+        if ($accountType === 'employer') {
+            session(['preferred_account_type' => 'employer']);
+        }
 
         // Check if email verification is pending - redirect to OTP page if not verified
         $emailVerified = session()->get('registration_email_verified', false);
@@ -86,7 +94,10 @@ class RegisterController extends BaseController
 
         return Theme::scope(
             'job-board.auth.register',
-            ['form' => RegisterForm::create()],
+            [
+                'form' => RegisterForm::create(),
+                'preferred_account_type' => $accountType,
+            ],
             'plugins/job-board::themes.auth.register'
         )->render();
     }
