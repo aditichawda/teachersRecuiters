@@ -33,7 +33,7 @@
 
         <div class="col-12">
             {{-- Steps Column --}}
-            
+
             <div class="col-lg-12 col-md-12">
 
                 <div class="twm-w-process-steps-2-wrap" >
