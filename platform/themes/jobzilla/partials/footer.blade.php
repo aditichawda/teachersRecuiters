@@ -5,154 +5,114 @@
 @endphp
 
 @unless ($shouldHideFooter)
-    <!-- FOOTER START -->
-    <footer class="footer-dark"
+    <!-- FOOTER START (screenshot style: dark, 5 columns, partners, bottom bar) -->
+    <footer class="footer-dark footer-screenshot-style"
         @if (theme_option('footer_background')) style="background-image: url({{ RvMedia::getImageUrl(theme_option('footer_background')) }});"
-        @else
-            style="background-image: url({{ Theme::asset()->url('/images/f-bg.jpg') }});" @endif>
+        @else style="background-color: #1a1d21;" @endif>
         <div class="container">
-            <!-- FOOTER BLOCKES START -->
+            <!-- Section 1: Top – 5 columns -->
             <div class="footer-top">
-                <div class="row">
-                    <!-- Left Section: Company Information -->
-                    <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                <div class="row g-4">
+                    <!-- Col 1: Brand -->
+                    <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
-                            <h3 class="footer-title"
-                                style="font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #fff;">
-                                TeachersRecruiter™</h3>
-                            <p style="color: #ccc; line-height: 1.8; margin-bottom: 0;">
+                            <h3 class="footer-title">TeachersRecruiter™</h3>
+                            <p class="footer-desc">
                                 Connecting educators and schools across India since 2015. With thousands of teacher
                                 placements and a dedicated education job portal, we make hiring and job searching simple,
-                                fast, and reliable – empowering schools with talent and teachers with opportunities.
+                                fast, and reliable.
                             </p>
+                            <a href="/about-us" class="footer-read-more">read more →</a>
                         </div>
                     </div>
-
-                    <!-- Middle Section: Important Links -->
-                    <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                    <!-- Col 2: Discover -->
+                    <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
-                            <h4 class="footer-title"
-                                style="color: #fff; margin-bottom: 20px; border-bottom: 2px solid #1967d2; padding-bottom: 10px; display: inline-block;">
-                                Important Links</h4>
-                            <ul class="footer-links" style="list-style: none; padding: 0; margin: 0;">
-                                <li style="margin-bottom: 10px;">
-                                    <a href="/home"
-                                        style="color: #ccc; text-decoration: none; transition: color 0.3s;">Home</a>
-                                </li>
-                                <li style="margin-bottom: 10px;">
-                                    <a href="/about-us"
-                                        style="color: #ccc; text-decoration: none; transition: color 0.3s;">About Us</a>
-                                </li>
-                                <li style="margin-bottom: 10px;">
-                                    <a href="/contact"
-                                        style="color: #ccc; text-decoration: none; transition: color 0.3s;">Contact Us</a>
-                                </li>
-                                <li style="margin-bottom: 10px;">
-                                    <a href="/jobs"
-                                        style="color: #ccc; text-decoration: none; transition: color 0.3s;">Services</a>
-                                </li>
-                                <li style="margin-bottom: 10px;">
-                                    <a href="/How it works"
-                                        style="color: #ccc; text-decoration: none; transition: color 0.3s;">How it works</a>
-                                </li>
-                                <li style="margin-bottom: 10px;">
-                                    <a href="/blogs"
-                                        style="color: #ccc; text-decoration: none; transition: color 0.3s;">Blogs</a>
-                                </li>
-                                <li style="margin-bottom: 10px;">
-                                    <a href="/faq"
-                                        style="color: #ccc; text-decoration: none; transition: color 0.3s;">FAQ’s</a>
-                                </li>
-                                {{-- <li style="margin-bottom: 10px;">
-                                    <a href="{{ route('public.account.register') }}" style="color: #ccc; text-decoration: none; transition: color 0.3s;">Signup for Free</a>
-                                </li>
-                                <li style="margin-bottom: 10px;">
-                                    <a href="{{ route('public.account.login') }}" style="color: #ccc; text-decoration: none; transition: color 0.3s;">Login Here</a>
-                                </li> --}}
+                            <h4 class="footer-title">Discover</h4>
+                            <ul class="footer-links">
+                                <li><a href="/">Home</a></li>
+                                <li><a href="/jobs">Jobs</a></li>
+                                <li><a href="/companies">Companies</a></li>
+                                <li><a href="/candidates">Candidates</a></li>
+                                <li><a href="/contact">Help & Support</a></li>
                             </ul>
                         </div>
                     </div>
-
-                    <!-- Right Section: Follow Us On -->
-                    <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                    <!-- Col 3: About -->
+                    <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
-                            <h4 class="footer-title"
-                                style="color: #fff; margin-bottom: 20px; border-bottom: 2px solid #1967d2; padding-bottom: 10px; display: inline-block;">
-                                Follow us on</h4>
+                            <h4 class="footer-title">About</h4>
+                            <ul class="footer-links">
+                                <li><a href="/about-us">About Us</a></li>
+                                <li><a href="/contact">Contact Us</a></li>
+                                <li><a href="/how-it-works">How it works</a></li>
+                                <li><a href="/blogs">Blog</a></li>
+                                <li><a href="/faq">FAQ’s</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Col 4: Resources -->
+                    <div class="col-lg col-md-4 col-6">
+                        <div class="footer-widget">
+                            <h4 class="footer-title">Resources</h4>
+                            <ul class="footer-links">
+                                <li><a href="/privacy-policy">Privacy</a></li>
+                                <li><a href="/terms-conditions">Terms & Refund</a></li>
+                                <li><a href="/fraud-alert">Fraud Alert</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Col 5: Social -->
+                    <div class="col-lg col-md-4 col-6">
+                        <div class="footer-widget">
+                            <h4 class="footer-title">Social</h4>
                             @php($socialLinks = Theme::getSocialLinks())
                             @if ($socialLinks)
-                                <ul class="social-icons"
-                                    style="list-style: none; padding: 0; margin: 0; display: flex; gap: 15px; flex-wrap: wrap;">
+                                <ul class="footer-links footer-social-links">
                                     @foreach ($socialLinks as $socialLink)
                                         @continue(!$socialLink->getUrl() || !$socialLink->getIconHtml())
                                         <li>
-                                            <a href="{{ $socialLink->getUrl() }}" target="_blank" rel="noopener"
-                                                style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.12); color: #fff; text-align: center; text-decoration: none; transition: transform 0.3s;">
-                                                {!! $socialLink->getIconHtml() !!}
-                                            </a>
+                                            <a href="{{ $socialLink->getUrl() }}" target="_blank" rel="noopener">{!! $socialLink->getIconHtml() !!} {{ $socialLink->getName() }}</a>
                                         </li>
                                     @endforeach
                                 </ul>
                             @else
-                                <ul class="social-icons"
-                                    style="list-style: none; padding: 0; margin: 0; display: flex; gap: 15px; flex-wrap: wrap;">
-                                    <li>
-                                        <a href="https://www.linkedin.com/company/teachersrecruiter" target="_blank"
-                                            rel="noopener"
-                                            style="display: inline-block; width: 40px; height: 40px; border-radius: 50%; background: #0077b5; color: #fff; text-align: center; line-height: 40px; text-decoration: none; transition: transform 0.3s;">
-                                            <i class="fab fa-linkedin-in"></i>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="https://www.instagram.com/teachersrecruiter" target="_blank" rel="noopener"
-                                            style="display: inline-block; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); color: #fff; text-align: center; line-height: 40px; text-decoration: none; transition: transform 0.3s;">
-                                            <i class="fab fa-instagram"></i>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="https://www.google.com/search?q=teachersrecruiter" target="_blank"
-                                            rel="noopener"
-                                            style="display: inline-block; width: 40px; height: 40px; border-radius: 50%; background: #4285F4; color: #fff; text-align: center; line-height: 40px; text-decoration: none; transition: transform 0.3s;">
-                                            <i class="fab fa-google"></i>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="https://www.facebook.com/teachersrecruiter" target="_blank" rel="noopener"
-                                            style="display: inline-block; width: 40px; height: 40px; border-radius: 50%; background: #1877F2; color: #fff; text-align: center; line-height: 40px; text-decoration: none; transition: transform 0.3s;">
-                                            <i class="fab fa-facebook-f"></i>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="https://www.youtube.com/@teachersrecruiter" target="_blank" rel="noopener"
-                                            style="display: inline-block; width: 40px; height: 40px; border-radius: 50%; background: #FF0000; color: #fff; text-align: center; line-height: 40px; text-decoration: none; transition: transform 0.3s;">
-                                            <i class="fab fa-youtube"></i>
-                                        </a>
-                                    </li>
+                                <ul class="footer-links footer-social-links">
+                                    <li><a href="https://www.linkedin.com/company/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i> LinkedIn</a></li>
+                                    <li><a href="https://www.instagram.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-instagram"></i> Instagram</a></li>
+                                    <li><a href="https://www.google.com/search?q=teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-google"></i> Google</a></li>
+                                    <li><a href="https://www.facebook.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i> Facebook</a></li>
+                                    <li><a href="https://www.youtube.com/@teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-youtube"></i> YouTube</a></li>
                                 </ul>
                             @endif
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="footer-policy-links" style="color: #ccc; font-size: 14px;justify-content: center; display: flex; align-items: center; margin-bottom: 10px; gap: 10px;">
-                <a href="/privacy-policy" style="color: #ccc; text-decoration: none; margin-right: 15px;">Privacy Policy</a>
-                <span style="color: #666;">|</span>
-                <a href="/terms-conditions" style="color: #ccc; text-decoration: none; margin: 0 15px;">Terms Conditions &
-                    Refund Policy</a>
-                <span style="color: #666;">|</span>
-                <a href="/fraud-alert" style="color: #ccc; text-decoration: none; margin-left: 15px;">Fraud Alert</a>
-            </div>
-            <!-- FOOTER COPYRIGHT -->
-            <div class="footer-bottom"
-                style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0px; margin-top: 0px;">
-                <div class="footer-bottom-info"
-                    style="display: flex; justify-content:center; align-items: center; flex-wrap: wrap; gap: 15px;">
 
+            <!-- Section 2: Partners -->
+            <div class="footer-partners">
+                <div class="footer-partners-inner">
+                    <span class="footer-partners-label">Our Partner:</span>
+                    <div class="footer-partners-list">
+                        <a href="/companies" class="footer-partner-item">Featured Institutions</a>
+                        <a href="/jobs" class="footer-partner-item">Jobs</a>
+                        <a href="/about-us" class="footer-partner-item">About</a>
+                    </div>
+                    <a href="/companies" class="footer-see-all">See All →</a>
+                </div>
+            </div>
+
+            <!-- Section 3: Bottom – Copyright + Legal -->
+            <div class="footer-bottom">
+                <div class="footer-bottom-inner">
                     <div class="footer-copy-right">
-                        <span class="copyrights-text"
-                            style="color: #ccc; font-size: 14px; text-align: center; display: block; width: 100%;">
-                            {!! Theme::getSiteCopyright() ?: 'Teachers Recruiter © ' . date('Y') . ', All Right Reserved.' !!}
-                        </span>
+                        {!! Theme::getSiteCopyright() ?: 'Copyright ©' . date('Y') . ' All rights reserved | This template is made with ❤️ by <a href="https://teachersrecruiter.in" class="footer-accent">TeachersRecruiter™</a>' !!}
+                    </div>
+                    <div class="footer-legal">
+                        <a href="/terms-conditions">Terms</a>
+                        <a href="/privacy-policy">Privacy</a>
+                        <a href="/fraud-alert">Compliances</a>
                     </div>
                 </div>
             </div>

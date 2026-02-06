@@ -1,5 +1,5 @@
 <!-- Popular category SECTION START -->
-<div class="section-full p-t120 p-b0 site-bg-white twm-jobatglance-wrap8">
+<div class="section-full p-t0 p-b0 site-bg-white twm-jobatglance-wrap8">
     <div class="container">
 
         <div class="wt-separator-two-part">

@@ -117,7 +117,7 @@
                                 <div class="contact-info-section">
 
                                     @if ($shortcode->address_1)
-                                        <div class="c-info-column">
+                                        <div class="c-info-column mb-6">
                                             <div class="c-info-icon">
                                                 <i class=" fas fa-map-marker-alt"></i>
                                             </div>
@@ -130,7 +130,7 @@
                                     @endif
 
                                     @if ($shortcode->phone_1)
-                                        <div class="c-info-column">
+                                        <div class="c-info-column mb-6">
                                             <div class="c-info-icon custome-size">
                                                 <i class="fas fa-mobile-alt"></i>
                                             </div>
@@ -143,7 +143,7 @@
                                     @endif
 
                                     @if ($shortcode->email_1)
-                                        <div class="c-info-column">
+                                        <div class="c-info-column mb-6">
                                             <div class="c-info-icon">
                                                 <i class="fas fa-envelope"></i>
                                             </div>
