@@ -532,7 +532,8 @@
                 const csrfToken = $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}';
 
                 console.log('Sending verification code to:', email);
-                console.log('Send code URL:', sendCodeUrl);
+           
+               console.log('Send code URL:', sendCodeUrl);
 
                 // Use FormData to include file uploads
                 const sendData = new FormData();
