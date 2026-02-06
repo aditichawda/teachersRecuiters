@@ -49,20 +49,24 @@ document.addEventListener("DOMContentLoaded", function() {
                 return;
             }
 
-            document.querySelector(".account-type-text-confirm").textContent = selectedAccountType.value === "employer"
-                ? "{{ trans('plugins/job-board::account.registration.employer') }}"
-                : "{{ trans('plugins/job-board::account.registration.job_seeker') }}";
+            // Employer registration is disabled – force job seeker and show message if needed
+            if (selectedAccountType.value === "employer") {
+                alert("Currently only Job Seeker registration is available.");
+                const jobSeekerRadio = document.querySelector('input[name=\"account_type\"][value=\"job-seeker\"]');
+                if (jobSeekerRadio) {
+                    jobSeekerRadio.checked = true;
+                }
+                return;
+            }
+
+            document.querySelector(".account-type-text-confirm").textContent =
+                "{{ trans('plugins/job-board::account.registration.job_seeker') }}";
 
             const employerIcon = document.querySelector(".account-type-icon-confirm .employer-icon");
             const jobseekerIcon = document.querySelector(".account-type-icon-confirm .jobseeker-icon");
 
-            if (selectedAccountType.value === "employer") {
-                employerIcon.classList.remove("d-none");
-                jobseekerIcon.classList.add("d-none");
-            } else {
-                employerIcon.classList.add("d-none");
-                jobseekerIcon.classList.remove("d-none");
-            }
+            if (employerIcon) employerIcon.classList.add("d-none");
+            if (jobseekerIcon) jobseekerIcon.classList.remove("d-none");
 
             modal.show();
         });
@@ -70,11 +74,10 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("confirmRegistration").addEventListener("click", function() {
             modal.hide();
 
-            const selectedAccountType = document.querySelector("input[name=\"account_type\"]:checked");
             const isEmployerInput = document.createElement("input");
             isEmployerInput.type = "hidden";
             isEmployerInput.name = "is_employer";
-            isEmployerInput.value = selectedAccountType.value === "employer" ? "1" : "0";
+            isEmployerInput.value = "0"; // Always job seeker
             form.appendChild(isEmployerInput);
 
             form.submit();

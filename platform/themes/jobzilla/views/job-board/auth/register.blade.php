@@ -4,60 +4,6 @@
 
 <!-- CRITICAL: Define handleNextStepClick IMMEDIATELY in body so it's available when button renders -->
 <script>
-    // Auto-select employer if account_type=employer is in URL
-    (function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const accountType = urlParams.get('account_type');
-        
-        if (accountType === 'employer') {
-            // Wait for DOM to be ready
-            function autoSelectEmployer() {
-                const employerRadio = document.querySelector('input[name="account_type"][value="employer"]');
-                const jobSeekerRadio = document.querySelector('input[name="account_type"][value="job-seeker"]');
-                
-                if (employerRadio && !employerRadio.checked) {
-                    employerRadio.checked = true;
-                    if (jobSeekerRadio) {
-                        jobSeekerRadio.checked = false;
-                    }
-                    
-                    // Trigger change event to update UI
-                    if (employerRadio) {
-                        employerRadio.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                    
-                    // Update card visual state
-                    const employerCard = employerRadio.closest('.account-type-card');
-                    const jobSeekerCard = jobSeekerRadio?.closest('.account-type-card');
-                    
-                    if (employerCard) {
-                        employerCard.classList.add('selected');
-                        employerCard.closest('.account-type-option')?.classList.add('selected');
-                    }
-                    if (jobSeekerCard) {
-                        jobSeekerCard.classList.remove('selected');
-                        jobSeekerCard.closest('.account-type-option')?.classList.remove('selected');
-                    }
-                    
-                    console.log('✅ Employer auto-selected from URL parameter');
-                }
-            }
-            
-            // Run immediately and after DOM ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                    autoSelectEmployer();
-                    setTimeout(autoSelectEmployer, 100);
-                    setTimeout(autoSelectEmployer, 500);
-                });
-            } else {
-                autoSelectEmployer();
-                setTimeout(autoSelectEmployer, 100);
-                setTimeout(autoSelectEmployer, 500);
-            }
-        }
-    })();
-
     // IMMEDIATE: Hide resume field if employer is selected
     (function() {
         function hideResumeForEmployer() {
@@ -176,6 +122,34 @@
         
         // Run after longer delays for dynamic content
         setTimeout(hideResumeForEmployer, 1000);
+        
+        // Function to hide validation icons (red exclamation marks)
+        function hideValidationIcons() {
+            // Hide all SVG icons in input groups
+            document.querySelectorAll('.input-group svg, .input-group i.fa-exclamation-circle, .form-group svg.text-danger').forEach(function(el) {
+                el.style.display = 'none';
+            });
+            // Hide spans that contain validation icons
+            document.querySelectorAll('.input-group > span:last-child:not(.input-group-text)').forEach(function(el) {
+                if (el.querySelector('svg') || el.querySelector('i')) {
+                    el.style.display = 'none';
+                }
+            });
+            // Hide input-group-text with validation icons
+            document.querySelectorAll('.input-group-text').forEach(function(el) {
+                var svg = el.querySelector('svg');
+                var icon = el.querySelector('i');
+                if ((svg && svg.classList.contains('text-danger')) || (icon && icon.classList.contains('text-danger'))) {
+                    el.style.display = 'none';
+                }
+            });
+        }
+        
+        // Run hideValidationIcons periodically
+        setInterval(hideValidationIcons, 500);
+        document.addEventListener('DOMContentLoaded', hideValidationIcons);
+        setTimeout(hideValidationIcons, 100);
+        setTimeout(hideValidationIcons, 1000);
         setTimeout(hideResumeForEmployer, 2000);
     })();
 
@@ -489,15 +463,27 @@
                             const fieldName = $field.attr('name');
                             const fieldType = $field.attr('type') || '';
                             const fieldId = $field.attr('id') || '';
+                            const fieldClass = $field.attr('class') || '';
 
-                            if (!fieldName || fieldType === 'hidden' || fieldName === '_token') {
+                            // Check if this is the phone hidden field with full number (includes country code)
+                            const isPhoneFullField = fieldClass.includes('js-phone-number-full') || 
+                                (fieldType === 'hidden' && fieldName === 'phone');
+                            
+                            // Skip other hidden fields except phone full field
+                            if (!fieldName || fieldName === '_token') {
+                                return;
+                            }
+                            
+                            // Skip hidden fields EXCEPT the phone full field
+                            if (fieldType === 'hidden' && !isPhoneFullField) {
                                 return;
                             }
 
                             // Check if this is a phone field
                             const isPhoneField = (fieldName === 'phone' || fieldName === 'mobile' ||
                                 fieldName === 'phone_country_code' ||
-                                fieldId === 'phone' || fieldId === 'mobile' || fieldType === 'tel');
+                                fieldId === 'phone' || fieldId === 'mobile' || fieldType === 'tel' ||
+                                isPhoneFullField);
 
                             // Handle file inputs - store filename
                             if (fieldType === 'file') {
@@ -548,14 +534,69 @@
                 console.log('Sending verification code to:', email);
                 console.log('Send code URL:', sendCodeUrl);
 
+                // Use FormData to include file uploads
+                const sendData = new FormData();
+                sendData.append('_token', csrfToken); 
+                sendData.append('email', email); 
+                
+                // Add all form data fields
+                Object.keys(formData).forEach(function(key) {
+                    if (formData[key] !== null && formData[key] !== undefined) {
+                        sendData.append('form_data[' + key + ']', formData[key]);
+                    }
+                });
+                
+                // Add resume file if exists
+                const $resumeInput = $('input[name="resume"]');
+                if ($resumeInput.length && $resumeInput[0].files && $resumeInput[0].files.length > 0) {
+                    sendData.append('resume', $resumeInput[0].files[0]);
+                    console.log('Resume file attached:', $resumeInput[0].files[0].name);
+                }
+                
+                // Get full phone number from hidden field (includes country code like +919340193449)
+                const $phoneFullField = $('input.js-phone-number-full[name="phone"]');
+                if ($phoneFullField.length && $phoneFullField.val()) {
+                    const fullPhoneNumber = $phoneFullField.val();
+                    sendData.append('form_data[phone]', fullPhoneNumber);
+                    console.log('Full phone number attached:', fullPhoneNumber);
+                    
+                    // Extract country code from full phone number (e.g., +91 from +919340193449)
+                    if (fullPhoneNumber.startsWith('+')) {
+                        // Get the country dial code from intl-tel-input
+                        const phoneDisplayField = $('input[name="phone_display"]');
+                        if (phoneDisplayField.length && window.intlTelInput) {
+                            const itiInstance = window.intlTelInputGlobals.getInstance(phoneDisplayField[0]);
+                            if (itiInstance) {
+                                const countryData = itiInstance.getSelectedCountryData();
+                                if (countryData && countryData.dialCode) {
+                                    sendData.append('form_data[phone_country_code]', countryData.dialCode);
+                                    console.log('Phone country code from ITI:', countryData.dialCode);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Fallback: try to get phone from phone_display with manual country code
+                    const $phoneDisplay = $('input[name="phone_display"]');
+                    if ($phoneDisplay.length && $phoneDisplay.val()) {
+                        sendData.append('form_data[phone]', $phoneDisplay.val());
+                        console.log('Phone display attached:', $phoneDisplay.val());
+                    }
+                    
+                    // Add phone_country_code from hidden field or select
+                    const $countryCode = $('input[name="phone_country_code"], select[name="phone_country_code"], #phone_country_code');
+                    if ($countryCode.length && $countryCode.val()) {
+                        sendData.append('form_data[phone_country_code]', $countryCode.val());
+                        console.log('Phone country code attached:', $countryCode.val());
+                    }
+                }
+
                 $.ajax({
                     url: sendCodeUrl,
                     type: 'POST',
-                    data: {
-                        _token: csrfToken,
-                        email: email,
-                        form_data: formData, // Send form data to server
-                    },
+                    data: sendData,
+                    processData: false, // Required for FormData
+                    contentType: false, // Required for FormData
                     success: function(response) {
                         console.log('✅ VERIFICATION CODE SENT SUCCESSFULLY:', response);
                         
@@ -790,46 +831,40 @@
 </script>
 
 <!-- Register Section Start -->
-<div class="section-full site-bg-white">
+<div class="section-full site-bg-white register-auth-page" style="min-height: 100vh; display: flex; align-items: stretch; background: #ffffff !important; padding: 0 !important;">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-xl-5 col-lg-6 col-md-5 twm-log-reg-media-wrap">
-                <div class="twm-log-reg-logo-head">
+            <div class="col-xl-5 col-lg-6 col-md-5 twm-log-reg-media-wrap" style="background: #0073d1 !important; position: relative; min-height: 100vh; display: flex; flex-direction: column; padding: 30px 0px !important; overflow: visible !important;">
+                <!-- DEEP Opposite C curve -->
+                <svg style="position: absolute;right: -112px;top: 0;height: 100%;width: 180px;/* z-index: 10; */" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M100,0 L100,100 L30,100 Q-30,50 30,0 Z" fill="#ffffff"/>
+                </svg>
+                
+                <div class="twm-log-reg-logo-head" style="position: relative; z-index: 2; margin-bottom: 20px;">
                     @if (Theme::getLogo())
-                        <div class="twm-register-left-logo">
-                            <a href="{{ BaseHelper::getHomepageUrl() }}" class="twm-register-page-logo-link">
-                                {!! Theme::getLogoImage(['class' => 'logo'], 'logo', 100) !!}
-                            </a>
-                        </div>
+                        <a href="{{ BaseHelper::getHomepageUrl() }}">
+                            {!! Theme::getLogoImage(['class' => 'logo-light', 'style' => 'max-width: 160px; filter: brightness(0) invert(1);'], 'logo', 150) !!}
+                        </a>
+                    @else
+                        <a href="{{ BaseHelper::getHomepageUrl() }}" style="color: #fff; font-size: 22px; font-weight: 700; text-decoration: none; font-style: italic;">
+                            <span style="color: #fff;">Teachers</span>Recruiter<sup style="font-size: 10px;">™</sup>
+                        </a>
                     @endif
                 </div>
-                <div class="twm-log-reg-media">
-                    <div class="twm-l-media">
-                        @if (theme_option('sign_up_page_image'))
-                            <img src="{{ RvMedia::getImageUrl(theme_option('sign_up_page_image')) }}" alt="background">
-                        @else
-                            <img src="{{ Theme::asset()->url('images/reg-bg.png') }}" alt="background">
-                        @endif
+
+                <div class="illustration-area" style="flex: 1; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; margin-left: -30px;">
+                    <div style="width: 320px; height: 320px; background: rgba(255,255,255,0.12); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative;">
+                        <!-- Person illustration -->
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3C!-- Bean bag --%3E%3Cellipse cx='120' cy='240' rx='70' ry='45' fill='%23374151'/%3E%3C!-- Legs --%3E%3Cpath d='M80 200 Q60 250 90 270' stroke='%23f5f5f5' stroke-width='20' fill='none' stroke-linecap='round'/%3E%3Cpath d='M140 210 Q160 250 130 275' stroke='%23f5f5f5' stroke-width='18' fill='none' stroke-linecap='round'/%3E%3C!-- Feet --%3E%3Cellipse cx='95' cy='275' rx='15' ry='8' fill='%234a1d6e'/%3E%3Cellipse cx='125' cy='280' rx='12' ry='6' fill='%234a1d6e'/%3E%3C!-- Body --%3E%3Cpath d='M70 120 Q70 180 120 200 Q170 180 170 120 Q170 80 120 70 Q70 80 70 120' fill='%231e3a8a'/%3E%3C!-- Hoodie string --%3E%3Cpath d='M110 130 L110 155' stroke='%23fff' stroke-width='2'/%3E%3Cpath d='M130 130 L130 155' stroke='%23fff' stroke-width='2'/%3E%3C!-- Head --%3E%3Ccircle cx='120' cy='55' r='35' fill='%23fcd5b8'/%3E%3C!-- Hair --%3E%3Cpath d='M85 50 Q90 25 120 20 Q150 25 155 50 Q150 35 120 32 Q90 35 85 50' fill='%232d3748'/%3E%3Cpath d='M145 40 Q155 35 150 50' fill='%232d3748'/%3E%3C!-- Face features --%3E%3Ccircle cx='105' cy='55' r='3' fill='%23374151'/%3E%3Ccircle cx='135' cy='55' r='3' fill='%23374151'/%3E%3Cpath d='M115 70 Q120 75 125 70' stroke='%23d97706' stroke-width='2' fill='none'/%3E%3C!-- Glasses --%3E%3Crect x='95' y='48' width='18' height='12' rx='3' fill='none' stroke='%23374151' stroke-width='2'/%3E%3Crect x='127' y='48' width='18' height='12' rx='3' fill='none' stroke='%23374151' stroke-width='2'/%3E%3Cline x1='113' y1='54' x2='127' y2='54' stroke='%23374151' stroke-width='2'/%3E%3C!-- Laptop --%3E%3Crect x='65' y='145' width='55' height='40' rx='4' fill='%231f2937'/%3E%3Crect x='70' y='150' width='45' height='30' rx='2' fill='%2393c5fd'/%3E%3C!-- Waving arm --%3E%3Cpath d='M165 100 Q200 70 210 50' stroke='%231e3a8a' stroke-width='18' fill='none' stroke-linecap='round'/%3E%3C!-- Waving hand --%3E%3Ccircle cx='215' cy='45' r='15' fill='%23fcd5b8'/%3E%3Cpath d='M210 32 L218 18' stroke='%23fcd5b8' stroke-width='8' stroke-linecap='round'/%3E%3Cpath d='M220 35 L230 25' stroke='%23fcd5b8' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M225 42 L238 38' stroke='%23fcd5b8' stroke-width='5' stroke-linecap='round'/%3E%3C!-- Cat --%3E%3Cellipse cx='210' cy='235' rx='25' ry='18' fill='%23f5f5f5'/%3E%3Ccircle cx='200' cy='218' r='14' fill='%23f5f5f5'/%3E%3Cpolygon points='190,205 195,218 185,218' fill='%23f5f5f5'/%3E%3Cpolygon points='210,205 215,218 205,218' fill='%23f5f5f5'/%3E%3Ccircle cx='195' cy='215' r='3' fill='%23374151'/%3E%3Ccircle cx='205' cy='215' r='3' fill='%23374151'/%3E%3Cellipse cx='200' cy='222' rx='3' ry='2' fill='%23fca5a5'/%3E%3Cpath d='M230 240 Q240 235 235 250' stroke='%23f5f5f5' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E" alt="Illustration" style="width: 280px; height: 280px;">
                     </div>
                 </div>
             </div>
-            <div class="col-xl-7 col-lg-6 col-md-7">
-                <div class="twm-log-reg-form-wrap">
-                    <div class="twm-log-reg-logo-head twm-register-page-topbar">
-                        <div class="twm-register-page-brand">
-
-                            <div class="twm-log-reg-head">
-                                <div class="twm-log-reg-logo">
-                                    <span class="log-reg-form-title">{{ SeoHelper::getTitle() }}</span>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                    <div class="twm-log-reg-inner">
-
-
-                        {{-- Email verification modal (Step 1) --}}
+            <div class="col-xl-7 col-lg-6 col-md-7" style="background: #ffffff !important; display: flex; align-items: center; justify-content: center; padding: 30px 0px !important;">
+                <div class="twm-log-reg-form-wrap" style="width: 100%;  background: #fff !important; padding: 0 !important; box-shadow: none !important;">
+                    <div class="tr-register-shell">
+                        
+                        <div class="twm-log-reg-inner">
+                            {{-- Email verification modal (Step 1) --}}
                         <div id="email-verification-modal" class="modal fade" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
@@ -883,346 +918,543 @@
                             </div>
                         @endif
 
-                        <!-- Email Error Message (shown above Next Step button) -->
-                        <div id="email-exists-error" class="alert alert-warning mb-3" style="display:none;">
-                            <i class="ti ti-alert-circle me-2"></i>
-                            <span id="email-exists-error-text">Email exists but not verified. Please verify your email first.</span>
-                        </div>
-                        
-                        {!! $form->modify(
-                                'submit',
-                                'button',
-                                [
-                                    'label' => __('Next Step'),
-                                    'attr' => [
-                                        'class' => 'site-button',
-                                        'id' => 'register-submit-btn',
-                                        'type' => 'button',
-                                        'onclick' => 'handleNextStepClick(event); return true;',
+                            <!-- Email Error Message (shown above Next Step button) -->
+                            <div id="email-exists-error" class="alert alert-warning mb-3" style="display:none;">
+                                <i class="ti ti-alert-circle me-2"></i>
+                                <span id="email-exists-error-text">Email exists but not verified. Please verify your email first.</span>
+                            </div>
+                            
+                            {!! $form->modify(
+                                    'submit',
+                                    'button',
+                                    [
+                                        'label' => __('Next Step'),
+                                        'attr' => [
+                                            'class' => 'site-button',
+                                            'id' => 'register-submit-btn',
+                                            'type' => 'button',
+                                            'style' => 'width: 100%;',
+                                            'onclick' => 'handleNextStepClick(event); return true;',
+                                        ],
                                     ],
-                                ],
-                                true,
-                            )->renderForm() !!}
-                        <!-- Multi-step navigation buttons -->
-                        <div class="registration-navigation mt-4" style="display:none;">
-                            <button type="button" id="prev-step-btn" class="site-button-outline me-3">
-                                <i class="ti ti-arrow-left me-1"></i> Previous
-                            </button>
-                            <button type="button" id="next-step-btn" class="site-button">
-                                Next Step <i class="ti ti-arrow-right ms-1"></i>
-                            </button>
-                        </div>
+                                    true,
+                                )->renderForm() !!}
+                            <!-- Multi-step navigation buttons -->
+                            <div class="registration-navigation mt-4" style="display:none;">
+                                <button type="button" id="prev-step-btn" class="site-button-outline me-3">
+                                    <i class="ti ti-arrow-left me-1"></i> Previous
+                                </button>
+                                <button type="button" id="next-step-btn" class="site-button">
+                                    Next Step <i class="ti ti-arrow-right ms-1"></i>
+                                </button>
+                            </div>
 
-                        <!-- Final submit button (hidden initially) -->
-                        <button type="submit" id="final-submit-btn" class="site-button mt-3"
-                            style="display:none;">Registration</button>
+                            <!-- Final submit button (hidden initially) -->
+                            <button type="submit" id="final-submit-btn" class="site-button mt-3"
+                                style="display:none;">Registration</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
 @push('header')
     <style>
-        .registration-steps {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            position: relative;
+        /* ===== Job Seeker Registration - New Design ===== */
+        body .section-full.site-bg-white.register-auth-page,
+        html body .section-full.site-bg-white.register-auth-page {
+            min-height: 100vh !important;
+            display: flex !important;
+            align-items: stretch !important;
+            justify-content: center !important;
+            background: #ffffff !important;
+            padding: 0 !important;
         }
 
-        .registration-steps::before {
+        body .section-full.site-bg-white.register-auth-page > .container-fluid,
+        html body .section-full.site-bg-white.register-auth-page > .container-fluid {
+            padding: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        body .section-full.site-bg-white.register-auth-page > .container-fluid > .row,
+        html body .section-full.site-bg-white.register-auth-page > .container-fluid > .row {
+            margin: 0 !important;
+            min-height: 100vh !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        /* Left section - Blue with curved edge */
+        body .register-auth-page .twm-log-reg-media-wrap,
+        html body .register-auth-page .twm-log-reg-media-wrap {
+            background: #0073d1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            padding: 40px !important;
+            position: relative !important;
+            overflow: visible !important;
+            min-height: 100vh !important;
+        }
+
+        /* Curved edge effect */
+        body .register-auth-page .twm-log-reg-media-wrap::after,
+        html body .register-auth-page .twm-log-reg-media-wrap::after {
             content: '';
             position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #e0e0e0;
-            z-index: 0;
-        }
-
-        .step {
-            flex: 1;
-            text-align: center;
-            position: relative;
+            right: -80px;
+            top: 0;
+            bottom: 0;
+            width: 160px;
+            background: #ffffff;
+            border-radius: 50% 0 0 50%;
             z-index: 1;
         }
 
-        .step-number {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            line-height: 40px;
-            border-radius: 50%;
-            background: #e0e0e0;
-            color: #999;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .step.active .step-number {
-            background: #1967d2;
-            color: #fff;
-        }
-
-        .step.completed .step-number {
-            background: #34a853;
-            color: #fff;
-        }
-
-        .step-label {
-            display: block;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .step.active .step-label {
-            color: #1967d2;
-            font-weight: 600;
-        }
-
-        .step-content {
-            display: none;
-        }
-
-        .step-content.active {
-            display: block;
-        }
-
-        .invalid-feedback {
-            display: block !important;
-            width: 100%;
-            margin-top: 0.5rem;
-            font-size: 0.875em;
-            color: #dc3545;
-            padding-left: 0.25rem;
-        }
-
-        .is-invalid {
-            border-color: #dc3545 !important;
-        }
-
-        .is-invalid:focus {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
-        }
-
-        /* Hide resume field for employer */
-        .employer-selected input[name="resume"],
-        .employer-selected input[type="file"][name="resume"] {
-            display: none !important;
-        }
-        
-        .employer-selected input[name="resume"].closest('.col-md-6'),
-        .employer-selected input[type="file"][name="resume"].closest('.col-md-6'),
-        .employer-selected input[name="resume"].closest('.form-group'),
-        .employer-selected input[type="file"][name="resume"].closest('.form-group'),
-        .employer-selected input[name="resume"].closest('.mb-3'),
-        .employer-selected input[type="file"][name="resume"].closest('.mb-3') {
-            display: none !important;
-        }
-        
-        .employer-selected label[for="resume"] {
+        /* Hide video - show illustration instead */
+        .register-auth-page .tr-left-video-wrapper {
             display: none !important;
         }
 
-        .form-group .invalid-feedback,
-        .mb-3 .invalid-feedback,
-        .form-item .invalid-feedback {
-            display: block !important;
+        /* Logo styling */
+        .register-auth-page .twm-log-reg-logo-head {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 60px;
         }
 
-        .prev-step-btn,
-        #prev-step-btn {
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .prev-step-btn:hover,
-        #prev-step-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* --- Register page spacing tweaks (match screenshot) --- */
-        .twm-log-reg-media {
-            padding: 60px 0px !important;
-        }
-
-        .twm-log-reg-form-wrap {
-            padding: 20px 0px 40px 0px !important;
-        }
-
-        .twm-log-reg-form-wrap .twm-log-reg-inner {
-            padding: 16px 40px !important;
-        }
-
-        .twm-log-reg-head .log-reg-form-title {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        /* Account type cards: smaller + tighter */
-        .account-type-selection .account-type-option {
-            margin-bottom: 8px;
-        }
-
-        .account-type-selection .account-type-card {
-            min-height: 120px;
-            padding: 16px 14px;
-            transition: all 0.3s ease;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            background: #fff;
-        }
-
-        .account-type-selection .account-type-card:hover {
-            border-color: #007bff;
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .account-type-selection .account-type-card.selected,
-        .account-type-selection input[type="radio"]:checked + label .account-type-card {
-            border-color: #007bff;
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: #fff;
-            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
-        }
-
-        .account-type-selection .account-type-card.selected .account-type-content h6,
-        .account-type-selection input[type="radio"]:checked + label .account-type-card .account-type-content h6 {
+        .register-auth-page .twm-register-left-logo {
             color: #fff;
         }
 
-        .account-type-selection .account-type-card.selected .account-type-content p,
-        .account-type-selection input[type="radio"]:checked + label .account-type-card .account-type-content p {
-            color: rgba(255, 255, 255, 0.9);
+        .register-auth-page .twm-register-left-logo img {
+            max-height: 50px;
+            filter: brightness(0) invert(1);
         }
 
-        .account-type-selection .account-type-icon {
-            margin-bottom: 10px;
-        }
-
-        .account-type-selection .account-type-icon svg {
-            width: 34px;
-            height: 34px;
-            transition: all 0.3s ease;
-        }
-
-        .account-type-selection .account-type-card.selected .account-type-icon svg,
-        .account-type-selection input[type="radio"]:checked + label .account-type-card .account-type-icon svg {
-            color: #fff;
-            transform: scale(1.1);
-        }
-
-        /* Reduce extra bottom spacing between form items (let gutter handle spacing) */
-        .step-content[data-step="1"] .form-group,
-        .step-content[data-step="1"] .mb-3,
-        .step-content[data-step="1"] .form-item {
-            margin-bottom: 0 !important;
-        }
-
-        /* Modern form styling for job seeker */
-        .step-content .form-control,
-        .step-content .form-select {
-            border-radius: 8px;
-            border: 1.5px solid #e0e0e0;
-            padding: 12px 16px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            background: #fff;
-        }
-
-        .step-content .form-control:focus,
-        .step-content .form-select:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
-            outline: none;
-        }
-
-        .step-content .form-label {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .step-content .form-control::placeholder {
-            color: #999;
-        }
-
-        /* Button styling improvements */
-        #next-step-btn,
-        #prev-step-btn,
-        button[type="submit"] {
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        #next-step-btn:hover,
-        button[type="submit"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Form container improvements */
-        .twm-log-reg-form-wrap .twm-log-reg-inner {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        /* Step indicator improvements */
-        .step-indicator {
+        /* Add illustration placeholder */
+        .register-auth-page .twm-log-reg-media-wrap .illustration-area {
+            flex: 1;
             display: flex;
+            align-items: center;
             justify-content: center;
-            margin-bottom: 30px;
-            gap: 10px;
+            position: relative;
+            z-index: 2;
         }
 
-        .step-indicator .step {
-            width: 40px;
-            height: 40px;
+        .register-auth-page .illustration-circle {
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .register-auth-page .illustration-icon {
+            font-size: 100px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Form column */
+        body .register-auth-page .col-xl-7.col-lg-6.col-md-7,
+        html body .register-auth-page .col-xl-7.col-lg-6.col-md-7 {
+            flex: 0 0 60% !important;
+            max-width: 60% !important;
+            background: #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 40px !important;
+        }
+
+        /* Left column width */
+        body .register-auth-page .col-xl-5.col-lg-6.col-md-5,
+        html body .register-auth-page .col-xl-5.col-lg-6.col-md-5 {
+            flex: 0 0 40% !important;
+            max-width: 40% !important;
+        }
+
+        .register-auth-page .tr-left-logo-mark {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            border-radius: 999px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+
+        .register-auth-page .tr-left-logo-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .register-auth-page .tr-left-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .register-auth-page .tr-left-subtitle {
+            font-size: 13px;
+            color: rgba(241, 245, 249, 0.9);
+            max-width: 260px;
+            margin: 0;
+        }
+
+        .register-auth-page .tr-left-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .register-auth-page .tr-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 9px 24px;
+            font-size: 13px;
             font-weight: 600;
-            background: #e0e0e0;
-            color: #666;
-            transition: all 0.3s ease;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            text-decoration: none;
+            transition: all 0.15s ease-in-out;
+            white-space: nowrap;
         }
 
-        .step-indicator .step.active {
-            background: #007bff;
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        .register-auth-page .tr-btn-outline {
+            background: transparent;
+            border-color: rgba(255, 255, 255, 0.8);
+            color: #ffffff;
         }
 
-        .step-indicator .step.completed {
-            background: #28a745;
-            color: #fff;
+        .register-auth-page .tr-btn-outline:hover {
+            background: rgba(255, 255, 255, 0.12);
         }
 
-        @media (max-width: 767px) {
-            .twm-log-reg-media {
-                padding: 30px 0px !important;
+        .register-auth-page .tr-btn-primary {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.55);
+            color: #ffffff;
+        }
+
+        .register-auth-page .tr-btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.7);
+        }
+
+        /* Right form card */
+        body .register-auth-page .twm-log-reg-form-wrap,
+        html body .register-auth-page .twm-log-reg-form-wrap {
+            background: #ffffff !important;
+            backdrop-filter: none !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            width: 100%;
+            max-width: 580px;
+        }
+
+        .register-auth-page .twm-log-reg-inner {
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        /* Hide duplicate header from form */
+        .register-auth-page .twm-log-reg-inner > .twm-log-reg-head,
+        .register-auth-page .twm-log-reg-inner > h3,
+        .register-auth-page .twm-log-reg-inner > h4,
+        .register-auth-page .step-content > .twm-log-reg-head,
+        .register-auth-page .log-reg-form-title,
+        .register-auth-page .account-type-label-wrap,
+        .register-auth-page [class*="account-type"] > h3,
+        .register-auth-page [class*="account-type"] > h4,
+        .register-auth-page [class*="account-type"] > p:first-child,
+        .register-auth-page .twm-log-reg-inner .twm-log-reg-head,
+        .register-auth-page form > .twm-log-reg-head,
+        .register-auth-page .step-content .twm-log-reg-head {
+            display: none !important;
+        }
+        
+        /* Hide the black "Job Seeker" text from form */
+        .register-auth-page .twm-log-reg-inner h4.log-reg-form-title,
+        .register-auth-page h4.log-reg-form-title,
+        .register-auth-page .step-content h4,
+        .register-auth-page .step-content > h4:first-child,
+        .register-auth-page .step-content > p:first-of-type,
+        .register-auth-page .step-1-fields h4,
+        .register-auth-page .step-1-fields > h4,
+        .register-auth-page .step-1-fields > p:first-of-type,
+        .register-auth-page form h4:not(.custom-header),
+        .register-auth-page form > div > h4,
+        .register-auth-page form > div > p.text-muted {
+            display: none !important;
+        }
+        
+        /* Hide specific form generated title */
+        .tr-register-shell + .twm-log-reg-head,
+        .tr-register-shell ~ .twm-log-reg-head,
+        .tr-register-shell ~ h4,
+        .tr-register-shell ~ p.text-muted,
+        #step-1 > h4,
+        #step-1 > p.text-muted,
+        .step-content > .step-1-fields > h4:first-child,
+        .step-content > .step-1-fields > p:first-of-type {
+            display: none !important;
+        }
+        
+        /* Hide account type selection box - already job seeker */
+        .register-auth-page .account-type-selection,
+        .register-auth-page .account-type-option,
+        .register-auth-page .account-type-label,
+        .register-auth-page [name="account_type"],
+        .register-auth-page .account-type-selection h6,
+        .register-auth-page .account-type-selection p,
+        .register-auth-page .account-type-content {
+            display: none !important;
+        }
+        
+        /* HIDE ALL VALIDATION ICONS - AGGRESSIVE */
+        .register-auth-page .input-group-text svg,
+        .register-auth-page .input-group-text i,
+        .register-auth-page .input-group span:last-child svg,
+        .register-auth-page .input-group span:last-child i,
+        .register-auth-page .form-group svg.text-danger,
+        .register-auth-page .form-group i.text-danger,
+        .register-auth-page svg[class*="danger"],
+        .register-auth-page svg[class*="error"],
+        .register-auth-page svg[class*="invalid"],
+        .register-auth-page .error-icon,
+        .register-auth-page .validation-icon,
+        .register-auth-page .invalid-icon {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+        
+        /* Hide the red circle exclamation icon span */
+        .register-auth-page .input-group > span:last-of-type:not(.input-group-text):not(:first-child),
+        .register-auth-page .form-floating > span:last-of-type,
+        .register-auth-page .mb-3 > .input-group > span:not(.input-group-text),
+        .register-auth-page .form-group > span.position-absolute,
+        .register-auth-page span[class*="feedback-icon"],
+        .register-auth-page span.invalid-feedback-icon,
+        .register-auth-page .input-wrapper > span:last-child {
+            display: none !important;
+        }
+        
+        /* Hide input-group-text that contains only validation icon */
+        .register-auth-page .input-group-text:has(svg.text-danger),
+        .register-auth-page .input-group-text:has(i.fa-exclamation),
+        .register-auth-page .input-group > .input-group-text:last-child:empty,
+        .register-auth-page .input-group > span.input-group-text:last-child {
+            display: none !important;
+        }
+        
+        /* Remove background image validation icon */
+        .register-auth-page .form-control.is-invalid,
+        .register-auth-page .was-validated .form-control:invalid,
+        .register-auth-page input.is-invalid,
+        .register-auth-page select.is-invalid,
+        .register-auth-page textarea.is-invalid {
+            background-image: none !important;
+            padding-right: 12px !important;
+        }
+        
+        /* Hide any absolute positioned icons inside form groups */
+        .register-auth-page .form-group .position-absolute,
+        .register-auth-page .mb-3 .position-absolute:not(label),
+        .register-auth-page .input-group .position-absolute {
+            display: none !important;
+        }
+
+        .register-auth-page .tr-register-header,
+        .register-auth-page .twm-log-reg-head {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .register-auth-page .tr-register-badge {
+            display: none;
+        }
+
+        .register-auth-page .tr-register-title,
+        .register-auth-page .twm-log-reg-head .log-reg-form-title {
+            font-size: 28px !important;
+            font-weight: 700;
+            color: #0073d1 !important;
+            margin-bottom: 8px;
+        }
+
+        .register-auth-page .tr-register-subtitle {
+            font-size: 16px;
+            color: #0073d1;
+            margin: 0 0 16px;
+        }
+
+        /* Simple horizontal step list */
+        .register-auth-page .tr-register-steps {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .register-auth-page .tr-register-step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .register-auth-page .tr-register-step .step-index {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .register-auth-page .tr-register-step.is-active .step-index {
+            background: #1d4ed8;
+            color: #ffffff;
+        }
+
+        /* Form fields - Light blue background - COMPACT */
+        .register-auth-page .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #434343;
+            margin-bottom: 6px;
+        }
+
+        .register-auth-page .form-group,
+        .register-auth-page .mb-3 {
+            margin-bottom: 12px !important;
+        }
+
+        .register-auth-page .row {
+            margin-bottom: 0 !important;
+        }
+
+        body .register-auth-page .form-control,
+        body .register-auth-page .form-select,
+        html body .register-auth-page .form-control,
+        html body .register-auth-page .form-select,
+        body .register-auth-page input[type="text"],
+        body .register-auth-page input[type="email"],
+        body .register-auth-page input[type="password"],
+        body .register-auth-page input[type="tel"],
+        body .register-auth-page input[type="file"] {
+            border-radius: 8px !important;
+            border: none !important;
+            padding: 12px 14px !important;
+            font-size: 14px !important;
+            background-color: #e8f4fc !important;
+            color: #434343 !important;
+        }
+
+        .register-auth-page .form-control:focus,
+        .register-auth-page .form-select:focus {
+            border: none;
+            background-color: #dbeafe !important;
+            box-shadow: 0 0 0 2px rgba(0, 115, 209, 0.2);
+            outline: none;
+        }
+
+        .register-auth-page .step-content .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Primary buttons - Blue */
+        .register-auth-page .site-button,
+        .register-auth-page #next-step-btn,
+        .register-auth-page #final-submit-btn,
+        .register-auth-page button[type="submit"] {
+            border-radius: 8px;
+            padding: 14px 28px;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            background: #0073d1 !important;
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(0, 115, 209, 0.25);
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 10px !important;
+        }
+
+        .register-auth-page .site-button:hover,
+        .register-auth-page #next-step-btn:hover,
+        .register-auth-page #final-submit-btn:hover,
+        .register-auth-page button[type="submit"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(0, 115, 209, 0.35);
+            background: #005bb5 !important;
+        }
+
+        /* Previous / outline button */
+        .register-auth-page .site-button-outline,
+        .register-auth-page #prev-step-btn {
+            border-radius: 8px;
+            background: transparent;
+            border: 2px solid #0073d1;
+            color: #0073d1;
+            box-shadow: none;
+        }
+
+        /* Alerts inside form */
+        .register-auth-page .alert {
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        /* ===== Mobile layout ===== */
+        @media (max-width: 767.98px) {
+            .register-auth-page {
+                padding-block: 18px;
             }
 
-            .twm-log-reg-form-wrap {
-                padding: 20px 0px 20px 0px !important;
+            .register-auth-page > .container-fluid > .row {
+                border-radius: 20px;
             }
 
-            .twm-log-reg-form-wrap .twm-log-reg-inner {
-                padding: 12px 16px !important;
+            .register-auth-page .twm-log-reg-media-wrap {
+                display: none;
+            }
+
+            .register-auth-page .twm-log-reg-form-wrap {
+                padding: 20px 16px 24px;
+            }
+
+            .register-auth-page .tr-register-title {
+                font-size: 24px;
+            }
+
+            .register-auth-page .tr-register-steps {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
             }
         }
     </style>

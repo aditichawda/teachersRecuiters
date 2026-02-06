@@ -2,630 +2,570 @@
     Theme::layout('without-navbar');
 @endphp
 
-<div class="section-full site-bg-white">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-xl-6 col-lg-7 col-md-8">
-                <div class="twm-log-reg-form-wrap">
-                    <div class="twm-log-reg-inner">
-                        <div class="twm-log-reg-head text-center mb-4">
-                            <div class="twm-log-reg-logo mb-3">
-                                @if (Theme::getLogo())
-                                    {!! Theme::getLogoImage(['class' => 'logo'], 'logo', 80) !!}
-                                @endif
-                            </div>
-                            <h2 class="log-reg-form-title mb-2">{{ __('Select Location') }}</h2>
-                            <p class="text-muted mb-0">
-                                {{ __('Please select your location details.') }}
-                            </p>
+<style>
+/* ===== Location Page Styles ===== */
+.location-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f4f8 0%, #e8f4fc 50%, #f5f7fa 100%);
+    margin: 0;
+    padding: 0;
+}
+
+.tr-auth-left-panel {
+    background: #0073d1 !important;
+    position: relative;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px;
+    overflow: hidden;
+    min-height: 100vh;
+}
+
+.tr-auth-curve {
+    position: absolute;
+    right: -1px;
+    top: 0;
+    height: 100%;
+    width: 150px;
+    z-index: 10;
+}
+
+.tr-auth-left-content {
+    position: relative;
+    z-index: 5;
+    color: #fff;
+    padding-right: 80px;
+}
+
+.tr-auth-logo {
+    margin-bottom: 30px;
+}
+
+.tr-auth-logo img {
+    max-width: 180px;
+    filter: brightness(0) invert(1);
+}
+
+.tr-auth-illustration {
+    margin: 30px 0;
+}
+
+.tr-auth-illustration svg {
+    width: 100%;
+    max-width: 300px;
+}
+
+.tr-auth-step-info {
+    margin-top: 30px;
+}
+
+.tr-auth-step-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.tr-auth-step-info h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    color: #fff;
+}
+
+.tr-auth-step-info p {
+    font-size: 14px;
+    opacity: 0.85;
+    margin: 0;
+    line-height: 1.6;
+    color: #fff;
+}
+
+.tr-auth-right-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 60px;
+    background: #fff !important;
+    min-height: 100vh;
+}
+
+.tr-auth-form-container {
+    width: 100%;
+    max-width: 450px;
+}
+
+.tr-auth-form-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.tr-auth-form-header h1 {
+    color: #0073d1;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.tr-auth-form-header p {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Form Elements */
+.tr-form-group {
+    margin-bottom: 20px;
+}
+
+.tr-form-label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.tr-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.tr-input-icon {
+    position: absolute;
+    left: 15px;
+    color: #0073d1;
+    font-size: 18px;
+    z-index: 2;
+}
+
+.tr-form-select {
+    width: 100%;
+    padding: 14px 15px 14px 45px;
+    border: 2px solid #e8f4fc;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #f8fbfd;
+    transition: all 0.3s;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+}
+
+.tr-form-select:focus {
+    border-color: #0073d1;
+    background-color: #fff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,115,209,0.1);
+}
+
+.tr-form-select:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.tr-error-text {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+
+.tr-error-text.show {
+    display: block;
+}
+
+/* Buttons */
+.tr-form-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.tr-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 25px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    color: #666;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.3s;
+    background: #fff;
+}
+
+.tr-btn-outline:hover {
+    border-color: #0073d1;
+    color: #0073d1;
+    text-decoration: none;
+}
+
+.tr-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 30px;
+    background: #0073d1;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tr-btn-primary:hover {
+    background: #005ba8;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0,115,209,0.3);
+}
+
+.tr-btn-primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.tr-form-footer {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 14px;
+    color: #666;
+}
+
+.tr-form-footer a {
+    color: #0073d1;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.tr-form-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .tr-auth-right-panel {
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .tr-auth-form-header h1 {
+        font-size: 24px;
+    }
+    
+    .tr-form-buttons {
+        flex-direction: column;
+    }
+    
+    .tr-btn-outline, .tr-btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<div class="section-full tr-auth-page location-page" style="margin:0;padding:0;">
+    <div class="container-fluid" style="padding:0;margin:0;">
+        <div class="row g-0" style="min-height:100vh;">
+            <!-- Left Panel - Blue with illustration -->
+            <div class="col-xl-5 col-lg-5 col-md-5 d-none d-md-flex tr-auth-left-panel" style="background:#0073d1 !important;">
+                <!-- Curve SVG -->
+                <svg class="tr-auth-curve" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M100,0 L100,100 L30,100 Q-30,50 30,0 Z" fill="#ffffff"/>
+                </svg>
+                
+                <!-- Content -->
+                <div class="tr-auth-left-content">
+                    @if (Theme::getLogo())
+                        <div class="tr-auth-logo">
+                            {!! Theme::getLogoImage(['class' => 'logo-light'], 'logo', 150) !!}
                         </div>
-
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-body p-4">
-                                <form id="location-form">
-                                    @csrf
-                                    
-                                    <!-- Hidden email field -->
-                                    <input type="hidden" name="email" id="location_email" value="" />
-                                    
-                                    <!-- Location Input -->
-                                        <div class="mb-4">
-                                        <label for="location" class="form-label fw-semibold mb-2">
-                                                {{ __('Location') }}
-                                            </label>
-                                        <input 
-                                            type="text" 
-                                            name="location" 
-                                            id="location" 
-                                            class="form-control form-control-lg"
-                                            placeholder="{{ __('Enter your location') }}"
-                                        />
-                                        <div id="location_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                        </div>
-
-                                    @if (is_plugin_active('location'))
-                                        <!-- Country -->
-                                        <div class="mb-4">
-                                            <label for="country_id" class="form-label fw-semibold mb-2">
-                                                {{ __('Country') }}
-                                            </label>
-                                            <select 
-                                                name="country_id" 
-                                                id="country_id" 
-                                                class="form-select form-select-lg"
-                                            >
-                                                <option value="">{{ __('Select Country') }}</option>
-                                                @php
-                                                    try {
-                                                        // Try to get published countries first
-                                                        $countries = \Botble\Location\Models\Country::query()
-                                                            ->where('status', 'published')
-                                                            ->orderBy('order')
-                                                            ->orderBy('name')
-                                                            ->get();
-                                                        
-                                                        // If no published countries, get all countries
-                                                        if ($countries->isEmpty()) {
-                                                            $countries = \Botble\Location\Models\Country::query()
-                                                                ->orderBy('order')
-                                                                ->orderBy('name')
-                                                                ->get();
-                                                        }
-                                                        
-                                                        \Log::info('Countries loaded for location page', [
-                                                            'count' => $countries->count(),
-                                                            'sample' => $countries->take(3)->pluck('name')->toArray()
-                                                        ]);
-                                                    } catch (\Exception $e) {
-                                                        \Log::error('Error loading countries', [
-                                                            'error' => $e->getMessage(),
-                                                            'trace' => $e->getTraceAsString()
-                                                        ]);
-                                                        $countries = collect([]);
-                                                    }
-                                                @endphp
-                                                @if($countries && $countries->count() > 0)
-                                                    @foreach($countries as $country)
-                                                        <option value="{{ $country->id }}">{{ $country->name }}</option>
-                                                    @endforeach
-                                                @else
-                                                    <option value="" disabled>{{ __('No countries available. Please contact administrator.') }}</option>
-                                                    @php
-                                                        \Log::warning('No countries found in database for location page');
-                                                    @endphp
-                                    @endif
-                                            </select>
-                                            <div id="country_id_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                        </div>
-
-                                        <!-- State -->
-                                    <div class="mb-4">
-                                            <label for="state_id" class="form-label fw-semibold mb-2">
-                                                {{ __('State') }}
-                                        </label>
-                                        <select 
-                                                name="state_id" 
-                                                id="state_id" 
-                                            class="form-select form-select-lg"
-                                                disabled
-                                        >
-                                                <option value="">{{ __('Select State') }}</option>
-                                        </select>
-                                            <div id="state_id_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                    </div>
-
-                                        <!-- City -->
-                                        <div class="mb-4">
-                                            <label for="city_id" class="form-label fw-semibold mb-2">
-                                                {{ __('City') }}
-                                            </label>
-                                            <select 
-                                                name="city_id" 
-                                                id="city_id" 
-                                                class="form-select form-select-lg"
-                                                disabled
-                                            >
-                                                <option value="">{{ __('Select City') }}</option>
-                                            </select>
-                                            <div id="city_id_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                        </div>
-                                    @endif
-
-                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                        <a href="{{ route('public.account.register.institutionTypePage') }}" class="btn btn-outline-secondary">
-                                            <i class="ti ti-arrow-left me-1"></i> {{ __('Back') }}
-                                        </a>
-                                        <button type="button" class="site-button" id="submit-btn" onclick="handleLocationSubmit(event); return false;">
-                                            {{ __('Complete Registration') }} <i class="ti ti-check ms-1"></i>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+                    @endif
+                    
+                    <div class="tr-auth-illustration">
+                        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Map/Location illustration -->
+                            <circle cx="200" cy="150" r="100" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+                            <circle cx="200" cy="150" r="70" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+                            <circle cx="200" cy="150" r="40" fill="rgba(255,255,255,0.15)"/>
+                            <!-- Location Pin -->
+                            <path d="M200 100 C170 100 150 125 150 150 C150 190 200 230 200 230 C200 230 250 190 250 150 C250 125 230 100 200 100Z" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+                            <circle cx="200" cy="145" r="20" fill="rgba(255,255,255,0.6)"/>
+                        </svg>
                     </div>
+                    
+                    <div class="tr-auth-step-info">
+                        <span class="tr-auth-step-badge">Step 3 of 3</span>
+                        <h3>Select Your Location</h3>
+                        <p>Help us find the best opportunities near you by selecting your preferred location</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel - Form -->
+            <div class="col-xl-7 col-lg-7 col-md-7 tr-auth-right-panel" style="background:#fff !important;">
+                <div class="tr-auth-form-container">
+                    <div class="tr-auth-form-header">
+                        <h1>Select Location</h1>
+                        <p>Choose your preferred work location</p>
+                    </div>
+                    
+                    <form id="location-form" onsubmit="return false;">
+                        @csrf
+                        <input type="hidden" name="email" id="location_email" value="" />
+                        
+                        @if (is_plugin_active('location'))
+                            <!-- Country -->
+                            <div class="tr-form-group">
+                                <label class="tr-form-label">
+                                    Country <span class="text-danger">*</span>
+                                </label>
+                                <div class="tr-select-wrapper">
+                                    <span class="tr-input-icon">🌍</span>
+                                    <select name="country_id" id="country_id" class="tr-form-select" required>
+                                        <option value="">Select Country</option>
+                                        @php
+                                            try {
+                                                $countries = \Botble\Location\Models\Country::query()
+                                                    ->where('status', 'published')
+                                                    ->orderBy('order')
+                                                    ->orderBy('name')
+                                                    ->get();
+                                                
+                                                if ($countries->isEmpty()) {
+                                                    $countries = \Botble\Location\Models\Country::query()
+                                                        ->orderBy('order')
+                                                        ->orderBy('name')
+                                                        ->get();
+                                                }
+                                            } catch (\Exception $e) {
+                                                $countries = collect([]);
+                                            }
+                                        @endphp
+                                        @foreach($countries as $country)
+                                            <option value="{{ $country->id }}">{{ $country->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div id="country_id_error" class="tr-error-text"></div>
+                            </div>
+
+                            <!-- State -->
+                            <div class="tr-form-group">
+                                <label class="tr-form-label">
+                                    State
+                                </label>
+                                <div class="tr-select-wrapper">
+                                    <span class="tr-input-icon">📍</span>
+                                    <select name="state_id" id="state_id" class="tr-form-select" disabled>
+                                        <option value="">Select State</option>
+                                    </select>
+                                </div>
+                                <div id="state_id_error" class="tr-error-text"></div>
+                            </div>
+
+                            <!-- City -->
+                            <div class="tr-form-group">
+                                <label class="tr-form-label">
+                                    City
+                                </label>
+                                <div class="tr-select-wrapper">
+                                    <span class="tr-input-icon">🏙️</span>
+                                    <select name="city_id" id="city_id" class="tr-form-select" disabled>
+                                        <option value="">Select City</option>
+                                    </select>
+                                </div>
+                                <div id="city_id_error" class="tr-error-text"></div>
+                            </div>
+                        @endif
+                        
+                        <!-- Buttons -->
+                        <div class="tr-form-buttons">
+                            <a href="{{ route('public.account.register.institutionTypePage') }}" class="tr-btn-outline">
+                                ← Back
+                            </a>
+                            <button type="button" class="tr-btn-primary" id="submit-btn">
+                                Complete Registration ✓
+                            </button>
+                        </div>
+                        
+                        <div class="tr-form-footer">
+                            Already have an account? <a href="{{ route('public.account.login') }}">Sign In</a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Immediate inline script test -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-console.log('=== IMMEDIATE SCRIPT TEST ===');
-console.log('This should show immediately when page loads');
-console.log('Time:', new Date().toISOString());
-console.log('Page URL:', window.location.href);
-
-// Test if console is working
-if (typeof console !== 'undefined') {
-    console.log('✅ Console is available');
-} else {
-    alert('Console is not available!');
-}
-
-// Global function for Complete Registration button click
-window.handleLocationSubmit = function(e) {
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    
-    console.log('========================================');
-    console.log('=== HANDLE LOCATION SUBMIT CALLED ===');
-    console.log('========================================');
-    console.log('🎯 Button click detected via onclick!');
-    console.log('Click time:', new Date().toISOString());
-    
-    // Get location value only
-    const location = document.getElementById('location')?.value;
-    let email = document.getElementById('location_email')?.value;
-    
-    console.log('=== GETTING FORM VALUES ===');
-    console.log('Location:', location);
-    console.log('Email from hidden field:', email);
-    console.log('Email element exists?', document.getElementById('location_email') !== null);
-    
-    // Validation
-    if (!location || location.trim() === '') {
-        console.error('❌ Validation failed: Location is empty');
-        alert('Please enter your location.');
-        return false;
-    }
-    
-    // If email is not found, try to load it from API
-    if (!email) {
-        console.log('⚠️ Email not found in hidden field, loading from API...');
-        const getEmailUrl = '{{ route('public.account.register.getVerificationData') }}';
-        
-        fetch(getEmailUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Email API Response:', data);
-            if (data.data && data.data.email) {
-                email = data.data.email;
-                document.getElementById('location_email').value = email;
-                console.log('✅ Email loaded from API:', email);
-                // Now process with the loaded email
-                processLocationSave(location, email);
-            } else {
-                console.error('❌ Email not found in API response');
-                console.error('Response data:', data);
-                alert('Email not found. Please go back to registration.');
-            }
-        })
-        .catch(error => {
-            console.error('❌ Failed to load email:', error);
-            alert('Email not found. Please go back to registration.');
-        });
-        
-        return false;
-    }
-    
-    // If email is found, process directly
-    processLocationSave(location, email);
-    return false;
-};
-
-// Separate function to process the save
-function processLocationSave(location, email) {
-    console.log('=== PROCESSING LOCATION SAVE ===');
-    console.log('Location:', location);
-    console.log('Email:', email);
-    
-    // Get button and show loading
-    const btn = document.getElementById('submit-btn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = 'Saving...';
-    console.log('✅ Button text changed to "Saving..."');
-    
-    // Get CSRF token
-    const csrfToken = document.querySelector('input[name="_token"]').value;
-    const saveUrl = '{{ route('public.account.register.saveLocation') }}';
-    
-    console.log('========================================');
-    console.log('=== SAVING LOCATION TO DATABASE ===');
-    console.log('========================================');
-    console.log('API URL:', saveUrl);
-    console.log('CSRF Token:', csrfToken ? '✅ Found' : '❌ Not found');
-    console.log('Request Data:', {
-        email: email,
-        location: location
-    });
-    console.log('Saving to database now...');
-    
-    // Use fetch API for better error handling
-    fetch(saveUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-            email: email,
-            location: location
-        })
-    })
-    .then(response => {
-        console.log('=== API RESPONSE RECEIVED ===');
-        console.log('Status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('========================================');
-        console.log('=== LOCATION SAVE RESPONSE ===');
-        console.log('========================================');
-        console.log('Full Response:', data);
-        console.log('Success?', data.error === false ? '✅ YES' : '❌ NO');
-        console.log('Message:', data.message);
-        console.log('========================================');
-        console.log('✅✅✅ LOCATION SAVED TO DATABASE ✅✅✅');
-        console.log('========================================');
-        console.log('Saved Location:', location);
-        console.log('Saved Email:', email);
-        console.log('Database Update: SUCCESS');
-        console.log('========================================');
-        
-        // Store in sessionStorage
-        if (typeof Storage !== 'undefined') {
-            sessionStorage.setItem('regStep', 'complete');
-            console.log('✅ Registration step stored in sessionStorage');
-        }
-        
-        // Redirect to dashboard
-        if (data.data && data.data.next_url) {
-            console.log('=== REDIRECTING ===');
-            console.log('Redirect URL:', data.data.next_url);
-            window.location.href = data.data.next_url;
-        } else {
-            console.log('=== REDIRECTING TO DASHBOARD ===');
-            window.location.href = '{{ route('public.account.dashboard') }}';
-        }
-    })
-    .catch(error => {
-        console.error('========================================');
-        console.error('=== LOCATION SAVE FAILED ===');
-        console.error('========================================');
-        console.error('Error:', error);
-        console.error('Error Message:', error.message);
-        console.error('========================================');
-        
-        alert('Failed to save location. Please try again.');
-        btn.innerHTML = originalText;
-    });
-}
-
-// Also define it as a regular function for compatibility
-function handleLocationSubmit(event) {
-    return window.handleLocationSubmit(event);
-}
-</script>
-
-@push('footer')
-<script>
-// Immediate console test
-console.log('========================================');
-console.log('=== LOCATION PAGE SCRIPT LOADED ===');
-console.log('========================================');
-console.log('Script load time:', new Date().toISOString());
-
 (function($) {
     'use strict';
-
+    
     $(document).ready(function() {
-        console.log('jQuery document ready fired');
-        console.log('========================================');
-        console.log('=== LOCATION PAGE LOADED ===');
-        console.log('========================================');
-        console.log('Page load time:', new Date().toISOString());
+        console.log('Location Page Loaded');
         
-        // Get email and existing location data from session or API
-        const getVerificationDataUrl = '{{ route('public.account.register.getVerificationData') }}';
+        // Load email from API
         $.ajax({
-            url: getVerificationDataUrl,
+            url: '{{ route("public.account.register.getVerificationData") }}',
             type: 'GET',
             success: function(response) {
-                console.log('========================================');
-                console.log('=== VERIFICATION DATA LOADED ===');
-                console.log('========================================');
-                console.log('Full Response:', response);
-                
-                if (response.data && response.data.email) {
+                if (response.data?.email) {
                     $('#location_email').val(response.data.email);
-                    console.log('✅ Email loaded:', response.data.email);
-                    
-                    // Pre-fill location if exists
-                    if (response.data.location) {
-                        $('#location').val(response.data.location);
-                        console.log('✅ Location pre-filled:', response.data.location);
-                    }
+                    console.log('Email loaded:', response.data.email);
                     
                     // Pre-fill country if exists
                     if (response.data.country_id) {
-                        $('#country_id').val(response.data.country_id);
-                        console.log('✅ Country ID pre-filled:', response.data.country_id);
-                        console.log('✅ Country Name:', $('#country_id option:selected').text());
-                        
-                        // Trigger country change to load states
-                        $('#country_id').trigger('change');
+                        $('#country_id').val(response.data.country_id).trigger('change');
                     }
-                    
-                    // Pre-fill state if exists (will be set after states load)
-                    if (response.data.state_id) {
-                        window.pendingStateId = response.data.state_id;
-                        console.log('⏳ State ID will be set after states load:', response.data.state_id);
-                    }
-                    
-                    // Pre-fill city if exists (will be set after cities load)
-                    if (response.data.city_id) {
-                        window.pendingCityId = response.data.city_id;
-                        console.log('⏳ City ID will be set after cities load:', response.data.city_id);
-                    }
-                    
-                    console.log('Existing Location Data:', {
-                        location: response.data.location || 'Not set',
-                        country_id: response.data.country_id || 'Not set',
-                        state_id: response.data.state_id || 'Not set',
-                        city_id: response.data.city_id || 'Not set'
-                    });
-                } else {
-                    console.error('❌ Email not found in verification data');
                 }
-                console.log('========================================');
             },
             error: function(xhr) {
-                console.error('❌ Failed to get verification data:', xhr);
+                console.error('Failed to load email:', xhr);
             }
         });
-        
-        // Check if countries are loaded
-        const $countryField = $('#country_id');
-        const countryOptions = $countryField.find('option').length;
-        console.log('========================================');
-        console.log('=== COUNTRY DROPDOWN STATUS ===');
-        console.log('========================================');
-        console.log('Country dropdown options count:', countryOptions);
-        console.log('Country dropdown is:', countryOptions > 1 ? '✅ Loaded' : '❌ Empty');
-        
-        if (countryOptions <= 1) {
-            console.warn('⚠️ Country dropdown appears empty. Please check server logs.');
-        } else {
-            console.log('Available Countries:', $countryField.find('option').map(function() {
-                return $(this).text();
-            }).get().slice(1)); // Skip first "Select Country" option
-        }
-        console.log('========================================');
         
         // Load states when country changes
         $('#country_id').on('change', function() {
             const countryId = $(this).val();
-            const countryName = $(this).find('option:selected').text();
             const $stateField = $('#state_id');
             const $cityField = $('#city_id');
             
-            console.log('========================================');
-            console.log('=== COUNTRY DROPDOWN CHANGED ===');
-            console.log('========================================');
-            console.log('🌍 Country Selected - ID:', countryId);
-            console.log('🌍 Country Selected - Name:', countryName);
-            console.log('Change time:', new Date().toISOString());
-            
             if (countryId) {
-                console.log('✅ Country selected, loading states...');
-                // Enable and load states
                 $stateField.prop('disabled', false).html('<option value="">Loading...</option>');
-                $cityField.prop('disabled', true).html('<option value="">{{ __('Select City') }}</option>');
+                $cityField.prop('disabled', true).html('<option value="">Select City</option>');
                 
                 $.ajax({
                     url: '{{ route("ajax.states-by-country") }}',
                     type: 'GET',
                     data: { country_id: countryId },
-                    beforeSend: function() {
-                        console.log('📡 Sending request to states API...');
-                    },
                     success: function(response) {
-                        console.log('========================================');
-                        console.log('=== STATES API RESPONSE ===');
-                        console.log('========================================');
-                        console.log('Full Response:', response);
-                        console.log('Response Data:', response.data);
-                        console.log('States Count:', response.data ? response.data.length : 0);
-                        
-                        let options = '<option value="">{{ __('Select State') }}</option>';
-                        let statesCount = 0;
-                        
-                        // Handle response.data array
-                        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-                            $.each(response.data, function(index, state) {
-                                // Skip the first option if it's the "Select State" placeholder (id: 0)
+                        let options = '<option value="">Select State</option>';
+                        if (response.data?.length > 0) {
+                            response.data.forEach(function(state) {
                                 if (state.id && state.id != 0) {
                                     options += '<option value="' + state.id + '">' + state.name + '</option>';
-                                    statesCount++;
                                 }
                             });
-                            
-                            console.log('✅ States loaded:', statesCount);
-                            console.log('States List:', response.data.filter(s => s.id && s.id != 0).map(s => s.name));
-                        } else {
-                            console.warn('⚠️ No states found for country ID:', countryId);
                         }
-                        
                         $stateField.html(options);
-                        console.log('✅ State dropdown populated');
-                        
-                        // If there's a pending state ID, set it now
-                        if (window.pendingStateId) {
-                            setTimeout(function() {
-                                $stateField.val(window.pendingStateId);
-                                console.log('✅ State ID set from existing data:', window.pendingStateId);
-                                console.log('✅ State Name:', $stateField.find('option:selected').text());
-                                $('#state_id').trigger('change'); // Trigger to load cities
-                                window.pendingStateId = null;
-                            }, 100);
-                        }
-                        console.log('========================================');
                     },
-                    error: function(xhr) {
-                        console.error('========================================');
-                        console.error('=== STATES API ERROR ===');
-                        console.error('========================================');
-                        console.error('Status:', xhr.status);
-                        console.error('Response:', xhr.responseText);
-                        console.error('Full XHR:', xhr);
-                        $stateField.html('<option value="">{{ __('Select State') }}</option>');
-                        console.error('========================================');
+                    error: function() {
+                        $stateField.html('<option value="">Select State</option>');
                     }
                 });
             } else {
-                console.log('❌ No country selected, disabling state and city dropdowns');
-                $stateField.prop('disabled', true).html('<option value="">{{ __('Select State') }}</option>');
-                $cityField.prop('disabled', true).html('<option value="">{{ __('Select City') }}</option>');
+                $stateField.prop('disabled', true).html('<option value="">Select State</option>');
+                $cityField.prop('disabled', true).html('<option value="">Select City</option>');
             }
-            console.log('========================================');
         });
 
         // Load cities when state changes
         $('#state_id').on('change', function() {
             const stateId = $(this).val();
-            const stateName = $(this).find('option:selected').text();
             const $cityField = $('#city_id');
             
-            console.log('========================================');
-            console.log('=== STATE DROPDOWN CHANGED ===');
-            console.log('========================================');
-            console.log('🏛️ State Selected - ID:', stateId);
-            console.log('🏛️ State Selected - Name:', stateName);
-            console.log('Change time:', new Date().toISOString());
-            
             if (stateId) {
-                console.log('✅ State selected, loading cities...');
-                // Enable and load cities
                 $cityField.prop('disabled', false).html('<option value="">Loading...</option>');
                 
                 $.ajax({
                     url: '{{ route("ajax.cities-by-state") }}',
                     type: 'GET',
                     data: { state_id: stateId },
-                    beforeSend: function() {
-                        console.log('📡 Sending request to cities API...');
-                    },
                     success: function(response) {
-                        console.log('========================================');
-                        console.log('=== CITIES API RESPONSE ===');
-                        console.log('========================================');
-                        console.log('Full Response:', response);
-                        console.log('Response Data:', response.data);
-                        console.log('Cities Count:', response.data ? response.data.length : 0);
-                        
-                        let options = '<option value="">{{ __('Select City') }}</option>';
-                        let citiesCount = 0;
-                        
-                        // Handle response.data array
-                        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-                            $.each(response.data, function(index, city) {
-                                // Skip the first option if it's the "Select City" placeholder (id: 0)
+                        let options = '<option value="">Select City</option>';
+                        if (response.data?.length > 0) {
+                            response.data.forEach(function(city) {
                                 if (city.id && city.id != 0) {
                                     options += '<option value="' + city.id + '">' + city.name + '</option>';
-                                    citiesCount++;
                                 }
                             });
-                            
-                            console.log('✅ Cities loaded:', citiesCount);
-                            console.log('Cities List:', response.data.filter(c => c.id && c.id != 0).map(c => c.name));
-                        } else {
-                            console.warn('⚠️ No cities found for state ID:', stateId);
                         }
-                        
                         $cityField.html(options);
-                        console.log('✅ City dropdown populated');
-                        
-                        // If there's a pending city ID, set it now
-                        if (window.pendingCityId) {
-                            setTimeout(function() {
-                                $cityField.val(window.pendingCityId);
-                                console.log('✅ City ID set from existing data:', window.pendingCityId);
-                                console.log('✅ City Name:', $cityField.find('option:selected').text());
-                                window.pendingCityId = null;
-                            }, 100);
-                        }
-                        console.log('========================================');
                     },
-                    error: function(xhr) {
-                        console.error('========================================');
-                        console.error('=== CITIES API ERROR ===');
-                        console.error('========================================');
-                        console.error('Status:', xhr.status);
-                        console.error('Response:', xhr.responseText);
-                        console.error('Full XHR:', xhr);
-                        $cityField.html('<option value="">{{ __('Select City') }}</option>');
-                        console.error('========================================');
+                    error: function() {
+                        $cityField.html('<option value="">Select City</option>');
                     }
                 });
             } else {
-                console.log('❌ No state selected, disabling city dropdown');
-                $cityField.prop('disabled', true).html('<option value="">{{ __('Select City') }}</option>');
+                $cityField.prop('disabled', true).html('<option value="">Select City</option>');
             }
-            console.log('========================================');
         });
         
-        // Log when city is selected
-        $('#city_id').on('change', function() {
-            const cityId = $(this).val();
-            const cityName = $(this).find('option:selected').text();
-            
-            console.log('========================================');
-            console.log('=== CITY DROPDOWN CHANGED ===');
-            console.log('========================================');
-            console.log('🏙️ City Selected - ID:', cityId);
-            console.log('🏙️ City Selected - Name:', cityName);
-            console.log('Change time:', new Date().toISOString());
-            console.log('========================================');
-        });
-        
-        // Log when location text field changes
-        $('#location').on('input change', function() {
-            const location = $(this).val();
-            console.log('📍 Location text changed:', location);
-        });
-
-        // Submit button - also attach jQuery listener as backup
+        // Submit button handler
         $('#submit-btn').on('click', function(e) {
-            console.log('jQuery click handler also fired (backup)');
-            // The onclick attribute will handle it, but we log it here
-        });
-
-        // Remove error on change
-        $('#location, #country_id, #state_id, #city_id').on('change', function() {
-            $(this).removeClass('is-invalid');
-            $('#' + $(this).attr('id') + '_error').hide();
+            e.preventDefault();
+            
+            const email = $('#location_email').val();
+            const countryId = $('#country_id').val();
+            const stateId = $('#state_id').val();
+            const cityId = $('#city_id').val();
+            
+            // Validation - only country is required
+            if (!countryId) {
+                alert('Please select a country');
+                return;
+            }
+            
+            // Show loading
+            const btn = $(this);
+            const originalText = btn.html();
+            btn.html('Completing...').prop('disabled', true);
+            
+            const csrfToken = $('input[name="_token"]').val();
+            
+            // Save to server
+            $.ajax({
+                url: '{{ route("public.account.register.saveLocation") }}',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: JSON.stringify({
+                    email: email,
+                    location: '',
+                    country_id: countryId || null,
+                    state_id: stateId || null,
+                    city_id: cityId || null
+                }),
+                success: function(data) {
+                    console.log('Save response:', data);
+                    
+                    // Clear registration data
+                    sessionStorage.setItem('regStep', 'complete');
+                    localStorage.removeItem('registrationFormData');
+                    
+                    // Redirect to job seeker dashboard
+                    window.location.href = '{{ route("public.account.jobseeker.dashboard") }}';
+                },
+                error: function(xhr) {
+                    console.error('Save error:', xhr);
+                    alert('Failed to save. Please try again.');
+                    btn.html(originalText).prop('disabled', false);
+                }
+            });
         });
     });
 })(jQuery);
 </script>
-@endpush

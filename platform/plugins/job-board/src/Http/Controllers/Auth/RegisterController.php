@@ -35,13 +35,19 @@ class RegisterController extends BaseController
     {
         abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
 
-        // Get account_type from URL parameter (for employer registration)
-        $accountType = $request->query('account_type', 'job-seeker');
-        
-        // Store account_type in session for later use
-        if ($accountType === 'employer') {
-            session(['preferred_account_type' => 'employer']);
+        // Force account type to job seeker only
+        $requestedAccountType = $request->query('account_type');
+
+        // If someone tries to open employer registration URL, show a warning and keep job-seeker
+        if ($requestedAccountType === 'employer') {
+            session()->flash(
+                'warning',
+                'Currently only Job Seeker registration is available.'
+            );
         }
+
+        // Always use job-seeker as account type on this page
+        $accountType = 'job-seeker';
 
         // Check if email verification is pending - redirect to OTP page if not verified
         $emailVerified = session()->get('registration_email_verified', false);
@@ -352,16 +358,18 @@ class RegisterController extends BaseController
             'form_data_keys' => array_keys($formData),
         ]);
         
-        // Format phone with country code: "+91 45645648964"
-        if ($phone && $phoneCountryCode) {
-            // Remove any existing + or spaces from country code
-            $phoneCountryCode = trim(str_replace(['+', ' '], '', $phoneCountryCode));
-            $phone = trim(str_replace(['+', ' ', '-'], '', $phone));
-            // Format as "+91 45645648964"
-            $phone = '+' . $phoneCountryCode . ' ' . $phone;
+        // Format phone with country code: "+919340193449" (no space)
+        if ($phone && strpos($phone, '+') === 0) {
+            // Phone already has country code, just clean spaces
+            $phone = '+' . preg_replace('/[^0-9]/', '', $phone);
+        } elseif ($phone && $phoneCountryCode) {
+            // Add country code to phone
+            $phoneCountryCode = preg_replace('/[^0-9]/', '', $phoneCountryCode);
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+            $phone = '+' . $phoneCountryCode . $phone;
         } elseif ($phone) {
-            // If only phone number, clean it
-            $phone = trim(str_replace(['+', ' ', '-'], '', $phone));
+            // Clean phone number (remove spaces, dashes)
+            $phone = preg_replace('/[^0-9]/', '', $phone);
         }
         
         \Log::info('Phone data after formatting:', [
@@ -386,6 +394,25 @@ class RegisterController extends BaseController
             'email_verification_token' => Str::random(64),
             'email_verification_token_expires_at' => $expiresAt,
         ]);
+
+        // Handle resume upload if file is provided
+        if ($request->hasFile('resume')) {
+            try {
+                $result = RvMedia::handleUpload($request->file('resume'), 0, $tempAccount->upload_folder);
+                if (!$result['error']) {
+                    $tempAccount->resume = $result['data']->url;
+                    $tempAccount->save();
+                    \Log::info('Resume uploaded during registration:', [
+                        'account_id' => $tempAccount->id,
+                        'resume_url' => $result['data']->url,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Resume upload failed during registration:', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         $request->session()->put('registration_email_verification', [
             'email' => $email,
@@ -902,7 +929,9 @@ class RegisterController extends BaseController
             // Validation rules - institution_name required for employer
             $validationRules = [
                 'email' => ['required', 'email'],
-                'institution_type' => ['required', 'string'],
+                'institution_type' => ['nullable', 'string'], // Primary institution type
+                'institution_types' => ['nullable', 'array', 'max:3'], // Multiple institution types (for job seekers)
+                'institution_types.*' => ['string'],
                 'location' => ['nullable', 'string', 'max:255'],
                 'country_id' => ['nullable', 'integer'],
                 'state_id' => ['nullable', 'integer'],
@@ -920,7 +949,17 @@ class RegisterController extends BaseController
 
             $email = $request->input('email');
             $institutionType = $request->input('institution_type');
+            $institutionTypes = $request->input('institution_types', []); // Array of selected types
             $institutionName = $request->input('institution_name');
+            
+            // If institution_types array is provided, use the first one as primary
+            if (!empty($institutionTypes) && is_array($institutionTypes)) {
+                $institutionType = $institutionTypes[0]; // First selection is primary
+                \Log::info('Multiple institution types received:', [
+                    'institution_types' => $institutionTypes,
+                    'primary' => $institutionType
+                ]);
+            }
             $location = $request->input('location');
             $countryId = $request->input('country_id');
             $stateId = $request->input('state_id');
@@ -992,6 +1031,15 @@ class RegisterController extends BaseController
             $updateData = [
                 'institution_type' => $institutionType,
             ];
+            
+            // Save multiple institution types as JSON (for job seekers)
+            if (!empty($institutionTypes) && is_array($institutionTypes)) {
+                $updateData['institution_types'] = json_encode($institutionTypes);
+                \Log::info('Saving institution_types as JSON:', [
+                    'institution_types' => $institutionTypes,
+                    'json' => json_encode($institutionTypes)
+                ]);
+            }
             
             // Save institution_name to institution_name column (for employer)
             // ALWAYS save if provided, even if empty string (trim it first)
@@ -1135,13 +1183,25 @@ class RegisterController extends BaseController
 
             $request->validate([
                 'email' => ['required', 'email'],
-                'location' => ['required', 'string', 'max:255'],
+                'location' => ['nullable', 'string', 'max:255'], // Nullable for job seekers
+                'country_id' => ['nullable', 'integer'],
+                'state_id' => ['nullable', 'integer'],
+                'city_id' => ['nullable', 'integer'],
             ]);
 
             $email = $request->input('email');
-            $location = $request->input('location');
+            $location = $request->input('location', ''); // Empty string if not provided
+            $countryId = $request->input('country_id');
+            $stateId = $request->input('state_id');
+            $cityId = $request->input('city_id');
             
-            \Log::info('Looking for account with email:', ['email' => $email]);
+            \Log::info('Looking for account with email:', [
+                'email' => $email, 
+                'location' => $location,
+                'country_id' => $countryId,
+                'state_id' => $stateId,
+                'city_id' => $cityId,
+            ]);
             
             // Use same pattern as verifyEmailCode and saveInstitutionType - find temp account from session first
             $sessionData = $request->session()->get('registration_email_verification');
@@ -1196,15 +1256,33 @@ class RegisterController extends BaseController
                 'is_email_verified' => $account->is_email_verified,
             ]);
 
-            // Update account - save location to location_type field
-            $account->update([
-                'location_type' => $location,
-            ]);
+            // Update account - save location data
+            $updateData = [];
+            
+            if (!empty($location)) {
+                $updateData['location_type'] = $location;
+            }
+            if (!empty($countryId)) {
+                $updateData['country_id'] = $countryId;
+            }
+            if (!empty($stateId)) {
+                $updateData['state_id'] = $stateId;
+            }
+            if (!empty($cityId)) {
+                $updateData['city_id'] = $cityId;
+            }
+            
+            if (!empty($updateData)) {
+                $account->update($updateData);
+            }
 
             \Log::info('=== Location saved successfully ===', [
                 'account_id' => $account->id,
                 'email' => $email,
                 'location' => $location,
+                'country_id' => $countryId,
+                'state_id' => $stateId,
+                'city_id' => $cityId,
                 'updated_location_type' => $account->fresh()->location_type,
             ]);
 
@@ -1219,11 +1297,11 @@ class RegisterController extends BaseController
                 'email' => $email,
             ]);
 
-            // Redirect to dashboard
+            // Redirect to settings page after registration
             return $this
                 ->httpResponse()
                 ->setMessage('Location saved successfully.')
-                ->setNextUrl(route('public.account.dashboard'));
+                ->setNextUrl(route('public.account.settings'));
                 
         } catch (\Exception $e) {
             \Log::error('=== saveLocation ERROR ===', [
@@ -1390,16 +1468,18 @@ class RegisterController extends BaseController
                     'phone_country_code_final' => $phoneCountryCode,
                 ]);
                 
-                // Format phone with country code: "+91 45645648964"
-                if ($phone && $phoneCountryCode) {
-                    // Remove any existing + or spaces from country code
-                    $phoneCountryCode = trim(str_replace(['+', ' '], '', $phoneCountryCode));
-                    $phone = trim(str_replace(['+', ' ', '-'], '', $phone));
-                    // Format as "+91 45645648964"
-                    $phone = '+' . $phoneCountryCode . ' ' . $phone;
+                // Format phone with country code: "+919340193449" (no space)
+                if ($phone && strpos($phone, '+') === 0) {
+                    // Phone already has country code, just clean spaces
+                    $phone = '+' . preg_replace('/[^0-9]/', '', $phone);
+                } elseif ($phone && $phoneCountryCode) {
+                    // Add country code to phone
+                    $phoneCountryCode = preg_replace('/[^0-9]/', '', $phoneCountryCode);
+                    $phone = preg_replace('/[^0-9]/', '', $phone);
+                    $phone = '+' . $phoneCountryCode . $phone;
                 } elseif ($phone) {
-                    // If only phone number, clean it
-                    $phone = trim(str_replace(['+', ' ', '-'], '', $phone));
+                    // Clean phone number (remove spaces, dashes)
+                    $phone = preg_replace('/[^0-9]/', '', $phone);
                 }
 
                 $account->update([
@@ -1443,16 +1523,18 @@ class RegisterController extends BaseController
             'phone_country_code' => $phoneCountryCode,
         ]);
         
-        // Format phone with country code: "+91 45645648964"
-        if ($phone && $phoneCountryCode) {
-            // Remove any existing + or spaces from country code
-            $phoneCountryCode = trim(str_replace(['+', ' '], '', $phoneCountryCode));
-            $phone = trim(str_replace(['+', ' ', '-'], '', $phone));
-            // Format as "+91 45645648964"
-            $phone = '+' . $phoneCountryCode . ' ' . $phone;
+        // Format phone with country code: "+919340193449" (no space)
+        if ($phone && strpos($phone, '+') === 0) {
+            // Phone already has country code, just clean spaces
+            $phone = '+' . preg_replace('/[^0-9]/', '', $phone);
+        } elseif ($phone && $phoneCountryCode) {
+            // Add country code to phone
+            $phoneCountryCode = preg_replace('/[^0-9]/', '', $phoneCountryCode);
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+            $phone = '+' . $phoneCountryCode . $phone;
         } elseif ($phone) {
-            // If only phone number, clean it
-            $phone = trim(str_replace(['+', ' ', '-'], '', $phone));
+            // Clean phone number (remove spaces, dashes)
+            $phone = preg_replace('/[^0-9]/', '', $phone);
         }
         
         \Log::info('Phone data after formatting (new account):', [
@@ -1483,5 +1565,314 @@ class RegisterController extends BaseController
             'is_email_verified' => true,
             'verification_code' => Arr::get($data, 'verification_code'),
         ]);
+    }
+
+    /**
+     * Show employer registration form
+     */
+    public function showEmployerRegistrationForm()
+    {
+        abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+        // Employer registration is always enabled for this site
+
+        SeoHelper::setTitle('Register as Employer');
+
+        Theme::breadcrumb()->add(__('Home'), route('public.index'))->add('Employer Registration');
+
+        Theme::asset()->container('footer')->add('js-validation', 'vendor/core/core/js-validation/js/js-validation.js', ['jquery']);
+        Theme::asset()->container('footer')
+            ->writeContent('js-validation-scripts', JsValidator::formRequest(\Botble\JobBoard\Http\Requests\Fronts\Auth\EmployerRegisterRequest::class), ['jquery']);
+
+        $form = \Botble\JobBoard\Forms\Fronts\Auth\EmployerRegisterForm::create();
+
+        return Theme::scope('job-board.auth.employer-register', compact('form'), 'plugins/job-board::themes.auth.employer-register')->render();
+    }
+
+    /**
+     * Handle employer registration Step 1 - Send OTP
+     */
+    public function registerEmployerStep1(\Botble\JobBoard\Http\Requests\Fronts\Auth\EmployerRegisterRequest $request)
+    {
+        abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+
+        $email = $request->input('email');
+
+        // Check if email already exists and is verified
+        $existingAccount = Account::where('email', $email)
+            ->where('is_email_verified', true)
+            ->first();
+            
+        if ($existingAccount) {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage('This email is already registered. Please login instead.')
+                ->setNextUrl(route('public.account.login'));
+        }
+
+        // Generate OTP
+        $code = '123456'; // For testing, use fixed code
+        // $code = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT); // For production
+        $expiresAt = now()->addMinutes(10);
+
+        // Map phone_display to phone
+        $phone = $request->input('phone') ?: $request->input('phone_display', '');
+        if ($phone && strpos($phone, '+') === 0) {
+            $phone = '+' . preg_replace('/[^0-9]/', '', $phone);
+        }
+
+        // Parse full name
+        $fullName = $request->input('full_name', '');
+        $nameParts = explode(' ', $fullName, 2);
+        $firstName = $nameParts[0] ?? '';
+        $lastName = $nameParts[1] ?? $firstName;
+
+        // Delete any existing unverified account with this email
+        Account::where('email', $email)->where('is_email_verified', false)->delete();
+
+        // Create temp employer account
+        $tempAccount = Account::create([
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'full_name' => $fullName,
+            'email' => $email,
+            'phone' => $phone,
+            'is_whatsapp_available' => $request->input('is_whatsapp_available', false),
+            'type' => AccountTypeEnum::EMPLOYER,
+            'password' => Hash::make($request->input('password')),
+            'is_email_verified' => false,
+            'email_verification_token' => $code,
+            'email_verification_token_expires_at' => $expiresAt,
+        ]);
+
+        // Store in session
+        $request->session()->put('employer_registration', [
+            'email' => $email,
+            'code' => $code,
+            'expires_at' => $expiresAt,
+            'temp_account_id' => $tempAccount->id,
+        ]);
+
+        $request->session()->put('employer_verify_email', $email);
+
+        \Log::info('Employer Step 1 completed - OTP sent:', [
+            'email' => $email,
+            'temp_account_id' => $tempAccount->id,
+        ]);
+
+        return $this
+            ->httpResponse()
+            ->setMessage('Verification code sent to your email.')
+            ->setNextUrl(route('public.account.register.employer.verifyEmailPage'));
+    }
+
+    /**
+     * Show employer email verification page
+     */
+    public function showEmployerEmailVerificationPage()
+    {
+        abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+
+        $email = session()->get('employer_verify_email');
+        if (!$email) {
+            return redirect()->route('public.account.register.employer')
+                ->with('error', 'Please complete the registration form first.');
+        }
+
+        SeoHelper::setTitle('Verify Email - Employer Registration');
+        Theme::breadcrumb()->add(__('Home'), route('public.index'))->add('Verify Email');
+
+        return Theme::scope('job-board.auth.employer-verify-email', compact('email'), 'plugins/job-board::themes.auth.employer-verify-email')->render();
+    }
+
+    /**
+     * Verify employer email code
+     */
+    public function verifyEmployerEmailCode(Request $request)
+    {
+        abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+
+        $request->validate([
+            'email' => ['required', 'email'],
+            'code' => ['required', 'regex:/^[0-9]{6}$/'],
+        ]);
+
+        $email = $request->input('email');
+        $inputCode = $request->input('code');
+
+        $sessionData = $request->session()->get('employer_registration');
+
+        if (!$sessionData || $sessionData['email'] !== $email) {
+            return $this->httpResponse()->setError()->setMessage('Invalid session. Please try again.');
+        }
+
+        if ($sessionData['code'] !== $inputCode) {
+            return $this->httpResponse()->setError()->setMessage('Invalid verification code.');
+        }
+
+        if (now()->isAfter($sessionData['expires_at'])) {
+            return $this->httpResponse()->setError()->setMessage('Verification code has expired.');
+        }
+
+        // Mark email as verified
+        $account = Account::find($sessionData['temp_account_id']);
+        if ($account) {
+            $account->update([
+                'is_email_verified' => true,
+                'email_verified_at' => now(),
+            ]);
+        }
+
+        $request->session()->put('employer_email_verified', true);
+
+        \Log::info('Employer email verified:', ['email' => $email]);
+
+        return $this
+            ->httpResponse()
+            ->setMessage('Email verified successfully!')
+            ->setNextUrl(route('public.account.register.employer.institutionTypePage'));
+    }
+
+    /**
+     * Show employer institution type page
+     */
+    public function showEmployerInstitutionTypePage()
+    {
+        abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+
+        if (!session()->get('employer_email_verified')) {
+            return redirect()->route('public.account.register.employer')
+                ->with('error', 'Please verify your email first.');
+        }
+
+        $email = session()->get('employer_verify_email');
+
+        SeoHelper::setTitle('Institution Details - Employer Registration');
+        Theme::breadcrumb()->add(__('Home'), route('public.index'))->add('Institution Details');
+
+        $institutionTypes = [
+            'school' => 'School',
+            'edtech-company' => 'Edtech Company',
+            'online-education-platform' => 'Online Education Platform',
+            'college' => 'College',
+            'coaching-institute' => 'Coaching Institute',
+            'book-publishing-company' => 'Book Publishing Company',
+            'non-profit-organization' => 'Non Profit Organization',
+            'university' => 'University',
+            'distance-learning' => 'Distance Learning',
+            'teacher-training-academy' => 'Teacher Training Academy',
+            'sports-academy' => 'Sports Academy',
+        ];
+
+        return Theme::scope('job-board.auth.employer-institution-type', compact('email', 'institutionTypes'), 'plugins/job-board::themes.auth.employer-institution-type')->render();
+    }
+
+    /**
+     * Save employer institution type
+     */
+    public function saveEmployerInstitutionType(Request $request)
+    {
+        abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+
+        $request->validate([
+            'institution_type' => ['required', 'string', 'max:100'],
+            'institution_name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $sessionData = $request->session()->get('employer_registration');
+        if (!$sessionData) {
+            return $this->httpResponse()->setError()->setMessage('Session expired. Please try again.');
+        }
+
+        $account = Account::find($sessionData['temp_account_id']);
+        if (!$account) {
+            return $this->httpResponse()->setError()->setMessage('Account not found.');
+        }
+
+        $account->update([
+            'institution_type' => $request->input('institution_type'),
+            'institution_name' => $request->input('institution_name'),
+        ]);
+
+        \Log::info('Employer institution type saved:', [
+            'account_id' => $account->id,
+            'institution_type' => $request->input('institution_type'),
+            'institution_name' => $request->input('institution_name'),
+        ]);
+
+        return $this
+            ->httpResponse()
+            ->setMessage('Institution details saved!')
+            ->setNextUrl(route('public.account.register.employer.locationPage'));
+    }
+
+    /**
+     * Show employer location page
+     */
+    public function showEmployerLocationPage()
+    {
+        abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+
+        if (!session()->get('employer_email_verified')) {
+            return redirect()->route('public.account.register.employer')
+                ->with('error', 'Please verify your email first.');
+        }
+
+        $email = session()->get('employer_verify_email');
+
+        SeoHelper::setTitle('Location - Employer Registration');
+        Theme::breadcrumb()->add(__('Home'), route('public.index'))->add('Location');
+
+        return Theme::scope('job-board.auth.employer-location', compact('email'), 'plugins/job-board::themes.auth.employer-location')->render();
+    }
+
+    /**
+     * Save employer location and complete registration
+     */
+    public function saveEmployerLocation(Request $request)
+    {
+        abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+
+        $request->validate([
+            'country_id' => ['required', 'integer'],
+            'state_id' => ['nullable', 'integer'],
+            'city_id' => ['nullable', 'integer'],
+        ]);
+
+        $sessionData = $request->session()->get('employer_registration');
+        if (!$sessionData) {
+            return $this->httpResponse()->setError()->setMessage('Session expired. Please try again.');
+        }
+
+        $account = Account::find($sessionData['temp_account_id']);
+        if (!$account) {
+            return $this->httpResponse()->setError()->setMessage('Account not found.');
+        }
+
+        $account->update([
+            'country_id' => $request->input('country_id'),
+            'state_id' => $request->input('state_id') ?: null,
+            'city_id' => $request->input('city_id') ?: null,
+            'is_public_profile' => true,
+        ]);
+
+        \Log::info('Employer registration completed:', [
+            'account_id' => $account->id,
+            'email' => $account->email,
+        ]);
+
+        // Fire registered event
+        event(new Registered($account));
+
+        // Login the employer
+        $this->guard()->login($account);
+
+        // Clear session data
+        $request->session()->forget(['employer_registration', 'employer_verify_email', 'employer_email_verified']);
+
+        return $this
+            ->httpResponse()
+            ->setMessage('Registration successful! Welcome to TeachersRecruiter.')
+            ->setNextUrl(route('public.account.dashboard'));
     }
 }

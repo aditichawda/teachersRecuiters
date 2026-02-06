@@ -37,6 +37,30 @@ class AccountController extends BaseController
         OptimizerHelper::disable();
     }
 
+    public function getDashboard()
+    {
+        /**
+         * @var Account $account
+         */
+        $account = auth('account')->user();
+
+        SeoHelper::setTitle(__('Dashboard'));
+        Theme::breadcrumb()
+            ->add(__('Dashboard'), route('public.account.jobseeker.dashboard'));
+
+        $educations = AccountEducation::query()
+            ->where('account_id', $account->id)
+            ->get();
+
+        $experiences = AccountExperience::query()
+            ->where('account_id', $account->id)
+            ->get();
+
+        $data = compact('account', 'educations', 'experiences');
+
+        return JobBoardHelper::scope('account.dashboard', $data);
+    }
+
     public function getOverview()
     {
         /**

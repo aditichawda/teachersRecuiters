@@ -2,1402 +2,655 @@
     Theme::layout('without-navbar');
 @endphp
 
-@push('header')
 <style>
-/* Force show institution name field for employer */
-#institution_name_field_wrapper.show-fields,
-#institution_name_field_wrapper[style*="display: block"],
-#institution_name_field_wrapper[style*="display:block"] {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    overflow: visible !important;
+.institution-type-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f4f8 0%, #e8f4fc 50%, #f5f7fa 100%);
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-/* Make sure field is visible when shown */
-#institution_name_field_wrapper {
-    transition: all 0.3s ease;
+.tr-auth-left-panel {
+    background: #0073d1 !important;
+    position: relative;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    /* align-items: center; */
+    padding: 20px !important;
+    overflow: hidden;
+    min-height: 100vh;
 }
 
-/* Override any inline styles that might hide it */
-body #institution_name_field_wrapper.show-fields {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+.tr-auth-curve {
+    position: absolute;
+    right: -1px;
+    top: 0;
+    height: 100%;
+    width: 210px;
+    /* z-index: 10; */
+}
+
+.tr-auth-left-content {
+    position: relative;
+    z-index: 5;
+    color: #fff;
+    /* text-align: center; */
+    width: 100%;
+    max-width: 350px;
+    padding: 0 30px;
+}
+
+.tr-auth-logo img {
+    max-width: 150px;
+    filter: brightness(0) invert(1);
+}
+
+.tr-auth-step-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.tr-auth-step-info h3 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    color: #fff;
+    line-height: 1.3;
+}
+
+.tr-auth-step-info p {
+    font-size: 16px;
+    opacity: 0.9;
+    color: #fff;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.tr-auth-right-panel {
+    display: flex;
+    align-items: center;
+    /* justify-content: center; */
+    padding: 10px 20px !important;
+    background: #fff !important;
+    min-height: 100vh;
+}
+
+.tr-auth-form-container {
+    width: 100%;
+    max-width: 550px;
+}
+
+.tr-auth-form-header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.tr-auth-form-header h1 {
+    color: #0073d1;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 3px 0;
+}
+
+.tr-auth-form-header p {
+    color: #666;
+    font-size: 13px;
+    margin: 0;
+}
+
+/* Selected Tags */
+.tr-selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+    min-height: 26px;
+}
+
+.tr-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #0073d1;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.tr-tag-num {
+    background: rgba(255,255,255,0.25);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.tr-tag-remove {
+    cursor: pointer;
+    margin-left: 2px;
+    opacity: 0.8;
+}
+
+.tr-tag-remove:hover {
+    opacity: 1;
+}
+
+/* Multi-Select Dropdown */
+.tr-multiselect {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.tr-multiselect-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.tr-multiselect-btn {
+    width: 100%;
+    padding: 10px 30px 10px 12px;
+    border: 2px solid #e0e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    color: #666;
+}
+
+.tr-multiselect-btn::after {
+    content: '▼';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #999;
+}
+
+.tr-multiselect-btn.open::after {
+    content: '▲';
+}
+
+.tr-multiselect-btn.has-selection {
+    color: #333;
+    border-color: #0073d1;
+}
+
+.tr-multiselect-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 2px solid #0073d1;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.tr-multiselect-dropdown.show {
+    display: block;
+}
+
+.tr-multiselect-group {
+    border-bottom: 1px solid #eee;
+}
+
+.tr-multiselect-group:last-child {
+    border-bottom: none;
+}
+
+.tr-multiselect-group-title {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #0073d1;
+    background: #f8fbfd;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tr-multiselect-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 14px;
+    color: #444;
+}
+
+.tr-multiselect-option:hover {
+    background: #f0f7ff;
+}
+
+.tr-multiselect-option.selected {
+    background: #e8f4fc;
+    color: #0073d1;
+    font-weight: 500;
+}
+
+.tr-multiselect-option.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #f5f5f5;
+}
+
+.tr-multiselect-checkbox {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ccc;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tr-multiselect-option.selected .tr-multiselect-checkbox {
+    background: #0073d1;
+    border-color: #0073d1;
+}
+
+.tr-multiselect-option.selected .tr-multiselect-checkbox::after {
+    content: '✓';
+    color: #fff;
+    font-size: 10px;
+}
+
+/* Form */
+.tr-form-group {
+    margin-bottom: 8px;
+}
+
+.tr-form-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.tr-form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e0e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.tr-form-control:focus {
+    border-color: #0073d1;
+    outline: none;
+}
+
+/* Buttons */
+.tr-form-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.tr-btn-outline {
+    padding: 10px 18px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    color: #666;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    background: #fff;
+}
+
+.tr-btn-outline:hover {
+    border-color: #0073d1;
+    color: #0073d1;
+}
+
+.tr-btn-primary {
+    padding: 10px 22px;
+    background: #0073d1;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.tr-btn-primary:hover {
+    background: #005ba8;
+}
+
+.tr-btn-primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.tr-form-footer {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+.tr-form-footer a {
+    color: #0073d1;
+    font-weight: 600;
+    text-decoration: none;
 }
 </style>
-@endpush
 
-<div class="section-full site-bg-white">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-xl-6 col-lg-7 col-md-8">
-                <div class="twm-log-reg-form-wrap">
-                    <div class="twm-log-reg-inner">
-                        <div class="twm-log-reg-head text-center mb-4">
-                            <div class="twm-log-reg-logo mb-3">
-                                @if (Theme::getLogo())
-                                    {!! Theme::getLogoImage(['class' => 'logo'], 'logo', 80) !!}
-                                @endif
-                            </div>
-                            <h2 class="log-reg-form-title mb-2">{{ __('Select Institution Type') }}</h2>
-                            <p class="text-muted mb-0">
-                                {{ __('Please select the type of institution you are associated with.') }}
-                            </p>
+<div class="institution-type-page" style="margin:0 !important;padding:0 !important;">
+    <div class="container-fluid p-0 m-0">
+        <div class="row g-0 m-0" style="min-height:100vh;">
+            <!-- Left Panel -->
+            <div class="col-xl-6 col-lg-4 col-md-4 d-none d-md-flex tr-auth-left-panel">
+                <svg class="tr-auth-curve" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M100,0 L100,100 L30,100 Q-30,50 30,0 Z" fill="#ffffff"/>
+                </svg>
+                <div class="tr-auth-left-content">
+                    @if (Theme::getLogo())
+                        <div class="tr-auth-logo" style="margin-bottom:20px;">
+                            {!! Theme::getLogoImage(['class' => 'logo-light'], 'logo', 140) !!}
                         </div>
-
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-body p-4">
-                                <form id="institution-type-form" onsubmit="return false;">
-                                    @csrf
-                                    
-                                    <!-- Hidden email field -->
-                                    <input type="hidden" name="email" id="institution_email" value="" />
-                                    
-                                    <!-- Institution Name Field - For Employer Only (SHOWN FIRST/ABOVE) -->
-                                    <div id="institution_name_field_wrapper" class="mb-4" style="display:content !important;">
-                                        <label for="institution_name" class="form-label fw-semibold mb-2">
-                                            {{ __('Institution Name') }} <span class="text-danger">*</span>
-                                        </label>
-                                        <input 
-                                            type="text" 
-                                            name="institution_name" 
-                                            id="institution_name" 
-                                            class="form-control form-control-lg"
-                                            placeholder="{{ __('Enter your institution full name') }}"
-                                            required
-                                        />
-                                        <small class="text-muted d-block mt-1">
-                                            {{ __('Please enter the complete name of your institution') }}
-                                        </small>
-                                        <div id="institution_name_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                    </div>
-                                    
-                                    <div class="mb-4">
-                                        <label for="institution_type" class="form-label fw-semibold mb-3">
-                                            {{ __('Institution Type') }} <span class="text-danger">*</span>
-                                        </label>
-                                        
-                                        <select 
-                                            name="institution_type" 
-                                            id="institution_type" 
-                                            class="form-select form-select-lg"
-                                            required
-                                        >
-                                            <option value="">{{ __('Select Institution Type') }}</option>
-                                            <optgroup label="SCHOOL">
-                                                <option value="school" data-subtype="cbse-school">CBSE School</option>
-                                                <option value="school" data-subtype="icse-school">ICSE School</option>
-                                                <option value="school" data-subtype="cambridge-school">Cambridge School</option>
-                                                <option value="school" data-subtype="ib-school">IB School</option>
-                                                <option value="school" data-subtype="igcse-school">IGCSE School</option>
-                                                <option value="school" data-subtype="primary-school">Primary School</option>
-                                                <option value="school" data-subtype="play-school">Play School</option>
-                                                <option value="school" data-subtype="pre-school">Pre School</option>
-                                                <option value="school" data-subtype="state-board-school">State Board School</option>
-                                            </optgroup>
-                                            <optgroup label="EDTECH COMPANY">
-                                                <option value="edtech-company">Edtech Company</option>
-                                            </optgroup>
-                                            <optgroup label="ONLINE EDUCATION PLATFORM">
-                                                <option value="online-education-platform">Online Education Platform</option>
-                                            </optgroup>
-                                            <optgroup label="COACHING INSTITUTES">
-                                                <option value="coaching-institute" data-subtype="animation-institute">Animation Institute</option>
-                                                <option value="coaching-institute" data-subtype="civil-services-institute">Civil Services Institute</option>
-                                                <option value="coaching-institute" data-subtype="banking-institute">Banking Institute</option>
-                                                <option value="coaching-institute" data-subtype="design-institute">Design Institute</option>
-                                                <option value="coaching-institute" data-subtype="english-learning-institute">English Learning Institute</option>
-                                                <option value="coaching-institute" data-subtype="foreign-language-institute">Foreign Language Institute</option>
-                                                <option value="coaching-institute" data-subtype="it-training-institute">IT Training Institute</option>
-                                                <option value="coaching-institute" data-subtype="jee-neet-institute">JEE and NEET Institute</option>
-                                                <option value="coaching-institute" data-subtype="music-institute">Music Institute</option>
-                                                <option value="coaching-institute" data-subtype="nda-institute">NDA Institute</option>
-                                                <option value="coaching-institute" data-subtype="vocational-training-institute">Vocational Training Institute</option>
-                                                <option value="coaching-institute" data-subtype="private-institute">Private Institute</option>
-                                            </optgroup>
-                                            <optgroup label="COLLEGE">
-                                                <option value="college" data-subtype="agriculture-college">Agriculture College</option>
-                                                <option value="college" data-subtype="engineering-college">Engineering College</option>
-                                                <option value="college" data-subtype="medical-college">Medical College</option>
-                                                <option value="college" data-subtype="nursing-college">Nursing College</option>
-                                                <option value="college" data-subtype="pharmacy-college">Pharmacy College</option>
-                                                <option value="college" data-subtype="science-college">Science College</option>
-                                                <option value="college" data-subtype="management-college">Management College</option>
-                                                <option value="college" data-subtype="degree-college">Degree College</option>
-                                            </optgroup>
-                                            <optgroup label="NON-PROFIT ORGANIZATION">
-                                                <option value="non-profit-organization">Non-Profit Organization</option>
-                                            </optgroup>
-                                            <optgroup label="ACADEMIES">
-                                                <option value="academy" data-subtype="sport-academy">Sport Academy</option>
-                                                <option value="academy" data-subtype="music-academy">Music Academy</option>
-                                                <option value="academy" data-subtype="distance-learning-academy">Distance Learning Academy</option>
-                                            </optgroup>
-                                            <optgroup label="UNIVERSITY">
-                                                <option value="university">University</option>
-                                            </optgroup>
-                                        </select>
-                                        
-                                        <div id="institution_type_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                    </div>
-
-                                    <!-- Employer Additional Fields -->
-                                    <div id="employer-additional-fields" style="display:none;" class="employer-fields-container">
-
-                                        <!-- Location Input -->
-                                        <div class="mb-4">
-                                            <label for="employer_location" class="form-label fw-semibold mb-2">
-                                                {{ __('Location') }}
-                                            </label>
-                                            <input 
-                                                type="text" 
-                                                name="employer_location" 
-                                                id="employer_location" 
-                                                class="form-control form-control-lg"
-                                                placeholder="{{ __('Enter location') }}"
-                                            />
-                                            <div id="employer_location_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                        </div>
-
-                                        @if (is_plugin_active('location'))
-                                            <!-- Country -->
-                                            <div class="mb-4">
-                                                <label for="employer_country_id" class="form-label fw-semibold mb-2">
-                                                    {{ __('Country') }}
-                                                </label>
-                                                <select 
-                                                    name="employer_country_id" 
-                                                    id="employer_country_id" 
-                                                    class="form-select form-select-lg"
-                                                >
-                                                    <option value="">{{ __('Select Country') }}</option>
-                                                    @php
-                                                        try {
-                                                            $countries = \Botble\Location\Models\Country::query()
-                                                                ->where('status', 'published')
-                                                                ->orderBy('order')
-                                                                ->orderBy('name')
-                                                                ->get();
-                                                            
-                                                            if ($countries->isEmpty()) {
-                                                                $countries = \Botble\Location\Models\Country::query()
-                                                                    ->orderBy('order')
-                                                                    ->orderBy('name')
-                                                                    ->get();
-                                                            }
-                                                        } catch (\Exception $e) {
-                                                            $countries = collect([]);
-                                                        }
-                                                    @endphp
-                                                    @if($countries && $countries->count() > 0)
-                                                        @foreach($countries as $country)
-                                                            <option value="{{ $country->id }}">{{ $country->name }}</option>
-                                                        @endforeach
-                                                    @endif
-                                                </select>
-                                                <div id="employer_country_id_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                            </div>
-
-                                            <!-- State -->
-                                            <div class="mb-4">
-                                                <label for="employer_state_id" class="form-label fw-semibold mb-2">
-                                                    {{ __('State') }}
-                                                </label>
-                                                <select 
-                                                    name="employer_state_id" 
-                                                    id="employer_state_id" 
-                                                    class="form-select form-select-lg"
-                                                    disabled
-                                                >
-                                                    <option value="">{{ __('Select State') }}</option>
-                                                </select>
-                                                <div id="employer_state_id_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                            </div>
-
-                                            <!-- City -->
-                                            <div class="mb-4">
-                                                <label for="employer_city_id" class="form-label fw-semibold mb-2">
-                                                    {{ __('City') }}
-                                                </label>
-                                                <select 
-                                                    name="employer_city_id" 
-                                                    id="employer_city_id" 
-                                                    class="form-select form-select-lg"
-                                                    disabled
-                                                >
-                                                    <option value="">{{ __('Select City') }}</option>
-                                                </select>
-                                                <div id="employer_city_id_error" class="invalid-feedback d-block" style="display:none;"></div>
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                        <a href="{{ route('public.account.register') }}" class="btn btn-outline-secondary">
-                                            <i class="ti ti-arrow-left me-1"></i> {{ __('Back') }}
-                                        </a>
-                                        <button type="button" class="site-button" id="continue-btn" onclick="handleContinueButtonClick(event); return false;">
-                                            {{ __('Continue') }} <i class="ti ti-arrow-right ms-1"></i>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+                    @endif
+                    <div class="tr-auth-step-info">
+                        <span class="tr-auth-step-badge">Step 2 of 3</span>
+                        <h3>Institution Type</h3>
+                        <p>Choose your preferred institution types</p>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel -->
+            <div class="col-xl-6 col-lg-8 col-md-8 tr-auth-right-panel">
+                <div class="tr-auth-form-container">
+                    <div class="tr-auth-form-header">
+                        <h1>Institution Type</h1>
+                        <p>Select up to 3 institution types (in order of preference)</p>
+                    </div>
+                    
+                    <form id="institution-type-form" onsubmit="return false;">
+                        @csrf
+                        <input type="hidden" name="email" id="institution_email" value="" />
+                        <input type="hidden" name="account_type" id="account_type_hidden" value="job-seeker" />
+                        
+                        <!-- Institution Name - For Employer -->
+                        <div id="institution_name_field_wrapper" class="tr-form-group" style="display:none;">
+                            <label class="tr-form-label">Institution Name <span class="text-danger">*</span></label>
+                            <input type="text" name="institution_name" id="institution_name" 
+                                class="tr-form-control" placeholder="Enter your institution name" />
+                        </div>
+                        
+                        <!-- Selected Tags -->
+                        <div id="selected-tags" class="tr-selected-tags"></div>
+                        
+                        <!-- Multi-Select Dropdown -->
+                        <div class="tr-multiselect">
+                            <label class="tr-multiselect-label">Select Institution Types (Max 3)</label>
+                            <button type="button" class="tr-multiselect-btn" id="multiselect-btn">
+                                Click to select institutions...
+                            </button>
+                            <div class="tr-multiselect-dropdown" id="multiselect-dropdown">
+                                <div class="tr-multiselect-group">
+                                    <div class="tr-multiselect-group-title">🏫 School</div>
+                                    <div class="tr-multiselect-option" data-value="cbse-school"><div class="tr-multiselect-checkbox"></div>CBSE School</div>
+                                    <div class="tr-multiselect-option" data-value="icse-school"><div class="tr-multiselect-checkbox"></div>ICSE School</div>
+                                    <div class="tr-multiselect-option" data-value="cambridge-school"><div class="tr-multiselect-checkbox"></div>Cambridge School</div>
+                                    <div class="tr-multiselect-option" data-value="ib-school"><div class="tr-multiselect-checkbox"></div>IB School</div>
+                                    <div class="tr-multiselect-option" data-value="igcse-school"><div class="tr-multiselect-checkbox"></div>IGCSE School</div>
+                                    <div class="tr-multiselect-option" data-value="primary-school"><div class="tr-multiselect-checkbox"></div>Primary School</div>
+                                    <div class="tr-multiselect-option" data-value="play-school"><div class="tr-multiselect-checkbox"></div>Play School</div>
+                                    <div class="tr-multiselect-option" data-value="state-board-school"><div class="tr-multiselect-checkbox"></div>State Board School</div>
+                                </div>
+                                <div class="tr-multiselect-group">
+                                    <div class="tr-multiselect-group-title">🎓 College</div>
+                                    <div class="tr-multiselect-option" data-value="engineering-college"><div class="tr-multiselect-checkbox"></div>Engineering College</div>
+                                    <div class="tr-multiselect-option" data-value="medical-college"><div class="tr-multiselect-checkbox"></div>Medical College</div>
+                                    <div class="tr-multiselect-option" data-value="nursing-college"><div class="tr-multiselect-checkbox"></div>Nursing College</div>
+                                    <div class="tr-multiselect-option" data-value="pharmacy-college"><div class="tr-multiselect-checkbox"></div>Pharmacy College</div>
+                                    <div class="tr-multiselect-option" data-value="science-college"><div class="tr-multiselect-checkbox"></div>Science College</div>
+                                    <div class="tr-multiselect-option" data-value="management-college"><div class="tr-multiselect-checkbox"></div>Management College</div>
+                                    <div class="tr-multiselect-option" data-value="degree-college"><div class="tr-multiselect-checkbox"></div>Degree College</div>
+                                </div>
+                                <div class="tr-multiselect-group">
+                                    <div class="tr-multiselect-group-title">📚 Coaching Institute</div>
+                                    <div class="tr-multiselect-option" data-value="jee-neet-institute"><div class="tr-multiselect-checkbox"></div>JEE & NEET Institute</div>
+                                    <div class="tr-multiselect-option" data-value="banking-institute"><div class="tr-multiselect-checkbox"></div>Banking Institute</div>
+                                    <div class="tr-multiselect-option" data-value="civil-services-institute"><div class="tr-multiselect-checkbox"></div>Civil Services Institute</div>
+                                    <div class="tr-multiselect-option" data-value="it-training-institute"><div class="tr-multiselect-checkbox"></div>IT Training Institute</div>
+                                </div>
+                                <div class="tr-multiselect-group">
+                                    <div class="tr-multiselect-group-title">💻 EdTech & Online</div>
+                                    <div class="tr-multiselect-option" data-value="edtech-company"><div class="tr-multiselect-checkbox"></div>EdTech Company</div>
+                                    <div class="tr-multiselect-option" data-value="online-education-platform"><div class="tr-multiselect-checkbox"></div>Online Education Platform</div>
+                                </div>
+                                <div class="tr-multiselect-group">
+                                    <div class="tr-multiselect-group-title">🏛️ University & Academy</div>
+                                    <div class="tr-multiselect-option" data-value="university"><div class="tr-multiselect-checkbox"></div>University</div>
+                                    <div class="tr-multiselect-option" data-value="sport-academy"><div class="tr-multiselect-checkbox"></div>Sport Academy</div>
+                                    <div class="tr-multiselect-option" data-value="music-academy"><div class="tr-multiselect-checkbox"></div>Music Academy</div>
+                                </div>
+                                <div class="tr-multiselect-group">
+                                    <div class="tr-multiselect-group-title">📋 Other</div>
+                                    <div class="tr-multiselect-option" data-value="non-profit-organization"><div class="tr-multiselect-checkbox"></div>Non-Profit Organization</div>
+                                    <div class="tr-multiselect-option" data-value="book-publishing-company"><div class="tr-multiselect-checkbox"></div>Book Publishing Company</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Buttons -->
+                        <div class="tr-form-buttons">
+                            <a href="{{ route('public.account.register.verifyEmailPage') }}" class="tr-btn-outline">← Back</a>
+                            <button type="button" class="tr-btn-primary" id="continue-btn">Continue →</button>
+                        </div>
+                        
+                        <div class="tr-form-footer">
+                            Already have an account? <a href="{{ route('public.account.login') }}">Sign In</a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Immediate inline script test -->
 <script>
-console.log('=== IMMEDIATE SCRIPT TEST ===');
-console.log('This should show immediately when page loads');
-console.log('Time:', new Date().toISOString());
-console.log('Page URL:', window.location.href);
-
-// Test if console is working
-if (typeof console !== 'undefined') {
-    console.log('✅ Console is available');
-} else {
-    alert('Console is not available!');
-}
-
-// IMMEDIATE: Check for employer and show fields - Multiple attempts
 (function() {
-    function showEmployerFields() {
-        let accountType = null;
-        
-        // Check localStorage
-        if (typeof Storage !== 'undefined') {
-            const savedData = localStorage.getItem('registrationFormData');
-            if (savedData) {
-                try {
-                    const formData = JSON.parse(savedData);
-                    accountType = formData.account_type;
-                    console.log('=== IMMEDIATE EMPLOYER CHECK ===');
-                    console.log('Account type from localStorage:', accountType);
-                } catch (e) {
-                    console.error('Error parsing localStorage:', e);
-                }
-            }
-        }
-        
-        if (accountType === 'employer') {
-            console.log('=== EMPLOYER DETECTED - SHOWING FIELDS ===');
-            
-            // Show Institution Name field wrapper (MOST IMPORTANT)
-            const nameFieldWrapper = document.getElementById('institution_name_field_wrapper');
-            console.log('Institution Name wrapper found?', nameFieldWrapper !== null);
-            
-            if (nameFieldWrapper) {
-                // Force show with multiple methods
-                nameFieldWrapper.removeAttribute('style');
-                nameFieldWrapper.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
-                nameFieldWrapper.style.setProperty('display', 'block', 'important');
-                nameFieldWrapper.style.setProperty('visibility', 'visible', 'important');
-                nameFieldWrapper.style.setProperty('opacity', '1', 'important');
-                nameFieldWrapper.classList.add('show-fields');
-                console.log('✅✅✅ INSTITUTION NAME FIELD SHOWN ✅✅✅');
-                console.log('Field display:', nameFieldWrapper.style.display);
-                console.log('Field computed display:', window.getComputedStyle(nameFieldWrapper).display);
-            } else {
-                console.error('❌ Institution Name wrapper NOT FOUND in DOM!');
-                console.error('Trying to find all elements with id containing institution_name...');
-                const allElements = document.querySelectorAll('[id*="institution_name"]');
-                console.log('Found elements:', allElements);
-            }
-            
-            const fieldsDiv = document.getElementById('employer-additional-fields');
-            const nameField = document.getElementById('institution_name');
-            
-            console.log('Fields div found?', fieldsDiv !== null);
-            console.log('Name field found?', nameField !== null);
-            
-            if (fieldsDiv) {
-                fieldsDiv.style.display = 'block';
-                fieldsDiv.style.visibility = 'visible';
-                console.log('✅ Additional fields div shown');
-            }
-            
-            if (nameField) {
-                nameField.required = true;
-                console.log('✅ Name field required set');
-            }
-            
-            // Also try jQuery if available
-            if (typeof jQuery !== 'undefined') {
-                const $wrapper = jQuery('#institution_name_field_wrapper');
-                if ($wrapper.length) {
-                    $wrapper.show();
-                    $wrapper.css({
-                        'display': 'block',
-                        'visibility': 'visible',
-                        'opacity': '1'
-                    });
-                    $wrapper.attr('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
-                    $wrapper.addClass('show-fields');
-                    console.log('✅ Institution Name field shown (jQuery - immediate check)');
-                    console.log('Field is visible?', $wrapper.is(':visible'));
-                    console.log('Field height:', $wrapper.height());
-                } else {
-                    console.error('❌ jQuery: Institution Name wrapper NOT FOUND in immediate check!');
-                }
-                
-                jQuery('#employer-additional-fields').show().css('display', 'block');
-                jQuery('#institution_name').prop('required', true);
-                console.log('✅✅✅ EMPLOYER FIELDS SHOWN (jQuery) ✅✅✅');
-            } else {
-                console.log('✅✅✅ EMPLOYER FIELDS SHOWN (Vanilla JS) ✅✅✅');
-            }
-        } else {
-            console.log('Not employer, account type:', accountType);
-            // Only hide if accountType is explicitly not 'employer' (not null/undefined)
-            if (accountType !== null && accountType !== undefined && accountType !== 'employer') {
-                const nameFieldWrapper = document.getElementById('institution_name_field_wrapper');
-                if (nameFieldWrapper) {
-                    nameFieldWrapper.style.display = 'none';
-                }
-            } else {
-                console.log('Account type is null/undefined - keeping field hidden for now');
-            }
-        }
-    }
+    'use strict';
     
-    // Try immediately
-    showEmployerFields();
+    let selected = []; // Array of { value, label }
+    const MAX = 3;
     
-    // Try after DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', showEmployerFields);
-    }
+    const btn = document.getElementById('multiselect-btn');
+    const dropdown = document.getElementById('multiselect-dropdown');
+    const tagsContainer = document.getElementById('selected-tags');
     
-    // Try after a delay (in case elements load late)
-    setTimeout(showEmployerFields, 200);
-    setTimeout(showEmployerFields, 500);
-    setTimeout(showEmployerFields, 1000);
-})();
-
-// Global function for Continue button click
-window.handleContinueButtonClick = function(e) {
-    console.log('========================================');
-    console.log('=== CONTINUE BUTTON CLICKED (GLOBAL FUNCTION) ===');
-    console.log('========================================');
-    console.log('🎯🎯🎯 BUTTON CLICK DETECTED! 🎯🎯🎯');
-    console.log('✅✅✅ Continue button click ho gaya hai! ✅✅✅');
-    console.log('Click time:', new Date().toISOString());
-    
-    if (e) {
-        e.preventDefault();
+    // Toggle dropdown
+    btn.addEventListener('click', function(e) {
         e.stopPropagation();
-    }
-    
-    // Get form values
-    const institutionType = document.getElementById('institution_type')?.value;
-    let email = document.getElementById('institution_email')?.value;
-    
-    console.log('=== GETTING FORM VALUES ===');
-    console.log('Institution Type:', institutionType);
-    console.log('Email from hidden field:', email);
-    console.log('Email element exists?', document.getElementById('institution_email') !== null);
-    
-        // Validation
-        if (!institutionType) {
-            console.error('❌ Validation failed: Institution type is empty');
-            alert('Please select an institution type');
-            return false;
-        }
-        
-        // Check if employer fields are visible and validate institution_name
-        const employerFieldsVisible = $('#employer-additional-fields').is(':visible');
-        if (employerFieldsVisible) {
-            const institutionName = $('#institution_name').val()?.trim();
-            if (!institutionName) {
-                console.error('❌ Validation failed: Institution name is required for employer');
-                alert('Please enter institution name');
-                $('#institution_name').focus();
-                return false;
-            }
-        }
-    
-    // If email is not found, try to load it from API
-    if (!email) {
-        console.log('⚠️ Email not found in hidden field, loading from API...');
-        const getEmailUrl = '{{ route('public.account.register.getVerificationData') }}';
-        
-        fetch(getEmailUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Email API Response:', data);
-            if (data.data && data.data.email) {
-                email = data.data.email;
-                document.getElementById('institution_email').value = email;
-                console.log('✅ Email loaded from API:', email);
-                // Now process with the loaded email
-                processInstitutionTypeSave(institutionType, email);
-            } else {
-                console.error('❌ Email not found in API response');
-                console.error('Response data:', data);
-                alert('Email not found. Please go back to registration.');
-            }
-        })
-        .catch(error => {
-            console.error('❌ Failed to load email:', error);
-            alert('Email not found. Please go back to registration.');
-        });
-        
-        return false;
-    }
-    
-    // If email is found, process directly
-    processInstitutionTypeSave(institutionType, email);
-    return false;
-}
-
-// Separate function to process the save
-function processInstitutionTypeSave(institutionType, email) {
-    console.log('=== PROCESSING INSTITUTION TYPE SAVE ===');
-    console.log('Institution Type:', institutionType);
-    console.log('Email:', email);
-    
-    // Get button and show loading
-    const btn = document.getElementById('continue-btn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = 'Saving...';
-    console.log('✅ Button text changed to "Saving..."');
-    
-    // Get CSRF token
-    const csrfToken = document.querySelector('input[name="_token"]')?.value;
-    console.log('CSRF Token:', csrfToken ? '✅ Found' : '❌ Not found');
-    
-    if (!csrfToken) {
-        console.error('❌ CSRF token not found!');
-        alert('Security token missing. Please refresh the page.');
-        btn.innerHTML = originalText;
-        return false;
-    }
-    
-    // Check if employer fields are visible
-    const employerFieldsVisible = $('#employer-additional-fields').is(':visible');
-    console.log('Employer fields visible:', employerFieldsVisible);
-    
-    // Prepare API request
-    console.log('========================================');
-    console.log('=== SAVING INSTITUTION TYPE TO DATABASE ===');
-    console.log('========================================');
-    const apiUrl = '{{ route('public.account.register.saveInstitutionType') }}';
-    console.log('API URL:', apiUrl);
-    
-    const requestData = {
-        email: email,
-        institution_type: institutionType
-    };
-    
-    // ALWAYS check for institution_name field (regardless of visibility)
-    const institutionNameField = document.getElementById('institution_name');
-    const institutionNameFieldVisible = $('#institution_name_field_wrapper').is(':visible');
-    
-    console.log('========================================');
-    console.log('=== CHECKING INSTITUTION NAME FIELD ===');
-    console.log('========================================');
-    console.log('🔍 Institution Name field element exists?', institutionNameField !== null);
-    console.log('👁️ Institution Name field visible?', institutionNameFieldVisible);
-    
-    // Get institution_name value using multiple methods
-    let institutionName = '';
-    if (institutionNameField) {
-        institutionName = institutionNameField.value?.trim() || '';
-        console.log('📝 Institution Name value (Vanilla JS):', institutionName);
-    }
-    
-    // Also try jQuery
-    const jqInstitutionName = $('#institution_name').val()?.trim() || '';
-    console.log('📝 Institution Name value (jQuery):', jqInstitutionName);
-    
-    // Use whichever has value
-    const finalInstitutionName = institutionName || jqInstitutionName;
-    console.log('📝📝📝 FINAL Institution Name:', finalInstitutionName || '❌ EMPTY');
-    console.log('📝📝📝 FINAL Institution Name Length:', finalInstitutionName ? finalInstitutionName.length : 0);
-    console.log('========================================');
-    
-    // ALWAYS add institution_name if it has a value (regardless of visibility)
-    if (finalInstitutionName && finalInstitutionName.length > 0) {
-        requestData.institution_name = finalInstitutionName;
-        console.log('✅✅✅ Institution Name added to request:', finalInstitutionName);
-    } else {
-        console.warn('⚠️ Institution Name is EMPTY - will not be saved');
-    }
-    
-    // Add other employer fields if visible
-    if (employerFieldsVisible) {
-        requestData.location = $('#employer_location').val() || '';
-        requestData.country_id = $('#employer_country_id').val() || '';
-        requestData.state_id = $('#employer_state_id').val() || '';
-        requestData.city_id = $('#employer_city_id').val() || '';
-        
-        console.log('=== EMPLOYER FIELDS COLLECTED ===');
-        console.log('Location:', requestData.location);
-        console.log('Country ID:', requestData.country_id);
-        console.log('State ID:', requestData.state_id);
-        console.log('City ID:', requestData.city_id);
-    }
-    
-    console.log('========================================');
-    console.log('=== DATA TO BE SAVED TO DATABASE ===');
-    console.log('========================================');
-    console.log('📧 Email:', email);
-    console.log('🏢 Institution Type:', institutionType);
-    console.log('📝📝📝 INSTITUTION NAME:', requestData.institution_name || '❌ NOT PROVIDED ❌');
-    console.log('📝📝📝 INSTITUTION NAME LENGTH:', requestData.institution_name ? requestData.institution_name.length : 0);
-    console.log('📍 Location:', requestData.location || 'Not provided');
-    console.log('🌍 Country ID:', requestData.country_id || 'Not provided');
-    console.log('🗺️ State ID:', requestData.state_id || 'Not provided');
-    console.log('🏙️ City ID:', requestData.city_id || 'Not provided');
-    console.log('========================================');
-    console.log('📦 Full Request Data Object:');
-    console.log(JSON.stringify(requestData, null, 2));
-    console.log('📦 Request Data (raw):');
-    console.log(requestData);
-    console.log('========================================');
-    console.log('💾 Saving to database now...');
-    console.log('========================================');
-    
-    // Make API call
-    fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify(requestData)
-    })
-    .then(response => {
-        console.log('=== API RESPONSE RECEIVED ===');
-        console.log('Response Status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('========================================');
-        console.log('=== DATABASE SAVE RESPONSE ===');
-        console.log('========================================');
-        console.log('Full Response:', data);
-        console.log('Institution type stored?', data.error === false ? '✅ YES' : '❌ NO');
-        
-        if (data.error === false) {
-            console.log('========================================');
-            console.log('✅✅✅ INSTITUTION TYPE SAVED TO DATABASE ✅✅✅');
-            console.log('========================================');
-            console.log('Saved Email:', email);
-            console.log('Saved Institution Type:', institutionType);
-            console.log('Database Update: SUCCESS');
-            console.log('========================================');
-            // Check if employer - if yes, skip location page and go to dashboard
-            const isEmployer = employerFieldsVisible;
-            if (isEmployer) {
-                console.log('=== EMPLOYER DETECTED - REDIRECTING TO DASHBOARD ===');
-                const dashboardUrl = '{{ route('public.account.dashboard') }}';
-                console.log('Dashboard URL:', dashboardUrl);
-                
-                setTimeout(function() {
-                    console.log('🚀 Redirecting to dashboard...');
-                    window.location.href = dashboardUrl;
-                }, 500);
-            } else {
-                console.log('=== REDIRECTING TO LOCATION PAGE ===');
-                const locationUrl = '{{ route('public.account.register.locationPage') }}';
-                console.log('Redirect URL:', locationUrl);
-                
-                setTimeout(function() {
-                    console.log('🚀 Redirecting now...');
-                    window.location.href = locationUrl;
-                }, 500);
-            }
-        } else {
-            console.error('========================================');
-            console.error('❌❌❌ DATABASE SAVE FAILED ❌❌❌');
-            console.error('Error Message:', data.message);
-            alert(data.message || 'Failed to save institution type');
-            btn.innerHTML = originalText;
-        }
-    })
-    .catch(error => {
-        console.error('========================================');
-        console.error('=== API CALL FAILED ===');
-        console.error('Error:', error);
-        alert('Error: ' + error.message);
-        btn.innerHTML = originalText;
+        dropdown.classList.toggle('show');
+        btn.classList.toggle('open');
     });
     
-    return false;
-};
-
-// Test dropdown immediately and check institution name field
-window.addEventListener('load', function() {
-    console.log('=== PAGE FULLY LOADED ===');
-    const dropdown = document.getElementById('institution_type');
-    console.log('Dropdown found?', dropdown !== null);
-    
-    // Check institution name field
-    const nameFieldWrapper = document.getElementById('institution_name_field_wrapper');
-    const nameField = document.getElementById('institution_name');
-    console.log('=== INSTITUTION NAME FIELD CHECK ===');
-    console.log('Institution Name wrapper found?', nameFieldWrapper !== null);
-    console.log('Institution Name input found?', nameField !== null);
-    
-    if (nameFieldWrapper) {
-        console.log('Wrapper element:', nameFieldWrapper);
-        console.log('Wrapper display style:', nameFieldWrapper.style.display);
-        console.log('Wrapper computed display:', window.getComputedStyle(nameFieldWrapper).display);
-    }
-    
-    // Final check for employer and force show if needed
-    if (typeof Storage !== 'undefined') {
-        const savedData = localStorage.getItem('registrationFormData');
-        if (savedData) {
-            try {
-                const formData = JSON.parse(savedData);
-                const accountType = formData.account_type;
-                console.log('Final check - Account type:', accountType);
-                
-                if (accountType === 'employer' && nameFieldWrapper) {
-                    console.log('=== FORCE SHOWING INSTITUTION NAME FIELD (FINAL CHECK) ===');
-                    nameFieldWrapper.removeAttribute('style');
-                    nameFieldWrapper.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
-                    nameFieldWrapper.style.setProperty('display', 'block', 'important');
-                    nameFieldWrapper.style.setProperty('visibility', 'visible', 'important');
-                    
-                    if (typeof jQuery !== 'undefined') {
-                        jQuery(nameFieldWrapper).show().css({
-                            'display': 'block',
-                            'visibility': 'visible',
-                            'opacity': '1'
-                        });
-                    }
-                    console.log('✅✅✅ FIELD FORCE SHOWN ✅✅✅');
-                }
-            } catch (e) {
-                console.error('Error in final check:', e);
-            }
+    // Close on outside click
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.tr-multiselect')) {
+            dropdown.classList.remove('show');
+            btn.classList.remove('open');
         }
-    }
+    });
     
-    if (dropdown) {
-        console.log('✅ Dropdown element found');
-        // Add immediate change listener
-        dropdown.onchange = function() {
-            console.log('=== DROPDOWN CHANGED (IMMEDIATE) ===');
-            console.log('Selected Value:', this.value);
-            console.log('Selected Text:', this.options[this.selectedIndex].text);
-        };
-        console.log('✅ Immediate dropdown listener attached');
-    }
-    
-    // Add global function to manually show field (for testing)
-    window.showInstitutionNameField = function() {
-        const wrapper = document.getElementById('institution_name_field_wrapper');
-        if (wrapper) {
-            wrapper.style.display = 'block';
-            wrapper.style.visibility = 'visible';
-            wrapper.style.opacity = '1';
-            if (typeof jQuery !== 'undefined') {
-                jQuery(wrapper).show();
+    // Option click
+    document.querySelectorAll('.tr-multiselect-option').forEach(opt => {
+        opt.addEventListener('click', function() {
+            if (this.classList.contains('disabled')) return;
+            
+            const value = this.dataset.value;
+            const label = this.textContent.trim();
+            
+            const idx = selected.findIndex(s => s.value === value);
+            
+            if (idx > -1) {
+                // Deselect
+                selected.splice(idx, 1);
+                this.classList.remove('selected');
+            } else if (selected.length < MAX) {
+                // Select
+                selected.push({ value, label });
+                this.classList.add('selected');
             }
-            console.log('✅ Institution Name field manually shown');
-            return true;
-        } else {
-            console.error('❌ Institution Name wrapper not found');
-            return false;
-        }
+            
+            updateUI();
+        });
+    });
+    
+    // Remove tag
+    window.removeTag = function(value) {
+        selected = selected.filter(s => s.value !== value);
+        document.querySelector(`.tr-multiselect-option[data-value="${value}"]`)?.classList.remove('selected');
+        updateUI();
     };
-    console.log('✅ Manual show function available: window.showInstitutionNameField()');
-});
-</script>
-
-@push('footer')
-<script>
-// ============================================
-// STEP 1: Script Loading
-// ============================================
-console.log('=== FOOTER SCRIPT STARTED ===');
-console.log('Time:', new Date().toISOString());
-console.log('Page URL:', window.location.href);
-
-// Test if script is in footer
-console.log('✅ Footer script is loading');
-
-// ============================================
-// STEP 2: Wait for DOM to Load
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== DOM CONTENT LOADED ===');
-    console.log('All HTML elements are now available');
     
-    // ============================================
-    // STEP 2.5: Immediate Employer Check from localStorage
-    // ============================================
-    console.log('=== CHECKING FOR EMPLOYER IN LOCALSTORAGE ===');
-    if (typeof Storage !== 'undefined') {
-        const savedData = localStorage.getItem('registrationFormData');
-        if (savedData) {
-            try {
-                const formData = JSON.parse(savedData);
-                const accountType = formData.account_type;
-                console.log('Account type from localStorage (immediate):', accountType);
+    // Update UI
+    function updateUI() {
+        // Update tags
+        if (selected.length === 0) {
+            tagsContainer.innerHTML = '';
+        } else {
+            tagsContainer.innerHTML = selected.map((s, i) => `
+                <div class="tr-tag">
+                    <span class="tr-tag-num">${i + 1}</span>
+                    ${s.label}
+                    <span class="tr-tag-remove" onclick="removeTag('${s.value}')">&times;</span>
+                </div>
+            `).join('');
+        }
+        
+        // Update button text
+        if (selected.length === 0) {
+            btn.textContent = 'Click to select institutions...';
+            btn.classList.remove('has-selection');
+        } else {
+            btn.textContent = `${selected.length} selected (Max ${MAX})`;
+            btn.classList.add('has-selection');
+        }
+        
+        // Disable unselected options if max reached
+        document.querySelectorAll('.tr-multiselect-option').forEach(opt => {
+            const isSelected = selected.some(s => s.value === opt.dataset.value);
+            if (selected.length >= MAX && !isSelected) {
+                opt.classList.add('disabled');
+            } else {
+                opt.classList.remove('disabled');
+            }
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load email
+        fetch('{{ route("public.account.register.getVerificationData") }}', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.data?.email) {
+                document.getElementById('institution_email').value = data.data.email;
+                
+                let accountType = data.data.temp_account?.type || data.data.form_data?.account_type;
+                if (!accountType) {
+                    const saved = localStorage.getItem('registrationFormData');
+                    if (saved) try { accountType = JSON.parse(saved).account_type; } catch(e) {}
+                }
+                
+                document.getElementById('account_type_hidden').value = accountType || 'job-seeker';
                 
                 if (accountType === 'employer') {
-                    // Show Institution Name field first (most important)
-                    const nameFieldWrapper = document.getElementById('institution_name_field_wrapper');
-                    if (nameFieldWrapper) {
-                        // Force show with multiple methods
-                        nameFieldWrapper.removeAttribute('style');
-                        nameFieldWrapper.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
-                        nameFieldWrapper.style.setProperty('display', 'block', 'important');
-                        nameFieldWrapper.style.setProperty('visibility', 'visible', 'important');
-                        nameFieldWrapper.style.setProperty('opacity', '1', 'important');
-                        nameFieldWrapper.classList.add('show-fields');
-                        console.log('✅ Institution Name field shown (vanilla JS - aggressive)');
-                        console.log('Field display:', nameFieldWrapper.style.display);
-                        console.log('Field computed display:', window.getComputedStyle(nameFieldWrapper).display);
-                    } else {
-                        console.error('❌ Institution Name wrapper NOT FOUND in DOM!');
-                    }
-                    
-                    // Force show with vanilla JS first
-                    const fieldsDiv = document.getElementById('employer-additional-fields');
-                    if (fieldsDiv) {
-                        fieldsDiv.style.display = 'block';
-                        fieldsDiv.style.visibility = 'visible';
-                        fieldsDiv.classList.add('show-fields');
-                        console.log('✅ Fields div shown (vanilla JS)');
-                    }
-                    
-                    // Then use jQuery - More aggressive
-                    if (typeof jQuery !== 'undefined') {
-                        const $wrapper = jQuery('#institution_name_field_wrapper');
-                        if ($wrapper.length) {
-                            $wrapper.show();
-                            $wrapper.css({
-                                'display': 'block',
-                                'visibility': 'visible',
-                                'opacity': '1'
-                            });
-                            $wrapper.attr('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
-                            $wrapper.addClass('show-fields');
-                            console.log('✅ Institution Name field shown (jQuery - aggressive)');
-                            console.log('Field is visible?', $wrapper.is(':visible'));
-                            console.log('Field height:', $wrapper.height());
-                        } else {
-                            console.error('❌ jQuery: Institution Name wrapper NOT FOUND!');
-                        }
-                        
-                        jQuery('#employer-additional-fields').show().addClass('show-fields').css({
-                            'display': 'block !important',
-                            'visibility': 'visible'
-                        });
-                        jQuery('#institution_name').prop('required', true);
-                    }
-                    
-                    console.log('✅✅✅ EMPLOYER DETECTED IMMEDIATELY - FIELDS SHOWN ✅✅✅');
-                    console.log('Institution Name field visible?', nameFieldWrapper ? nameFieldWrapper.style.display : 'div not found');
-                    console.log('Fields visible?', fieldsDiv ? fieldsDiv.style.display : 'div not found');
-                }
-            } catch (e) {
-                console.error('Error parsing localStorage:', e);
-            }
-        }
-    }
-    
-    // ============================================
-    // STEP 3: Load Email from Session/API
-    // ============================================
-    console.log('=== LOADING EMAIL ===');
-    const getEmailUrl = '{{ route('public.account.register.getVerificationData') }}';
-    console.log('Email API URL:', getEmailUrl);
-    
-    fetch(getEmailUrl, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Email API Response:', data);
-        if (data.data && data.data.email) {
-            document.getElementById('institution_email').value = data.data.email;
-            console.log('✅ Email loaded successfully:', data.data.email);
-        } else {
-            console.error('❌ Email not found in response');
-        }
-        
-        // Check if account type is employer - Multiple sources
-        let accountType = null;
-        
-        if (data.data && data.data.temp_account) {
-            accountType = data.data.temp_account.type;
-            console.log('Account type from temp_account:', accountType);
-        }
-        
-        if (!accountType && data.data && data.data.form_data) {
-            accountType = data.data.form_data.account_type;
-            console.log('Account type from form_data:', accountType);
-        }
-        
-        // Also check localStorage for account_type
-        if (!accountType && typeof Storage !== 'undefined') {
-            const savedData = localStorage.getItem('registrationFormData');
-            if (savedData) {
-                try {
-                    const formData = JSON.parse(savedData);
-                    accountType = formData.account_type;
-                    console.log('Account type from localStorage:', accountType);
-                } catch (e) {
-                    console.error('Error parsing localStorage:', e);
+                    document.getElementById('institution_name_field_wrapper').style.display = 'block';
                 }
             }
-        }
-        
-        console.log('=== FINAL ACCOUNT TYPE DETECTED ===', accountType);
-        
-        if (accountType === 'employer') {
-            console.log('=== EMPLOYER DETECTED FROM API - SHOWING FIELDS ===');
-            
-            // Show Institution Name field first (most important) - AGGRESSIVE
-            const nameFieldWrapper = document.getElementById('institution_name_field_wrapper');
-            if (nameFieldWrapper) {
-                // Remove inline style completely and set with !important
-                nameFieldWrapper.removeAttribute('style');
-                nameFieldWrapper.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
-                nameFieldWrapper.style.setProperty('display', 'block', 'important');
-                nameFieldWrapper.style.setProperty('visibility', 'visible', 'important');
-                nameFieldWrapper.style.setProperty('opacity', '1', 'important');
-                nameFieldWrapper.classList.add('show-fields');
-                console.log('✅ Institution Name field shown (vanilla JS - aggressive)');
-                console.log('Field display:', nameFieldWrapper.style.display);
-                console.log('Field computed display:', window.getComputedStyle(nameFieldWrapper).display);
-            } else {
-                console.error('❌ Institution Name wrapper NOT FOUND!');
-            }
-            
-            // Force show with multiple methods
-            const fieldsDiv = document.getElementById('employer-additional-fields');
-            if (fieldsDiv) {
-                fieldsDiv.style.display = 'block';
-                fieldsDiv.style.visibility = 'visible';
-                console.log('✅ Fields div shown (vanilla JS)');
-            }
-            
-            // jQuery method - AGGRESSIVE
-            if (typeof jQuery !== 'undefined') {
-                const $wrapper = jQuery('#institution_name_field_wrapper');
-                if ($wrapper.length) {
-                    $wrapper.show();
-                    $wrapper.css({
-                        'display': 'block',
-                        'visibility': 'visible',
-                        'opacity': '1'
-                    });
-                    $wrapper.attr('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
-                    $wrapper.addClass('show-fields');
-                    console.log('✅ Institution Name field shown (jQuery - aggressive)');
-                    console.log('Field is visible?', $wrapper.is(':visible'));
-                    console.log('Field height:', $wrapper.height());
-                }
-                
-                jQuery('#employer-additional-fields').show().css({
-                    'display': 'block !important',
-                    'visibility': 'visible'
-                });
-                jQuery('#institution_name').prop('required', true);
-            }
-            
-            console.log('✅✅✅ EMPLOYER DETECTED - FIELDS SHOWN ✅✅✅');
-            console.log('Institution Name field visible?', nameFieldWrapper ? window.getComputedStyle(nameFieldWrapper).display : 'div not found');
-            console.log('Fields div visible?', fieldsDiv ? fieldsDiv.style.display : 'div not found');
-        } else {
-            // Only hide if accountType is explicitly not 'employer'
-            if (accountType !== null && accountType !== undefined && accountType !== 'employer') {
-                $('#institution_name_field_wrapper').hide();
-                $('#employer-additional-fields').hide();
-                $('#institution_name').prop('required', false);
-                console.log('✅ Employer fields hidden (job-seeker)');
-            } else {
-                console.log('⚠️ Account type is null/undefined - keeping fields hidden for now');
-            }
-        }
-    })
-    .catch(error => {
-        console.error('❌ Failed to load email:', error);
-    });
-    
-    // Setup employer country/state/city dropdowns
-    $(document).on('change', '#employer_country_id', function() {
-        const countryId = $(this).val();
-        console.log('Employer Country selected:', countryId);
-        
-        if (countryId) {
-            $('#employer_state_id').prop('disabled', false).html('<option value="">Loading...</option>');
-            
-            $.ajax({
-                url: '{{ route('ajax.states-by-country') }}',
-                type: 'GET',
-                data: { country_id: countryId },
-                success: function(response) {
-                    let options = '<option value="">{{ __('Select State') }}</option>';
-                    if (response.data && response.data.length > 0) {
-                        response.data.forEach(function(state) {
-                            options += '<option value="' + state.id + '">' + state.name + '</option>';
-                        });
-                    }
-                    $('#employer_state_id').html(options);
-                    $('#employer_city_id').prop('disabled', true).html('<option value="">{{ __('Select City') }}</option>');
-                },
-                error: function() {
-                    $('#employer_state_id').html('<option value="">{{ __('Error loading states') }}</option>');
-                }
-            });
-        } else {
-            $('#employer_state_id').prop('disabled', true).html('<option value="">{{ __('Select State') }}</option>');
-            $('#employer_city_id').prop('disabled', true).html('<option value="">{{ __('Select City') }}</option>');
-        }
-    });
-    
-    $(document).on('change', '#employer_state_id', function() {
-        const stateId = $(this).val();
-        const countryId = $('#employer_country_id').val();
-        console.log('Employer State selected:', stateId);
-        
-        if (stateId && countryId) {
-            $('#employer_city_id').prop('disabled', false).html('<option value="">Loading...</option>');
-            
-            $.ajax({
-                url: '{{ route('ajax.cities-by-state') }}',
-                type: 'GET',
-                data: { state_id: stateId, country_id: countryId },
-                success: function(response) {
-                    let options = '<option value="">{{ __('Select City') }}</option>';
-                    if (response.data && response.data.length > 0) {
-                        response.data.forEach(function(city) {
-                            options += '<option value="' + city.id + '">' + city.name + '</option>';
-                        });
-                    }
-                    $('#employer_city_id').html(options);
-                },
-                error: function() {
-                    $('#employer_city_id').html('<option value="">{{ __('Error loading cities') }}</option>');
-                }
-            });
-        } else {
-            $('#employer_city_id').prop('disabled', true).html('<option value="">{{ __('Select City') }}</option>');
-        }
-    });
-    
-    // ============================================
-    // STEP 3.5: Add Dropdown Change Listener & Save to Database
-    // ============================================
-    console.log('=== SETTING UP DROPDOWN LISTENER ===');
-    const institutionTypeDropdown = document.getElementById('institution_type');
-    
-    if (institutionTypeDropdown) {
-        console.log('✅ Institution type dropdown found');
-        
-        institutionTypeDropdown.addEventListener('change', function(e) {
-            console.log('========================================');
-            console.log('=== DROPDOWN OPTION SELECTED ===');
-            console.log('========================================');
-            
-            const selectedValue = this.value;
-            const selectedOption = this.options[this.selectedIndex];
-            const selectedText = selectedOption.text;
-            
-            console.log('Selected Value:', selectedValue);
-            console.log('Selected Text:', selectedText);
-            console.log('Selected Index:', this.selectedIndex);
-            console.log('Option Data Attributes:', selectedOption.dataset);
-            
-            // Get all option details
-            console.log('Option Details:', {
-                value: selectedOption.value,
-                text: selectedOption.text,
-                label: selectedOption.label || 'No label',
-                dataSubtype: selectedOption.dataset.subtype || 'No subtype',
-                optgroup: selectedOption.parentElement.label || 'No group'
-            });
-            
-            // Print in a readable format
-            console.log('📋 SELECTED OPTION SUMMARY:');
-            console.log('   Value:', selectedValue);
-            console.log('   Text:', selectedText);
-            console.log('   Group:', selectedOption.parentElement.label || 'No group');
-            console.log('   Subtype:', selectedOption.dataset.subtype || 'No subtype');
-            console.log('ℹ️ Note: Will be saved to database when Continue button is clicked');
         });
         
-        console.log('✅ Dropdown change listener attached');
-        console.log('ℹ️ Institution type will be saved when Continue button is clicked');
-    } else {
-        console.error('❌ Institution type dropdown NOT found!');
-    }
-    
-    // ============================================
-    // STEP 4: Find Continue Button
-    // ============================================
-    console.log('=== FINDING CONTINUE BUTTON ===');
-    const continueBtn = document.getElementById('continue-btn');
-    console.log('Button element:', continueBtn);
-    console.log('Button found?', continueBtn !== null);
-    
-    if (!continueBtn) {
-        console.error('❌ Continue button NOT FOUND!');
-        return;
-    }
-    
-    console.log('✅ Continue button FOUND');
-    console.log('Button type:', continueBtn.type);
-    console.log('Button disabled?', continueBtn.disabled);
-    
-    // Force enable button
-    continueBtn.disabled = false;
-    console.log('✅ Continue button force enabled');
-    
-    // ============================================
-    // STEP 5: Attach Click Event Handler
-    // ============================================
-    console.log('=== ATTACHING CLICK HANDLER ===');
-    
-    // Remove any existing listeners by cloning
-    const newBtn = continueBtn.cloneNode(true);
-    continueBtn.parentNode.replaceChild(newBtn, continueBtn);
-    console.log('✅ Button cloned to remove old listeners');
-    
-    // Attach onclick handler (direct method)
-    newBtn.onclick = function(e) {
-        console.log('🔥🔥🔥 DIRECT ONCLICK HANDLER FIRED 🔥🔥🔥');
-        e = e || window.event;
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        // Will be handled by addEventListener below
-    };
-    
-    // Attach addEventListener handler (modern method)
-    newBtn.addEventListener('click', function(e) {
-        console.log('========================================');
-        console.log('=== CONTINUE BUTTON CLICKED ===');
-        console.log('========================================');
-        console.log('🎯🎯🎯 BUTTON CLICK DETECTED! 🎯🎯🎯');
-        console.log('✅✅✅ Continue button click ho gaya hai! ✅✅✅');
-        console.log('Click time:', new Date().toISOString());
-        console.log('Event type:', e.type);
-        console.log('Event target:', e.target);
-        
-        // Prevent default form submission
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        console.log('✅ Default form submission prevented');
-        
-        // ============================================
-        // STEP 6: Get Form Values
-        // ============================================
-        console.log('=== GETTING FORM VALUES ===');
-        const institutionType = document.getElementById('institution_type')?.value;
-        const email = document.getElementById('institution_email')?.value;
-        
-        console.log('Institution Type:', institutionType);
-        console.log('Email:', email);
-        
-        // Validation
-        if (!institutionType) {
-            console.error('❌ Validation failed: Institution type is empty');
-            alert('Please select an institution type');
-            // Button remains enabled
-            return;
-        }
-        
-        if (!email) {
-            console.error('❌ Validation failed: Email is empty');
-            alert('Email not found. Please go back to registration.');
-            // Button remains enabled
-            return;
-        }
-        
-        // Check if institution_name field is visible and validate it
-        const institutionNameField = document.getElementById('institution_name');
-        const institutionNameFieldVisible = $('#institution_name_field_wrapper').is(':visible');
-        const employerFieldsVisible = $('#employer-additional-fields').is(':visible');
-        
-        console.log('=== VALIDATING INSTITUTION NAME ===');
-        console.log('Institution Name field element exists?', institutionNameField !== null);
-        console.log('Institution Name field visible?', institutionNameFieldVisible);
-        console.log('Employer additional fields visible?', employerFieldsVisible);
-        
-        // If institution_name field is visible, it must have a value
-        if (institutionNameFieldVisible) {
-            const institutionName = institutionNameField ? institutionNameField.value?.trim() : '';
-            console.log('Institution Name value:', institutionName);
-            console.log('Institution Name value length:', institutionName ? institutionName.length : 0);
+        // Continue button
+        document.getElementById('continue-btn').addEventListener('click', function() {
+            const email = document.getElementById('institution_email').value;
+            const accountType = document.getElementById('account_type_hidden').value;
             
-            if (!institutionName || institutionName.length === 0) {
-                console.error('❌ Validation failed: Institution name is required');
-                alert('Please enter institution name');
-                if (institutionNameField) {
-                    institutionNameField.focus();
+            if (accountType === 'employer') {
+                const institutionName = document.getElementById('institution_name').value.trim();
+                if (!institutionName) {
+                    alert('Please enter institution name');
+                    return;
                 }
-                // Button remains enabled
-                return;
-            } else {
-                console.log('✅ Institution Name validation passed:', institutionName);
             }
-        } else if (employerFieldsVisible) {
-            // Fallback: check if employer fields are visible
-            const institutionName = $('#institution_name').val()?.trim();
-            if (!institutionName) {
-                console.error('❌ Validation failed: Institution name is required for employer');
-                alert('Please enter institution name');
-                $('#institution_name').focus();
-                // Button remains enabled
+            
+            if (selected.length === 0) {
+                alert('Please select at least one institution type');
                 return;
             }
-        }
-        
-        console.log('✅ All validations passed');
-        
-        // ============================================
-        // STEP 7: Show Loading (Button stays enabled)
-        // ============================================
-        console.log('=== SHOWING LOADING STATE ===');
-        const btn = this;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = 'Saving...';
-        console.log('✅ Button text changed to "Saving..." (button remains enabled)');
-        
-        // ============================================
-        // STEP 8: Get CSRF Token
-        // ============================================
-        console.log('=== GETTING CSRF TOKEN ===');
-        const csrfToken = document.querySelector('input[name="_token"]')?.value;
-        console.log('CSRF Token:', csrfToken ? '✅ Found' : '❌ Not found');
-        
-        if (!csrfToken) {
-            console.error('❌ CSRF token not found!');
-            alert('Security token missing. Please refresh the page.');
-            btn.innerHTML = originalText;
-            // Button remains enabled
-            return;
-        }
-        
-        // ============================================
-        // STEP 9: Prepare API Request & Save to Database
-        // ============================================
-        console.log('========================================');
-        console.log('=== SAVING INSTITUTION TYPE TO DATABASE ===');
-        console.log('========================================');
-        const apiUrl = '{{ route('public.account.register.saveInstitutionType') }}';
-        console.log('API URL:', apiUrl);
-        
-        const requestData = {
-            email: email,
-            institution_type: institutionType
-        };
-        
-        // Check if institution_name field exists and has value (regardless of visibility)
-        const institutionNameField = document.getElementById('institution_name');
-        const institutionName = institutionNameField ? institutionNameField.value?.trim() : '';
-        
-        // Also check via jQuery
-        const institutionNameFieldVisible = $('#institution_name_field_wrapper').is(':visible');
-        const employerFieldsVisible = $('#employer-additional-fields').is(':visible');
-        
-        console.log('=== CHECKING INSTITUTION NAME FIELD ===');
-        console.log('Institution Name field element exists?', institutionNameField !== null);
-        console.log('Institution Name field visible?', institutionNameFieldVisible);
-        console.log('Institution Name value:', institutionName);
-        console.log('Institution Name value length:', institutionName ? institutionName.length : 0);
-        console.log('Employer additional fields visible?', employerFieldsVisible);
-        
-        // If institution_name has a value, ALWAYS add it to request (even if field is not visible)
-        let finalInstitutionName = '';
-        
-        if (institutionName && institutionName.length > 0) {
-            finalInstitutionName = institutionName;
-            requestData.institution_name = finalInstitutionName;
-            console.log('✅✅✅ Institution Name added to request (Vanilla JS):', finalInstitutionName);
-            console.log('✅ Institution Name will be saved to database');
-        } else {
-            // Also try jQuery method as fallback
-            const jqInstitutionName = $('#institution_name').val()?.trim();
-            console.log('🔄 Trying jQuery method...');
-            console.log('📝 jQuery Institution Name value:', jqInstitutionName);
             
-            if (jqInstitutionName && jqInstitutionName.length > 0) {
-                finalInstitutionName = jqInstitutionName;
-                requestData.institution_name = finalInstitutionName;
-                console.log('✅✅✅ Institution Name added to request (jQuery fallback):', finalInstitutionName);
-                console.log('✅ Institution Name will be saved to database');
-            } else {
-                console.error('❌❌❌ Institution Name is EMPTY or NOT FOUND! ❌❌❌');
-                console.error('❌ Vanilla JS value:', institutionName);
-                console.error('❌ jQuery value:', jqInstitutionName);
-                console.error('❌ Field element:', institutionNameField);
-                console.error('❌ Field HTML:', institutionNameField ? institutionNameField.outerHTML : 'NOT FOUND');
-            }
-        }
-        
-        console.log('========================================');
-        console.log('📝 FINAL Institution Name to be saved:', finalInstitutionName || '❌ EMPTY');
-        console.log('📝 Request Data institution_name:', requestData.institution_name || '❌ NOT SET');
-        console.log('========================================');
-        
-        // Add other employer fields if visible
-        if (employerFieldsVisible) {
-            requestData.location = $('#employer_location').val() || '';
-            requestData.country_id = $('#employer_country_id').val() || '';
-            requestData.state_id = $('#employer_state_id').val() || '';
-            requestData.city_id = $('#employer_city_id').val() || '';
-            console.log('✅ Additional employer fields added');
-        }
-        
-        console.log('========================================');
-        console.log('=== DATA TO BE SAVED TO DATABASE ===');
-        console.log('========================================');
-        console.log('📧 Email:', email);
-        console.log('🏢 Institution Type:', institutionType);
-        console.log('📝 Institution Name:', requestData.institution_name || '❌ NOT PROVIDED');
-        console.log('📍 Location:', requestData.location || 'Not provided');
-        console.log('🌍 Country ID:', requestData.country_id || 'Not provided');
-        console.log('🗺️ State ID:', requestData.state_id || 'Not provided');
-        console.log('🏙️ City ID:', requestData.city_id || 'Not provided');
-        console.log('========================================');
-        console.log('📦 Full Request Data Object:');
-        console.log(requestData);
-        console.log('========================================');
-        console.log('💾 Saving to database now...');
-        console.log('========================================');
-        
-        // ============================================
-        // STEP 10: Make API Call (Fetch)
-        // ============================================
-        console.log('=== MAKING API CALL ===');
-        console.log('Method: POST');
-        console.log('URL:', apiUrl);
-        console.log('Headers:', {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        });
-        console.log('Body:', JSON.stringify(requestData));
-        
-        fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(requestData)
-        })
-        .then(response => {
-            console.log('=== API RESPONSE RECEIVED ===');
-            console.log('Response Status:', response.status);
-            console.log('Response OK?', response.ok);
-            return response.json();
-        })
-        .then(data => {
-            console.log('========================================');
-            console.log('=== DATABASE SAVE RESPONSE RECEIVED ===');
-            console.log('========================================');
-            console.log('📥 Full Response Object:');
-            console.log(data);
-            console.log('❌ Error?', data.error);
-            console.log('💬 Message:', data.message);
-            console.log('✅ Success?', data.error === false ? 'YES ✅' : 'NO ❌');
-            console.log('========================================');
+            const btn = this;
+            btn.innerHTML = 'Saving...';
+            btn.disabled = true;
             
-            if (data.error === false) {
-                console.log('========================================');
-                console.log('✅✅✅ DATA SUCCESSFULLY SAVED TO DATABASE ✅✅✅');
-                console.log('========================================');
-                console.log('📧 Saved Email:', email);
-                console.log('🏢 Saved Institution Type:', institutionType);
-                console.log('📝 Saved Institution Name:', requestData.institution_name || 'Not provided');
-                console.log('📍 Saved Location:', requestData.location || 'Not provided');
-                console.log('🌍 Saved Country ID:', requestData.country_id || 'Not provided');
-                console.log('🗺️ Saved State ID:', requestData.state_id || 'Not provided');
-                console.log('🏙️ Saved City ID:', requestData.city_id || 'Not provided');
-                console.log('========================================');
-                console.log('💾 Database Update Status: SUCCESS ✅');
-                console.log('📊 All data has been stored in jb_accounts table');
-                console.log('📋 Column: institution_name');
-                console.log('💾 Value stored:', requestData.institution_name || 'NULL');
-                console.log('========================================');
-                console.log('=== REDIRECTING TO LOCATION PAGE ===');
-                const locationUrl = '{{ route('public.account.register.locationPage') }}';
-                console.log('🔗 Redirect URL:', locationUrl);
-                console.log('⏱️ Redirecting in 500ms...');
-                console.log('========================================');
-                
-                // Small delay to ensure database save is complete
-                setTimeout(function() {
-                    console.log('🚀 Redirecting now...');
-                    window.location.href = locationUrl;
-                }, 500);
-            } else {
-                console.error('========================================');
-                console.error('❌❌❌ DATABASE SAVE FAILED ❌❌❌');
-                console.error('========================================');
-                console.error('💬 Error Message:', data.message);
-                console.error('📧 Email:', email);
-                console.error('🏢 Institution Type:', institutionType);
-                console.error('📝 Institution Name:', requestData.institution_name || 'Not provided');
-                console.error('========================================');
-                alert(data.message || 'Failed to save institution type');
-                btn.innerHTML = originalText;
-                // Button remains enabled
-            }
-        })
-        .catch(error => {
-            console.error('========================================');
-            console.error('=== API CALL FAILED ===');
-            console.error('========================================');
-            console.error('Error Type:', error.name);
-            console.error('Error Message:', error.message);
-            console.error('Full Error:', error);
-            alert('Error: ' + error.message);
-            btn.innerHTML = originalText;
-            // Button remains enabled
+            const institutionTypes = selected.map(s => s.value);
+            const csrfToken = document.querySelector('input[name="_token"]').value;
+            
+            fetch('{{ route("public.account.register.saveInstitutionType") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    institution_type: institutionTypes[0],
+                    institution_types: institutionTypes,
+                    institution_name: document.getElementById('institution_name')?.value || ''
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error === false) {
+                    localStorage.setItem('selected_institution_types', JSON.stringify(institutionTypes));
+                    window.location.href = '{{ route("public.account.register.locationPage") }}';
+                } else {
+                    alert(data.message || 'Failed to save');
+                    btn.innerHTML = 'Continue →';
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                alert('Failed to save');
+                btn.innerHTML = 'Continue →';
+                btn.disabled = false;
+            });
         });
-    }, false); // Use bubble phase, not capture
-    
-    console.log('✅ Click handler attached successfully');
-    console.log('=== SETUP COMPLETE - READY FOR USER INTERACTION ===');
-    
-    // Test click programmatically after 1 second
-    setTimeout(function() {
-        console.log('=== TESTING BUTTON CLICK ===');
-        const testBtn = document.getElementById('continue-btn');
-        if (testBtn) {
-            console.log('✅ Button exists for testing');
-            console.log('Button HTML:', testBtn.outerHTML.substring(0, 100));
-        } else {
-            console.error('❌ Button not found for testing');
-        }
-    }, 1000);
-});
+    });
+})();
 </script>
-@endpush

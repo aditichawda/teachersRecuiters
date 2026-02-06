@@ -12,11 +12,14 @@ class RedirectIfAccount
     public function handle(Request $request, Closure $next)
     {
         if (Auth::guard('account')->check()) {
-            if (Auth::guard('account')->user()->isEmployer()) {
+            $account = Auth::guard('account')->user();
+            
+            // Redirect employers to employer dashboard, job seekers to job seeker dashboard
+            if ($account->isEmployer()) {
                 return redirect(route('public.account.dashboard'));
+            } else {
+                return redirect(route('public.account.jobseeker.dashboard'));
             }
-
-            return redirect()->route('public.index');
         }
 
         AdminBar::setIsDisplay(false);

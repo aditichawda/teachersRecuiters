@@ -37,6 +37,50 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'uses' => 'register',
                     ]);
 
+                    // Employer Registration Routes - Multi-step
+                    Route::get('register/employer', [
+                        'as' => 'register.employer',
+                        'uses' => 'showEmployerRegistrationForm',
+                    ]);
+
+                    Route::post('register/employer', [
+                        'as' => 'register.employer.post',
+                        'uses' => 'registerEmployerStep1',
+                    ]);
+
+                    // Employer Step 2: OTP Verification
+                    Route::get('register/employer/verify-email', [
+                        'as' => 'register.employer.verifyEmailPage',
+                        'uses' => 'showEmployerEmailVerificationPage',
+                    ]);
+
+                    Route::post('register/employer/verify-email-code', [
+                        'as' => 'register.employer.verifyEmailCode',
+                        'uses' => 'verifyEmployerEmailCode',
+                    ]);
+
+                    // Employer Step 3: Institution Type
+                    Route::get('register/employer/institution-type', [
+                        'as' => 'register.employer.institutionTypePage',
+                        'uses' => 'showEmployerInstitutionTypePage',
+                    ]);
+
+                    Route::post('register/employer/save-institution-type', [
+                        'as' => 'register.employer.saveInstitutionType',
+                        'uses' => 'saveEmployerInstitutionType',
+                    ]);
+
+                    // Employer Step 4: Location
+                    Route::get('register/employer/location', [
+                        'as' => 'register.employer.locationPage',
+                        'uses' => 'showEmployerLocationPage',
+                    ]);
+
+                    Route::post('register/employer/save-location', [
+                        'as' => 'register.employer.saveLocation',
+                        'uses' => 'saveEmployerLocation',
+                    ]);
+
                     // Dedicated email verification step (OTP page)
                     Route::get('register/verify-email', [
                         'as' => 'register.verifyEmailPage',
@@ -165,6 +209,13 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 });
 
                 Route::controller('AccountController')->group(function (): void {
+                    // Job Seeker Dashboard
+                    Route::get('jobseeker-dashboard', [
+                        'as' => 'jobseeker.dashboard',
+                        'uses' => 'getDashboard',
+                        'middleware' => ['account:' . AccountTypeEnum::JOB_SEEKER],
+                    ]);
+
                     Route::get('overview', [
                         'as' => 'overview',
                         'uses' => 'getOverview',

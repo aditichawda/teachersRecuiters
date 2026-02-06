@@ -62,6 +62,103 @@ form.auth-form {
     .text-primary {
         color: var(--primary-color) !important;
     }
+
+    // Reduce vertical gap between bootstrap rows inside auth form
+    .row > [class^="col-"],
+    .row > [class*=" col-"] {
+        margin-top: 0.35rem; // default bootstrap uses var(--bs-gutter-y) ≈ .75rem
+    }
+}
+
+// ===== Register page layout & visual enhancements =====
+// Main auth section background (desktop + mobile)
+.section-full.site-bg-white {
+    background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%, #000000 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+.section-full.site-bg-white > .container-fluid > .row {
+    justify-content: center;
+}
+
+// Compact centered auth card inspired by modern blue layouts
+.twm-log-reg-form-wrap {
+    position: relative;
+    max-width: 920px;
+    margin: 32px auto;
+    border-radius: 24px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #020617 0%, #0b1220 45%, #1d4ed8 100%);
+    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.8);
+    padding: 0;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+// Inner content (form) – semi‑transparent panel
+.twm-log-reg-inner {
+    background: rgba(15, 23, 42, 0.92);
+    border-radius: 0;
+    padding: 26px 32px 30px;
+    color: #e5e7eb;
+}
+
+// Dark form fields & labels to match card
+.twm-log-reg-inner .form-label {
+    color: #e5e7eb;
+    font-weight: 500;
+}
+
+.twm-log-reg-inner .form-control,
+.twm-log-reg-inner .form-select {
+    background-color: #020617;
+    border-radius: 10px;
+    border: 1px solid #1f2937;
+    color: #e5e7eb;
+    padding: 11px 14px;
+}
+
+.twm-log-reg-inner .form-control::placeholder {
+    color: #6b7280;
+}
+
+.twm-log-reg-inner .form-control:focus,
+.twm-log-reg-inner .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.7);
+    outline: none;
+}
+
+.twm-log-reg-head .log-reg-form-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f9fafb;
+}
+
+// Mobile / tablet: hide left image section and give form full-width, comfortable padding
+@media (max-width: 991.98px) {
+    .twm-log-reg-media-wrap {
+        display: none !important;
+    }
+
+    .twm-log-reg-form-wrap {
+        margin: 18px 12px 24px;
+        border-radius: 22px;
+    }
+
+    .twm-log-reg-inner {
+        padding: 22px 18px 26px;
+    }
+}
+
+// Remove left illustration column on auth pages and center the form
+.section-full.site-bg-white .twm-log-reg-media-wrap {
+    display: none;
+}
+
+.section-full.site-bg-white > .container-fluid > .row {
+    justify-content: center;
 }
 
 body[dir="rtl"] {
@@ -335,5 +432,116 @@ body[dir="rtl"] {
     .account-type-option input[type="radio"]:checked + .account-type-label .account-type-card {
         border-width: 3px;
         background-color: #fff;
+    }
+}
+
+// ===== New register header & steps styling =====
+.tr-register-shell {
+    position: relative;
+}
+
+.tr-register-header {
+    margin-bottom: 1.25rem;
+}
+
+.tr-register-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: rgba(var(--primary-color-rgb), 0.08);
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+}
+
+.tr-register-title {
+    font-size: 23px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: .35rem;
+}
+
+.tr-register-subtitle {
+    font-size: 13px;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.tr-register-steps {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    margin-bottom: 1.5rem;
+}
+
+.tr-register-step {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    padding: 6px 8px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.tr-register-step .step-index {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+.tr-register-step .step-label {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tr-register-step.is-active {
+    background: rgba(59, 130, 246, 0.22);
+    color: #e5e7eb;
+}
+
+.tr-register-step.is-active .step-index {
+    background: #3b82f6;
+    color: #fff;
+}
+
+@media (max-width: 767.98px) {
+    .tr-register-title {
+        font-size: 22px;
+    }
+
+    .tr-register-subtitle {
+        font-size: 13px;
+    }
+
+    .tr-register-steps {
+        gap: 6px;
+    }
+
+    .tr-register-step {
+        padding-inline: 10px;
+    }
+
+    .tr-register-step .step-label {
+        font-size: 11px;
     }
 }

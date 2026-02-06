@@ -73,6 +73,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'city_id',
         'location_type',
         'institution_type',
+        'institution_types',
         'institution_name',
         'cover_letter',
         'unique_id',

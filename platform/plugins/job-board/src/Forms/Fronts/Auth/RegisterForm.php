@@ -62,7 +62,7 @@ class RegisterForm extends AuthForm
                 );
             })
             ->add('step_1_grid_open', HtmlField::class, [
-                'html' => '<div class="row g-3">',
+                'html' => '<div class="row">',
             ])
             // Row 1: Full Name + Email (6/6)
             ->add('step_1_col_full_name_open', HtmlField::class, [
@@ -226,6 +226,26 @@ class RegisterForm extends AuthForm
                     ->addAttribute('data-step', '3')
                     ->addAttribute('data-account-type', 'job-seeker')
             )
+            // Field 23: Educational Institutions (up to 3 with priority)
+            ->add('educational_institutions_section', HtmlField::class, [
+                'html' => view('plugins/job-board::auth.partials.educational-institutions')->render(),
+            ])
+            
+            // Field 24: Position Type (Teaching/Non-Teaching)
+            ->add('position_type_section', HtmlField::class, [
+                'html' => view('plugins/job-board::auth.partials.position-type')->render(),
+            ])
+            
+            // Field 25: Teaching Subject or Post (up to 3 with priority)
+            ->add('teaching_subject_post_section', HtmlField::class, [
+                'html' => view('plugins/job-board::auth.partials.teaching-subject-post')->render(),
+            ])
+            
+            // Field 26: Job Type
+            ->add('job_type_section', HtmlField::class, [
+                'html' => view('plugins/job-board::auth.partials.job-type')->render(),
+            ])
+            
             ->add('step_3_end', HtmlField::class, [
                 'html' => '</div>',
             ])
@@ -236,20 +256,6 @@ class RegisterForm extends AuthForm
             ->add('step_3_employer_end', HtmlField::class, [
                 'html' => '</div>',
             ])
-            ->add(
-                'agree_terms_and_policy',
-                OnOffCheckboxField::class,
-                CheckboxFieldOption::make()
-                    ->when(
-                        $privacyPolicyUrl = theme_option('term_and_privacy_policy_url'),
-                        function (CheckboxFieldOption $fieldOption, string $url): void {
-                            $fieldOption->label(trans('plugins/job-board::messages.terms_agreement', ['link' => Html::link($url, trans('plugins/job-board::messages.terms_privacy_policy'), attributes: ['class' => 'text-decoration-underline', 'target' => '_blank'])]));
-                        }
-                    )
-                    ->when(! $privacyPolicyUrl, function (CheckboxFieldOption $fieldOption): void {
-                        $fieldOption->label(trans('plugins/job-board::messages.terms_agreement_simple'));
-                    })
-            )
             ->submitButton(trans('plugins/job-board::messages.register'), 'ti ti-arrow-narrow-right')
             ->add('login', HtmlField::class, [
                 'html' => sprintf(
