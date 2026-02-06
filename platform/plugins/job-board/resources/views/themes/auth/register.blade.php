@@ -5,6 +5,7 @@
                     <div class="card-body">
                         <h4 class="text-center">{{ trans('plugins/job-board::dashboard.register-title') }}</h4>
                         <br>
+                      
                         @if (session()->has('status'))
                             <div role="alert" class="alert alert-success">
                                 {{ session('status') }}

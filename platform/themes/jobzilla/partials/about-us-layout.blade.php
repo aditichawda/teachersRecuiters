@@ -6,7 +6,7 @@
         <div class="row align-items-center">
             <div class="col-lg-6">
                 <div class="hiw-hero-content">
-                    <span class="hiw-label">About Teachers Recruiter</span>
+                    <span class="hiw-label"> heloo About Teachers Recruiter</span>
                     <h2 class="hiw-hero-title">Connecting Teachers with Top Schools Across India</h2>
                     <p class="hiw-hero-desc">
                         Founded in June 2015, Teachers Recruiter began as an offline recruitment consultancy 
