@@ -27,6 +27,7 @@ class Company extends BaseModel
 
     protected $fillable = [
         'name',
+        'institution_type',
         'status',
         'account_id',
         'address',
@@ -48,7 +49,17 @@ class Company extends BaseModel
         'twitter',
         'linkedin',
         'instagram',
+        'google',
+        'youtube_video',
         'ceo',
+        'principal_name',
+        'total_staff',
+        'campus_type',
+        'staff_facilities',
+        'standard_level',
+        'awards',
+        'affiliations',
+        'team_members',
         'is_featured',
         'is_verified',
         'verified_at',
@@ -76,9 +87,17 @@ class Company extends BaseModel
         'twitter' => SafeContent::class,
         'linkedin' => SafeContent::class,
         'instagram' => SafeContent::class,
+        'google' => SafeContent::class,
         'ceo' => SafeContent::class,
+        'principal_name' => SafeContent::class,
+        'total_staff' => 'int',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
+        'staff_facilities' => 'array',
+        'standard_level' => 'array',
+        'awards' => 'array',
+        'affiliations' => 'array',
+        'team_members' => 'array',
     ];
 
     public function accounts(): BelongsToMany

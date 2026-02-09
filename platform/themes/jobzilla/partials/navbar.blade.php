@@ -258,10 +258,17 @@
                                                     </li>
                                                 @endif
                                                 <li>
-                                                    <a class="dropdown-item" href="{{ route('public.account.settings') }}">
-                                                        <i class="feather-settings"></i>
-                                                        <span>{{ __('Account Settings') }}</span>
-                                                    </a>
+                                                    @if ($account->isEmployer())
+                                                        <a class="dropdown-item" href="{{ route('public.account.employer.settings.edit') }}">
+                                                            <i class="feather-settings"></i>
+                                                            <span>{{ __('Account Settings') }}</span>
+                                                        </a>
+                                                    @else
+                                                        <a class="dropdown-item" href="{{ route('public.account.settings') }}">
+                                                            <i class="feather-settings"></i>
+                                                            <span>{{ __('Account Settings') }}</span>
+                                                        </a>
+                                                    @endif
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li>

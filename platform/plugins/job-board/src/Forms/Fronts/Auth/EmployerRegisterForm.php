@@ -99,7 +99,7 @@ class EmployerRegisterForm extends AuthForm
                 'html' => '</div>',
             ])
 
-            // Row 3: Password + Confirm Password (6/6)
+            // Row 3: Password
             ->add('col_password_open', HtmlField::class, [
                 'html' => '<div class="col-md-6">',
             ])
@@ -113,21 +113,6 @@ class EmployerRegisterForm extends AuthForm
                     ->required()
             )
             ->add('col_password_close', HtmlField::class, [
-                'html' => '</div>',
-            ])
-            ->add('col_password_confirmation_open', HtmlField::class, [
-                'html' => '<div class="col-md-6">',
-            ])
-            ->add(
-                'password_confirmation',
-                PasswordField::class,
-                TextFieldOption::make()
-                    ->label(trans('plugins/job-board::messages.password_confirmation'))
-                    ->placeholder(trans('plugins/job-board::messages.password_confirmation'))
-                    ->icon('ti ti-lock')
-                    ->required()
-            )
-            ->add('col_password_confirmation_close', HtmlField::class, [
                 'html' => '</div>',
             ])
 

@@ -7,12 +7,13 @@ return [
     'menu' => [
         'dashboard' => 'Dashboard',
         'jobs' => 'Jobs',
-        'companies' => 'Companies',
+        'companies' => 'Institution',
         'reviews' => 'Reviews',
         'applicants' => 'Applicants',
         'packages' => 'Packages',
         'invoices' => 'Invoices',
         'settings' => 'Settings',
+        'change_password' => 'Change Password',
     ],
 
     // Auth translate key

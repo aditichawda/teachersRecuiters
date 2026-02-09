@@ -50,8 +50,10 @@
     .step-indicator {
         display: flex;
         justify-content: center;
+        align-items: center;
         margin-bottom: 20px;
-        gap: 15px;
+        gap: 10px;
+        flex-wrap: nowrap;
     }
 
     .step {
@@ -60,11 +62,16 @@
         gap: 5px;
         color: #999;
         font-size: 12px;
+        white-space: nowrap;
     }
 
     .step.active {
         color: #0073d1;
         font-weight: 600;
+    }
+
+    .step.completed {
+        color: #28a745;
     }
 
     .step-number {
@@ -77,10 +84,16 @@
         justify-content: center;
         font-size: 11px;
         font-weight: 600;
+        flex-shrink: 0;
     }
 
     .step.active .step-number {
         background: #0073d1;
+        color: #fff;
+    }
+
+    .step.completed .step-number {
+        background: #28a745;
         color: #fff;
     }
 
@@ -183,9 +196,23 @@
         }
 
         .step-indicator {
-            flex-wrap: wrap;
-            gap: 15px;
+            gap: 6px;
         }
+
+        .step {
+            font-size: 10px;
+            gap: 3px;
+        }
+
+        .step-number {
+            width: 20px;
+            height: 20px;
+            font-size: 9px;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .step span:last-child { display: none; }
     }
 </style>
 
@@ -197,19 +224,19 @@
         </div>
         
         <div class="employer-register-body">
-            <!-- Step Indicator -->
+            <!-- Step Indicator - 4 Steps -->
             <div class="step-indicator">
                 <div class="step active">
                     <span class="step-number">1</span>
-                    <span>Details</span>
+                    <span>Basic Details</span>
                 </div>
                 <div class="step">
                     <span class="step-number">2</span>
-                    <span>Verify</span>
+                    <span>Verification</span>
                 </div>
                 <div class="step">
                     <span class="step-number">3</span>
-                    <span>Institution</span>
+                    <span>School/Institution</span>
                 </div>
                 <div class="step">
                     <span class="step-number">4</span>

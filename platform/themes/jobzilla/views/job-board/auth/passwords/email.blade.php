@@ -19,14 +19,6 @@
             </div>
             <div class="col-xl-4 col-lg-6 col-md-7">
                 <div class="twm-log-reg-form-wrap">
-                    <div class="twm-log-reg-logo-head">
-                        @if (Theme::getLogo())
-                            <a href="{{ BaseHelper::getHomepageUrl()  }}">
-                                {!! Theme::getLogoImage(['class' => 'logo'], 'logo', 44) !!}
-                            </a>
-                        @endif
-                    </div>
-
                     <div class="twm-log-reg-inner">
                         <div class="twm-log-reg-head">
                             <div class="twm-log-reg-logo">

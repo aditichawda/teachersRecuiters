@@ -1,54 +1,52 @@
-@php
-    $account = auth('account')->user();
-@endphp
-
-@extends(Theme::getThemeNamespace('views.job-board.account.partials.' . ($account && $account->isEmployer() ? 'layout-employer' : 'layout-settings')))
+@extends(JobBoardHelper::viewPath('dashboard.layouts.master'))
 
 @section('content')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    .security-card {
+    .cp-card {
         background: #fff;
         border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         overflow: hidden;
+        max-width: 800px;
     }
-    .security-header {
-       background: linear-gradient(135deg, #64b5f6, #1967d2, #0d47a1);
+    .cp-header {
+        background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
         color: #fff;
         padding: 20px 24px;
     }
-    .security-header h3 {
+    .cp-header h3 {
         font-size: 20px;
         font-weight: 600;
         margin: 0;
     }
-    .security-header p {
+    .cp-header p {
         font-size: 13px;
         opacity: 0.85;
         margin: 4px 0 0 0;
     }
-    .security-body {
+    .cp-body {
         padding: 24px;
     }
-    .security-body .form-label {
+    .cp-body .form-label {
         font-size: 14px;
         font-weight: 500;
         color: #333;
         margin-bottom: 6px;
     }
-    .security-body .form-label .required {
+    .cp-body .form-label .required {
         color: #dc3545;
     }
-    .security-body .form-control {
-        border: 1px solid #e0e0e0;
+    .cp-body .form-control {
+        border: 1.5px solid #e2e8f0;
         border-radius: 8px;
         padding: 10px 14px;
         font-size: 14px;
         transition: all 0.2s;
     }
-    .security-body .form-control:focus {
-        border-color:cl;
-        box-shadow: 0 0 0 3px rgba(26,35,126,0.1);
+    .cp-body .form-control:focus {
+        border-color: #0073d1;
+        box-shadow: 0 0 0 3px rgba(0,115,209,0.1);
     }
     .password-field-wrapper {
         position: relative;
@@ -67,25 +65,6 @@
     }
     .password-field-wrapper .toggle-password:hover {
         color: #333;
-    }
-    .security-footer {
-        padding: 16px 24px;
-        border-top: 1px solid #f0f0f0;
-        display: flex;
-        justify-content: flex-end;
-    }
-    .btn-save-security {
-        background:#1967d2;
-        color: #fff;
-        border: none;
-        padding: 10px 24px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        transition: all 0.2s;
-    }
-    .btn-save-security:hover {
-        background: #1967d2;
     }
     .password-strength {
         height: 4px;
@@ -119,7 +98,7 @@
     .security-tip h6 {
         font-size: 14px;
         font-weight: 600;
-        color: #1967d2;
+        color: #0073d1;
         margin: 0 0 8px 0;
     }
     .security-tip ul {
@@ -138,22 +117,43 @@
         font-weight: bold;
         margin-right: 8px;
     }
+    .cp-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .btn-save-password {
+        background: linear-gradient(135deg, #0073d1, #005bb5);
+        color: #fff;
+        border: none;
+        padding: 10px 28px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .btn-save-password:hover {
+        background: linear-gradient(135deg, #005bb5, #003f8a);
+        color: #fff;
+        transform: translateY(-1px);
+    }
 </style>
 
-<div class="security-card">
-    <div class="security-header">
+<div class="cp-card">
+    <div class="cp-header">
         <h3><i class="fa fa-lock me-2"></i>{{ __('Change Password') }}</h3>
         <p>{{ __('Update your password to keep your account secure') }}</p>
     </div>
     {!! Form::open(['route' => 'public.account.post.security', 'method' => 'PUT']) !!}
-        <div class="security-body">
+        <div class="cp-body">
             <div class="security-tip">
                 <h6><i class="fa fa-shield-alt me-1"></i> {{ __('Password Tips') }}</h6>
                 <ul>
                     <li>{{ __('Use at least 8 characters') }}</li>
                     <li>{{ __('Include uppercase & lowercase letters') }}</li>
                     <li>{{ __('Include at least one number and symbol') }}</li>
-                    <li>{{ __('Don\'t reuse passwords from other sites') }}</li>
+                    <li>{{ __("Don't reuse passwords from other sites") }}</li>
                 </ul>
             </div>
 
@@ -220,9 +220,9 @@
                 </div>
             </div>
         </div>
-        <div class="security-footer">
-            <button type="submit" class="btn-save-security">
-                <i class="fa fa-save me-1"></i> {{ __('Update Password') }}
+        <div class="cp-footer">
+            <button type="submit" class="btn-save-password">
+                <i class="fa fa-key me-2"></i>{{ __('Update Password') }}
             </button>
         </div>
     {!! Form::close() !!}
@@ -277,4 +277,4 @@ function checkPasswordStrength(password) {
     }
 }
 </script>
-@endsection
+@stop

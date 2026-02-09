@@ -59,11 +59,11 @@
     background: #f8f9fa;
     min-height: calc(100vh - 200px);
     margin-top: 20px;
-    padding-top: 20px;
+    padding-top: 77px;
 }
 
 .js-dashboard-content {
-    padding: 0 0 0 20px;
+    padding: 0 0 40px 0px;
 }
 
 /* Profile Card - Left Sidebar */

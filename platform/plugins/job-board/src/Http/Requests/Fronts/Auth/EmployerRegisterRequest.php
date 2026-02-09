@@ -15,7 +15,7 @@ class EmployerRegisterRequest extends Request
             'email' => ['required', 'max:60', new EmailRule()],
             'phone' => ['required', 'string', 'max:25'],
             'is_whatsapp_available' => ['nullable', 'boolean'],
-            'password' => ['required', 'confirmed', Password::min(6)],
+            'password' => ['required', Password::min(6)],
         ];
     }
 
@@ -26,7 +26,6 @@ class EmployerRegisterRequest extends Request
             'email.required' => 'Please enter your email address.',
             'phone.required' => 'Please enter your mobile number.',
             'password.required' => 'Please enter a password.',
-            'password.confirmed' => 'Password confirmation does not match.',
         ];
     }
 }

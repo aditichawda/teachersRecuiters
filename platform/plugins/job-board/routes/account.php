@@ -24,6 +24,24 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'as' => 'login.post',
                         'uses' => 'login',
                     ]);
+                    
+                    // OTP Login Routes
+                    Route::post('login/send-email-otp', [
+                        'as' => 'login.sendEmailOtp',
+                        'uses' => 'sendEmailOtp',
+                    ]);
+                    Route::post('login/send-whatsapp-otp', [
+                        'as' => 'login.sendWhatsAppOtp',
+                        'uses' => 'sendWhatsAppOtp',
+                    ]);
+                    Route::post('login/verify-otp', [
+                        'as' => 'login.verifyOtp',
+                        'uses' => 'verifyOtpLogin',
+                    ]);
+                    Route::post('login/resend-otp', [
+                        'as' => 'login.resendOtp',
+                        'uses' => 'resendOtp',
+                    ]);
                 });
 
                 Route::controller('RegisterController')->group(function (): void {
@@ -272,7 +290,18 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                             ]);
                         });
                     });
+
+                    Route::get('resume-builder', [
+                        'as' => 'resume-builder',
+                        'uses' => 'getResumeBuilder',
+                    ]);
+
+                    Route::get('resume-builder/download', [
+                        'as' => 'resume-builder.download',
+                        'uses' => 'downloadResume',
+                    ]);
                 });
+
                 Route::group(['prefix' => 'experiences', 'as' => 'experiences.'], function (): void {
                     Route::resource('', AccountExperienceController::class)->parameters(['' => 'experience']);
                 });

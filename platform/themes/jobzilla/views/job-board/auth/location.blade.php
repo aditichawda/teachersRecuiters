@@ -3,416 +3,317 @@
 @endphp
 
 <style>
-/* ===== Location Page Styles ===== */
-.location-page {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #f0f4f8 0%, #e8f4fc 50%, #f5f7fa 100%);
-    margin: 0;
-    padding: 0;
-}
-
-.tr-auth-left-panel {
-    background: #0073d1 !important;
-    position: relative;
-    display: flex !important;
-    flex-direction: column;
-    justify-content: center;
-    padding: 40px;
-    overflow: hidden;
-    min-height: 100vh;
-}
-
-.tr-auth-curve {
-    position: absolute;
-    right: -1px;
-    top: 0;
-    height: 100%;
-    width: 150px;
-    z-index: 10;
-}
-
-.tr-auth-left-content {
-    position: relative;
-    z-index: 5;
-    color: #fff;
-    padding-right: 80px;
-}
-
-.tr-auth-logo {
-    margin-bottom: 30px;
-}
-
-.tr-auth-logo img {
-    max-width: 180px;
-    filter: brightness(0) invert(1);
-}
-
-.tr-auth-illustration {
-    margin: 30px 0;
-}
-
-.tr-auth-illustration svg {
-    width: 100%;
-    max-width: 300px;
-}
-
-.tr-auth-step-info {
-    margin-top: 30px;
-}
-
-.tr-auth-step-badge {
-    display: inline-block;
-    background: rgba(255,255,255,0.2);
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 15px;
-    color: #fff;
-}
-
-.tr-auth-step-info h3 {
-    font-size: 24px;
-    font-weight: 700;
-    margin: 0 0 10px 0;
-    color: #fff;
-}
-
-.tr-auth-step-info p {
-    font-size: 14px;
-    opacity: 0.85;
-    margin: 0;
-    line-height: 1.6;
-    color: #fff;
-}
-
-.tr-auth-right-panel {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 60px;
-    background: #fff !important;
-    min-height: 100vh;
-}
-
-.tr-auth-form-container {
-    width: 100%;
-    max-width: 450px;
-}
-
-.tr-auth-form-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.tr-auth-form-header h1 {
-    color: #0073d1;
-    font-size: 28px;
-    font-weight: 700;
-    margin: 0 0 8px 0;
-}
-
-.tr-auth-form-header p {
-    color: #666;
-    font-size: 14px;
-    margin: 0;
-}
-
-/* Form Elements */
-.tr-form-group {
-    margin-bottom: 20px;
-}
-
-.tr-form-label {
-    display: block;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
-    font-size: 14px;
-}
-
-.tr-select-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.tr-input-icon {
-    position: absolute;
-    left: 15px;
-    color: #0073d1;
-    font-size: 18px;
-    z-index: 2;
-}
-
-.tr-form-select {
-    width: 100%;
-    padding: 14px 15px 14px 45px;
-    border: 2px solid #e8f4fc;
-    border-radius: 10px;
-    font-size: 14px;
-    background: #f8fbfd;
-    transition: all 0.3s;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-}
-
-.tr-form-select:focus {
-    border-color: #0073d1;
-    background-color: #fff;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(0,115,209,0.1);
-}
-
-.tr-form-select:disabled {
-    background: #f5f5f5;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
-.tr-error-text {
-    color: #dc3545;
-    font-size: 12px;
-    margin-top: 5px;
-    display: none;
-}
-
-.tr-error-text.show {
-    display: block;
-}
-
-/* Buttons */
-.tr-form-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    margin-top: 30px;
-}
-
-.tr-btn-outline {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 25px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    color: #666;
-    font-weight: 600;
-    font-size: 14px;
-    text-decoration: none;
-    transition: all 0.3s;
-    background: #fff;
-}
-
-.tr-btn-outline:hover {
-    border-color: #0073d1;
-    color: #0073d1;
-    text-decoration: none;
-}
-
-.tr-btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 30px;
-    background: #0073d1;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.tr-btn-primary:hover {
-    background: #005ba8;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(0,115,209,0.3);
-}
-
-.tr-btn-primary:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.tr-form-footer {
-    text-align: center;
-    margin-top: 25px;
-    font-size: 14px;
-    color: #666;
-}
-
-.tr-form-footer a {
-    color: #0073d1;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.tr-form-footer a:hover {
-    text-decoration: underline;
-}
-
-/* Responsive */
-@media (max-width: 991px) {
-    .tr-auth-right-panel {
-        padding: 30px 20px;
-    }
-}
-
-@media (max-width: 767px) {
-    .tr-auth-form-header h1 {
-        font-size: 24px;
-    }
-    
-    .tr-form-buttons {
-        flex-direction: column;
-    }
-    
-    .tr-btn-outline, .tr-btn-primary {
-        width: 100%;
+    .location-wrapper {
+        min-height: 100vh;
+        background: #f5f7fa;
+        background-image: 
+            radial-gradient(at 20% 30%, rgba(0, 115, 209, 0.08) 0%, transparent 50%),
+            radial-gradient(at 80% 70%, rgba(67, 67, 67, 0.06) 0%, transparent 50%);
+        display: flex;
+        align-items: center;
         justify-content: center;
+        padding: 40px 20px;
     }
-}
+
+    .location-container {
+        width: 100%;
+        max-width: 500px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+
+    .location-header {
+        background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
+        padding: 24px 30px;
+        text-align: center;
+    }
+
+    .location-header h2 {
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .location-header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .location-body {
+        padding: 30px;
+    }
+
+    /* Step Indicator */
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 25px;
+        gap: 10px;
+        flex-wrap: nowrap;
+    }
+
+    .step {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #999;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .step.active {
+        color: #0073d1;
+        font-weight: 600;
+    }
+
+    .step.completed {
+        color: #10b981;
+    }
+
+    .step-number {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: #666;
+    }
+
+    .step.active .step-number {
+        background: #0073d1;
+        color: #fff;
+    }
+
+    .step.completed .step-number {
+        background: #10b981;
+        color: #fff;
+    }
+
+    /* Form Elements */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .form-label .required {
+        color: #dc3545;
+    }
+
+    .form-label .optional {
+        color: #94a3b8;
+        font-weight: 400;
+        font-size: 13px;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #374151;
+        background: #fff;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .form-select:focus {
+        border-color: #0073d1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 115, 209, 0.1);
+    }
+
+    .form-select:disabled {
+        background-color: #f8fafc;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    /* Complete Button */
+    .complete-btn {
+        width: 100%;
+        padding: 14px 24px;
+        background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 15px;
+    }
+
+    .complete-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 15px rgba(0, 115, 209, 0.25);
+    }
+
+    .complete-btn:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Back Link */
+    .back-link {
+        text-align: center;
+    }
+
+    .back-link a {
+        color: #0073d1;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .back-link a:hover {
+        text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 576px) {
+        .location-wrapper {
+            padding: 20px 15px;
+        }
+
+        .location-container {
+            border-radius: 12px;
+        }
+
+        .location-header {
+            padding: 20px;
+        }
+
+        .location-header h2 {
+            font-size: 20px;
+        }
+
+        .location-body {
+            padding: 24px 20px;
+        }
+
+        .step-indicator { gap: 6px; }
+        .step { font-size: 10px; gap: 3px; }
+        .step-number { width: 20px; height: 20px; font-size: 9px; }
+    }
+
+    @media (max-width: 360px) {
+        .step span:last-child { display: none; }
+    }
 </style>
 
-<div class="section-full tr-auth-page location-page" style="margin:0;padding:0;">
-    <div class="container-fluid" style="padding:0;margin:0;">
-        <div class="row g-0" style="min-height:100vh;">
-            <!-- Left Panel - Blue with illustration -->
-            <div class="col-xl-5 col-lg-5 col-md-5 d-none d-md-flex tr-auth-left-panel" style="background:#0073d1 !important;">
-                <!-- Curve SVG -->
-                <svg class="tr-auth-curve" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M100,0 L100,100 L30,100 Q-30,50 30,0 Z" fill="#ffffff"/>
-                </svg>
+<div class="location-wrapper">
+    <div class="location-container">
+        <div class="location-header">
+            <h2>Location</h2>
+            <p>Step 4 of 4 - Select your location</p>
+        </div>
+        
+        <div class="location-body">
+            <!-- Step Indicator - 4 Steps -->
+            <div class="step-indicator">
+                <div class="step completed">
+                    <span class="step-number">✓</span>
+                    <span>Basic Details</span>
+                </div>
+                <div class="step completed">
+                    <span class="step-number">✓</span>
+                    <span>Verification</span>
+                </div>
+                <div class="step completed">
+                    <span class="step-number">✓</span>
+                    <span>Add Preferences & Resume</span>
+                </div>
+                <div class="step active">
+                    <span class="step-number">4</span>
+                    <span>Location</span>
+                </div>
+            </div>
+
+            <form id="location-form" onsubmit="return false;">
+                @csrf
+                <input type="hidden" name="email" id="location_email" value="" />
                 
-                <!-- Content -->
-                <div class="tr-auth-left-content">
-                    @if (Theme::getLogo())
-                        <div class="tr-auth-logo">
-                            {!! Theme::getLogoImage(['class' => 'logo-light'], 'logo', 150) !!}
-                        </div>
-                    @endif
-                    
-                    <div class="tr-auth-illustration">
-                        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Map/Location illustration -->
-                            <circle cx="200" cy="150" r="100" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-                            <circle cx="200" cy="150" r="70" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-                            <circle cx="200" cy="150" r="40" fill="rgba(255,255,255,0.15)"/>
-                            <!-- Location Pin -->
-                            <path d="M200 100 C170 100 150 125 150 150 C150 190 200 230 200 230 C200 230 250 190 250 150 C250 125 230 100 200 100Z" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
-                            <circle cx="200" cy="145" r="20" fill="rgba(255,255,255,0.6)"/>
-                        </svg>
+                @if (is_plugin_active('location'))
+                    <!-- Country -->
+                    <div class="form-group">
+                        <label class="form-label">Country <span class="required">*</span></label>
+                        <select name="country_id" id="country_id" class="form-select" required>
+                            <option value="">Select Country</option>
+                            @php
+                                try {
+                                    $countries = \Botble\Location\Models\Country::query()
+                                        ->where('status', 'published')
+                                        ->orderBy('order')
+                                        ->orderBy('name')
+                                        ->get();
+                                    
+                                    if ($countries->isEmpty()) {
+                                        $countries = \Botble\Location\Models\Country::query()
+                                            ->orderBy('order')
+                                            ->orderBy('name')
+                                            ->get();
+                                    }
+                                } catch (\Exception $e) {
+                                    $countries = collect([]);
+                                }
+                            @endphp
+                            @foreach($countries as $country)
+                                <option value="{{ $country->id }}">{{ $country->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    
-                    <div class="tr-auth-step-info">
-                        <span class="tr-auth-step-badge">Step 3 of 3</span>
-                        <h3>Select Your Location</h3>
-                        <p>Help us find the best opportunities near you by selecting your preferred location</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Right Panel - Form -->
-            <div class="col-xl-7 col-lg-7 col-md-7 tr-auth-right-panel" style="background:#fff !important;">
-                <div class="tr-auth-form-container">
-                    <div class="tr-auth-form-header">
-                        <h1>Select Location</h1>
-                        <p>Choose your preferred work location</p>
-                    </div>
-                    
-                    <form id="location-form" onsubmit="return false;">
-                        @csrf
-                        <input type="hidden" name="email" id="location_email" value="" />
-                        
-                        @if (is_plugin_active('location'))
-                            <!-- Country -->
-                            <div class="tr-form-group">
-                                <label class="tr-form-label">
-                                    Country <span class="text-danger">*</span>
-                                </label>
-                                <div class="tr-select-wrapper">
-                                    <span class="tr-input-icon">🌍</span>
-                                    <select name="country_id" id="country_id" class="tr-form-select" required>
-                                        <option value="">Select Country</option>
-                                        @php
-                                            try {
-                                                $countries = \Botble\Location\Models\Country::query()
-                                                    ->where('status', 'published')
-                                                    ->orderBy('order')
-                                                    ->orderBy('name')
-                                                    ->get();
-                                                
-                                                if ($countries->isEmpty()) {
-                                                    $countries = \Botble\Location\Models\Country::query()
-                                                        ->orderBy('order')
-                                                        ->orderBy('name')
-                                                        ->get();
-                                                }
-                                            } catch (\Exception $e) {
-                                                $countries = collect([]);
-                                            }
-                                        @endphp
-                                        @foreach($countries as $country)
-                                            <option value="{{ $country->id }}">{{ $country->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div id="country_id_error" class="tr-error-text"></div>
-                            </div>
 
-                            <!-- State -->
-                            <div class="tr-form-group">
-                                <label class="tr-form-label">
-                                    State
-                                </label>
-                                <div class="tr-select-wrapper">
-                                    <span class="tr-input-icon">📍</span>
-                                    <select name="state_id" id="state_id" class="tr-form-select" disabled>
-                                        <option value="">Select State</option>
-                                    </select>
-                                </div>
-                                <div id="state_id_error" class="tr-error-text"></div>
-                            </div>
+                    <!-- State -->
+                    <div class="form-group">
+                        <label class="form-label">State <span class="optional">(Optional)</span></label>
+                        <select name="state_id" id="state_id" class="form-select" disabled>
+                            <option value="">Select State</option>
+                        </select>
+                    </div>
 
-                            <!-- City -->
-                            <div class="tr-form-group">
-                                <label class="tr-form-label">
-                                    City
-                                </label>
-                                <div class="tr-select-wrapper">
-                                    <span class="tr-input-icon">🏙️</span>
-                                    <select name="city_id" id="city_id" class="tr-form-select" disabled>
-                                        <option value="">Select City</option>
-                                    </select>
-                                </div>
-                                <div id="city_id_error" class="tr-error-text"></div>
-                            </div>
-                        @endif
-                        
-                        <!-- Buttons -->
-                        <div class="tr-form-buttons">
-                            <a href="{{ route('public.account.register.institutionTypePage') }}" class="tr-btn-outline">
-                                ← Back
-                            </a>
-                            <button type="button" class="tr-btn-primary" id="submit-btn">
-                                Complete Registration ✓
-                            </button>
-                        </div>
-                        
-                        <div class="tr-form-footer">
-                            Already have an account? <a href="{{ route('public.account.login') }}">Sign In</a>
-                        </div>
-                    </form>
+                    <!-- City -->
+                    <div class="form-group">
+                        <label class="form-label">City <span class="optional">(Optional)</span></label>
+                        <select name="city_id" id="city_id" class="form-select" disabled>
+                            <option value="">Select City</option>
+                        </select>
+                    </div>
+                @endif
+
+                <!-- Complete Button -->
+                <button type="button" class="complete-btn" id="submit-btn">Complete Registration</button>
+                
+                <!-- Back Link -->
+                <div class="back-link">
+                    <a href="{{ route('public.account.register.institutionTypePage') }}">Back</a>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -423,8 +324,6 @@
     'use strict';
     
     $(document).ready(function() {
-        console.log('Location Page Loaded');
-        
         // Load email from API
         $.ajax({
             url: '{{ route("public.account.register.getVerificationData") }}',
@@ -432,16 +331,11 @@
             success: function(response) {
                 if (response.data?.email) {
                     $('#location_email').val(response.data.email);
-                    console.log('Email loaded:', response.data.email);
                     
-                    // Pre-fill country if exists
                     if (response.data.country_id) {
                         $('#country_id').val(response.data.country_id).trigger('change');
                     }
                 }
-            },
-            error: function(xhr) {
-                console.error('Failed to load email:', xhr);
             }
         });
         
@@ -521,46 +415,40 @@
             const stateId = $('#state_id').val();
             const cityId = $('#city_id').val();
             
-            // Validation - only country is required
             if (!countryId) {
                 alert('Please select a country');
                 return;
             }
             
-            // Show loading
             const btn = $(this);
             const originalText = btn.html();
             btn.html('Completing...').prop('disabled', true);
             
             const csrfToken = $('input[name="_token"]').val();
             
-            // Save to server
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('location', '');
+            formData.append('country_id', countryId || '');
+            formData.append('state_id', stateId || '');
+            formData.append('city_id', cityId || '');
+            
             $.ajax({
                 url: '{{ route("public.account.register.saveLocation") }}',
                 type: 'POST',
-                contentType: 'application/json',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
                 },
-                data: JSON.stringify({
-                    email: email,
-                    location: '',
-                    country_id: countryId || null,
-                    state_id: stateId || null,
-                    city_id: cityId || null
-                }),
+                data: formData,
+                processData: false,
+                contentType: false,
                 success: function(data) {
-                    console.log('Save response:', data);
-                    
-                    // Clear registration data
                     sessionStorage.setItem('regStep', 'complete');
                     localStorage.removeItem('registrationFormData');
                     
-                    // Redirect to job seeker dashboard
                     window.location.href = '{{ route("public.account.jobseeker.dashboard") }}';
                 },
                 error: function(xhr) {
-                    console.error('Save error:', xhr);
                     alert('Failed to save. Please try again.');
                     btn.html(originalText).prop('disabled', false);
                 }

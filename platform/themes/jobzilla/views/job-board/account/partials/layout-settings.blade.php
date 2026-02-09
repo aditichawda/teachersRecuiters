@@ -24,7 +24,7 @@
     background: #f8f9fa;
     min-height: calc(100vh - 200px);
     margin-top: 20px;
-    padding-top: 20px;
+    padding-top: 75px;
 }
 
 /* Profile Sidebar */
@@ -128,7 +128,7 @@
 
 /* Main Content Area */
 .js-main-content {
-    padding: 0 0 0 20px;
+    padding: 0 0 40px 0px;
 }
 
 .js-page-header {
@@ -238,7 +238,7 @@
 }
 </style>
 
-<div class="js-settings-page">
+<div class="js-settings-page crop-avatar">
     <div class="container">
         <div class="row">
             <!-- Left Sidebar -->
@@ -270,6 +270,7 @@
                         <li><a href="{{ route('public.account.jobs.applied-jobs') }}" @class(['active' => $currentUrl == route('public.account.jobs.applied-jobs')])><i class="fa fa-file-alt"></i> Applied Jobs</a></li>
                         <li><a href="{{ route('public.account.experiences.index') }}" @class(['active' => str_contains($currentUrl, 'experience')])><i class="fa fa-briefcase"></i> Experience</a></li>
                         <li><a href="{{ route('public.account.educations.index') }}" @class(['active' => str_contains($currentUrl, 'education')])><i class="fa fa-graduation-cap"></i> Education</a></li>
+                        <li><a href="{{ route('public.account.resume-builder') }}" @class(['active' => str_contains($currentUrl, 'resume-builder')])><i class="fa fa-file-pdf"></i> Resume Builder</a></li>
                         <li><a href="{{ route('public.account.security') }}" @class(['active' => $currentUrl == route('public.account.security')])><i class="fa fa-lock"></i> Security</a></li>
                     </ul>
                 </div>
@@ -277,7 +278,7 @@
             
             <!-- Main Content -->
             <div class="col-lg-9 col-md-8">
-                <div class="js-main-content crop-avatar">
+                <div class="js-main-content">
                     @yield('content')
                 </div>
             </div>

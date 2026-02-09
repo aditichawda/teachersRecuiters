@@ -3,477 +3,496 @@
 @endphp
 
 <style>
-.institution-type-page {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #f0f4f8 0%, #e8f4fc 50%, #f5f7fa 100%);
-    margin: 0 !important;
-    padding: 0 !important;
-}
+    .institution-wrapper {
+        min-height: 100vh;
+        background: #f5f7fa;
+        background-image: 
+            radial-gradient(at 20% 30%, rgba(0, 115, 209, 0.08) 0%, transparent 50%),
+            radial-gradient(at 80% 70%, rgba(67, 67, 67, 0.06) 0%, transparent 50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
 
-.tr-auth-left-panel {
-    background: #0073d1 !important;
-    position: relative;
-    display: flex !important;
-    flex-direction: column;
-    justify-content: center;
-    /* align-items: center; */
-    padding: 20px !important;
-    overflow: hidden;
-    min-height: 100vh;
-}
+    .institution-container {
+        width: 100%;
+        max-width: 520px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.15);
+        overflow: visible;
+    }
 
-.tr-auth-curve {
-    position: absolute;
-    right: -1px;
-    top: 0;
-    height: 100%;
-    width: 210px;
-    /* z-index: 10; */
-}
+    .institution-header {
+        background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
+        padding: 24px 30px;
+        text-align: center;
+        border-radius: 16px 16px 0 0;
+    }
 
-.tr-auth-left-content {
-    position: relative;
-    z-index: 5;
-    color: #fff;
-    /* text-align: center; */
-    width: 100%;
-    max-width: 350px;
-    padding: 0 30px;
-}
+    .institution-header h2 {
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
 
-.tr-auth-logo img {
-    max-width: 150px;
-    filter: brightness(0) invert(1);
-}
+    .institution-header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        margin: 0;
+    }
 
-.tr-auth-step-badge {
-    display: inline-block;
-    background: rgba(255,255,255,0.2);
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    margin-bottom: 12px;
-    color: #fff;
-}
+    .institution-body {
+        padding: 30px;
+    }
 
-.tr-auth-step-info h3 {
-    font-size: 26px;
-    font-weight: 700;
-    margin: 0 0 10px 0;
-    color: #fff;
-    line-height: 1.3;
-}
+    /* Step Indicator */
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 25px;
+        gap: 10px;
+        flex-wrap: nowrap;
+    }
 
-.tr-auth-step-info p {
-    font-size: 16px;
-    opacity: 0.9;
-    color: #fff;
-    line-height: 1.4;
-    margin: 0;
-}
+    .step {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #999;
+        font-size: 12px;
+        white-space: nowrap;
+    }
 
-.tr-auth-right-panel {
-    display: flex;
-    align-items: center;
-    /* justify-content: center; */
-    padding: 10px 20px !important;
-    background: #fff !important;
-    min-height: 100vh;
-}
+    .step.active { color: #0073d1; font-weight: 600; }
+    .step.completed { color: #10b981; }
 
-.tr-auth-form-container {
-    width: 100%;
-    max-width: 550px;
-}
+    .step-number {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: #666;
+    }
 
-.tr-auth-form-header {
-    text-align: center;
-    margin-bottom: 10px;
-}
+    .step.active .step-number { background: #0073d1; color: #fff; }
+    .step.completed .step-number { background: #10b981; color: #fff; }
 
-.tr-auth-form-header h1 {
-    color: #0073d1;
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0 0 3px 0;
-}
+    /* Selection Info */
+    .selection-info {
+        text-align: center;
+        margin-bottom: 18px;
+        padding: 10px 16px;
+        background: #f0f7ff;
+        border-radius: 8px;
+        border: 1px solid #d0e6ff;
+    }
 
-.tr-auth-form-header p {
-    color: #666;
-    font-size: 13px;
-    margin: 0;
-}
+    .selection-info p {
+        margin: 0;
+        font-size: 13px;
+        color: #0073d1;
+        font-weight: 500;
+    }
 
-/* Selected Tags */
-.tr-selected-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 8px;
-    min-height: 26px;
-}
+    .selection-info .count { font-weight: 700; font-size: 15px; }
 
-.tr-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: #0073d1;
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 500;
-}
+    /* Selected Tags */
+    .selected-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 18px;
+        min-height: 30px;
+    }
 
-.tr-tag-num {
-    background: rgba(255,255,255,0.25);
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-}
+    .selected-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        background: #0073d1;
+        color: #fff;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        animation: fadeIn 0.2s ease;
+    }
 
-.tr-tag-remove {
-    cursor: pointer;
-    margin-left: 2px;
-    opacity: 0.8;
-}
+    .selected-tag .remove-tag {
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        opacity: 0.8;
+        line-height: 1;
+    }
 
-.tr-tag-remove:hover {
-    opacity: 1;
-}
+    .selected-tag .remove-tag:hover { opacity: 1; }
 
-/* Multi-Select Dropdown */
-.tr-multiselect {
-    position: relative;
-    margin-bottom: 10px;
-}
+    .no-selection {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 8px;
+        font-style: italic;
+    }
 
-.tr-multiselect-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 14px;
-    margin-bottom: 5px;
-    display: block;
-}
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
 
-.tr-multiselect-btn {
-    width: 100%;
-    padding: 10px 30px 10px 12px;
-    border: 2px solid #e0e8f0;
-    border-radius: 6px;
-    font-size: 14px;
-    background: #fff;
-    text-align: left;
-    cursor: pointer;
-    position: relative;
-    color: #666;
-}
+    /* Dropdown Label */
+    .dropdown-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        /* margin-bottom: 8px; */
+        font-size: 14px;
+    }
 
-.tr-multiselect-btn::after {
-    content: '▼';
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    color: #999;
-}
+    /* Custom Multi-Select Dropdown */
+    .multi-select-wrapper {
+        position: relative;
+        margin-bottom: 20px;
+    }
 
-.tr-multiselect-btn.open::after {
-    content: '▲';
-}
+    .multi-select-trigger {
+        width: 100%;
+        padding: 12px 40px 12px 16px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #374151;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+        min-height: 48px;
+    }
 
-.tr-multiselect-btn.has-selection {
-    color: #333;
-    border-color: #0073d1;
-}
+    .multi-select-trigger:hover { border-color: #b0c4de; }
+    .multi-select-trigger.open {
+        border-color: #0073d1;
+        box-shadow: 0 0 0 3px rgba(0, 115, 209, 0.1);
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
 
-.tr-multiselect-dropdown {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: #fff;
-    border: 2px solid #0073d1;
-    border-top: none;
-    border-radius: 0 0 6px 6px;
-    max-height: 280px;
-    overflow-y: auto;
-    z-index: 100;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
+    .multi-select-trigger .trigger-text { color: #999; }
+    .multi-select-trigger .trigger-text.has-selection { color: #374151; font-weight: 500; }
 
-.tr-multiselect-dropdown.show {
-    display: block;
-}
+    .multi-select-trigger .arrow {
+        position: absolute;
+        right: 14px;
+        bottom: 10%;
+        transform: translateY(-50%);
+        font-size: 10px;
+        color: #888;
+        transition: transform 0.2s;
+    }
 
-.tr-multiselect-group {
-    border-bottom: 1px solid #eee;
-}
+    .multi-select-trigger.open .arrow { transform: translateY(-50%) rotate(180deg); }
 
-.tr-multiselect-group:last-child {
-    border-bottom: none;
-}
+    .multi-select-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1.5px solid #0073d1;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 350px;
+        overflow-y: auto;
+        z-index: 9999;
+        display: none;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
 
-.tr-multiselect-group-title {
-    padding: 6px 12px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #0073d1;
-    background: #f8fbfd;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+    .multi-select-dropdown.show { display: block; }
 
-.tr-multiselect-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: background 0.15s;
-    font-size: 14px;
-    color: #444;
-}
+    /* Search inside dropdown */
+    .dropdown-search {
+        padding: 8px 12px;
+        border-bottom: 1px solid #f0f0f0;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
 
-.tr-multiselect-option:hover {
-    background: #f0f7ff;
-}
+    .dropdown-search input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 13px;
+        outline: none;
+    }
 
-.tr-multiselect-option.selected {
-    background: #e8f4fc;
-    color: #0073d1;
-    font-weight: 500;
-}
+    .dropdown-search input:focus { border-color: #0073d1; }
 
-.tr-multiselect-option.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    background: #f5f5f5;
-}
+    /* Group Label */
+    .dropdown-group-label {
+        padding: 8px 14px 4px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: #f9fafb;
+        border-bottom: 1px solid #f0f0f0;
+        position: sticky;
+    }
 
-.tr-multiselect-checkbox {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ccc;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
+    /* Option */
+    .dropdown-option {
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+        font-size: 13px;
+        color: #374151;
+        border-bottom: 1px solid #f8f8f8;
+    }
 
-.tr-multiselect-option.selected .tr-multiselect-checkbox {
-    background: #0073d1;
-    border-color: #0073d1;
-}
+    .dropdown-option:hover { background: #f0f7ff; }
 
-.tr-multiselect-option.selected .tr-multiselect-checkbox::after {
-    content: '✓';
-    color: #fff;
-    font-size: 10px;
-}
+    .dropdown-option.selected {
+        background: #eef5ff;
+        color: #0073d1;
+        font-weight: 600;
+    }
 
-/* Form */
-.tr-form-group {
-    margin-bottom: 8px;
-}
+    .dropdown-option.disabled-option {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
 
-.tr-form-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 14px;
-    margin-bottom: 4px;
-    display: block;
-}
+    .dropdown-option .opt-check {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s;
+        background: #fff;
+    }
 
-.tr-form-control {
-    width: 100%;
-    padding: 10px 12px;
-    border: 2px solid #e0e8f0;
-    border-radius: 6px;
-    font-size: 14px;
-}
+    .dropdown-option.selected .opt-check {
+        background: #0073d1;
+        border-color: #0073d1;
+    }
 
-.tr-form-control:focus {
-    border-color: #0073d1;
-    outline: none;
-}
+    .dropdown-option.selected .opt-check::after {
+        content: '✓';
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
+    }
 
-/* Buttons */
-.tr-form-buttons {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 12px;
-}
+    .dropdown-option:last-child { border-bottom: none; }
 
-.tr-btn-outline {
-    padding: 10px 18px;
-    border: 2px solid #e0e0e0;
-    border-radius: 6px;
-    color: #666;
-    font-weight: 600;
-    font-size: 14px;
-    text-decoration: none;
-    background: #fff;
-}
+    .no-results {
+        padding: 16px;
+        text-align: center;
+        color: #999;
+        font-size: 13px;
+    }
 
-.tr-btn-outline:hover {
-    border-color: #0073d1;
-    color: #0073d1;
-}
+    /* Continue Button */
+    .continue-btn {
+        width: 100%;
+        padding: 14px 24px;
+        background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 15px;
+    }
 
-.tr-btn-primary {
-    padding: 10px 22px;
-    background: #0073d1;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-}
+    .continue-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 15px rgba(0, 115, 209, 0.25);
+    }
 
-.tr-btn-primary:hover {
-    background: #005ba8;
-}
+    .continue-btn:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
 
-.tr-btn-primary:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-}
+    /* Back Link */
+    .back-link { text-align: center; }
+    .back-link a {
+        color: #0073d1;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+    }
+    .back-link a:hover { text-decoration: underline; }
 
-.tr-form-footer {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 14px;
-    color: #666;
-}
+    /* Responsive */
+    @media (max-width: 576px) {
+        .institution-wrapper { padding: 20px 15px; }
+        .institution-container { border-radius: 12px; }
+        .institution-header { padding: 20px; }
+        .institution-header h2 { font-size: 20px; }
+        .institution-body { padding: 24px 20px; }
+        .step-indicator { gap: 6px; }
+        .step { font-size: 10px; gap: 3px; }
+        .step-number { width: 20px; height: 20px; font-size: 9px; }
+    }
 
-.tr-form-footer a {
-    color: #0073d1;
-    font-weight: 600;
-    text-decoration: none;
-}
+    @media (max-width: 360px) {
+        .step span:last-child { display: none; }
+    }
 </style>
 
-<div class="institution-type-page" style="margin:0 !important;padding:0 !important;">
-    <div class="container-fluid p-0 m-0">
-        <div class="row g-0 m-0" style="min-height:100vh;">
-            <!-- Left Panel -->
-            <div class="col-xl-6 col-lg-4 col-md-4 d-none d-md-flex tr-auth-left-panel">
-                <svg class="tr-auth-curve" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M100,0 L100,100 L30,100 Q-30,50 30,0 Z" fill="#ffffff"/>
-                </svg>
-                <div class="tr-auth-left-content">
-                    @if (Theme::getLogo())
-                        <div class="tr-auth-logo" style="margin-bottom:20px;">
-                            {!! Theme::getLogoImage(['class' => 'logo-light'], 'logo', 140) !!}
-                        </div>
-                    @endif
-                    <div class="tr-auth-step-info">
-                        <span class="tr-auth-step-badge">Step 2 of 3</span>
-                        <h3>Institution Type</h3>
-                        <p>Choose your preferred institution types</p>
-                    </div>
+<div class="institution-wrapper">
+    <div class="institution-container">
+        <div class="institution-header">
+            <h2>School/Institution</h2>
+            <p>Step 3 of 4 - Select your preferred institution types</p>
+        </div>
+        
+        <div class="institution-body">
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step completed">
+                    <span class="step-number">✓</span>
+                    <span>Basic Details</span>
+                </div>
+                <div class="step completed">
+                    <span class="step-number">✓</span>
+                    <span>Verification</span>
+                </div>
+                <div class="step active">
+                    <span class="step-number">3</span>
+                    <span>Add Preferences & Resume</span>
+                </div>
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <span>Location </span>
                 </div>
             </div>
-            
-            <!-- Right Panel -->
-            <div class="col-xl-6 col-lg-8 col-md-8 tr-auth-right-panel">
-                <div class="tr-auth-form-container">
-                    <div class="tr-auth-form-header">
-                        <h1>Institution Type</h1>
-                        <p>Select up to 3 institution types (in order of preference)</p>
-                    </div>
-                    
-                    <form id="institution-type-form" onsubmit="return false;">
-                        @csrf
-                        <input type="hidden" name="email" id="institution_email" value="" />
-                        <input type="hidden" name="account_type" id="account_type_hidden" value="job-seeker" />
-                        
-                        <!-- Institution Name - For Employer -->
-                        <div id="institution_name_field_wrapper" class="tr-form-group" style="display:none;">
-                            <label class="tr-form-label">Institution Name <span class="text-danger">*</span></label>
-                            <input type="text" name="institution_name" id="institution_name" 
-                                class="tr-form-control" placeholder="Enter your institution name" />
-                        </div>
-                        
-                        <!-- Selected Tags -->
-                        <div id="selected-tags" class="tr-selected-tags"></div>
-                        
-                        <!-- Multi-Select Dropdown -->
-                        <div class="tr-multiselect">
-                            <label class="tr-multiselect-label">Select Institution Types (Max 3)</label>
-                            <button type="button" class="tr-multiselect-btn" id="multiselect-btn">
-                                Click to select institutions...
-                            </button>
-                            <div class="tr-multiselect-dropdown" id="multiselect-dropdown">
-                                <div class="tr-multiselect-group">
-                                    <div class="tr-multiselect-group-title">🏫 School</div>
-                                    <div class="tr-multiselect-option" data-value="cbse-school"><div class="tr-multiselect-checkbox"></div>CBSE School</div>
-                                    <div class="tr-multiselect-option" data-value="icse-school"><div class="tr-multiselect-checkbox"></div>ICSE School</div>
-                                    <div class="tr-multiselect-option" data-value="cambridge-school"><div class="tr-multiselect-checkbox"></div>Cambridge School</div>
-                                    <div class="tr-multiselect-option" data-value="ib-school"><div class="tr-multiselect-checkbox"></div>IB School</div>
-                                    <div class="tr-multiselect-option" data-value="igcse-school"><div class="tr-multiselect-checkbox"></div>IGCSE School</div>
-                                    <div class="tr-multiselect-option" data-value="primary-school"><div class="tr-multiselect-checkbox"></div>Primary School</div>
-                                    <div class="tr-multiselect-option" data-value="play-school"><div class="tr-multiselect-checkbox"></div>Play School</div>
-                                    <div class="tr-multiselect-option" data-value="state-board-school"><div class="tr-multiselect-checkbox"></div>State Board School</div>
-                                </div>
-                                <div class="tr-multiselect-group">
-                                    <div class="tr-multiselect-group-title">🎓 College</div>
-                                    <div class="tr-multiselect-option" data-value="engineering-college"><div class="tr-multiselect-checkbox"></div>Engineering College</div>
-                                    <div class="tr-multiselect-option" data-value="medical-college"><div class="tr-multiselect-checkbox"></div>Medical College</div>
-                                    <div class="tr-multiselect-option" data-value="nursing-college"><div class="tr-multiselect-checkbox"></div>Nursing College</div>
-                                    <div class="tr-multiselect-option" data-value="pharmacy-college"><div class="tr-multiselect-checkbox"></div>Pharmacy College</div>
-                                    <div class="tr-multiselect-option" data-value="science-college"><div class="tr-multiselect-checkbox"></div>Science College</div>
-                                    <div class="tr-multiselect-option" data-value="management-college"><div class="tr-multiselect-checkbox"></div>Management College</div>
-                                    <div class="tr-multiselect-option" data-value="degree-college"><div class="tr-multiselect-checkbox"></div>Degree College</div>
-                                </div>
-                                <div class="tr-multiselect-group">
-                                    <div class="tr-multiselect-group-title">📚 Coaching Institute</div>
-                                    <div class="tr-multiselect-option" data-value="jee-neet-institute"><div class="tr-multiselect-checkbox"></div>JEE & NEET Institute</div>
-                                    <div class="tr-multiselect-option" data-value="banking-institute"><div class="tr-multiselect-checkbox"></div>Banking Institute</div>
-                                    <div class="tr-multiselect-option" data-value="civil-services-institute"><div class="tr-multiselect-checkbox"></div>Civil Services Institute</div>
-                                    <div class="tr-multiselect-option" data-value="it-training-institute"><div class="tr-multiselect-checkbox"></div>IT Training Institute</div>
-                                </div>
-                                <div class="tr-multiselect-group">
-                                    <div class="tr-multiselect-group-title">💻 EdTech & Online</div>
-                                    <div class="tr-multiselect-option" data-value="edtech-company"><div class="tr-multiselect-checkbox"></div>EdTech Company</div>
-                                    <div class="tr-multiselect-option" data-value="online-education-platform"><div class="tr-multiselect-checkbox"></div>Online Education Platform</div>
-                                </div>
-                                <div class="tr-multiselect-group">
-                                    <div class="tr-multiselect-group-title">🏛️ University & Academy</div>
-                                    <div class="tr-multiselect-option" data-value="university"><div class="tr-multiselect-checkbox"></div>University</div>
-                                    <div class="tr-multiselect-option" data-value="sport-academy"><div class="tr-multiselect-checkbox"></div>Sport Academy</div>
-                                    <div class="tr-multiselect-option" data-value="music-academy"><div class="tr-multiselect-checkbox"></div>Music Academy</div>
-                                </div>
-                                <div class="tr-multiselect-group">
-                                    <div class="tr-multiselect-group-title">📋 Other</div>
-                                    <div class="tr-multiselect-option" data-value="non-profit-organization"><div class="tr-multiselect-checkbox"></div>Non-Profit Organization</div>
-                                    <div class="tr-multiselect-option" data-value="book-publishing-company"><div class="tr-multiselect-checkbox"></div>Book Publishing Company</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Buttons -->
-                        <div class="tr-form-buttons">
-                            <a href="{{ route('public.account.register.verifyEmailPage') }}" class="tr-btn-outline">← Back</a>
-                            <button type="button" class="tr-btn-primary" id="continue-btn">Continue →</button>
-                        </div>
-                        
-                        <div class="tr-form-footer">
-                            Already have an account? <a href="{{ route('public.account.login') }}">Sign In</a>
-                        </div>
-                    </form>
-                </div>
+
+            <!-- Selection Info -->
+            <div class="selection-info">
+                <p>Select up to <span class="count">3</span> institution types (<span id="selected-count">0</span>/3 selected)</p>
             </div>
+
+            <!-- Selected Tags -->
+            <div class="selected-tags" id="selected-tags">
+                <span class="no-selection"></span>
+            </div>
+            <form id="institution-type-form" onsubmit="return false;">
+                @csrf
+                <input type="hidden" name="email" id="institution_email" value="" />
+
+                <!-- Multi-Select Dropdown -->
+                <div class="multi-select-wrapper" id="multi-select-wrapper">
+                    <label class="dropdown-label">Institution Type <span style="color:#dc3545;">*</span></label>
+                    <span class="no-selection">(Are youlooking job in which type of school/institution)</span>
+                    <div class="multi-select-trigger" id="multi-select-trigger">
+                        <span class="trigger-text" id="trigger-text">Select institution types...</span>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="multi-select-dropdown" id="multi-select-dropdown">
+                        <!-- Search -->
+                        <div class="dropdown-search">
+                            <input type="text" id="dropdown-search-input" placeholder="Search institution type..." autocomplete="off">
+                        </div>
+
+                        <!-- School -->
+                        <div class="dropdown-group-label" data-group="school">🏫 School</div>
+                        <div class="dropdown-option" data-value="cbse-school" data-group="school"><span class="opt-check"></span> CBSE School</div>
+                        <div class="dropdown-option" data-value="icse-school" data-group="school"><span class="opt-check"></span> ICSE School</div>
+                        <div class="dropdown-option" data-value="cambridge-school" data-group="school"><span class="opt-check"></span> Cambridge School</div>
+                        <div class="dropdown-option" data-value="ib-school" data-group="school"><span class="opt-check"></span> IB School</div>
+                        <div class="dropdown-option" data-value="igcse-school" data-group="school"><span class="opt-check"></span> IGCSE School</div>
+                        <div class="dropdown-option" data-value="primary-school" data-group="school"><span class="opt-check"></span> Primary School</div>
+                        <div class="dropdown-option" data-value="play-school" data-group="school"><span class="opt-check"></span> Play School</div>
+                        <div class="dropdown-option" data-value="state-board-school" data-group="school"><span class="opt-check"></span> State Board School</div>
+
+                        <!-- College -->
+                        <div class="dropdown-group-label" data-group="college">🎓 College</div>
+                        <div class="dropdown-option" data-value="engineering-college" data-group="college"><span class="opt-check"></span> Engineering College</div>
+                        <div class="dropdown-option" data-value="medical-college" data-group="college"><span class="opt-check"></span> Medical College</div>
+                        <div class="dropdown-option" data-value="nursing-college" data-group="college"><span class="opt-check"></span> Nursing College</div>
+                        <div class="dropdown-option" data-value="pharmacy-college" data-group="college"><span class="opt-check"></span> Pharmacy College</div>
+                        <div class="dropdown-option" data-value="science-college" data-group="college"><span class="opt-check"></span> Science College</div>
+                        <div class="dropdown-option" data-value="management-college" data-group="college"><span class="opt-check"></span> Management College</div>
+                        <div class="dropdown-option" data-value="degree-college" data-group="college"><span class="opt-check"></span> Degree College</div>
+
+                        <!-- Coaching Institute -->
+                        <div class="dropdown-group-label" data-group="coaching">📚 Coaching Institute</div>
+                        <div class="dropdown-option" data-value="jee-neet-institute" data-group="coaching"><span class="opt-check"></span> JEE & NEET Institute</div>
+                        <div class="dropdown-option" data-value="banking-institute" data-group="coaching"><span class="opt-check"></span> Banking Institute</div>
+                        <div class="dropdown-option" data-value="civil-services-institute" data-group="coaching"><span class="opt-check"></span> Civil Services Institute</div>
+                        <div class="dropdown-option" data-value="it-training-institute" data-group="coaching"><span class="opt-check"></span> IT Training Institute</div>
+
+                        <!-- EdTech & Online -->
+                        <div class="dropdown-group-label" data-group="edtech">💻 EdTech & Online</div>
+                        <div class="dropdown-option" data-value="edtech-company" data-group="edtech"><span class="opt-check"></span> EdTech Company</div>
+                        <div class="dropdown-option" data-value="online-education-platform" data-group="edtech"><span class="opt-check"></span> Online Education Platform</div>
+
+                        <!-- University & Academy -->
+                        <div class="dropdown-group-label" data-group="university">🏛️ University & Academy</div>
+                        <div class="dropdown-option" data-value="university" data-group="university"><span class="opt-check"></span> University</div>
+                        <div class="dropdown-option" data-value="teacher-training-academy" data-group="university"><span class="opt-check"></span> Teacher Training Academy</div>
+                        <div class="dropdown-option" data-value="sport-academy" data-group="university"><span class="opt-check"></span> Sports Academy</div>
+                        <div class="dropdown-option" data-value="distance-learning" data-group="university"><span class="opt-check"></span> Distance Learning</div>
+
+                        <!-- Other -->
+                        <div class="dropdown-group-label" data-group="other">📋 Other</div>
+                        <div class="dropdown-option" data-value="non-profit-organization" data-group="other"><span class="opt-check"></span> Non-Profit Organization</div>
+                        <div class="dropdown-option" data-value="book-publishing-company" data-group="other"><span class="opt-check"></span> Book Publishing Company</div>
+
+                        <div class="no-results" style="display:none;" id="no-results">No results found</div>
+                    </div>
+                </div>
+
+                <!-- Upload Resume -->
+                <div class="form-group" style="margin-bottom: 16px; margin-top: 10px;">
+                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 6px; font-size: 14px;">Upload Resume <span style="color: #dc3545;">*</span></label>
+                    <input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: #fff; cursor: pointer;" />
+                    <div id="resume-error" style="font-size: 12px; color: #dc3545; margin-top: 5px; display: none;"></div>
+                    <div style="font-size: 11px; color: #888; margin-top: 4px;">Only PDF and Word files accepted. Max size: 2 MB</div>
+                </div>
+
+                <!-- Continue Button -->
+                <button type="button" class="continue-btn" id="continue-btn" disabled>Continue</button>
+                
+                <!-- Back Link -->
+                <div class="back-link">
+                    <a href="{{ route('public.account.register.verifyEmailPage') }}">← Back</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -481,176 +500,283 @@
 <script>
 (function() {
     'use strict';
-    
-    let selected = []; // Array of { value, label }
-    const MAX = 3;
-    
-    const btn = document.getElementById('multiselect-btn');
-    const dropdown = document.getElementById('multiselect-dropdown');
-    const tagsContainer = document.getElementById('selected-tags');
-    
-    // Toggle dropdown
-    btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdown.classList.toggle('show');
-        btn.classList.toggle('open');
-    });
-    
-    // Close on outside click
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.tr-multiselect')) {
-            dropdown.classList.remove('show');
-            btn.classList.remove('open');
-        }
-    });
-    
-    // Option click
-    document.querySelectorAll('.tr-multiselect-option').forEach(opt => {
-        opt.addEventListener('click', function() {
-            if (this.classList.contains('disabled')) return;
-            
-            const value = this.dataset.value;
-            const label = this.textContent.trim();
-            
-            const idx = selected.findIndex(s => s.value === value);
-            
-            if (idx > -1) {
-                // Deselect
-                selected.splice(idx, 1);
-                this.classList.remove('selected');
-            } else if (selected.length < MAX) {
-                // Select
-                selected.push({ value, label });
-                this.classList.add('selected');
-            }
-            
-            updateUI();
-        });
-    });
-    
-    // Remove tag
-    window.removeTag = function(value) {
-        selected = selected.filter(s => s.value !== value);
-        document.querySelector(`.tr-multiselect-option[data-value="${value}"]`)?.classList.remove('selected');
-        updateUI();
+
+    var MAX = 3;
+    var selected = [];
+
+    var names = {
+        'cbse-school':'CBSE School','icse-school':'ICSE School','cambridge-school':'Cambridge School',
+        'ib-school':'IB School','igcse-school':'IGCSE School','primary-school':'Primary School',
+        'play-school':'Play School','state-board-school':'State Board School',
+        'engineering-college':'Engineering College','medical-college':'Medical College',
+        'nursing-college':'Nursing College','pharmacy-college':'Pharmacy College',
+        'science-college':'Science College','management-college':'Management College',
+        'degree-college':'Degree College','jee-neet-institute':'JEE & NEET Institute',
+        'banking-institute':'Banking Institute','civil-services-institute':'Civil Services Institute',
+        'it-training-institute':'IT Training Institute','edtech-company':'EdTech Company',
+        'online-education-platform':'Online Education Platform','university':'University',
+        'teacher-training-academy':'Teacher Training Academy','sport-academy':'Sports Academy',
+        'distance-learning':'Distance Learning','non-profit-organization':'Non-Profit Organization',
+        'book-publishing-company':'Book Publishing Company'
     };
-    
-    // Update UI
+
+    var trigger = document.getElementById('multi-select-trigger');
+    var dropdown = document.getElementById('multi-select-dropdown');
+    var searchInput = document.getElementById('dropdown-search-input');
+    var triggerText = document.getElementById('trigger-text');
+
     function updateUI() {
-        // Update tags
-        if (selected.length === 0) {
-            tagsContainer.innerHTML = '';
-        } else {
-            tagsContainer.innerHTML = selected.map((s, i) => `
-                <div class="tr-tag">
-                    <span class="tr-tag-num">${i + 1}</span>
-                    ${s.label}
-                    <span class="tr-tag-remove" onclick="removeTag('${s.value}')">&times;</span>
-                </div>
-            `).join('');
-        }
-        
-        // Update button text
-        if (selected.length === 0) {
-            btn.textContent = 'Click to select institutions...';
-            btn.classList.remove('has-selection');
-        } else {
-            btn.textContent = `${selected.length} selected (Max ${MAX})`;
-            btn.classList.add('has-selection');
-        }
-        
-        // Disable unselected options if max reached
-        document.querySelectorAll('.tr-multiselect-option').forEach(opt => {
-            const isSelected = selected.some(s => s.value === opt.dataset.value);
-            if (selected.length >= MAX && !isSelected) {
-                opt.classList.add('disabled');
+        // Count
+        var countEl = document.getElementById('selected-count');
+        if (countEl) countEl.textContent = selected.length;
+
+        // Tags — show selected items as blue pills with remove button
+        var tagsEl = document.getElementById('selected-tags');
+        if (tagsEl) {
+            tagsEl.innerHTML = '';
+            if (selected.length === 0) {
+                tagsEl.innerHTML = '<span class="no-selection">No institution selected yet</span>';
             } else {
-                opt.classList.remove('disabled');
+                selected.forEach(function(val) {
+                    var tag = document.createElement('span');
+                    tag.className = 'selected-tag';
+                    tag.innerHTML = (names[val] || val) + ' <span class="remove-tag" data-value="' + val + '">✕</span>';
+                    tagsEl.appendChild(tag);
+                });
+            }
+        }
+
+        // Trigger text — show selected names
+        if (triggerText) {
+            if (selected.length === 0) {
+                triggerText.textContent = 'Select institution types...';
+                triggerText.classList.remove('has-selection');
+            } else {
+                var selectedNames = selected.map(function(val) { return names[val] || val; });
+                if (selected.length === MAX) {
+                    triggerText.textContent = selectedNames.join(', ') + ' (max reached)';
+                } else {
+                    triggerText.textContent = selectedNames.join(', ');
+                }
+                triggerText.classList.add('has-selection');
+            }
+        }
+
+        // Options state — toggle checked/unchecked look
+        document.querySelectorAll('.dropdown-option').forEach(function(opt) {
+            var val = opt.getAttribute('data-value');
+            if (selected.indexOf(val) !== -1) {
+                opt.classList.add('selected');
+                opt.classList.remove('disabled-option');
+            } else if (selected.length >= MAX) {
+                opt.classList.remove('selected');
+                opt.classList.add('disabled-option');
+            } else {
+                opt.classList.remove('selected');
+                opt.classList.remove('disabled-option');
             }
         });
+
+        // Button
+        var btn = document.getElementById('continue-btn');
+        if (btn) btn.disabled = selected.length === 0;
     }
-    
+
+    function toggleDropdown() {
+        var isOpen = dropdown.classList.contains('show');
+        if (isOpen) {
+            dropdown.classList.remove('show');
+            trigger.classList.remove('open');
+        } else {
+            dropdown.classList.add('show');
+            trigger.classList.add('open');
+            searchInput.value = '';
+            filterOptions('');
+            setTimeout(function(){ searchInput.focus(); }, 100);
+        }
+    }
+
+    function filterOptions(query) {
+        query = query.toLowerCase().trim();
+        var options = document.querySelectorAll('.dropdown-option');
+        var groupLabels = document.querySelectorAll('.dropdown-group-label');
+        var groupHasVisible = {};
+        var anyVisible = false;
+
+        options.forEach(function(opt) {
+            var text = opt.textContent.toLowerCase();
+            var group = opt.getAttribute('data-group');
+            if (!query || text.indexOf(query) !== -1) {
+                opt.style.display = '';
+                groupHasVisible[group] = true;
+                anyVisible = true;
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+
+        groupLabels.forEach(function(label) {
+            var group = label.getAttribute('data-group');
+            label.style.display = groupHasVisible[group] ? '' : 'none';
+        });
+
+        document.getElementById('no-results').style.display = anyVisible ? 'none' : 'block';
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // Load email
         fetch('{{ route("public.account.register.getVerificationData") }}', {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.data?.email) {
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.data && data.data.email) {
                 document.getElementById('institution_email').value = data.data.email;
-                
-                let accountType = data.data.temp_account?.type || data.data.form_data?.account_type;
-                if (!accountType) {
-                    const saved = localStorage.getItem('registrationFormData');
-                    if (saved) try { accountType = JSON.parse(saved).account_type; } catch(e) {}
-                }
-                
-                document.getElementById('account_type_hidden').value = accountType || 'job-seeker';
-                
-                if (accountType === 'employer') {
-                    document.getElementById('institution_name_field_wrapper').style.display = 'block';
-                }
             }
         });
-        
-        // Continue button
-        document.getElementById('continue-btn').addEventListener('click', function() {
-            const email = document.getElementById('institution_email').value;
-            const accountType = document.getElementById('account_type_hidden').value;
-            
-            if (accountType === 'employer') {
-                const institutionName = document.getElementById('institution_name').value.trim();
-                if (!institutionName) {
-                    alert('Please enter institution name');
-                    return;
+
+        // Toggle dropdown
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleDropdown();
+        });
+
+        // Search
+        searchInput.addEventListener('input', function() {
+            filterOptions(this.value);
+        });
+
+        searchInput.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Option click
+        document.querySelectorAll('.dropdown-option').forEach(function(opt) {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var val = this.getAttribute('data-value');
+
+                if (selected.indexOf(val) !== -1) {
+                    // Deselect
+                    selected = selected.filter(function(v) { return v !== val; });
+                } else if (selected.length < MAX) {
+                    // Select
+                    selected.push(val);
                 }
+                updateUI();
+            });
+        });
+
+        // Remove tag
+        document.getElementById('selected-tags').addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-tag')) {
+                var val = e.target.getAttribute('data-value');
+                selected = selected.filter(function(v) { return v !== val; });
+                updateUI();
             }
-            
+        });
+
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('multi-select-wrapper').contains(e.target)) {
+                dropdown.classList.remove('show');
+                trigger.classList.remove('open');
+            }
+        });
+
+        // Clear resume error when file is selected
+        document.getElementById('resume').addEventListener('change', function() {
+            var resumeError = document.getElementById('resume-error');
+            resumeError.style.display = 'none';
+            resumeError.textContent = '';
+            this.style.borderColor = '#e2e8f0';
+        });
+
+        // Continue
+        document.getElementById('continue-btn').addEventListener('click', function() {
             if (selected.length === 0) {
-                alert('Please select at least one institution type');
+                alert('Please select at least 1 institution type');
                 return;
             }
-            
-            const btn = this;
+
+            // Validate resume
+            // Resume validation — inline error below input
+            var resumeInput = document.getElementById('resume');
+            var resumeError = document.getElementById('resume-error');
+            resumeError.style.display = 'none';
+            resumeError.textContent = '';
+            resumeInput.style.borderColor = '#e2e8f0';
+
+            if (!resumeInput || !resumeInput.files.length) {
+                resumeError.textContent = 'Please upload your resume.';
+                resumeError.style.display = 'block';
+                resumeInput.style.borderColor = '#dc3545';
+                resumeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            var resumeFile = resumeInput.files[0];
+            var allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            var fileName = resumeFile.name.toLowerCase();
+            if (allowedTypes.indexOf(resumeFile.type) === -1 && !fileName.endsWith('.pdf') && !fileName.endsWith('.doc') && !fileName.endsWith('.docx')) {
+                resumeError.textContent = 'Invalid file type. Only PDF and Word (.doc, .docx) files are allowed.';
+                resumeError.style.display = 'block';
+                resumeInput.style.borderColor = '#dc3545';
+                resumeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            var maxSize = 2 * 1024 * 1024; // 2MB
+            if (resumeFile.size > maxSize) {
+                resumeError.textContent = 'File size is too large. Maximum allowed size is 2 MB.';
+                resumeError.style.display = 'block';
+                resumeInput.style.borderColor = '#dc3545';
+                resumeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            var btn = this;
             btn.innerHTML = 'Saving...';
             btn.disabled = true;
-            
-            const institutionTypes = selected.map(s => s.value);
-            const csrfToken = document.querySelector('input[name="_token"]').value;
-            
+
+            var email = document.getElementById('institution_email').value;
+            var csrfToken = document.querySelector('input[name="_token"]').value;
+
+            // Use FormData for file upload
+            var formData = new FormData();
+            formData.append('email', email);
+            formData.append('institution_type', selected[0]);
+            formData.append('resume', resumeFile);
+            selected.forEach(function(val) {
+                formData.append('institution_types[]', val);
+            });
+
             fetch('{{ route("public.account.register.saveInstitutionType") }}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({
-                    email: email,
-                    institution_type: institutionTypes[0],
-                    institution_types: institutionTypes,
-                    institution_name: document.getElementById('institution_name')?.value || ''
-                })
+                body: formData
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
                 if (data.error === false) {
-                    localStorage.setItem('selected_institution_types', JSON.stringify(institutionTypes));
+                    localStorage.setItem('selected_institution_types', JSON.stringify(selected));
                     window.location.href = '{{ route("public.account.register.locationPage") }}';
                 } else {
                     alert(data.message || 'Failed to save');
-                    btn.innerHTML = 'Continue →';
+                    btn.innerHTML = 'Continue';
                     btn.disabled = false;
                 }
             })
-            .catch(err => {
-                alert('Failed to save');
-                btn.innerHTML = 'Continue →';
+            .catch(function() {
+                alert('Failed to save. Please try again.');
+                btn.innerHTML = 'Continue';
                 btn.disabled = false;
             });
         });
+
+        updateUI();
     });
 })();
 </script>

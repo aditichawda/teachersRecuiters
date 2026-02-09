@@ -45,6 +45,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
     protected $table = 'jb_accounts';
 
     protected $fillable = [
+        // Basic Info
         'first_name',
         'last_name',
         'full_name',
@@ -55,28 +56,81 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'phone',
         'phone_country_code',
         'is_whatsapp_available',
-        'description',
+        'alternate_phone',
+        'alternate_phone_country_code',
         'gender',
+        'marital_status',
+        'description',
+        'bio',
+        'career_aspiration',
+        
+        // Account type & package
         'package_id',
         'type',
         'credits',
+        'unique_id',
+        
+        // Resume & Documents
         'resume',
-        'address',
-        'bio',
-        'is_public_profile',
-        'hide_cv',
-        'available_for_hiring',
+        'resume_parsing_allowed',
+        'cover_letter',
+        'introductory_audio',
+        'introductory_audio_duration',
+        'introductory_video_url',
+        
+        // Salary
         'salary_type',
         'salary_amount',
+        'current_salary',
+        'expected_salary',
+        
+        // Profile Visibility
+        'is_public_profile',
+        'profile_visibility',
+        'hide_cv',
+        'hide_resume',
+        'hide_name_for_employer',
+        'hidden_for_schools',
+        
+        // Work Status
+        'available_for_hiring',
+        'available_for_immediate_joining',
+        'current_work_status',
+        'notice_period',
+        
+        // Location
+        'address',
         'country_id',
         'state_id',
         'city_id',
         'location_type',
+        'ready_for_relocation',
+        'work_location_preferences',
+        
+        // Institution preferences
         'institution_type',
         'institution_types',
         'institution_name',
-        'cover_letter',
-        'unique_id',
+        
+        // Position & Job preferences
+        'position_type',
+        'teaching_subjects',
+        'non_teaching_positions',
+        'job_type_preferences',
+        'remote_only',
+        
+        // Qualifications & Experience
+        'qualifications',
+        'teaching_certifications',
+        'total_experience',
+        
+        // Skills & Languages
+        'languages',
+        'skills',
+        
+        // Social
+        'social_links',
+        
         // Email verification fields
         'email_verified_at',
         'email_verification_token',
@@ -98,6 +152,31 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'email_verification_token_expires_at' => 'datetime',
         'verification_code_expires_at' => 'datetime',
         'is_email_verified' => 'boolean',
+        'is_whatsapp_available' => 'boolean',
+        'is_public_profile' => 'boolean',
+        'profile_visibility' => 'boolean',
+        'hide_cv' => 'boolean',
+        'hide_resume' => 'boolean',
+        'hide_name_for_employer' => 'boolean',
+        'available_for_hiring' => 'boolean',
+        'available_for_immediate_joining' => 'boolean',
+        'ready_for_relocation' => 'boolean',
+        'remote_only' => 'boolean',
+        'resume_parsing_allowed' => 'boolean',
+        'current_salary' => 'decimal:2',
+        'expected_salary' => 'decimal:2',
+        // JSON fields
+        'hidden_for_schools' => 'array',
+        'qualifications' => 'array',
+        'teaching_certifications' => 'array',
+        'work_location_preferences' => 'array',
+        'languages' => 'array',
+        'skills' => 'array',
+        'teaching_subjects' => 'array',
+        'non_teaching_positions' => 'array',
+        'job_type_preferences' => 'array',
+        'social_links' => 'array',
+        'institution_types' => 'array',
     ];
 
     public function sendPasswordResetNotification($token): void

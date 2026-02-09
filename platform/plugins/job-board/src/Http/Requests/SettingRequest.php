@@ -15,13 +15,15 @@ class SettingRequest extends Request
     {
         $rules = [
             'first_name' => 'required|max:120|min:2',
-            'last_name' => 'required|max:120|min:2',
-            'phone' => 'nullable|' . BaseHelper::getPhoneValidationRule(),
+            'last_name' => 'nullable|max:120',
+            'phone' => 'nullable|max:30',
+            'phone_country_code' => 'nullable|max:10',
             'dob' => 'nullable|date',
             'address' => 'nullable|max:250',
             'gender' => 'nullable|' . Rule::in(AccountGenderEnum::values()),
             'description' => 'nullable|max:4000',
             'bio' => 'nullable',
+            'career_aspiration' => 'nullable|max:10000',
             'country_id' => 'nullable|numeric',
             'state_id' => 'nullable|numeric',
             'city_id' => 'nullable|numeric',
@@ -35,13 +37,74 @@ class SettingRequest extends Request
 
         if ($account && $account->isJobSeeker()) {
             $rules = array_merge($rules, [
-                'is_public_profile' => Rule::in([0, 1]),
-                'hide_cv' => Rule::in([0, 1]),
-                'available_for_hiring' => Rule::in([0, 1]),
+                // Basic info
+                'is_whatsapp_available' => Rule::in([0, 1]),
+                'alternate_phone' => 'nullable|max:30',
+                'alternate_phone_country_code' => 'nullable|max:10',
+                'marital_status' => 'nullable|in:single,married,separated,others',
+                
+                // Salary
+                'current_salary' => 'nullable|numeric|min:0|max:99999999.99',
+                'expected_salary' => 'nullable|numeric|min:0|max:99999999.99',
                 'salary_type' => 'nullable|in:yearly,monthly,weekly,hourly',
                 'salary_amount' => 'nullable|numeric|min:0|max:999999999.99',
-                'resume' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx',
-                'cover_letter' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx',
+                
+                // Profile visibility
+                'is_public_profile' => Rule::in([0, 1]),
+                'profile_visibility' => Rule::in([0, 1]),
+                'hide_cv' => Rule::in([0, 1]),
+                'hide_resume' => Rule::in([0, 1]),
+                'hide_name_for_employer' => Rule::in([0, 1]),
+                'hidden_for_schools' => 'nullable|array',
+                
+                // Work status
+                'available_for_hiring' => Rule::in([0, 1]),
+                'available_for_immediate_joining' => Rule::in([0, 1]),
+                'current_work_status' => 'nullable|in:not_working,working',
+                'notice_period' => 'nullable|in:7_days,15_days,1_month,2_months,3_months',
+                
+                // Documents
+                'resume' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx|max:2048',
+                'resume_parsing_allowed' => Rule::in([0, 1]),
+                'cover_letter' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx|max:2048',
+                'introductory_audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:10240',
+                'introductory_video_url' => 'nullable|url|max:500',
+                
+                // Qualifications & Experience
+                'qualifications' => 'nullable|array',
+                'qualifications.*.level' => 'nullable|in:diploma,bachelors,masters,doctorate',
+                'qualifications.*.specialization' => 'nullable|string|max:200',
+                'qualifications.*.institution' => 'nullable|string|max:200',
+                'teaching_certifications' => 'nullable|array',
+                'total_experience' => 'nullable|string|max:20',
+                
+                // Location
+                'location_type' => 'nullable|in:current,native',
+                'ready_for_relocation' => Rule::in([0, 1]),
+                'work_location_preferences' => 'nullable|array',
+                
+                // Skills & Languages
+                'favorite_skills' => 'nullable|string|max:5000',
+                'favorite_tags' => 'nullable|string|max:5000',
+                'languages' => 'nullable|array|max:3',
+                'languages.*.language' => 'nullable|string|max:100',
+                'languages.*.proficiency' => 'nullable|in:basic,intermediate,fluent,native',
+                'skills' => 'nullable|array',
+                
+                // Job preferences
+                'institution_types' => 'nullable|array',
+                'position_type' => 'nullable|array',
+                'teaching_subjects' => 'nullable|array',
+                'non_teaching_positions' => 'nullable|array',
+                'job_type_preferences' => 'nullable|array',
+                'remote_only' => Rule::in([0, 1]),
+                
+                // Social links
+                'social_links' => 'nullable|array',
+                'social_links.linkedin' => 'nullable|url|max:500',
+                'social_links.facebook' => 'nullable|url|max:500',
+                'social_links.twitter' => 'nullable|url|max:500',
+                'social_links.instagram' => 'nullable|url|max:500',
             ]);
         }
 

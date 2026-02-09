@@ -12,15 +12,18 @@ class AccountEducation extends BaseModel
     protected $fillable = [
         'school',
         'account_id',
+        'level',
         'specialized',
         'description',
         'started_at',
         'ended_at',
+        'is_current',
     ];
 
     protected $casts = [
         'started_at' => 'date',
         'ended_at' => 'date',
+        'is_current' => 'boolean',
         'school' => SafeContent::class,
         'description' => SafeContent::class,
         'specialized' => SafeContent::class,

@@ -629,6 +629,14 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => fn () => route('public.account.employer.settings.edit'),
                     'icon' => 'ti ti-settings',
                 ])
+                ->registerItem([
+                    'id' => 'cms-account-change-password',
+                    'priority' => 8,
+                    'parent_id' => null,
+                    'name' => 'plugins/job-board::dashboard.menu.change_password',
+                    'url' => fn () => route('public.account.security'),
+                    'icon' => 'ti ti-lock',
+                ])
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), function (DashboardMenuSupport $dashboardMenu): void {
                     $dashboardMenu
                         ->registerItem([

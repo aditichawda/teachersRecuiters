@@ -127,8 +127,11 @@ class AccountController extends BaseController
          */
         $account = auth('account')->user();
         $data = $request->validated();
-        Arr::forget($data, ['resume', 'cover_letter']);
+        
+        // Remove file fields from data array (handled separately)
+        Arr::forget($data, ['resume', 'cover_letter', 'introductory_audio']);
 
+        // Handle resume upload
         if ($request->hasFile('resume')) {
             $result = RvMedia::handleUpload($request->file('resume'), 0, $account->upload_folder);
 
@@ -141,6 +144,7 @@ class AccountController extends BaseController
             }
         }
 
+        // Handle cover letter upload
         if ($request->hasFile('cover_letter')) {
             $result = RvMedia::handleUpload($request->file('cover_letter'), 0, $account->upload_folder);
 
@@ -153,6 +157,65 @@ class AccountController extends BaseController
             }
         }
 
+        // Handle introductory audio upload
+        if ($request->hasFile('introductory_audio')) {
+            $result = RvMedia::handleUpload($request->file('introductory_audio'), 0, $account->upload_folder);
+
+            if (! $result['error']) {
+                if ($path = $account->introductory_audio) {
+                    Storage::disk('public')->delete($path);
+                }
+
+                $data['introductory_audio'] = $result['data']->url;
+                
+                // Try to get audio duration (optional)
+                try {
+                    $filePath = Storage::disk('public')->path($result['data']->url);
+                    if (function_exists('getID3') || class_exists('\getID3')) {
+                        $getID3 = new \getID3();
+                        $fileInfo = $getID3->analyze($filePath);
+                        $data['introductory_audio_duration'] = isset($fileInfo['playtime_seconds']) 
+                            ? (int) $fileInfo['playtime_seconds'] 
+                            : null;
+                    }
+                } catch (\Exception $e) {
+                    // Duration detection failed, continue without it
+                }
+            }
+        }
+
+        // Process qualifications - filter out empty entries
+        if (isset($data['qualifications'])) {
+            $data['qualifications'] = array_values(array_filter($data['qualifications'], function($qual) {
+                return !empty($qual['level']) || !empty($qual['specialization']) || !empty($qual['institution']);
+            }));
+        }
+
+        // Process languages - filter out empty entries
+        if (isset($data['languages'])) {
+            $data['languages'] = array_values(array_filter($data['languages'], function($lang) {
+                return !empty($lang['language']);
+            }));
+        }
+
+        // Handle position_type as string if array with single value
+        if (isset($data['position_type']) && is_array($data['position_type'])) {
+            $data['position_type'] = implode(',', $data['position_type']);
+        }
+
+        // Extract favorite_skills and favorite_tags before saving (pivot table sync)
+        $favoriteSkills = null;
+        if (isset($data['favorite_skills'])) {
+            $favoriteSkills = $data['favorite_skills'];
+            Arr::forget($data, 'favorite_skills');
+        }
+
+        $favoriteTags = null;
+        if (isset($data['favorite_tags'])) {
+            $favoriteTags = $data['favorite_tags'];
+            Arr::forget($data, 'favorite_tags');
+        }
+
         AccountSettingForm::createFromModel($account)
             ->saving(function (AccountSettingForm $form) use ($data): void {
                 $model = $form->getModel();
@@ -160,6 +223,18 @@ class AccountController extends BaseController
                 $model->fill($data);
                 $model->save();
             });
+
+        // Sync favorite skills (pivot table)
+        if ($favoriteSkills !== null) {
+            $skillIds = array_filter(explode(',', $favoriteSkills));
+            $account->favoriteSkills()->sync($skillIds);
+        }
+
+        // Sync favorite tags (pivot table)
+        if ($favoriteTags !== null) {
+            $tagIds = array_filter(explode(',', $favoriteTags));
+            $account->favoriteTags()->sync($tagIds);
+        }
 
         AccountActivityLog::query()->create(['action' => 'update_setting']);
 
@@ -171,12 +246,18 @@ class AccountController extends BaseController
 
     public function getSecurity()
     {
-        SeoHelper::setTitle(trans('plugins/job-board::messages.security'));
-
         /**
          * @var Account $account
          */
         $account = auth('account')->user();
+
+        if ($account->isEmployer()) {
+            $this->pageTitle(__('Change Password'));
+
+            return JobBoardHelper::view('dashboard.change-password', compact('account'));
+        }
+
+        SeoHelper::setTitle(trans('plugins/job-board::messages.security'));
 
         return JobBoardHelper::scope('account.settings.security', compact('account'));
     }
@@ -330,6 +411,56 @@ class AccountController extends BaseController
         $account = auth('account')->user();
 
         return RvMedia::uploadFromEditor($request, 0, $account->upload_folder);
+    }
+
+    public function getResumeBuilder()
+    {
+        SeoHelper::setTitle(__('Resume Builder'));
+
+        /** @var Account $account */
+        $account = auth('account')->user();
+
+        $educations = AccountEducation::query()
+            ->where('account_id', $account->id)
+            ->orderBy('started_at', 'desc')
+            ->get();
+
+        $experiences = AccountExperience::query()
+            ->where('account_id', $account->id)
+            ->orderBy('started_at', 'desc')
+            ->get();
+
+        $skills = $account->favoriteSkills()->pluck('name')->all();
+
+        return JobBoardHelper::scope(
+            'account.resume-builder',
+            compact('account', 'educations', 'experiences', 'skills')
+        );
+    }
+
+    public function downloadResume(Request $request)
+    {
+        /** @var Account $account */
+        $account = auth('account')->user();
+
+        $template = $request->input('template', 'classic');
+
+        $educations = AccountEducation::query()
+            ->where('account_id', $account->id)
+            ->orderBy('started_at', 'desc')
+            ->get();
+
+        $experiences = AccountExperience::query()
+            ->where('account_id', $account->id)
+            ->orderBy('started_at', 'desc')
+            ->get();
+
+        $skills = $account->favoriteSkills()->pluck('name')->all();
+
+        $html = view(Theme::getThemeNamespace('views.job-board.account.resume-templates.' . $template), compact('account', 'educations', 'experiences', 'skills'))->render();
+
+        return response($html)
+            ->header('Content-Type', 'text/html');
     }
 
     public function postUploadResume(UploadResumeRequest $request)

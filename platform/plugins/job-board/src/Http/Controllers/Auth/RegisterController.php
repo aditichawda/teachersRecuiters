@@ -177,9 +177,18 @@ class RegisterController extends BaseController
             'session_data_keys' => array_keys($sessionData)
         ]);
 
+        // Get phone and WhatsApp availability from session data
+        $formData = $sessionData['form_data'] ?? [];
+        $phone = $formData['phone'] ?? '';
+        $isWhatsappAvailable = !empty($formData['is_whatsapp_available']);
+
         return Theme::scope(
             'job-board.auth.verify-email',
-            ['email' => $email],
+            [
+                'email' => $email,
+                'phone' => $phone,
+                'isWhatsappAvailable' => $isWhatsappAvailable,
+            ],
         )->render();
     }
 
@@ -196,9 +205,14 @@ class RegisterController extends BaseController
 
         $this->guard()->login($account);
 
+        // Redirect based on account type
+        $redirectUrl = $account->isEmployer() 
+            ? route('public.account.dashboard') 
+            : route('public.account.jobseeker.dashboard');
+
         return $this
             ->httpResponse()
-            ->setNextUrl(route('public.account.dashboard'))
+            ->setNextUrl($redirectUrl)
             ->setMessage(trans('plugins/job-board::account.confirmation_successful'));
     }
 
@@ -336,7 +350,21 @@ class RegisterController extends BaseController
             }
         }
         
-        $formData = $request->input('form_data', []); // Get form data from request
+        // Get form data - support both nested (form_data[field]) and top-level (field) formats
+        $formData = $request->input('form_data', []);
+        if (empty($formData)) {
+            // Read from top-level request data
+            $formData = [
+                'full_name' => $request->input('full_name'),
+                'email' => $request->input('email'),
+                'phone' => $request->input('phone'),
+                'phone_display' => $request->input('phone_display'),
+                'phone_country_code' => $request->input('phone_country_code'),
+                'password' => $request->input('password'),
+                'is_whatsapp_available' => $request->input('is_whatsapp_available', false),
+                'account_type' => $request->input('account_type', 'job-seeker'),
+            ];
+        }
 
         // Generate OTP code - For testing use fixed code, for production use random
         // Fixed code for testing:
@@ -1083,6 +1111,29 @@ class RegisterController extends BaseController
             $updated = $account->update($updateData);
             \Log::info('Update result:', ['updated' => $updated]);
             
+            // Handle resume upload (moved from location step to institution type step)
+            if ($request->hasFile('resume')) {
+                try {
+                    $result = RvMedia::handleUpload($request->file('resume'), 0, $account->upload_folder);
+                    if (!$result['error']) {
+                        $account->resume = $result['data']->url;
+                        $account->save();
+                        \Log::info('Resume uploaded in institution type step', [
+                            'account_id' => $account->id,
+                            'resume_url' => $result['data']->url,
+                        ]);
+                    } else {
+                        \Log::warning('Resume upload failed in institution type step', [
+                            'error' => $result['message'] ?? 'Unknown error',
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Resume upload exception in institution type step:', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+            
             // Verify the save
             $account->refresh();
             \Log::info('=== Account updated successfully ===', [
@@ -1090,7 +1141,8 @@ class RegisterController extends BaseController
                 'institution_name' => $account->institution_name,
                 'institution_name_expected' => $institutionName,
                 'institution_name_saved' => $account->institution_name === $institutionName ? 'YES ✅' : 'NO ❌',
-                'institution_name_is_null' => is_null($account->institution_name) ? 'YES ❌' : 'NO ✅'
+                'institution_name_is_null' => is_null($account->institution_name) ? 'YES ❌' : 'NO ✅',
+                'resume' => $account->resume,
             ]);
             
             // Double check with fresh query
@@ -1187,6 +1239,7 @@ class RegisterController extends BaseController
                 'country_id' => ['nullable', 'integer'],
                 'state_id' => ['nullable', 'integer'],
                 'city_id' => ['nullable', 'integer'],
+                'resume' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:2048'],
             ]);
 
             $email = $request->input('email');
@@ -1276,6 +1329,23 @@ class RegisterController extends BaseController
                 $account->update($updateData);
             }
 
+            // Handle resume upload
+            if ($request->hasFile('resume')) {
+                $result = RvMedia::handleUpload($request->file('resume'), 0, $account->upload_folder);
+                if (! $result['error']) {
+                    $account->resume = $result['data']->url;
+                    $account->save();
+                    \Log::info('Resume uploaded successfully', [
+                        'account_id' => $account->id,
+                        'resume_url' => $result['data']->url,
+                    ]);
+                } else {
+                    \Log::warning('Resume upload failed', [
+                        'error' => $result['message'] ?? 'Unknown error',
+                    ]);
+                }
+            }
+
             \Log::info('=== Location saved successfully ===', [
                 'account_id' => $account->id,
                 'email' => $email,
@@ -1297,11 +1367,15 @@ class RegisterController extends BaseController
                 'email' => $email,
             ]);
 
-            // Redirect to settings page after registration
+            // Redirect to appropriate dashboard based on account type
+            $redirectUrl = $account->isEmployer() 
+                ? route('public.account.dashboard') 
+                : route('public.account.jobseeker.dashboard');
+
             return $this
                 ->httpResponse()
                 ->setMessage('Location saved successfully.')
-                ->setNextUrl(route('public.account.settings'));
+                ->setNextUrl($redirectUrl);
                 
         } catch (\Exception $e) {
             \Log::error('=== saveLocation ERROR ===', [
@@ -1426,8 +1500,11 @@ class RegisterController extends BaseController
 
         $this->registered($request, $account);
 
+        // Redirect based on account type
         if ($account->isEmployer()) {
             $this->redirectTo = route('public.account.dashboard');
+        } else {
+            $this->redirectTo = route('public.account.jobseeker.dashboard');
         }
 
         return $this

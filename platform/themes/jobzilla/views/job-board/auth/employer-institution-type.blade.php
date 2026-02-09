@@ -90,8 +90,10 @@
     .step-indicator {
         display: flex;
         justify-content: center;
+        align-items: center;
         margin-bottom: 20px;
-        gap: 12px;
+        gap: 10px;
+        flex-wrap: nowrap;
     }
 
     .step {
@@ -100,6 +102,7 @@
         gap: 5px;
         color: #999;
         font-size: 11px;
+        white-space: nowrap;
     }
 
     .step.active {
@@ -121,6 +124,7 @@
         justify-content: center;
         font-size: 10px;
         font-weight: 600;
+        flex-shrink: 0;
     }
 
     .step.active .step-number {
@@ -131,6 +135,16 @@
     .step.completed .step-number {
         background: #28a745;
         color: #fff;
+    }
+
+    @media (max-width: 480px) {
+        .step-indicator { gap: 6px; }
+        .step { font-size: 10px; gap: 3px; }
+        .step-number { width: 20px; height: 20px; font-size: 9px; }
+    }
+
+    @media (max-width: 360px) {
+        .step span:last-child { display: none; }
     }
 
     .back-link {
@@ -156,15 +170,15 @@
             <div class="step-indicator">
                 <div class="step completed">
                     <span class="step-number">✓</span>
-                    <span>Details</span>
+                    <span>Basic Details</span>
                 </div>
                 <div class="step completed">
                     <span class="step-number">✓</span>
-                    <span>Verify</span>
+                    <span>Verification</span>
                 </div>
                 <div class="step active">
                     <span class="step-number">3</span>
-                    <span>Institution</span>
+                    <span>School/Institution</span>
                 </div>
                 <div class="step">
                     <span class="step-number">4</span>

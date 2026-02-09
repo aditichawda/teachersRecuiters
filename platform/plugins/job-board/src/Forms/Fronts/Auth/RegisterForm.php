@@ -4,12 +4,10 @@ namespace Botble\JobBoard\Forms\Fronts\Auth;
 
 use Botble\Base\Facades\Html;
 use Botble\Base\Forms\FieldOptions\CheckboxFieldOption;
-use Botble\Base\Forms\FieldOptions\FileFieldOption;
 use Botble\Base\Forms\FieldOptions\OnOffFieldOption;
 use Botble\Base\Forms\FieldOptions\PhoneNumberFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\Fields\EmailField;
-use Botble\Base\Forms\Fields\FileField;
 use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\OnOffCheckboxField;
 use Botble\Base\Forms\Fields\OnOffField;
@@ -43,7 +41,7 @@ class RegisterForm extends AuthForm
         ];
 
         $this
-            ->setUrl(route('public.account.register.post'))
+            ->setUrl(route('public.account.register.sendVerificationCode'))
             ->setValidatorClass(RegisterRequest::class)
             ->setFormOption('enctype', 'multipart/form-data')
             // Step 1 Fields
@@ -98,7 +96,7 @@ class RegisterForm extends AuthForm
                 'html' => '</div>',
             ])
 
-            // Row 2: Mobile (+ WhatsApp toggle) + Upload Resume (6/6)
+            // Row 2: Mobile (+ WhatsApp toggle)
             ->add('step_1_col_phone_open', HtmlField::class, [
                 'html' => '<div class="col-md-6">',
             ])
@@ -123,23 +121,8 @@ class RegisterForm extends AuthForm
             ->add('step_1_col_phone_close', HtmlField::class, [
                 'html' => '</div>',
             ])
-            ->add('step_1_col_resume_open', HtmlField::class, [
-                'html' => '<div class="col-md-6">',
-            ])
-            ->add(
-                'resume',
-                FileField::class,
-                FileFieldOption::make()
-                    ->label('Upload Resume (PDF/Word)')
-                    ->addAttribute('accept', 'application/pdf,.doc,.docx')
-                    ->addAttribute('data-step', '1')
-                    ->required()
-            )
-            ->add('step_1_col_resume_close', HtmlField::class, [
-                'html' => '</div>',
-            ])
 
-            // Row 3: Password + Confirm Password (6/6)
+            // Row 3: Password
             ->add('step_1_col_password_open', HtmlField::class, [
                 'html' => '<div class="col-md-6">',
             ])
@@ -154,22 +137,6 @@ class RegisterForm extends AuthForm
                     ->addAttribute('data-step', '1')
             )
             ->add('step_1_col_password_close', HtmlField::class, [
-                'html' => '</div>',
-            ])
-            ->add('step_1_col_password_confirmation_open', HtmlField::class, [
-                'html' => '<div class="col-md-6">',
-            ])
-            ->add(
-                'password_confirmation',
-                PasswordField::class,
-                TextFieldOption::make()
-                    ->label(trans('plugins/job-board::messages.password_confirmation'))
-                    ->placeholder(trans('plugins/job-board::messages.password_confirmation'))
-                    ->icon('ti ti-lock')
-                    ->required()
-                    ->addAttribute('data-step', '1')
-            )
-            ->add('step_1_col_password_confirmation_close', HtmlField::class, [
                 'html' => '</div>',
             ])
 
@@ -267,11 +234,6 @@ class RegisterForm extends AuthForm
             ])
             ->add('filters', HtmlField::class, [
                 'html' => apply_filters(BASE_FILTER_AFTER_LOGIN_OR_REGISTER_FORM, null, Account::class),
-            ])
-            ->when(setting('job_board_enabled_register_as_employer', 1), function (FormAbstract $form): void {
-                $form->add('account_type_modal', HtmlField::class, [
-                    'html' => view('plugins/job-board::auth.partials.account-type-modal')->render(),
-                ]);
-            });
+            ]);
     }
 }

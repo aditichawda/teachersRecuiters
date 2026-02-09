@@ -28,7 +28,7 @@ class RegisterRequest extends Request
             'phone_country_code' => ['nullable', 'string', 'max:10'],
             'is_whatsapp_available' => ['nullable', 'boolean'],
             'resume' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'], // Made nullable for multi-step registration
-            'password' => ['required', 'min:6', 'confirmed'],
+            'password' => ['required', 'min:6'],
             
             // Step 2: Institution Type
             'institution_type' => ['nullable', 'in:school,edtech-company,online-education-platform,college,coaching-institute,book-publishing-company,non-profit-organization'],
