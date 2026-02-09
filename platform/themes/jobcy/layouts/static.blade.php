@@ -5,11 +5,15 @@
         @if (Theme::get('withPageHeader', true))
             {!! Theme::partial('page-header') !!}
         @endif
-        <section class="section static-layout-page">
+        <section class="section static-layout-page py-5">
             <div class="container">
                 <div class="row justify-content-center">
-                    <div class="col-lg-12">
-                        {!! Theme::content() !!}
+                    <div class="col-lg-12 col-xl-12">
+                        <div class="static-page-content card border-0 shadow-sm rounded-3 overflow-hidden">
+                            <div class="card-body p-4 p-md-5">
+                                {!! Theme::content() !!}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

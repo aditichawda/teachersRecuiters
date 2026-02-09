@@ -1,5 +1,5 @@
 <!-- TOP COMPANIES START -->
-<div class="section-full p-t120 p-b90 site-bg-white twm-companies-wrap twm-companies-wrap-h-page-7 pos-relative">
+<div class="section-full p-t0 p-b90 site-bg-white twm-companies-wrap twm-companies-wrap-h-page-7 pos-relative">
     <div class="twm-companies-wrap-bg-block2"></div>
     <!-- TITLE START-->
     <div class="section-head center wt-small-separator-outer content-white">

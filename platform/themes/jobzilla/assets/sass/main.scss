@@ -1201,7 +1201,7 @@ button {
             color: $clr-dark;
             position: relative;
             min-height: 75px;
-            margin-bottom: 90px;
+            margin-bottom: 50px;
             @include breakpoint-991 {
                 margin-bottom: 30px;
             }
@@ -17602,5 +17602,1566 @@ h3.twm-title {
             }
         }
 
+    }
+}
+// Contact form card styling
+.twm-contact-one {
+    .contact-form-outer {
+        // card background with a bit more contrast
+        background: linear-gradient(135deg, #e7f0ff 0%, #f5f8ff 40%, #ffffff 100%);
+        border: 1px solid #8fb0ff; // visible bluish border
+        border-radius: 18px;
+        padding: 32px 32px 28px;
+        box-shadow: none;
+    }
+
+    .section-head.left.wt-small-separator-outer {
+        margin-bottom: 24px;
+
+        .wt-title {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        p {
+            margin-bottom: 0;
+            color: #647089;
+        }
+    }
+
+    .cons-contact-form {
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-control {
+            background-color: #ffffff; // always white, focus ho ya na ho
+            border: 1px solid #c3d6fb; // clearer border around inputs
+            border-radius: 10px;
+            height: 52px;
+            padding: 10px 16px;
+
+            &:focus {
+                background-color: #ffffff;
+                border-color: #2563eb;
+                box-shadow: none;
+            }
+        }
+
+        textarea.form-control {
+            min-height: 110px;
+        }
+
+        .site-button {
+            padding: 11px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+    }
+}
+
+// Job card (style-2) tweaks
+.twm-jobs-grid-style1 {
+    box-shadow: none; // remove default shadow
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 0 1px rgba(56, 152, 226, 0.35), 0 10px 25px rgba(56, 152, 226, 0.22);
+    }
+
+    .twm-media {
+        box-shadow: none;
+
+        &:hover {
+            box-shadow: 0 0 0 1px rgba(56, 152, 226, 0.4);
+        }
+    }
+}
+
+// About page styling
+.about-page {
+    .about-page-section {
+        padding-top: 30px;
+        padding-bottom: 40px;
+        // 180deg = upar blue, neeche jate jate white (neeche zyada blue nahi hoga)
+        background: linear-gradient(80deg, rgb(161, 210, 253) 0%, rgba(255, 255, 255, 1) 100%);
+    }
+
+    .about-page-card {
+        // text ke peeche pure white card
+        background-color: #ffffff;
+        border: 2px solid #e5e7eb; // light gray border around text block
+        border-radius: 18px;
+        padding: 34px 44px;
+        max-width: 1280px;
+        margin: 0 auto;
+    }
+
+    .about-page-card .ck-content {
+        font-size: 16px;
+        line-height: 1.8;
+        color: #1f2933;
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        strong {
+            font-weight: 600;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        ul,
+        ol {
+            margin: 0.75rem 0 1rem;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.35rem;
+        }
+
+        // Desktop: sirf paragraph text 2 columns; shortcodes full width neeche
+        @media (min-width: 992px) {
+            column-count: 2;
+            column-gap: 48px;
+
+            p,
+            h1,
+            h2,
+            h3,
+            h4,
+            ul,
+            ol {
+                break-inside: avoid-column;
+            }
+
+            // shortcode blocks (testimonials, job categories, jobs list, etc.) full width, pehle jaisa
+            > div,
+            > section {
+                column-span: all;
+            }
+        }
+    }
+}
+
+// About page: shortcode sections ke beech space kam (Browse All Jobs / Featured Institutions)
+.about-page .about-page-card .section-full {
+    &.p-t120 {
+        padding-top: 3rem; // 48px (pehle 120px)
+    }
+    &.p-b90 {
+        padding-bottom: 3rem; // 48px (pehle 90px)
+    }
+}
+
+// How It Works page – soft gradient + white content card (screenshot-style UI)
+.how-it-works-page {
+    .how-it-works-section {
+        padding-top: 2rem;
+        padding-bottom: 3.5rem;
+        background: linear-gradient(180deg, #e8f4fc 0%, #f0f7ff 25%, #ffffff 100%);
+    }
+
+    .how-it-works-card {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 2.5rem 2.75rem 3rem;
+        max-width: 1100px;
+        margin: 0 auto;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+    }
+
+    .how-it-works-card .ck-content {
+        font-size: 1rem;
+        line-height: 1.85;
+        color: #334155;
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        strong {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+            color: #0f172a;
+            &:first-child {
+                margin-top: 0;
+            }
+        }
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 1.75rem;
+            margin-bottom: 0.6rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        h3,
+        h4 {
+            font-size: 1.25rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        ul,
+        ol {
+            margin: 0.75rem 0 1rem;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.4rem;
+        }
+
+        @media (min-width: 992px) {
+            column-count: 2;
+            column-gap: 3rem;
+
+            p,
+            h1,
+            h2,
+            h3,
+            h4,
+            ul,
+            ol {
+                break-inside: avoid-column;
+            }
+
+            > div,
+            > section {
+                column-span: all;
+            }
+        }
+    }
+}
+
+.how-it-works-page .how-it-works-card .section-full {
+    &.p-t120 {
+        padding-top: 3rem;
+    }
+    &.p-b90 {
+        padding-bottom: 3rem;
+    }
+}
+
+// ============================================
+// HOW IT WORKS - PROFESSIONAL CORPORATE LAYOUT
+// ============================================
+
+// Common elements
+.hiw-label {
+    display: inline-block;
+    color: #1967d2;
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.hiw-section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+
+    .hiw-section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: 0.5rem;
+        margin-bottom: 0;
+    }
+}
+
+.hiw-btn-primary {
+    display: inline-block;
+    background: #1967d2;
+    color: #fff;
+    padding: 0.875rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: all 0.25s ease;
+
+    &:hover {
+        background: #1557b0;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(25, 103, 210, 0.3);
+    }
+}
+
+// SECTION 1: Hero Section
+.hiw-hero-section {
+    padding: 7rem 0 0;
+    background: linear-gradient(180deg, #f0f7ff 0%, #ffffff 100%);
+
+    .hiw-hero-content {
+        padding-right: 2rem;
+
+        @media (max-width: 991px) {
+            padding-right: 0;
+            margin-bottom: 2.5rem;
+        }
+    }
+
+    .hiw-hero-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+        margin-bottom: 1.25rem;
+
+        @media (max-width: 767px) {
+            font-size: 2rem;
+        }
+    }
+
+    .hiw-hero-desc {
+        font-size: 1.0625rem;
+        color: #475569;
+        line-height: 1.75;
+        margin-bottom: 1rem;
+    }
+
+    .hiw-hero-highlights {
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0 0;
+
+        li {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            color: #334155;
+            font-size: 1rem;
+            margin-bottom: 0.625rem;
+
+            i {
+                color: #22c55e;
+                font-size: 1.125rem;
+            }
+        }
+    }
+
+    .hiw-hero-image {
+        text-align: center;
+        
+        img {
+            max-width: 350px;
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+    }
+}
+
+// SECTION 2: Info Boxes (Two Columns)
+.hiw-info-boxes-section {
+    padding: 4rem 0 0;
+    background: #fff;
+
+    .hiw-info-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 2rem 2.25rem;
+        height: 100%;
+        transition: box-shadow 0.25s ease;
+
+        &:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        }
+    }
+
+    .hiw-info-title {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        i {
+            color: #1967d2;
+            font-size: 1.5rem;
+        }
+    }
+
+    .hiw-info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+            position: relative;
+            padding-left: 1.75rem;
+            color: #475569;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+
+            &::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0.5rem;
+                width: 8px;
+                height: 8px;
+                background: #1967d2;
+                border-radius: 50%;
+            }
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+
+// SECTION 3: Process Steps (Numbered Grid)
+.hiw-process-section {
+    padding: 5rem 0 0;
+    background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+
+    .hiw-step-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 2rem;
+        height: 100%;
+        position: relative;
+        transition: all 0.3s ease;
+
+        &:hover {
+            border-color: #1967d2;
+            box-shadow: 0 12px 40px rgba(25, 103, 210, 0.12);
+            transform: translateY(-4px);
+        }
+    }
+
+    .hiw-step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #1967d2 0%, #3b82f6 100%);
+        color: #fff;
+        font-size: 1.25rem;
+        font-weight: 700;
+        border-radius: 12px;
+        margin-bottom: 1.25rem;
+    }
+
+    .hiw-step-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.75rem;
+    }
+
+    .hiw-step-desc {
+        color: #64748b;
+        font-size: 0.9375rem;
+        line-height: 1.65;
+        margin-bottom: 0;
+    }
+}
+
+// SECTION 4: Alternating Image + Text
+.hiw-alternating-section {
+    padding: 5rem 0 0;
+    background: #fff;
+
+    .hiw-alt-row {
+        margin-bottom: 5rem;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 991px) {
+            margin-bottom: 3.5rem;
+        }
+    }
+
+    .hiw-alt-image {
+        text-align: center;
+        
+        img {
+            max-width: 380px;
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 12px 35px rgba(130, 169, 223, 0.4);
+        }
+
+        @media (max-width: 991px) {
+            margin-bottom: 2rem;
+        }
+    }
+
+    .hiw-alt-content {
+        padding-left: 2.5rem;
+
+        @media (max-width: 991px) {
+            padding-left: 0;
+        }
+
+        .flex-lg-row-reverse & {
+            padding-left: 0;
+            padding-right: 2.5rem;
+
+            @media (max-width: 991px) {
+                padding-right: 0;
+            }
+        }
+    }
+
+    .hiw-alt-title {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .hiw-alt-content > p {
+        color: #475569;
+        font-size: 1rem;
+        line-height: 1.75;
+        margin-bottom: 1.25rem;
+    }
+
+    .hiw-alt-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1.75rem;
+
+        li {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            color: #334155;
+            font-size: 1rem;
+            margin-bottom: 0.625rem;
+
+            i {
+                color: #22c55e;
+                font-size: 1.125rem;
+            }
+        }
+    }
+}
+
+// SECTION 5: Feature Cards
+.hiw-features-section {
+    padding: 5rem 0;
+    background: #f8fafc;
+
+    .hiw-feature-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        height: 100%;
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
+
+        &:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8);
+        }
+
+        h4 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.75rem;
+        }
+
+        p {
+            color: #64748b;
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+    }
+
+    .hiw-feature-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+
+        i {
+            font-size: 1.5rem;
+            color: #fff;
+        }
+    }
+
+    .hiw-feature-blue {
+        border-color: rgba(25, 103, 210, 0.15);
+        .hiw-feature-icon {
+            background: linear-gradient(135deg, #1967d2 0%, #3b82f6 100%);
+        }
+    }
+
+    .hiw-feature-green {
+        border-color: rgba(34, 197, 94, 0.15);
+        .hiw-feature-icon {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        }
+    }
+
+    .hiw-feature-purple {
+        border-color: rgba(147, 51, 234, 0.15);
+        .hiw-feature-icon {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+        }
+    }
+}
+
+// SECTION 6: Stats Counter (Dark Blue)
+.hiw-stats-section {
+    padding: 4.5rem 0;
+    background: linear-gradient(135deg, #10234e 0%, #4f90e9 100%);
+    color: #fff;
+
+    .hiw-stats-header {
+        text-align: center;
+        margin-bottom: 3rem;
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+
+            @media (max-width: 767px) {
+                font-size: 1.5rem;
+            }
+        }
+
+        p {
+            color: #ffffff;
+            font-size: 1.0625rem;
+            margin-bottom: 0;
+        }
+    }
+
+    .hiw-stat-item {
+        text-align: center;
+        padding: 1rem;
+
+        @media (max-width: 767px) {
+            padding: 0.75rem;
+        }
+    }
+
+    .hiw-stat-number {
+        display: block;
+        font-size: 3rem;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+
+        @media (max-width: 767px) {
+            font-size: 2rem;
+        }
+    }
+
+    .hiw-stat-label {
+        display: block;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 0.9375rem;
+        font-weight: 500;
+
+        @media (max-width: 767px) {
+            font-size: 0.8125rem;
+        }
+    }
+}
+
+// SECTION 7: CTA Section (White Background + Blue Buttons)
+.hiw-cta-section {
+    padding: 5rem 0;
+    background: #ffffff;
+    text-align: center;
+
+    .hiw-cta-content {
+        max-width: 680px;
+        margin: 0 auto;
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 1rem;
+
+            @media (max-width: 767px) {
+                font-size: 1.75rem;
+            }
+        }
+
+        p {
+            color: #64748b;
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+        }
+    }
+
+    .hiw-cta-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .hiw-btn-white {
+        display: inline-block;
+        background: linear-gradient(135deg, #1967d2 0%, #3b82f6 100%);
+        color: #ffffff;
+        padding: 1rem 2.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(25, 103, 210, 0.35);
+
+        &:hover {
+            background: linear-gradient(135deg, #1557b0 0%, #2563eb 100%);
+            color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(25, 103, 210, 0.45);
+        }
+    }
+
+    .hiw-btn-outline {
+        display: inline-block;
+        background: transparent;
+        color: #1967d2;
+        padding: 1rem 2.5rem;
+        border: 2px solid #1967d2;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+
+        &:hover {
+            background: #1967d2;
+            color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(25, 103, 210, 0.35);
+        }
+    }
+}
+
+// CMS Content section (below the layout)
+.how-it-works-cms-content {
+    padding: 4rem 0;
+    background: #f8fafc;
+
+    .how-it-works-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+}
+
+// Working Process (style-8): improved UI – spacing, hover, icons, typography
+.twm-how-it-work-working-process {
+    padding-bottom: 2.5rem;
+
+    .section-head {
+        margin-bottom: 2.25rem;
+
+        .wt-small-separator {
+            color: #64748b;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+        .wt-title {
+            font-size: 2.125rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 0.35rem;
+            margin-bottom: 0;
+            letter-spacing: -0.02em;
+        }
+    }
+
+    .twm-working-process-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.75rem;
+        max-width: 920px;
+        margin-left: auto;
+        margin-right: auto;
+
+        @media (max-width: 767px) {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        .twm-working-process-col:nth-child(3) {
+            grid-column: 1 / -1;
+            justify-self: center;
+            max-width: 50%;
+
+            @media (max-width: 767px) {
+                max-width: 100%;
+            }
+        }
+    }
+
+    .twm-w-process-steps-working-process {
+        position: relative;
+        padding-left: 0;
+        padding-top: 0;
+        margin-bottom: 0;
+        height: 100%;
+
+        .twm-w-pro-top {
+            margin-left: 0;
+            margin-bottom: 0;
+            padding: 28px 28px 28px 96px;
+            border-radius: 18px;
+            min-height: 152px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            position: relative;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+            &:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+            }
+
+            .twm-media {
+                position: absolute;
+                left: 24px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 60px;
+                height: 60px;
+                background-color: #fff;
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+
+                span {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                img {
+                    max-width: 36px;
+                    max-height: 36px;
+                    object-fit: contain;
+                }
+            }
+
+            .twm-title {
+                color: #fff;
+                font-weight: 700;
+                font-size: 1.2rem;
+                margin-bottom: 0.4rem;
+                padding-left: 0;
+                letter-spacing: -0.01em;
+            }
+
+            .twm-desc {
+                color: rgba(255, 255, 255, 0.95);
+                font-size: 0.9rem;
+                line-height: 1.55;
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+
+// Testimonial style-2: sab cards ki height same + section border/radius
+.twm-testimonial-2-area {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+
+    .twm-testimonial-2-carousel.owl-carousel {
+        .owl-stage {
+            display: flex;
+        }
+        .owl-item {
+            display: flex;
+        }
+        .item {
+            display: flex;
+            width: 100%;
+        }
+    }
+    .twm-testimonial-2 {
+        display: flex;
+        flex: 1;
+        width: 100%;
+    }
+    .twm-testimonial-2-content {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        width: 100%;
+    }
+    .twm-testi-content {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+    .twm-testi-info {
+        flex: 1;
+    }
+}
+
+// Footer screenshot style: dark theme, 5 columns, partners, bottom bar
+.footer-screenshot-style {
+    background-color: #1a1d21 !important;
+    color: #b0b0b0;
+    padding-top: 3rem;
+    padding-bottom: 1.5rem;
+
+    .footer-title {
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .footer-desc {
+        color: #b0b0b0;
+        font-size: 0.9375rem;
+        line-height: 1.7;
+        margin-bottom: 1rem;
+    }
+
+    .footer-read-more,
+    .footer-see-all,
+    .footer-accent {
+        color: #d4a574;
+        text-decoration: none;
+        transition: color 0.2s ease;
+        &:hover {
+            color: #e8b882;
+        }
+    }
+
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        li {
+            margin-bottom: 0.5rem;
+        }
+        a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.9375rem;
+            transition: color 0.2s ease;
+            &:hover {
+                color: #fff;
+            }
+        }
+    }
+
+    .footer-social-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .footer-top {
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .footer-partners {
+        padding: 1.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .footer-partners-inner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .footer-partners-label {
+        color: #b0b0b0;
+        font-size: 0.9375rem;
+        margin-right: 0.5rem;
+    }
+
+    .footer-partners-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        flex: 1;
+    }
+
+    .footer-partner-item {
+        color: #b0b0b0;
+        text-decoration: none;
+        font-size: 0.9375rem;
+        transition: color 0.2s ease;
+        &:hover {
+            color: #fff;
+        }
+    }
+
+    .footer-see-all {
+        font-size: 0.9375rem;
+        white-space: nowrap;
+    }
+
+    .footer-bottom {
+        padding-top: 1.25rem;
+        border-top: none;
+    }
+
+    .footer-bottom-inner {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .footer-copy-right {
+        color: #b0b0b0;
+        font-size: 0.875rem;
+        a.footer-accent {
+            color: #d4a574;
+        }
+    }
+
+    .footer-legal {
+        display: flex;
+        gap: 1rem;
+        a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s ease;
+            &:hover {
+                color: #fff;
+            }
+        }
+    }
+}
+
+// ============================================
+// RESPONSIVE STYLES - ALL CUSTOM PAGES
+// ============================================
+
+// Tablet (max-width: 991px)
+@media (max-width: 991px) {
+    // How It Works - Hero Section
+    .hiw-hero-section {
+        padding: 3rem 0 3.5rem;
+
+        .hiw-hero-content {
+            padding-right: 0;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .hiw-hero-title {
+            font-size: 1.5rem;
+        }
+
+        .hiw-hero-highlights {
+            display: inline-block;
+            text-align: left;
+        }
+
+        .hiw-hero-image img {
+            max-height: 280px;
+        }
+    }
+
+    // How It Works - Info Boxes
+    .hiw-info-boxes-section {
+        padding: 3rem 0;
+
+        .hiw-info-box {
+            padding: 1.5rem;
+        }
+    }
+
+    // How It Works - Process Section
+    .hiw-process-section {
+        padding: 3.5rem 0;
+
+        .hiw-section-header {
+            margin-bottom: 2rem;
+
+            .hiw-section-title {
+                font-size: 1.75rem;
+            }
+        }
+
+        .hiw-step-card {
+            padding: 1.5rem;
+        }
+    }
+
+    // How It Works - Alternating Sections
+    .hiw-alternating-section {
+        padding: 3.5rem 0 0;
+
+        .hiw-alt-row {
+            margin-bottom: 3rem;
+        }
+
+        .hiw-alt-content {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            text-align: center;
+        }
+
+        .hiw-alt-title {
+            font-size: 1.5rem;
+        }
+
+        .hiw-alt-list {
+            display: inline-block;
+            text-align: left;
+        }
+
+        .hiw-alt-image img {
+            max-height: 240px;
+        }
+    }
+
+    // How It Works - Features
+    .hiw-features-section {
+        padding: 3.5rem 0;
+
+        .hiw-section-header .hiw-section-title {
+            font-size: 1.75rem;
+        }
+    }
+
+    // How It Works - Stats
+    .hiw-stats-section {
+        padding: 3rem 0;
+
+        .hiw-stats-header {
+            margin-bottom: 2rem;
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        .hiw-stat-number {
+            font-size: 2rem;
+        }
+    }
+
+    // How It Works - CTA
+    .hiw-cta-section {
+        padding: 3.5rem 0;
+
+        .hiw-cta-content h2 {
+            font-size: 1.75rem;
+        }
+    }
+
+    // About Page
+    .about-page {
+        .about-page-section {
+            padding-top: 1.5rem;
+            padding-bottom: 2.5rem;
+        }
+
+        .about-page-card {
+            padding: 1.5rem 1.25rem;
+            border-radius: 14px;
+        }
+
+        .about-page-card .ck-content {
+            column-count: 1 !important;
+        }
+    }
+
+    // Footer
+    .footer-screenshot-style {
+        padding-top: 2rem;
+
+        .footer-top .row {
+            row-gap: 1.5rem;
+        }
+
+        .footer-partners-inner {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .footer-bottom-inner {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.75rem;
+        }
+    }
+}
+
+// Mobile (max-width: 767px)
+@media (max-width: 767px) {
+    // How It Works - Hero Section
+    .hiw-hero-section {
+        padding: 2rem 0 2.5rem;
+
+        .hiw-hero-title {
+            font-size: 1.5rem;
+            line-height: 1.3;
+        }
+
+        .hiw-hero-desc {
+            font-size: 0.9375rem;
+        }
+
+        .hiw-hero-image img {
+            max-height: 220px;
+        }
+    }
+
+    // How It Works - Info Boxes
+    .hiw-info-boxes-section {
+        padding: 2rem 0;
+
+        .hiw-info-title {
+            font-size: 1.125rem;
+        }
+
+        .hiw-info-list li {
+            font-size: 0.9375rem;
+        }
+    }
+
+    // How It Works - Process Section
+    .hiw-process-section {
+        padding: 2.5rem 0;
+
+        .hiw-section-header {
+            margin-bottom: 1.5rem;
+
+            .hiw-section-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        .hiw-step-card {
+            padding: 1.25rem;
+        }
+
+        .hiw-step-number {
+            width: 40px;
+            height: 40px;
+            font-size: 1.125rem;
+        }
+
+        .hiw-step-title {
+            font-size: 1rem;
+        }
+
+        .hiw-step-desc {
+            font-size: 0.875rem;
+        }
+    }
+
+    // How It Works - Alternating Sections
+    .hiw-alternating-section {
+        padding: 2.5rem 0 0;
+
+        .hiw-alt-row {
+            margin-bottom: 2.5rem;
+        }
+
+        .hiw-alt-title {
+            font-size: 1.375rem;
+        }
+
+        .hiw-alt-content > p {
+            font-size: 0.9375rem;
+        }
+
+        .hiw-alt-image img {
+            max-height: 200px;
+        }
+
+        .hiw-btn-primary {
+            width: 100%;
+            text-align: center;
+        }
+    }
+
+    // How It Works - Features
+    .hiw-features-section {
+        padding: 2.5rem 0;
+
+        .hiw-section-header {
+            margin-bottom: 2rem;
+
+            .hiw-section-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        .hiw-feature-card {
+            padding: 1.5rem;
+
+            h4 {
+                font-size: 1rem;
+            }
+
+            p {
+                font-size: 0.875rem;
+            }
+        }
+
+        .hiw-feature-icon {
+            width: 48px;
+            height: 48px;
+
+            i {
+                font-size: 1.25rem;
+            }
+        }
+    }
+
+    // How It Works - Stats
+    .hiw-stats-section {
+        padding: 2.5rem 0;
+
+        .hiw-stats-header {
+            margin-bottom: 1.5rem;
+
+            h2 {
+                font-size: 1.25rem;
+            }
+
+            p {
+                font-size: 0.9375rem;
+            }
+        }
+
+        .hiw-stat-item {
+            padding: 0.5rem;
+        }
+
+        .hiw-stat-number {
+            font-size: 1.75rem;
+        }
+
+        .hiw-stat-label {
+            font-size: 0.75rem;
+        }
+    }
+
+    // How It Works - CTA
+    .hiw-cta-section {
+        padding: 2.5rem 0;
+
+        .hiw-cta-content {
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+        }
+
+        .hiw-cta-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hiw-btn-white,
+        .hiw-btn-outline {
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+        }
+    }
+
+    // About Page
+    .about-page {
+        .about-page-section {
+            padding-top: 1rem;
+            padding-bottom: 2rem;
+        }
+
+        .about-page-card {
+            padding: 1.25rem 1rem;
+            border-radius: 12px;
+        }
+
+        .about-page-card .ck-content {
+            font-size: 0.9375rem;
+            line-height: 1.7;
+
+            h1 { font-size: 1.5rem; }
+            h2 { font-size: 1.375rem; }
+            h3, h4 { font-size: 1.125rem; }
+        }
+    }
+
+    // Contact Page
+    .twm-contact-one {
+        .contact-form-outer {
+            padding: 1.5rem;
+            border-radius: 14px;
+        }
+
+        .section-head.left.wt-small-separator-outer .wt-title {
+            font-size: 1.375rem;
+        }
+
+        .cons-contact-form .form-control {
+            height: 48px;
+            padding: 8px 14px;
+        }
+    }
+
+    // Footer
+    .footer-screenshot-style {
+        padding-top: 1.5rem;
+        padding-bottom: 1rem;
+
+        .footer-title {
+            font-size: 0.9375rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-desc {
+            font-size: 0.875rem;
+        }
+
+        .footer-links {
+            li {
+                margin-bottom: 0.375rem;
+            }
+            a {
+                font-size: 0.875rem;
+            }
+        }
+
+        .footer-top {
+            padding-bottom: 1.5rem;
+        }
+
+        .footer-partners {
+            padding: 1rem 0;
+        }
+
+        .footer-partners-label {
+            font-size: 0.875rem;
+        }
+
+        .footer-partner-item {
+            font-size: 0.875rem;
+        }
+
+        .footer-copy-right {
+            font-size: 0.8125rem;
+        }
+
+        .footer-legal a {
+            font-size: 0.8125rem;
+        }
+    }
+
+    // Page Header / Banner
+    .wt-bnr-inr {
+        padding: 1.5rem 0;
+
+        .wt-title {
+            font-size: 1.5rem !important;
+        }
+    }
+
+    .wt-breadcrumb {
+        li {
+            font-size: 0.8125rem;
+        }
+    }
+}
+
+// Small Mobile (max-width: 480px)
+@media (max-width: 480px) {
+    .hiw-hero-title {
+        font-size: 1rem !important;
+    }
+
+    .hiw-section-header .hiw-section-title {
+        font-size: 1.25rem !important;
+    }
+
+    .hiw-stats-section .hiw-stat-number {
+        font-size: 1.5rem;
+    }
+
+    .hiw-stats-section .hiw-stat-label {
+        font-size: 0.6875rem;
+    }
+
+    .about-page .about-page-card {
+        padding: 1rem 0.875rem;
+    }
+
+    .footer-screenshot-style {
+        .footer-top .row > div {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
     }
 }

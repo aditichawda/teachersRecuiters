@@ -21,7 +21,7 @@
         }
     }
 
-    $style = in_array($shortcode->style, ['style-1', 'style-2', 'style-3', 'style-4', 'style-7']) ? $shortcode->style : 'style-1';
+    $style = in_array($shortcode->style, ['style-1', 'style-2', 'style-3', 'style-4', 'style-7', 'style-8']) ? $shortcode->style : 'style-1';
     
     // Process YouTube video URL if provided
     $url = null;
