@@ -125,7 +125,7 @@
     <!-- Related Jobs START -->
     <div class="section-full p-t120 p-b90 site-bg-light-purple twm-related-jobs-carousel-wrap">
         <!-- TITLE START-->
-        <div class="section-head center wt-small-separator-outer">
+        <div class="section-head center wt-small-separator-outer mt-5">
             <div class="wt-small-separator site-text-primary">
                 <div>{{ __('Top Jobs') }}</div>
             </div>
@@ -158,7 +158,7 @@
                                 </div>
                                 <div class="twm-right-content">
                                     <div class="twm-jobs-amount">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</div>
-                                    <a href="{{ $job->url }}" class="twm-jobs-browse site-text-primary">{{ __('Browse Job') }}</a>
+                                    <a href="{{ $job->url }}" class="twm-jobs-browse site-text-primary">{{ __('View Job') }}</a>
                                 </div>
                             </div>
                         </div>

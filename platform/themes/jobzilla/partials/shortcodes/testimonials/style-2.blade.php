@@ -1,9 +1,9 @@
-<div class="section-full my-5 p-t5 p-b5 site-bg-gray twm-testimonial-2-area">
-    <div class="section-head center wt-small-separator-outer">
-        <div class="wt-small-separator site-text-primary">
+<div class="section-full mt-5 p-t5 p-b5 site-bg-gray twm-testimonial-2-area">
+    <div class="section-head center wt-small-separator-outer mt-5">
+        <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
+<div class="wt-small-separator site-text-primary">
             <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
         </div>
-        <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
     </div>
     <div class="container">
         <div class="section-content">

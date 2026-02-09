@@ -17,7 +17,7 @@
         </a>
     </div>
     <div class="twm-bot-content">
-        <p class="twm-job-address"><i class="feather-map-pin"></i>{{ $job->location }}</p>
+        <p class="twm-job-address"><i class="feather-map-pin"></i> {{ $job->location ?: __('India') }}</p>
         <span class="twm-job-post-duration">{{ $job->created_at->diffForHumans() }}</span>
     </div>
 </div>

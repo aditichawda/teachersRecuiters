@@ -1,15 +1,15 @@
 <!-- HOW IT WORK SECTION START -->
-<div class="section-full p-b30 site-bg-white twm-how-it-work-area2">
+<div class="section-full p-b30 twm-how-it-work-area2" style="background-color: aliceblue">
 
     {{-- Section Heading --}}
-    <div class="section-head left wt-small-separator-outer text-center">
+    <div class="section-head left wt-small-separator-outer text-center pt-5">
+    <h2 class="wt-title d-flex justify-content-center">
+            {!! BaseHelper::clean($shortcode->subtitle) !!}
+        </h2>
         <div class="wt-small-separator site-text-primary d-flex justify-content-center">
             <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
         </div>
 
-        <h2 class="wt-title d-flex justify-content-center">
-            {!! BaseHelper::clean($shortcode->subtitle) !!}
-        </h2>
     </div>
 
     {{-- Check List --}}
@@ -36,26 +36,23 @@
             
             <div class="col-lg-12 col-md-12">
 
-                <div class="twm-w-process-steps-2-wrap" >
+                {{-- Step Cards - Full Width Row --}}
+                <div class="twm-w-process-steps-2-wrap">
                     <div class="row">
-
                         @foreach ($tabs as $tab)
-
                             @php
                                 $rgbColor = Arr::get($tab, 'rgb_color');
                                 $bgColor  = Arr::get($tab, 'bg_color');
                             @endphp
 
-                            <div class="col-xl-6 col-lg-6 col-md-6">
-
-                                <div class="twm-w-process-steps-2" style="padding-left: 56px !important;">
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+                                <div class="twm-w-process-steps-2">
                                     <div
                                         class="twm-w-pro-top shadow bg-opacity-50 {{ !$rgbColor ? 'bg-clr-sky-light' : '' }}"
                                         @if($bgColor)
                                             style="background-color: {{ $bgColor }};"
                                         @endif
                                     >
-
                                         <span
                                             class="twm-large-number {{ !$bgColor ? 'text-clr-sky' : '' }}"
                                             @if($bgColor)
@@ -86,14 +83,29 @@
                                         <p>
                                             {{ Arr::get($tab, 'subtitle') }}
                                         </p>
-
                                     </div>
                                 </div>
-
                             </div>
-
                         @endforeach
+                    </div>
+                </div>
 
+                {{-- Video Section - Below Cards --}}
+                <div class="hiw-video-below-section">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8 col-md-10 col-12">
+                            <div class="hiw-video-below-card">
+                                <div class="hiw-video-below-inner">
+                                    <iframe 
+                                        src="https://www.youtube.com/embed/r4PevhrJA_A?si=oVH36shDIgdaL5D4" 
+                                        title="Teachers Recruiter - How It Works" 
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -217,7 +229,7 @@
             </div>
             <div class="col-lg-8 col-md-12">
                 <div class="twm-w-process-steps-2-wrap">
-                    <div class="row">
+                    <div class="row col-6">
                         @foreach ($tabs as $tab)
                             <div class="col-xl-6 col-lg-6 col-md-6">
                                 <div class="twm-w-process-steps-2">

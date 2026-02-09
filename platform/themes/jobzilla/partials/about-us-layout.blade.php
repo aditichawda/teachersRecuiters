@@ -257,7 +257,7 @@
             <p>Whether you're a teacher looking for opportunities or a school seeking talented educators, we're here to help.</p>
             <div class="hiw-cta-buttons">
                 <a href="{{ route('public.account.register') }}" class="hiw-btn-white">Get Started Free</a>
-                <a href="/jobs" class="hiw-btn-outline">Browse Jobs</a>
+                <a href="/jobs" class="hiw-btn-outline">View Jobs</a>
             </div>
         </div>
     </div>

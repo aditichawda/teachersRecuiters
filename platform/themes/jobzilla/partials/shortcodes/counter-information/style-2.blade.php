@@ -5,13 +5,14 @@
                 <div class="col-xl-8 col-lg-8 col-md-12 wt-separator-two-part-left">
                     <div class="section-head left wt-small-separator-outer">
                         @if ($subtitle = $shortcode->subtitle)
+                            <h2 class="wt-title">{!! BaseHelper::clean($title) !!}</h2>
+                        @endif
+                        @if ($subtitle = $shortcode->subtitle)
                             <div class="wt-small-separator site-text-primary">
                                 <div>{!! BaseHelper::clean($subtitle) !!}</div>
                             </div>
                         @endif
-                        @if ($title = $shortcode->title)
-                            <h2 class="wt-title">{!! BaseHelper::clean($title) !!}</h2>
-                        @endif
+                        
                     </div>
                 </div>
             </div>

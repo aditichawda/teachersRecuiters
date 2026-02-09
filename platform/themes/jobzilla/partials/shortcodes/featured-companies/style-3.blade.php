@@ -15,6 +15,13 @@
                     </div>
                 @endforeach
             </div>
+            <div class="text-center m-t30">
+                @if (auth('account')->check())
+                    <a href="{{ url('/how-it-works') }}" class="site-button">{{ __('Get Started') }}</a>
+                @else
+                    <a href="{{ route('public.account.register') }}" class="site-button">{{ __('Get Started') }}</a>
+                @endif
+            </div>
         </div>
     </div>
 </div>

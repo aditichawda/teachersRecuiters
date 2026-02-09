@@ -3,7 +3,8 @@
     <div class="container">
 
         <!-- TITLE START-->
-        <div class="section-head center wt-small-separator-outer">
+        <div class="section-head center wt-small-separator-outer mt-5">
+        <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
             <div class="wt-small-separator site-text-primary">
                 <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
             </div>

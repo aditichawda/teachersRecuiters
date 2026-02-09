@@ -14,10 +14,11 @@
                     <div class="twm-about-1-section-right">
                         <!-- TITLE START-->
                         <div class="section-head left wt-small-separator-outer">
+                            <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
                             <div class="wt-small-separator site-text-primary">
                                 <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
                             </div>
-                            <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
+                            
 
                         </div>
                        
