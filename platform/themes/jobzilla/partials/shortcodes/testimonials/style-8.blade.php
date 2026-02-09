@@ -2,7 +2,7 @@
 <div class="section-full p-t120 p-b90 site-bg-white twm-testimonial-page8-wrap">
     <div class="container">
         <!-- TITLE START-->
-        <div class="section-head center wt-small-separator-outer">
+        <div class="section-head center wt-small-separator-outer mt-5">
             <div class="wt-small-separator site-text-primary">
                 <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
             </div>

@@ -8,11 +8,12 @@
                         <div class="twm-explore-content-outer2">
                             <div class="twm-explore-top-section">
                                 <div class="section-head left wt-small-separator-outer">
+                                    <h2>{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
+                                    <p>{!! BaseHelper::clean($shortcode->description) !!}</p>
                                     <div class="wt-small-separator site-text-primary">
                                         <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
                                     </div>
-                                    <h2>{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
-                                    <p>{!! BaseHelper::clean($shortcode->description) !!}</p>
+                                    
                                 </div>
                                 @if ($shortcode->button_url)
                                     <div class="twm-read-more">

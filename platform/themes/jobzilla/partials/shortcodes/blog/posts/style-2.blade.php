@@ -3,7 +3,8 @@
     <div class="overlay-main site-bg-primary opacity-01"></div>
     <div class="container">
         <!-- TITLE START-->
-        <div class="section-head center wt-small-separator-outer">
+        <div class="section-head center wt-small-separator-outer mt-5">
+        <h2 class="wt-title site-text-white">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
             <div class="wt-small-separator site-text-primary" >
                 <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
             </div>

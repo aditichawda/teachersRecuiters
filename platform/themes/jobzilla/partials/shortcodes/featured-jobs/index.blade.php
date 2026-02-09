@@ -1,5 +1,5 @@
 <div class="section-full p-t120 p-b90 site-bg-white twm-hpage-6-featured-outer">
-    <div class="section-head center wt-small-separator-outer">
+    <div class="section-head center wt-small-separator-outer mt-5">
         @if ($title = $shortcode->title)
             <div class="wt-small-separator site-text-primary">
                 <div>{!! BaseHelper::clean($title) !!}</div>
