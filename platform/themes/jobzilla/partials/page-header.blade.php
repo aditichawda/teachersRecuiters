@@ -5,7 +5,7 @@
     $hideBreadcrumb = in_array($titleLower, ['contact', 'contact us', 'about us', 'about-us']);
     
     // Hide entire banner for About Us, How It Works, and Contact Us pages
-    $hideEntireBanner = in_array($titleLower, ['about us', 'about-us', 'how it works', 'how-it-works', 'contact', 'contact us']);
+    $hideEntireBanner = in_array($titleLower, ['about us', 'about-us', 'how it works', 'how-it-works', 'contact', 'contact us', 'jobs', 'companies','candidates']);
 @endphp
 
 @unless($hideEntireBanner)

@@ -1,27 +1,27 @@
-<div class="twm-jobs-grid-style1">
-    <div class="twm-media">
-        <img src="{{ $job->company_logo_thumb }}" alt="{{ $job->name }}">
+<div class="job-grid-modern">
+    <div class="jgm-top">
+        <div class="jgm-logo">
+            <img src="{{ $job->company_logo_thumb }}" alt="{{ $job->name }}">
+        </div>
+        <span class="jgm-time">{{ $job->created_at->diffForHumans() }}</span>
     </div>
-    <span class="twm-job-post-duration">{{ $job->created_at->diffForHumans() }}</span>
-    <div class="twm-jobs-category">
+    <div class="jgm-tags">
         @foreach ($job->jobTypes->loadMissing('metadata') as $jobType)
             @php
                 $jobType->background_color = $jobType->getMetaData('background_color', true);
             @endphp
-            <span @if ($jobType->background_color) style="background-color: {{ $jobType->background_color }}" @else class="twm-bg-green" @endif>{{ $jobType->name }}</span>
+            <span class="jgm-tag" @if ($jobType->background_color) style="background-color: {{ $jobType->background_color }}20; color: {{ $jobType->background_color }}; border-color: {{ $jobType->background_color }}40;" @endif>{{ $jobType->name }}</span>
         @endforeach
     </div>
-    <div class="twm-mid-content">
-        <a href="{{ $job->url }}" class="twm-job-title" title="{{ $job->name }}">
-            <h4 class="text-truncate">{!! BaseHelper::clean($job->name) !!}</h4>
-        </a>
-        <p class="twm-job-address"><i class="feather-map-pin"></i> {{ $job->location ?: 'India' }}</p>
-        @if ($job->has_company)
-            <a href="{{ $job->company_url }}" class="twm-job-websites site-text-primary">{{ $job->company_name }} {!! $job->company->badge !!}</a>
-        @endif
-    </div>
-    <div class="twm-right-content">
-        <div class="twm-jobs-amount">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</div>
-        <a href="{{ $job->url }}" class="twm-jobs-browse site-text-primary">{{ __('View Job') }}</a>
+    <a href="{{ $job->url }}" class="jgm-title" title="{{ $job->name }}">
+        {!! BaseHelper::clean($job->name) !!}
+    </a>
+    <p class="jgm-location"><i class="feather-map-pin"></i> {{ $job->location ?: 'India' }}</p>
+    @if ($job->has_company)
+        <a href="{{ $job->company_url }}" class="jgm-company">{{ $job->company_name }} {!! $job->company->badge !!}</a>
+    @endif
+    <div class="jgm-bottom">
+        <div class="jgm-salary">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</div>
+        <a href="{{ $job->url }}" class="jgm-view">{{ __('View') }} →</a>
     </div>
 </div>

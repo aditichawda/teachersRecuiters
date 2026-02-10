@@ -1,29 +1,31 @@
-<div class="twm-jobs-list-style1 mb-5">
-    <div class="twm-media">
+<div class="job-card-modern">
+    <div class="jcm-logo">
         <img src="{{ $job->company_logo_thumb }}" alt="{{ $job->name }}">
     </div>
-    <div class="twm-mid-content">
-        <a href="{{ $job->url }}" class="twm-job-title" title="{{ $job->name }}">
-            <h4 class="text-truncate">
-                {!! BaseHelper::clean($job->name) !!}
-                <span class="twm-job-post-duration">/ {{ $job->created_at->diffForHumans() }}</span>
-            </h4>
+    <div class="jcm-info">
+        <a href="{{ $job->url }}" class="jcm-title" title="{{ $job->name }}">
+            {!! BaseHelper::clean($job->name) !!}
         </a>
-        <p class="twm-job-address"><i class="feather-map-pin"></i> {{ $job->location ?: 'India' }}</p>
-        @if ($job->has_company)
-            <a href="{{ $job->company_url }}" class="twm-job-websites site-text-primary">{{ $job->company_name }} {!! $job->company->badge !!}</a>
-        @endif
-    </div>
-    <div class="twm-right-content">
-        <div class="twm-jobs-category">
+        <div class="jcm-meta">
+            <span><i class="feather-map-pin"></i> {{ $job->location ?: 'India' }}</span>
+            @if ($job->has_company)
+                <a href="{{ $job->company_url }}">{{ $job->company_name }} {!! $job->company->badge !!}</a>
+            @endif
+            <span><i class="feather-clock"></i> {{ $job->created_at->diffForHumans() }}</span>
+        </div>
+        <div class="jcm-tags">
             @foreach ($job->jobTypes->loadMissing('metadata') as $jobType)
                 @php
                     $jobType->background_color = $jobType->getMetaData('background_color', true);
                 @endphp
-                <span @if ($jobType->background_color) style="background-color: {{ $jobType->background_color }}" @else class="twm-bg-green" @endif>{{ $jobType->name }}</span>
+                <span class="jcm-tag" @if ($jobType->background_color) style="background-color: {{ $jobType->background_color }}20; color: {{ $jobType->background_color }}; border-color: {{ $jobType->background_color }}40;" @endif>{{ $jobType->name }}</span>
             @endforeach
         </div>
-        <div class="twm-jobs-amount">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</div>
-        <a href="{{ $job->url }}" class="twm-jobs-browse site-text-primary">{{ __('View Job') }}</a>
+        <span class="jcm-salary-mobile">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</span>
+    </div>
+    <div class="jcm-right">
+        <div class="jcm-salary">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</div>
+        <span class="jcm-time">{{ $job->created_at->diffForHumans() }}</span>
+        <a href="{{ $job->url }}" class="jcm-apply">{{ __('View Job') }} →</a>
     </div>
 </div>

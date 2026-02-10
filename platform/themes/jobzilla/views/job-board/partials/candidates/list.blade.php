@@ -1,36 +1,24 @@
-<div class="row d-flex justify-content-center row-cols-1">
-    @foreach ($candidates as $candidate)
-        <div class="col">
-            <div class="twm-candidates-list-style1">
-                <div class="twm-media">
-                    <div class="twm-media-pic">
-                        <img src="{{ $candidate->avatar_url }}" alt="{{ $candidate->name }}">
-                    </div>
-                    @if ($candidate->is_featured)
-                        <div class="twm-candidates-tag"><span>{{ __('Featured') }}</span></div>
-                    @endif
-                </div>
-                <div class="twm-mid-content">
-                    <a href="{{ $candidate->url }}" class="twm-job-title">
-                        <h4>{{ $candidate->name }}</h4>
-                    </a>
-                    <p>{!! Str::limit(BaseHelper::clean($candidate->description), 80) !!}</p>
-                    <div class="twm-fot-content">
-                        <div class="twm-left-info">
-                            @if ($candidate->address)
-                                <p class="twm-candidate-address">
-                                    <i class="feather-map-pin"></i>{{ Str::limit($candidate->address, 35) }}
-                                </p>
-                            @endif
-                        </div>
-                        @if (! JobBoardHelper::isDisabledPublicProfile())
-                            <div class="twm-right-btn">
-                                <a href="{{ $candidate->url }}" class="twm-view-prifile site-text-primary">{{ __('View Profile') }}</a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
+@foreach ($candidates as $candidate)
+    <div class="cand-card-list">
+        @if ($candidate->is_featured)
+            <span class="cl-featured">{{ __('Featured') }}</span>
+        @endif
+        <div class="cl-avatar">
+            <img src="{{ $candidate->avatar_url }}" alt="{{ $candidate->name }}">
         </div>
-    @endforeach
-</div>
+        <div class="cl-info">
+            <a href="{{ $candidate->url }}" class="cl-name">{{ $candidate->name }}</a>
+            <p class="cl-desc">{!! Str::limit(BaseHelper::clean($candidate->description), 80) !!}</p>
+            @if ($candidate->address)
+                <p class="cl-location">
+                    <i class="feather-map-pin"></i> {{ Str::limit($candidate->address, 35) }}
+                </p>
+            @endif
+        </div>
+        @if (! JobBoardHelper::isDisabledPublicProfile())
+            <div class="cl-right">
+                <a href="{{ $candidate->url }}" class="cl-view-btn">{{ __('View Profile') }} →</a>
+            </div>
+        @endif
+    </div>
+@endforeach
