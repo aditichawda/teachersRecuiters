@@ -64,7 +64,7 @@
     <div class="sticky-header main-bar-wraper navbar-expand-lg">
         <div class="main-bar">
             <div class="container-fluid clearfix">
-                @if (Theme::getLogo())
+               @if (Theme::getLogo())
                     <div class="logo-header">
                         <div class="logo-header-inner logo-header-one">
                             <a href="{{ BaseHelper::getHomepageUrl()  }}">
