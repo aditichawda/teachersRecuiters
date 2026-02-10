@@ -5,11 +5,10 @@
             <div class="row wt-separator-two-part-row">
                 <div class="col-xl-5 col-lg-5 col-md-12 wt-separator-two-part-left">
                     <div class="section-head left wt-small-separator-outer">
-                        <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
                         <div class="wt-small-separator site-text-primary">
                             <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
                         </div>
-                        
+                        <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
                     </div>
                 </div>
                 <div class="col-xl-6 col-lg-6 col-md-12 wt-separator-two-part-right">

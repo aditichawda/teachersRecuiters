@@ -8,15 +8,26 @@
     Theme::asset()->container('footer')->add('tagify-js', 'vendor/core/core/base/libraries/tagify/tagify.js');
     Theme::asset()->container('footer')->usePath()->add('tags-js', 'js/tagify-select.js');
     
-    // Profile completion
-    $completion = 0;
-    if($account->first_name ?? false) $completion += 15;
-    if($account->phone ?? false) $completion += 15;
-    if($account->resume ?? false) $completion += 25;
-    if($account->avatar ?? false) $completion += 15;
-    if($account->bio ?? false) $completion += 15;
-    if($account->address ?? false) $completion += 15;
-    $completion = min($completion, 100);
+    // Profile completion with per-field reward points
+    $profileFields = [
+        ['field' => 'first_name', 'label' => 'Full Name', 'points' => 10, 'filled' => !empty($account->first_name)],
+        ['field' => 'phone', 'label' => 'Mobile Number', 'points' => 10, 'filled' => !empty($account->phone)],
+        ['field' => 'avatar', 'label' => 'Profile Photo', 'points' => 15, 'filled' => !empty($account->avatar_id)],
+        ['field' => 'bio', 'label' => 'About / Bio', 'points' => 10, 'filled' => !empty($account->bio)],
+        ['field' => 'resume', 'label' => 'Resume', 'points' => 20, 'filled' => !empty($account->resume)],
+        ['field' => 'address', 'label' => 'Location/Address', 'points' => 10, 'filled' => !empty($account->address)],
+        ['field' => 'dob', 'label' => 'Date of Birth', 'points' => 5, 'filled' => !empty($account->dob)],
+        ['field' => 'gender', 'label' => 'Gender', 'points' => 5, 'filled' => !empty($account->gender)],
+        ['field' => 'total_experience', 'label' => 'Total Experience', 'points' => 10, 'filled' => !empty($account->total_experience)],
+        ['field' => 'current_salary', 'label' => 'Salary Details', 'points' => 5, 'filled' => !empty($account->current_salary)],
+    ];
+    $totalPoints = array_sum(array_column($profileFields, 'points'));
+    $earnedPoints = 0;
+    foreach ($profileFields as $pf) {
+        if ($pf['filled']) $earnedPoints += $pf['points'];
+    }
+    $completion = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100) : 0;
+    $walletPoints = $earnedPoints;
 @endphp
 
 <style>
@@ -36,12 +47,48 @@
     margin-bottom: 20px;
 }
 
+.js-profile-avatar-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
 .js-profile-avatar {
     width: 80px;
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    margin-bottom: 15px;
+    border: 3px solid #e2e8f0;
+    transition: border-color 0.3s;
+}
+
+.js-profile-avatar-wrapper:hover .js-profile-avatar {
+    border-color: #0073d1;
+}
+
+.js-avatar-camera-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 28px;
+    height: 28px;
+    background: #0073d1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 12px;
+    border: 2px solid #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.js-avatar-camera-btn:hover {
+    background: #005bb5;
+    transform: scale(1.1);
+    color: #fff;
 }
 
 .js-profile-name {
@@ -54,7 +101,36 @@
 .js-profile-date {
     font-size: 13px;
     color: #888;
-    margin: 0 0 20px 0;
+    margin: 0 0 3px 0;
+}
+
+.js-profile-updated {
+    font-size: 12px;
+    color: #aaa;
+    margin: 0 0 15px 0;
+}
+
+.js-view-profile-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
+    color: #fff;
+    padding: 7px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+}
+
+.js-view-profile-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,115,209,0.3);
+    color: #fff;
+}
+
+.js-view-profile-btn i {
+    margin-right: 5px;
 }
 
 .js-profile-completion {
@@ -218,6 +294,71 @@
     background: #005bb5;
 }
 
+/* Wallet Badge */
+.js-wallet-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    width: 100%;
+    justify-content: center;
+}
+
+.js-wallet-badge i { font-size: 16px; }
+.js-wallet-points { font-size: 18px; font-weight: 700; }
+
+/* Profile Field Progress */
+.js-field-progress { margin-top: 10px; }
+
+.js-field-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 12px;
+    border-bottom: 1px solid #f5f5f5;
+}
+.js-field-item:last-child { border-bottom: none; }
+
+.js-field-item .field-name {
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.js-field-item .field-name i { font-size: 10px; }
+.js-field-item .field-name i.completed { color: #28a745; }
+.js-field-item .field-name i.pending { color: #dc3545; }
+
+.js-field-item .field-points {
+    font-weight: 600;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+.js-field-item .field-points.earned { background: #e8f5e9; color: #28a745; }
+.js-field-item .field-points.available { background: #fff3e0; color: #e65100; }
+
+.js-reward-message {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 1px solid #ffcc80;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #e65100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.js-reward-message i { font-size: 18px; color: #f57c00; }
+
 /* Responsive */
 @media (max-width: 991px) {
     .js-profile-sidebar {
@@ -245,11 +386,34 @@
             <div class="col-lg-3 col-md-4 d-none d-md-block">
                 <div class="js-profile-sidebar">
                     <div class="text-center">
-                        <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}" class="js-profile-avatar">
+                        <div class="js-profile-avatar-wrapper">
+                            <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}" class="js-profile-avatar">
+                            <a href="#" class="js-avatar-camera-btn" data-bs-toggle="modal" data-bs-target="#avatar-modal" title="{{ __('Change Photo') }}">
+                                <i class="fa fa-camera"></i>
+                            </a>
+                        </div>
                         <h5 class="js-profile-name">Hello, {{ $account->first_name ?? $account->name }}</h5>
                         <p class="js-profile-date">Joined {{ $account->created_at->format('M d, Y') }}</p>
+                        <p class="js-profile-updated">Last Updated: {{ $account->updated_at->format('M d, Y') }}</p>
+                        @php
+                            $candidateSlug = \Botble\Slug\Models\Slug::where('reference_type', \Botble\JobBoard\Models\Account::class)
+                                ->where('reference_id', $account->id)
+                                ->value('key');
+                        @endphp
+                        @if($candidateSlug)
+                            <a href="{{ url('candidates/' . $candidateSlug) }}" target="_blank" class="js-view-profile-btn">
+                                <i class="fa fa-eye"></i> {{ __('View Profile') }}
+                            </a>
+                        @endif
                     </div>
                     
+                    <!-- Wallet -->
+                    <div class="js-wallet-badge">
+                        <i class="fa fa-wallet"></i>
+                        <span>Reward Points:</span>
+                        <span class="js-wallet-points">{{ $walletPoints }}</span>
+                    </div>
+
                     <!-- Profile Completion -->
                     <div class="js-profile-completion">
                         <h6>Profile Completion</h6>
@@ -257,7 +421,29 @@
                             <div class="js-completion-fill" style="width: {{ $completion }}%"></div>
                         </div>
                         <span class="js-completion-text">{{ $completion }}% Complete</span>
+
+                        <!-- Per-field progress -->
+                        <div class="js-field-progress">
+                            @foreach($profileFields as $pf)
+                                <div class="js-field-item">
+                                    <span class="field-name">
+                                        <i class="fa {{ $pf['filled'] ? 'fa-check-circle completed' : 'fa-times-circle pending' }}"></i>
+                                        {{ $pf['label'] }}
+                                    </span>
+                                    <span class="field-points {{ $pf['filled'] ? 'earned' : 'available' }}">
+                                        {{ $pf['filled'] ? '+' . $pf['points'] . ' pts' : $pf['points'] . ' pts' }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
+
+                    @if($completion < 100)
+                        <div class="js-reward-message">
+                            <i class="fa fa-gift"></i>
+                            <span>Complete your profile and earn <strong>{{ $totalPoints - $earnedPoints }}</strong> more points!</span>
+                        </div>
+                    @endif
                     
                     <!-- Navigation -->
                     @php
@@ -270,6 +456,7 @@
                         <li><a href="{{ route('public.account.jobs.applied-jobs') }}" @class(['active' => $currentUrl == route('public.account.jobs.applied-jobs')])><i class="fa fa-file-alt"></i> Applied Jobs</a></li>
                         <li><a href="{{ route('public.account.experiences.index') }}" @class(['active' => str_contains($currentUrl, 'experience')])><i class="fa fa-briefcase"></i> Experience</a></li>
                         <li><a href="{{ route('public.account.educations.index') }}" @class(['active' => str_contains($currentUrl, 'education')])><i class="fa fa-graduation-cap"></i> Education</a></li>
+                        <li><a href="#" @class(['active' => false])><i class="fa fa-wallet"></i> Wallet <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $walletPoints }}</span></a></li>
                         <li><a href="{{ route('public.account.resume-builder') }}" @class(['active' => str_contains($currentUrl, 'resume-builder')])><i class="fa fa-file-pdf"></i> Resume Builder</a></li>
                         <li><a href="{{ route('public.account.security') }}" @class(['active' => $currentUrl == route('public.account.security')])><i class="fa fa-lock"></i> Security</a></li>
                     </ul>

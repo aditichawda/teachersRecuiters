@@ -417,7 +417,7 @@
                 <!-- Multi-Select Dropdown -->
                 <div class="multi-select-wrapper" id="multi-select-wrapper">
                     <label class="dropdown-label">Institution Type <span style="color:#dc3545;">*</span></label>
-                    <span class="no-selection">(Are youlooking job in which type of school/institution)</span>
+                    <span class="no-selection">(Are you looking job in which type of school/institution)</span>
                     <div class="multi-select-trigger" id="multi-select-trigger">
                         <span class="trigger-text" id="trigger-text">Select institution types...</span>
                         <span class="arrow">▼</span>

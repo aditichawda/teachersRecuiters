@@ -16,7 +16,9 @@
             </div>
             <div class="company-info">
                 <a href="{{ $job->url }}" class="company-name">{{ $job->company->name }} {!! $job->company->badge !!}</a>
-                <p class="company-address"><i class="feather-map-pin"></i> {{ $job->location ?: __('India') }}</p>
+                @if ($location = $job->location)
+                    <p class="company-address">{{ $location }}</p>
+                @endif
             </div>
         </div>
         <div class="bottom-content">

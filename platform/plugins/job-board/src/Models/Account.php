@@ -58,6 +58,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'is_whatsapp_available',
         'alternate_phone',
         'alternate_phone_country_code',
+        'is_alternate_whatsapp_available',
         'gender',
         'marital_status',
         'description',
@@ -67,6 +68,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         // Account type & package
         'package_id',
         'type',
+        'registration_type',
         'credits',
         'unique_id',
         
@@ -82,7 +84,9 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'salary_type',
         'salary_amount',
         'current_salary',
+        'current_salary_period',
         'expected_salary',
+        'expected_salary_period',
         
         // Profile Visibility
         'is_public_profile',
@@ -153,6 +157,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'verification_code_expires_at' => 'datetime',
         'is_email_verified' => 'boolean',
         'is_whatsapp_available' => 'boolean',
+        'is_alternate_whatsapp_available' => 'boolean',
         'is_public_profile' => 'boolean',
         'profile_visibility' => 'boolean',
         'hide_cv' => 'boolean',

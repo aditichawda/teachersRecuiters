@@ -41,11 +41,14 @@ class SettingRequest extends Request
                 'is_whatsapp_available' => Rule::in([0, 1]),
                 'alternate_phone' => 'nullable|max:30',
                 'alternate_phone_country_code' => 'nullable|max:10',
+                'is_alternate_whatsapp_available' => Rule::in([0, 1]),
                 'marital_status' => 'nullable|in:single,married,separated,others',
                 
                 // Salary
                 'current_salary' => 'nullable|numeric|min:0|max:99999999.99',
+                'current_salary_period' => 'nullable|in:month,hour',
                 'expected_salary' => 'nullable|numeric|min:0|max:99999999.99',
+                'expected_salary_period' => 'nullable|in:month,hour',
                 'salary_type' => 'nullable|in:yearly,monthly,weekly,hourly',
                 'salary_amount' => 'nullable|numeric|min:0|max:999999999.99',
                 
@@ -105,6 +108,7 @@ class SettingRequest extends Request
                 'social_links.facebook' => 'nullable|url|max:500',
                 'social_links.twitter' => 'nullable|url|max:500',
                 'social_links.instagram' => 'nullable|url|max:500',
+                'social_links.youtube' => 'nullable|url|max:500',
             ]);
         }
 

@@ -2,12 +2,7 @@
 <div class="section-full p-t120 p-b90 site-bg-gray">
     <div class="container">
         <!-- TITLE START-->
-        <div class="section-head center wt-small-separator-outer mt-2">
-        <h2 class="wt-title" style="
-    text-align: center;
-    justify-content: center;
-    display: flex;
-">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
+        <div class="section-head center wt-small-separator-outer">
             <div class="wt-small-separator site-text-primary" style="
     text-align: center;
     justify-content: center;
@@ -15,7 +10,11 @@
 ">
                 <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
             </div>
-           
+            <h2 class="wt-title" style="
+    text-align: center;
+    justify-content: center;
+    display: flex;
+">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
         </div>
         <!-- TITLE END-->
         <div class="section-content">

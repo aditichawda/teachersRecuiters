@@ -333,6 +333,150 @@
             justify-content: center;
         }
     }
+
+    /* Speech to Text Button */
+    .speech-to-text-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f0f7ff;
+        color: #0073d1;
+        border: 1px solid #0073d1;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 8px;
+    }
+    .speech-to-text-btn:hover {
+        background: #0073d1;
+        color: #fff;
+    }
+    .speech-to-text-btn.recording {
+        background: #dc3545;
+        color: #fff;
+        border-color: #dc3545;
+        animation: pulse-recording 1.5s infinite;
+    }
+    @keyframes pulse-recording {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(220,53,69,0.4); }
+        50% { box-shadow: 0 0 0 8px rgba(220,53,69,0); }
+    }
+    .speech-status {
+        font-size: 12px;
+        color: #64748b;
+        margin-left: 8px;
+        display: none;
+    }
+    .speech-status.active {
+        display: inline;
+        color: #dc3545;
+        font-weight: 500;
+    }
+
+    /* Voice Recorder Styles */
+    .voice-recorder-wrapper {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 15px;
+        background: #f8fafc;
+        margin-top: 8px;
+    }
+    .voice-recorder-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .btn-record {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-record:hover { background: #c82333; }
+    .btn-record.recording {
+        animation: pulse-recording 1.5s infinite;
+    }
+    .btn-record-stop {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #333;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .recording-timer {
+        font-size: 14px;
+        font-weight: 600;
+        color: #dc3545;
+        font-family: monospace;
+    }
+    .recorded-audio-preview {
+        margin-top: 10px;
+        display: none;
+    }
+    .recorded-audio-preview audio {
+        width: 100%;
+        max-width: 400px;
+    }
+    .recorded-audio-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    /* Autocomplete Styles for Specialization */
+    .specialization-autocomplete-wrapper {
+        position: relative;
+    }
+    .specialization-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1.5px solid #e2e8f0;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: none;
+    }
+    .specialization-suggestions.active {
+        display: block;
+    }
+    .specialization-suggestion-item {
+        padding: 8px 14px;
+        font-size: 13px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .specialization-suggestion-item:hover,
+    .specialization-suggestion-item.highlighted {
+        background: #f0f7ff;
+        color: #0073d1;
+    }
+    .specialization-suggestion-item:last-child {
+        border-bottom: none;
+    }
 </style>
 
     <!-- Page Header -->
@@ -419,6 +563,11 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Alternate Contact') }}</label>
                     <input type="tel" class="form-control" name="alternate_phone" value="{{ old('alternate_phone', $account->alternate_phone ?? '') }}" placeholder="{{ __('Alternate phone number') }}">
+                    <div class="form-check mt-2">
+                        <input type="hidden" name="is_alternate_whatsapp_available" value="0">
+                        <input type="checkbox" class="form-check-input" name="is_alternate_whatsapp_available" value="1" id="is_alternate_whatsapp_available" @checked(old('is_alternate_whatsapp_available', $account->is_alternate_whatsapp_available ?? false))>
+                        <label class="form-check-label" for="is_alternate_whatsapp_available">{{ __('This number is available on WhatsApp') }}</label>
+                    </div>
                 </div>
 
                 <!-- 5. Gender -->
@@ -453,25 +602,6 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Date of Birth') }} <span class="required">*</span></label>
                     <input type="date" class="form-control" name="dob" value="{{ old('dob', $account->dob ? $account->dob->format('Y-m-d') : '') }}" max="{{ now()->subYears(16)->format('Y-m-d') }}">
-                </div>
-
-                <!-- 8. Salary -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Current Salary') }} <span class="required">*</span></label>
-                    <div class="input-group">
-                        <span class="input-group-text">₹</span>
-                        <input type="number" class="form-control" name="current_salary" value="{{ old('current_salary', $account->current_salary ?? '') }}" placeholder="0">
-                        <span class="input-group-text">/ month</span>
-                    </div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Expected Salary') }} <span class="required">*</span></label>
-                    <div class="input-group">
-                        <span class="input-group-text">₹</span>
-                        <input type="number" class="form-control" name="expected_salary" value="{{ old('expected_salary', $account->expected_salary ?? '') }}" placeholder="0">
-                        <span class="input-group-text">/ month</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -551,78 +681,197 @@
                 <!-- 12. Bio -->
                 <div class="col-12 mb-3">
                     <label class="form-label">{{ __('About / Bio / Career Aspiration') }}</label>
+                    <div class="mb-2">
+                        <button type="button" class="speech-to-text-btn" id="bio-speech-btn" onclick="toggleSpeechToText()">
+                            <i class="fa fa-microphone"></i> <span id="speech-btn-text">{{ __('Speech to Text') }}</span>
+                        </button>
+                        <span class="speech-status" id="speech-status">🔴 {{ __('Listening...') }}</span>
+                    </div>
                     {!! Form::customEditor('bio', old('bio', $account->bio)) !!}
                     <small class="form-text">{{ __('Tell schools about yourself, your teaching philosophy, and career goals') }}</small>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Section 4: Qualifications & Experience -->
+    <!-- Section 7: Job Preferences -->
     <div class="profile-section">
-        <div class="profile-section-header">
-            <i class="fa fa-graduation-cap"></i> {{ __('Qualifications, Certifications & Experience') }}
-        </div>
-        <div class="profile-section-body">
-            <div class="row">
-                <!-- 14. Qualifications (JSON array) -->
-                <div class="col-12 mb-4">
-                    <label class="form-label">{{ __('Educational Qualifications') }} <span class="required">*</span></label>
-                    <div id="qualifications-container">
-                        @php $qualifications = old('qualifications', $account->qualifications ?? [['level' => '', 'specialization' => '']]); @endphp
-                        @foreach($qualifications as $index => $qual)
-                        <div class="removable-item qualification-item">
-                            @if($index > 0)<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>@endif
-                            <div class="row">
-                                <div class="col-md-4 mb-2">
-                                    <select class="form-select" name="qualifications[{{ $index }}][level]">
-                                        <option value="">{{ __('Select Level') }}</option>
-                                        @foreach(['diploma' => 'Diploma', 'bachelors' => 'Bachelors', 'masters' => 'Masters', 'doctorate' => 'Doctorate'] as $val => $lbl)
-                                            <option value="{{ $val }}" @selected(($qual['level'] ?? '') == $val)>{{ $lbl }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-4 mb-2">
-                                    <input type="text" class="form-control" name="qualifications[{{ $index }}][specialization]" value="{{ $qual['specialization'] ?? '' }}" placeholder="{{ __('Specialization/Subject') }}">
-                                </div>
-                                <div class="col-md-4 mb-2">
-                                    <input type="text" class="form-control" name="qualifications[{{ $index }}][institution]" value="{{ $qual['institution'] ?? '' }}" placeholder="{{ __('Institution Name') }}">
-                                </div>
+            <div class="profile-section-header">
+                <i class="fa fa-briefcase"></i> {{ __('Job Preferences') }}
+            </div>
+            <div class="profile-section-body">
+                <div class="row">
+                    <!-- 23. Institution Type Preferences -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ __('Looking job for which type of Educational Institutions') }} <span class="required">*</span></label>
+                        <select id="ts-institution-types" name="institution_types[]" multiple placeholder="{{ __('Search & select up to 3...') }}">
+                            @php $instTypes = old('institution_types', $account->institution_types ?? []); @endphp
+                            <optgroup label="School">
+                                @foreach(['cbse_school' => 'CBSE School', 'icse_school' => 'ICSE School', 'cambridge_school' => 'Cambridge School', 'ib_school' => 'IB School', 'state_board_school' => 'State Board School', 'play_school' => 'Play School'] as $val => $lbl)
+                                    <option value="{{ $val }}" @selected(in_array($val, $instTypes))>{{ $lbl }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="College">
+                                @foreach(['engineering_college' => 'Engineering College', 'medical_college' => 'Medical College', 'nursing_college' => 'Nursing College'] as $val => $lbl)
+                                    <option value="{{ $val }}" @selected(in_array($val, $instTypes))>{{ $lbl }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="Others">
+                                @foreach(['edtech_company' => 'EdTech Company', 'coaching_institute' => 'Coaching Institute', 'university' => 'University'] as $val => $lbl)
+                                    <option value="{{ $val }}" @selected(in_array($val, $instTypes))>{{ $lbl }}</option>
+                                @endforeach
+                            </optgroup>
+                        </select>
+                        <div class="ts-max-info"><span class="count" id="inst-count">0</span>/3 {{ __('selected') }}</div>
+                    </div>
+
+                    <!-- 24. Position Type -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ __('Looking for which position?') }} <span class="required">*</span></label>
+                        <div class="d-flex gap-3 mt-2">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="teaching" id="position_teaching" @checked(str_contains(old('position_type', $account->position_type ?? ''), 'teaching'))>
+                                <label class="form-check-label" for="position_teaching">{{ __('Teaching') }}</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="non_teaching" id="position_non_teaching" @checked(str_contains(old('position_type', $account->position_type ?? ''), 'non_teaching'))>
+                                <label class="form-check-label" for="position_non_teaching">{{ __('Non-Teaching') }}</label>
                             </div>
                         </div>
-                        @endforeach
                     </div>
-                    <button type="button" class="add-more-btn" onclick="addQualification()">+ {{ __('Add More Qualification') }}</button>
-                </div>
 
-                <!-- 15. Teaching Certifications -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Teaching Certifications') }} <span class="required">*</span></label>
-                    <select id="ts-teaching-certifications" name="teaching_certifications[]" multiple placeholder="{{ __('Search & select certifications...') }}">
-                        @php $certs = old('teaching_certifications', $account->teaching_certifications ?? []); @endphp
-                        @foreach(['b_ed' => 'B.Ed', 'm_ed' => 'M.Ed', 'ctet' => 'CTET', 'tet' => 'TET', 'ntt' => 'NTT', 'montessori' => 'Montessori', 'teacher_training' => 'Teacher Training Course', 'net' => 'NET', 'set' => 'SET', 'gate' => 'GATE'] as $val => $lbl)
-                            <option value="{{ $val }}" @selected(in_array($val, $certs))>{{ $lbl }}</option>
-                        @endforeach
-                    </select>
-                    <div class="ts-max-info">{{ __('Select all applicable certifications') }}</div>
-                </div>
+                    <!-- 25. Teaching Subjects (shown when Teaching is selected) -->
+                    <div class="col-md-12 mb-3" id="teaching_subjects_wrapper">
+                        <label class="form-label">{{ __('Teaching Subjects / Post') }} ({{ __('Select up to 3') }}) <span class="required">*</span></label>
+                        <select id="ts-teaching-subjects" name="teaching_subjects[]" multiple placeholder="{{ __('Search & select up to 3 subjects...') }}">
+                            @php $teachingSubjects = old('teaching_subjects', $account->teaching_subjects ?? []); @endphp
+                            <optgroup label="Primary Level">
+                                @foreach([
+                                    'english_primary' => 'English (Primary)',
+                                    'hindi_primary' => 'Hindi (Primary)',
+                                    'mathematics_primary' => 'Mathematics (Primary)',
+                                    'evs_primary' => 'EVS (Primary)',
+                                    'social_studies_primary' => 'Social Studies (Primary)',
+                                ] as $val => $lbl)
+                                    <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="Upper Primary Level">
+                                @foreach([
+                                    'english_upper_primary' => 'English (Upper Primary)',
+                                    'hindi_upper_primary' => 'Hindi (Upper Primary)',
+                                    'mathematics_upper_primary' => 'Mathematics (Upper Primary)',
+                                    'science_upper_primary' => 'Science (Upper Primary)',
+                                    'social_science_upper_primary' => 'Social Science (Upper Primary)',
+                                ] as $val => $lbl)
+                                    <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="Secondary Level">
+                                @foreach([
+                                    'physics_secondary' => 'Physics (Secondary)',
+                                    'chemistry_secondary' => 'Chemistry (Secondary)',
+                                    'biology_secondary' => 'Biology (Secondary)',
+                                    'mathematics_secondary' => 'Mathematics (Secondary)',
+                                    'english_secondary' => 'English (Secondary)',
+                                ] as $val => $lbl)
+                                    <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="Higher Secondary Level">
+                                @foreach([
+                                    'physics_higher_secondary' => 'Physics (Higher Secondary)',
+                                    'chemistry_higher_secondary' => 'Chemistry (Higher Secondary)',
+                                    'biology_higher_secondary' => 'Biology (Higher Secondary)',
+                                    'mathematics_higher_secondary' => 'Mathematics (Higher Secondary)',
+                                    'commerce_higher_secondary' => 'Commerce (Higher Secondary)',
+                                    'accountancy_higher_secondary' => 'Accountancy (Higher Secondary)',
+                                ] as $val => $lbl)
+                                    <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="College Level">
+                                @foreach([
+                                    'english_degree' => 'English (Degree College)',
+                                    'zoology_degree' => 'Zoology (Degree College)',
+                                    'botany_degree' => 'Botany (Degree College)',
+                                    'physics_degree' => 'Physics (Degree College)',
+                                    'chemistry_degree' => 'Chemistry (Degree College)',
+                                    'mechanics_engineering' => 'Mechanics (Engineering College)',
+                                ] as $val => $lbl)
+                                    <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
+                                @endforeach
+                            </optgroup>
+                        </select>
+                        <div class="ts-max-info"><span class="count" id="subj-count">0</span>/3 {{ __('selected') }}</div>
+                    </div>
 
-                <!-- 17. Total Experience -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Total Experience') }} <span class="required">*</span></label>
-                    <select class="form-select" name="total_experience">
-                        <option value="">{{ __('-- Select --') }}</option>
-                        <option value="fresher" @selected(old('total_experience', $account->total_experience ?? '') == 'fresher')>{{ __('Fresher') }}</option>
-                        <option value="intern" @selected(old('total_experience', $account->total_experience ?? '') == 'intern')>{{ __('Intern') }}</option>
-                        @for($i = 1; $i <= 15; $i++)
-                            <option value="{{ $i }}_years" @selected(old('total_experience', $account->total_experience ?? '') == "{$i}_years")>{{ $i }} {{ __('Year(s)') }}</option>
-                        @endfor
-                        <option value="15+_years" @selected(old('total_experience', $account->total_experience ?? '') == '15+_years')>{{ __('15+ Years') }}</option>
-                    </select>
+                    <!-- Non-Teaching Positions (shown when Non-Teaching is selected) -->
+                    <div class="col-md-12 mb-3" id="non_teaching_positions_wrapper" style="display: none;">
+                        <label class="form-label">{{ __('Non-Teaching Positions') }} ({{ __('Select up to 3') }}) <span class="required">*</span></label>
+                        <select id="ts-non-teaching" name="non_teaching_positions[]" multiple placeholder="{{ __('Search & select up to 3 positions...') }}">
+                            @php $nonTeachingPositions = old('non_teaching_positions', $account->non_teaching_positions ?? []); @endphp
+                            @foreach([
+                                'principal' => 'School Principal',
+                                'vice_principal' => 'Vice Principal',
+                                'administrator' => 'Administrator',
+                                'hr' => 'HR',
+                                'hostel_warden' => 'Hostel Warden',
+                                'counselor' => 'Counselor',
+                                'academic_coordinator' => 'Academic Coordinator',
+                                'librarian' => 'Librarian',
+                                'lab_assistant' => 'Lab Assistant',
+                                'office_staff' => 'Office Staff',
+                            ] as $val => $lbl)
+                                <option value="{{ $val }}" @selected(in_array($val, (array)$nonTeachingPositions))>{{ $lbl }}</option>
+                            @endforeach
+                        </select>
+                        <div class="ts-max-info"><span class="count" id="nt-count">0</span>/3 {{ __('selected') }}</div>
+                    </div>
+
+                    <!-- 26. Job Type -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ __('Job Type') }} <span class="required">*</span></label>
+                        <select id="ts-job-type" name="job_type_preferences[]" multiple placeholder="{{ __('Select job types...') }}">
+                            @php $jobTypes = old('job_type_preferences', $account->job_type_preferences ?? []); @endphp
+                            @foreach(['full_time' => 'Full-Time', 'part_time' => 'Part-Time', 'internship' => 'Internship', 'freelance' => 'Freelance', 'contract' => 'Contract', 'remote' => 'Remote'] as $val => $lbl)
+                                <option value="{{ $val }}" @selected(in_array($val, (array)$jobTypes))>{{ $lbl }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-check mt-2">
+                            <input type="hidden" name="remote_only" value="0">
+                            <input type="checkbox" class="form-check-input" name="remote_only" value="1" id="remote_only" @checked(old('remote_only', $account->remote_only ?? false))>
+                            <label class="form-check-label" for="remote_only">{{ __('Available only for Remote jobs') }}</label>
+                        </div>
+                    </div>
+
+                    <!-- Salary (moved from Personal Details) -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ __('Current Salary') }} <span class="required">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" name="current_salary" value="{{ old('current_salary', $account->current_salary ?? '') }}" placeholder="0">
+                            <select class="form-select" name="current_salary_period" style="max-width: 120px;">
+                                <option value="month" @selected(old('current_salary_period', $account->current_salary_period ?? 'month') == 'month')>/ Month</option>
+                                <option value="hour" @selected(old('current_salary_period', $account->current_salary_period ?? 'month') == 'hour')>/ Hour</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ __('Expected Salary') }} <span class="required">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" name="expected_salary" value="{{ old('expected_salary', $account->expected_salary ?? '') }}" placeholder="0">
+                            <select class="form-select" name="expected_salary_period" style="max-width: 120px;">
+                                <option value="month" @selected(old('expected_salary_period', $account->expected_salary_period ?? 'month') == 'month')>/ Month</option>
+                                <option value="hour" @selected(old('expected_salary_period', $account->expected_salary_period ?? 'month') == 'hour')>/ Hour</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+   
 
     <!-- Section 5: Location -->
     <div class="profile-section">
@@ -681,7 +930,74 @@
             </div>
         </div>
     </div>
+                <!-- Section 4: Qualifications & Experience -->
+                <div class="profile-section">
+                        <div class="profile-section-header">
+                            <i class="fa fa-graduation-cap"></i> {{ __('Qualifications, Certifications & Experience') }}
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="row">
+                                <!-- 14. Qualifications (JSON array) -->
+                                <div class="col-12 mb-4">
+                                    <label class="form-label">{{ __('Educational Qualifications') }} <span class="required">*</span></label>
+                                    <div id="qualifications-container">
+                                        @php $qualifications = old('qualifications', $account->qualifications ?? [['level' => '', 'specialization' => '']]); @endphp
+                                        @foreach($qualifications as $index => $qual)
+                                        <div class="removable-item qualification-item">
+                                            @if($index > 0)<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>@endif
+                                            <div class="row">
+                                                <div class="col-md-4 mb-2">
+                                                    <select class="form-select" name="qualifications[{{ $index }}][level]">
+                                                        <option value="">{{ __('Select Level') }}</option>
+                                                        @foreach(['diploma' => 'Diploma', 'bachelors' => 'Bachelors', 'masters' => 'Masters', 'doctorate' => 'Doctorate'] as $val => $lbl)
+                                                            <option value="{{ $val }}" @selected(($qual['level'] ?? '') == $val)>{{ $lbl }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 mb-2">
+                                                    <div class="specialization-autocomplete-wrapper">
+                                                        <input type="text" class="form-control specialization-input" name="qualifications[{{ $index }}][specialization]" value="{{ $qual['specialization'] ?? '' }}" placeholder="{{ __('Specialization/Subject') }}" autocomplete="off">
+                                                        <div class="specialization-suggestions"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4 mb-2">
+                                                    <input type="text" class="form-control" name="qualifications[{{ $index }}][institution]" value="{{ $qual['institution'] ?? '' }}" placeholder="{{ __('Institution Name') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    <button type="button" class="add-more-btn" onclick="addQualification()">+ {{ __('Add More Qualification') }}</button>
+                                </div>
 
+                                <!-- 15. Teaching Certifications -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ __('Teaching Certifications') }} <span class="required">*</span></label>
+                                    <select id="ts-teaching-certifications" name="teaching_certifications[]" multiple placeholder="{{ __('Search & select certifications...') }}">
+                                        @php $certs = old('teaching_certifications', $account->teaching_certifications ?? []); @endphp
+                                        @foreach(['b_ed' => 'B.Ed', 'm_ed' => 'M.Ed', 'ctet' => 'CTET', 'tet' => 'TET', 'ntt' => 'NTT', 'montessori' => 'Montessori', 'teacher_training' => 'Teacher Training Course', 'net' => 'NET', 'set' => 'SET', 'gate' => 'GATE'] as $val => $lbl)
+                                            <option value="{{ $val }}" @selected(in_array($val, $certs))>{{ $lbl }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="ts-max-info">{{ __('Select all applicable certifications') }}</div>
+                                </div>
+
+                                <!-- 17. Total Experience -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ __('Total Experience') }} <span class="required">*</span></label>
+                                    <select class="form-select" name="total_experience">
+                                        <option value="">{{ __('-- Select --') }}</option>
+                                        <option value="fresher" @selected(old('total_experience', $account->total_experience ?? '') == 'fresher')>{{ __('Fresher') }}</option>
+                                        <option value="intern" @selected(old('total_experience', $account->total_experience ?? '') == 'intern')>{{ __('Intern') }}</option>
+                                        @for($i = 1; $i <= 15; $i++)
+                                            <option value="{{ $i }}_years" @selected(old('total_experience', $account->total_experience ?? '') == "{$i}_years")>{{ $i }} {{ __('Year(s)') }}</option>
+                                        @endfor
+                                        <option value="15+_years" @selected(old('total_experience', $account->total_experience ?? '') == '15+_years')>{{ __('15+ Years') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
     <!-- Section 6: Skills & Languages -->
     <div class="profile-section">
         <div class="profile-section-header">
@@ -730,159 +1046,7 @@
         </div>
     </div>
 
-    <!-- Section 7: Job Preferences -->
-    <div class="profile-section">
-        <div class="profile-section-header">
-            <i class="fa fa-briefcase"></i> {{ __('Job Preferences') }}
-        </div>
-        <div class="profile-section-body">
-            <div class="row">
-                <!-- 23. Institution Type Preferences -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Looking job for which type of Educational Institutions') }} <span class="required">*</span></label>
-                    <select id="ts-institution-types" name="institution_types[]" multiple placeholder="{{ __('Search & select up to 3...') }}">
-                        @php $instTypes = old('institution_types', $account->institution_types ?? []); @endphp
-                        <optgroup label="School">
-                            @foreach(['cbse_school' => 'CBSE School', 'icse_school' => 'ICSE School', 'cambridge_school' => 'Cambridge School', 'ib_school' => 'IB School', 'state_board_school' => 'State Board School', 'play_school' => 'Play School'] as $val => $lbl)
-                                <option value="{{ $val }}" @selected(in_array($val, $instTypes))>{{ $lbl }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="College">
-                            @foreach(['engineering_college' => 'Engineering College', 'medical_college' => 'Medical College', 'nursing_college' => 'Nursing College'] as $val => $lbl)
-                                <option value="{{ $val }}" @selected(in_array($val, $instTypes))>{{ $lbl }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="Others">
-                            @foreach(['edtech_company' => 'EdTech Company', 'coaching_institute' => 'Coaching Institute', 'university' => 'University'] as $val => $lbl)
-                                <option value="{{ $val }}" @selected(in_array($val, $instTypes))>{{ $lbl }}</option>
-                            @endforeach
-                        </optgroup>
-                    </select>
-                    <div class="ts-max-info"><span class="count" id="inst-count">0</span>/3 {{ __('selected') }}</div>
-                </div>
-
-                <!-- 24. Position Type -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Looking for which position?') }} <span class="required">*</span></label>
-                    <div class="d-flex gap-3 mt-2">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="teaching" id="position_teaching" @checked(str_contains(old('position_type', $account->position_type ?? ''), 'teaching'))>
-                            <label class="form-check-label" for="position_teaching">{{ __('Teaching') }}</label>
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="non_teaching" id="position_non_teaching" @checked(str_contains(old('position_type', $account->position_type ?? ''), 'non_teaching'))>
-                            <label class="form-check-label" for="position_non_teaching">{{ __('Non-Teaching') }}</label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 25. Teaching Subjects (shown when Teaching is selected) -->
-                <div class="col-md-12 mb-3" id="teaching_subjects_wrapper">
-                    <label class="form-label">{{ __('Teaching Subjects / Post') }} ({{ __('Select up to 3') }}) <span class="required">*</span></label>
-                    <select id="ts-teaching-subjects" name="teaching_subjects[]" multiple placeholder="{{ __('Search & select up to 3 subjects...') }}">
-                        @php $teachingSubjects = old('teaching_subjects', $account->teaching_subjects ?? []); @endphp
-                        <optgroup label="Primary Level">
-                            @foreach([
-                                'english_primary' => 'English (Primary)',
-                                'hindi_primary' => 'Hindi (Primary)',
-                                'mathematics_primary' => 'Mathematics (Primary)',
-                                'evs_primary' => 'EVS (Primary)',
-                                'social_studies_primary' => 'Social Studies (Primary)',
-                            ] as $val => $lbl)
-                                <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="Upper Primary Level">
-                            @foreach([
-                                'english_upper_primary' => 'English (Upper Primary)',
-                                'hindi_upper_primary' => 'Hindi (Upper Primary)',
-                                'mathematics_upper_primary' => 'Mathematics (Upper Primary)',
-                                'science_upper_primary' => 'Science (Upper Primary)',
-                                'social_science_upper_primary' => 'Social Science (Upper Primary)',
-                            ] as $val => $lbl)
-                                <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="Secondary Level">
-                            @foreach([
-                                'physics_secondary' => 'Physics (Secondary)',
-                                'chemistry_secondary' => 'Chemistry (Secondary)',
-                                'biology_secondary' => 'Biology (Secondary)',
-                                'mathematics_secondary' => 'Mathematics (Secondary)',
-                                'english_secondary' => 'English (Secondary)',
-                            ] as $val => $lbl)
-                                <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="Higher Secondary Level">
-                            @foreach([
-                                'physics_higher_secondary' => 'Physics (Higher Secondary)',
-                                'chemistry_higher_secondary' => 'Chemistry (Higher Secondary)',
-                                'biology_higher_secondary' => 'Biology (Higher Secondary)',
-                                'mathematics_higher_secondary' => 'Mathematics (Higher Secondary)',
-                                'commerce_higher_secondary' => 'Commerce (Higher Secondary)',
-                                'accountancy_higher_secondary' => 'Accountancy (Higher Secondary)',
-                            ] as $val => $lbl)
-                                <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="College Level">
-                            @foreach([
-                                'english_degree' => 'English (Degree College)',
-                                'zoology_degree' => 'Zoology (Degree College)',
-                                'botany_degree' => 'Botany (Degree College)',
-                                'physics_degree' => 'Physics (Degree College)',
-                                'chemistry_degree' => 'Chemistry (Degree College)',
-                                'mechanics_engineering' => 'Mechanics (Engineering College)',
-                            ] as $val => $lbl)
-                                <option value="{{ $val }}" @selected(in_array($val, (array)$teachingSubjects))>{{ $lbl }}</option>
-                            @endforeach
-                        </optgroup>
-                    </select>
-                    <div class="ts-max-info"><span class="count" id="subj-count">0</span>/3 {{ __('selected') }}</div>
-                </div>
-
-                <!-- Non-Teaching Positions (shown when Non-Teaching is selected) -->
-                <div class="col-md-12 mb-3" id="non_teaching_positions_wrapper" style="display: none;">
-                    <label class="form-label">{{ __('Non-Teaching Positions') }} ({{ __('Select up to 3') }}) <span class="required">*</span></label>
-                    <select id="ts-non-teaching" name="non_teaching_positions[]" multiple placeholder="{{ __('Search & select up to 3 positions...') }}">
-                        @php $nonTeachingPositions = old('non_teaching_positions', $account->non_teaching_positions ?? []); @endphp
-                        @foreach([
-                            'principal' => 'School Principal',
-                            'vice_principal' => 'Vice Principal',
-                            'administrator' => 'Administrator',
-                            'hr' => 'HR',
-                            'hostel_warden' => 'Hostel Warden',
-                            'counselor' => 'Counselor',
-                            'academic_coordinator' => 'Academic Coordinator',
-                            'librarian' => 'Librarian',
-                            'lab_assistant' => 'Lab Assistant',
-                            'office_staff' => 'Office Staff',
-                        ] as $val => $lbl)
-                            <option value="{{ $val }}" @selected(in_array($val, (array)$nonTeachingPositions))>{{ $lbl }}</option>
-                        @endforeach
-                    </select>
-                    <div class="ts-max-info"><span class="count" id="nt-count">0</span>/3 {{ __('selected') }}</div>
-                </div>
-
-                <!-- 26. Job Type -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Job Type') }} <span class="required">*</span></label>
-                    <select id="ts-job-type" name="job_type_preferences[]" multiple placeholder="{{ __('Select job types...') }}">
-                        @php $jobTypes = old('job_type_preferences', $account->job_type_preferences ?? []); @endphp
-                        @foreach(['full_time' => 'Full-Time', 'part_time' => 'Part-Time', 'internship' => 'Internship', 'freelance' => 'Freelance', 'contract' => 'Contract', 'remote' => 'Remote'] as $val => $lbl)
-                            <option value="{{ $val }}" @selected(in_array($val, (array)$jobTypes))>{{ $lbl }}</option>
-                        @endforeach
-                    </select>
-                    <div class="form-check mt-2">
-                        <input type="hidden" name="remote_only" value="0">
-                        <input type="checkbox" class="form-check-input" name="remote_only" value="1" id="remote_only" @checked(old('remote_only', $account->remote_only ?? false))>
-                        <label class="form-check-label" for="remote_only">{{ __('Available only for Remote jobs') }}</label>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+   
 
     <!-- Section 8: Resume & Documents -->
     <div class="profile-section">
@@ -924,8 +1088,36 @@
                 <!-- 13. Introductory Audio -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Introductory Audio') }}</label>
-                    <input type="file" class="form-control" name="introductory_audio" accept="audio/*">
-                    <small class="form-text">{{ __('Record an audio introduction (max 2 minutes). Include: qualifications, experience, teaching style.') }}</small>
+                    <input type="file" class="form-control" name="introductory_audio" id="introductory_audio_file" accept="audio/*">
+                    <small class="form-text">{{ __('Upload an audio file OR record directly below (max 2 minutes).') }}</small>
+
+                    <!-- Voice Recorder -->
+                    <div class="voice-recorder-wrapper mt-2">
+                        <label class="form-label" style="font-size:13px; margin-bottom:8px;">
+                            <i class="fa fa-microphone me-1 text-danger"></i> {{ __('Or Record Your Voice') }}
+                        </label>
+                        <div class="voice-recorder-controls">
+                            <button type="button" class="btn-record" id="btn-start-recording" onclick="startAudioRecording()">
+                                <i class="fa fa-circle"></i> {{ __('Record') }}
+                            </button>
+                            <button type="button" class="btn-record-stop" id="btn-stop-recording" style="display:none;" onclick="stopAudioRecording()">
+                                <i class="fa fa-stop"></i> {{ __('Stop') }}
+                            </button>
+                            <span class="recording-timer" id="recording-timer" style="display:none;">00:00</span>
+                        </div>
+                        <div class="recorded-audio-preview" id="recorded-audio-preview">
+                            <audio controls id="recorded-audio-player"></audio>
+                            <div class="recorded-audio-actions">
+                                <button type="button" class="add-more-btn" onclick="useRecordedAudio()">
+                                    <i class="fa fa-check me-1"></i> {{ __('Use This Recording') }}
+                                </button>
+                                <button type="button" class="btn-remove-photo" style="padding:6px 12px; font-size:12px;" onclick="discardRecording()">
+                                    <i class="fa fa-trash me-1"></i> {{ __('Discard') }}
+                                </button>
+                            </div>
+                        </div>
+                        <small class="form-text mt-1">{{ __('Include: qualifications, experience, teaching style. Max 2 minutes.') }}</small>
+                    </div>
                 </div>
 
                 <!-- 30. Introductory Video Link -->
@@ -960,6 +1152,10 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label"><i class="fab fa-instagram text-danger me-2"></i>{{ __('Instagram') }}</label>
                     <input type="url" class="form-control" name="social_links[instagram]" value="{{ $social['instagram'] ?? '' }}" placeholder="https://instagram.com/...">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label"><i class="fab fa-youtube text-danger me-2"></i>{{ __('YouTube') }}</label>
+                    <input type="url" class="form-control" name="social_links[youtube]" value="{{ $social['youtube'] ?? '' }}" placeholder="https://youtube.com/@...">
                 </div>
             </div>
         </div>
@@ -1135,7 +1331,10 @@ function addQualification() {
                     </select>
                 </div>
                 <div class="col-md-4 mb-2">
-                    <input type="text" class="form-control" name="qualifications[${qualificationIndex}][specialization]" placeholder="Specialization/Subject">
+                    <div class="specialization-autocomplete-wrapper">
+                        <input type="text" class="form-control specialization-input" name="qualifications[${qualificationIndex}][specialization]" placeholder="Specialization/Subject" autocomplete="off">
+                        <div class="specialization-suggestions"></div>
+                    </div>
                 </div>
                 <div class="col-md-4 mb-2">
                     <input type="text" class="form-control" name="qualifications[${qualificationIndex}][institution]" placeholder="Institution Name">
@@ -1244,7 +1443,6 @@ document.addEventListener('DOMContentLoaded', function() {
         avatarModal.addEventListener('hidden.bs.modal', function() {
             var profileImg = document.getElementById('profile-photo-display');
             if (profileImg) {
-                // Update sidebar avatar to match
                 var sidebarAvatar = document.querySelector('.js-profile-avatar');
                 if (sidebarAvatar) {
                     sidebarAvatar.src = profileImg.src;
@@ -1252,6 +1450,352 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Initialize specialization autocomplete for existing fields
+    initSpecializationAutocomplete();
 });
+
+// ==========================================
+// Speech-to-Text for Bio Editor
+// ==========================================
+var speechRecognition = null;
+var isSpeechActive = false;
+
+function toggleSpeechToText() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('{{ __("Speech-to-Text is not supported in your browser. Please use Chrome or Edge.") }}');
+        return;
+    }
+
+    if (isSpeechActive) {
+        stopSpeechToText();
+    } else {
+        startSpeechToText();
+    }
+}
+
+function startSpeechToText() {
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    speechRecognition = new SpeechRecognition();
+    speechRecognition.continuous = true;
+    speechRecognition.interimResults = true;
+    speechRecognition.lang = 'en-IN'; // English (India) - supports Hindi too
+
+    var btn = document.getElementById('bio-speech-btn');
+    var btnText = document.getElementById('speech-btn-text');
+    var status = document.getElementById('speech-status');
+
+    speechRecognition.onstart = function() {
+        isSpeechActive = true;
+        btn.classList.add('recording');
+        btn.querySelector('i').className = 'fa fa-stop';
+        btnText.textContent = '{{ __("Stop Listening") }}';
+        status.classList.add('active');
+    };
+
+    speechRecognition.onresult = function(event) {
+        var finalTranscript = '';
+        for (var i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            }
+        }
+        if (finalTranscript) {
+            insertTextIntoEditor(finalTranscript);
+        }
+    };
+
+    speechRecognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+            alert('{{ __("Microphone access was denied. Please allow microphone access in your browser settings.") }}');
+        }
+        stopSpeechToText();
+    };
+
+    speechRecognition.onend = function() {
+        if (isSpeechActive) {
+            // Restart if still active (auto-stop protection)
+            try { speechRecognition.start(); } catch(e) { stopSpeechToText(); }
+        }
+    };
+
+    try {
+        speechRecognition.start();
+    } catch(e) {
+        alert('{{ __("Could not start speech recognition. Please try again.") }}');
+    }
+}
+
+function stopSpeechToText() {
+    isSpeechActive = false;
+    if (speechRecognition) {
+        speechRecognition.stop();
+        speechRecognition = null;
+    }
+    var btn = document.getElementById('bio-speech-btn');
+    var btnText = document.getElementById('speech-btn-text');
+    var status = document.getElementById('speech-status');
+    btn.classList.remove('recording');
+    btn.querySelector('i').className = 'fa fa-microphone';
+    btnText.textContent = '{{ __("Speech to Text") }}';
+    status.classList.remove('active');
+}
+
+function insertTextIntoEditor(text) {
+    // Try CKEditor first
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.bio) {
+        CKEDITOR.instances.bio.model.change(function(writer) {
+            var root = CKEDITOR.instances.bio.model.document.getRoot();
+            writer.insertText(text, root, 'end');
+        });
+        return;
+    }
+
+    // Try window.editor (CKEditor 5)
+    if (typeof window.editorManagement !== 'undefined' && window.editorManagement.CKEDITOR && window.editorManagement.CKEDITOR.bio) {
+        var editor = window.editorManagement.CKEDITOR.bio;
+        editor.model.change(function(writer) {
+            var insertPosition = editor.model.document.selection.getLastPosition();
+            writer.insertText(' ' + text, insertPosition);
+        });
+        return;
+    }
+
+    // Fallback: append to textarea
+    var textarea = document.getElementById('bio');
+    if (textarea) {
+        textarea.value += ' ' + text;
+        // Trigger change event
+        textarea.dispatchEvent(new Event('change'));
+    }
+}
+
+// ==========================================
+// Specialization/Subject Autocomplete
+// ==========================================
+var specializationsList = [
+    // Sciences
+    'Physics', 'Chemistry', 'Biology', 'Mathematics', 'Computer Science',
+    'Environmental Science', 'Biotechnology', 'Microbiology', 'Zoology', 'Botany',
+    'Geology', 'Astronomy', 'Statistics', 'Biochemistry',
+    // Arts & Humanities
+    'English', 'Hindi', 'Sanskrit', 'History', 'Geography', 'Political Science',
+    'Economics', 'Sociology', 'Psychology', 'Philosophy', 'Music', 'Fine Arts',
+    'Performing Arts', 'Journalism', 'Mass Communication', 'Library Science',
+    // Commerce & Management
+    'Commerce', 'Accountancy', 'Business Studies', 'Management', 'Finance',
+    'Marketing', 'Human Resource Management', 'Banking', 'Insurance',
+    // Engineering & Technology
+    'Mechanical Engineering', 'Civil Engineering', 'Electrical Engineering',
+    'Electronics Engineering', 'Computer Engineering', 'Chemical Engineering',
+    'Information Technology', 'Automobile Engineering', 'Aeronautical Engineering',
+    // Education
+    'Education (B.Ed)', 'Special Education', 'Physical Education', 'Montessori Education',
+    'Early Childhood Education', 'Curriculum Development',
+    // Medical & Health
+    'Medicine', 'Nursing', 'Pharmacy', 'Physiotherapy', 'Dental Science',
+    'Ayurveda', 'Homeopathy', 'Public Health', 'Nutrition & Dietetics',
+    // Law
+    'Law', 'Criminal Law', 'Corporate Law', 'International Law',
+    // Languages
+    'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Bengali', 'Gujarati',
+    'Punjabi', 'Urdu', 'French', 'German', 'Spanish', 'Japanese', 'Chinese',
+    // Others
+    'Yoga', 'Sports Science', 'Agriculture', 'Veterinary Science',
+    'Hotel Management', 'Fashion Design', 'Interior Design', 'Architecture',
+    'Social Work', 'Defense Studies', 'Home Science'
+];
+
+function initSpecializationAutocomplete() {
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('specialization-input')) {
+            handleSpecializationInput(e.target);
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        // Close all dropdowns when clicking outside
+        if (!e.target.classList.contains('specialization-input') && !e.target.classList.contains('specialization-suggestion-item')) {
+            document.querySelectorAll('.specialization-suggestions').forEach(function(el) {
+                el.classList.remove('active');
+            });
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.target.classList.contains('specialization-input')) {
+            handleSpecializationKeydown(e);
+        }
+    });
+}
+
+function handleSpecializationInput(input) {
+    var query = input.value.trim().toLowerCase();
+    var suggestionsDiv = input.parentElement.querySelector('.specialization-suggestions');
+
+    if (query.length < 1) {
+        suggestionsDiv.classList.remove('active');
+        return;
+    }
+
+    var matches = specializationsList.filter(function(item) {
+        return item.toLowerCase().indexOf(query) !== -1;
+    }).slice(0, 8);
+
+    if (matches.length === 0) {
+        suggestionsDiv.classList.remove('active');
+        return;
+    }
+
+    var html = '';
+    matches.forEach(function(item, idx) {
+        var highlighted = item.replace(new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<strong>$1</strong>');
+        html += '<div class="specialization-suggestion-item' + (idx === 0 ? ' highlighted' : '') + '" data-value="' + item + '">' + highlighted + '</div>';
+    });
+
+    suggestionsDiv.innerHTML = html;
+    suggestionsDiv.classList.add('active');
+
+    // Add click handlers
+    suggestionsDiv.querySelectorAll('.specialization-suggestion-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+            input.value = this.getAttribute('data-value');
+            suggestionsDiv.classList.remove('active');
+            input.focus();
+        });
+    });
+}
+
+function handleSpecializationKeydown(e) {
+    var suggestionsDiv = e.target.parentElement.querySelector('.specialization-suggestions');
+    if (!suggestionsDiv.classList.contains('active')) return;
+
+    var items = suggestionsDiv.querySelectorAll('.specialization-suggestion-item');
+    var current = suggestionsDiv.querySelector('.highlighted');
+    var currentIdx = -1;
+    items.forEach(function(item, idx) { if (item === current) currentIdx = idx; });
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (current) current.classList.remove('highlighted');
+        var next = (currentIdx + 1) % items.length;
+        items[next].classList.add('highlighted');
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (current) current.classList.remove('highlighted');
+        var prev = (currentIdx - 1 + items.length) % items.length;
+        items[prev].classList.add('highlighted');
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (current) {
+            e.target.value = current.getAttribute('data-value');
+            suggestionsDiv.classList.remove('active');
+        }
+    } else if (e.key === 'Escape') {
+        suggestionsDiv.classList.remove('active');
+    }
+}
+
+// ==========================================
+// Voice Recording for Introductory Audio
+// ==========================================
+var mediaRecorder = null;
+var audioChunks = [];
+var recordedBlob = null;
+var recordingTimerInterval = null;
+var recordingSeconds = 0;
+var maxRecordingSeconds = 120; // 2 minutes
+
+function startAudioRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('{{ __("Audio recording is not supported in your browser.") }}');
+        return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+            audioChunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = function(e) {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = function() {
+                stream.getTracks().forEach(function(track) { track.stop(); });
+                recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                var audioUrl = URL.createObjectURL(recordedBlob);
+                var audioPlayer = document.getElementById('recorded-audio-player');
+                audioPlayer.src = audioUrl;
+                document.getElementById('recorded-audio-preview').style.display = 'block';
+            };
+
+            mediaRecorder.start();
+
+            // UI Updates
+            document.getElementById('btn-start-recording').style.display = 'none';
+            document.getElementById('btn-stop-recording').style.display = 'inline-flex';
+            document.getElementById('recording-timer').style.display = 'inline';
+            document.getElementById('btn-start-recording').classList.add('recording');
+
+            // Start timer
+            recordingSeconds = 0;
+            updateRecordingTimer();
+            recordingTimerInterval = setInterval(function() {
+                recordingSeconds++;
+                updateRecordingTimer();
+                if (recordingSeconds >= maxRecordingSeconds) {
+                    stopAudioRecording();
+                }
+            }, 1000);
+        })
+        .catch(function(err) {
+            console.error('Microphone access error:', err);
+            alert('{{ __("Could not access microphone. Please allow microphone access.") }}');
+        });
+}
+
+function stopAudioRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+    clearInterval(recordingTimerInterval);
+
+    // UI Updates
+    document.getElementById('btn-start-recording').style.display = 'inline-flex';
+    document.getElementById('btn-start-recording').classList.remove('recording');
+    document.getElementById('btn-stop-recording').style.display = 'none';
+    document.getElementById('recording-timer').style.display = 'none';
+}
+
+function updateRecordingTimer() {
+    var mins = Math.floor(recordingSeconds / 60).toString().padStart(2, '0');
+    var secs = (recordingSeconds % 60).toString().padStart(2, '0');
+    document.getElementById('recording-timer').textContent = mins + ':' + secs;
+}
+
+function useRecordedAudio() {
+    if (!recordedBlob) return;
+
+    // Create a File from the Blob and assign to the file input
+    var file = new File([recordedBlob], 'introductory-audio-recording.webm', { type: 'audio/webm' });
+    var dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    document.getElementById('introductory_audio_file').files = dataTransfer.files;
+
+    // Show confirmation
+    document.getElementById('recorded-audio-preview').innerHTML = 
+        '<div style="background:#e8f5e9;padding:10px;border-radius:8px;color:#2e7d32;font-size:13px;">' +
+        '<i class="fa fa-check-circle me-1"></i> {{ __("Recording attached! It will be uploaded when you save your profile.") }}' +
+        '</div>';
+    document.getElementById('recorded-audio-preview').style.display = 'block';
+}
+
+function discardRecording() {
+    recordedBlob = null;
+    document.getElementById('recorded-audio-preview').style.display = 'none';
+    document.getElementById('recorded-audio-player').src = '';
+}
 </script>
 @endsection

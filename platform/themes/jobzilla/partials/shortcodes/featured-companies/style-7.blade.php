@@ -1,11 +1,11 @@
 <div class="section-full p-t120 p-b0 site-bg-white twm-companies-wrap twm-companies-wrap-h-page-7 pos-relative">
     <div class="twm-companies-wrap-bg-block"></div>
     <!-- TITLE START-->
-    <div class="section-head center wt-small-separator-outer mt-5 content-white">
-        <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
-<div class="wt-small-separator site-text-primary">
+    <div class="section-head center wt-small-separator-outer content-white">
+        <div class="wt-small-separator site-text-primary">
             <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
         </div>
+        <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
     </div>
     <!-- TITLE END-->
 

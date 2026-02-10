@@ -137,4 +137,38 @@ class CityController extends BaseController
             ->httpResponse()
             ->setData(CityResource::collection($data));
     }
+
+    public function ajaxSearchCities(Request $request)
+    {
+        $keyword = BaseHelper::stringify($request->query('k'));
+
+        if (! $keyword || strlen($keyword) < 2) {
+            return $this
+                ->httpResponse()
+                ->setData([]);
+        }
+
+        $cities = City::query()
+            ->select(['id', 'name', 'state_id', 'country_id'])
+            ->with(['state:id,name', 'country:id,name'])
+            ->wherePublished()
+            ->where('name', 'LIKE', '%' . $keyword . '%')
+            ->orderBy('name')
+            ->limit(15)
+            ->get()
+            ->map(function ($city) {
+                return [
+                    'id' => $city->id,
+                    'name' => $city->name,
+                    'state_id' => $city->state_id,
+                    'state_name' => $city->state?->name,
+                    'country_id' => $city->country_id,
+                    'country_name' => $city->country?->name,
+                ];
+            });
+
+        return $this
+            ->httpResponse()
+            ->setData($cities);
+    }
 }

@@ -1,12 +1,11 @@
 <!-- OUR BLOG START -->
 <div class="section-full p-t120 p-b90 site-bg-light-white">
     <div class="container">
-        <div class="section-head center wt-small-separator-outer mt-5">
-        <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
+        <div class="section-head center wt-small-separator-outer">
             <div class="wt-small-separator site-text-primary">
                 <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
             </div>
-            
+            <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
         </div>
         <div class="section-content">
             <div class="twm-blog-post-3-outer-wrap">

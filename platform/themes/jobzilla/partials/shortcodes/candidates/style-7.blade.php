@@ -10,12 +10,11 @@
 <div class="section-full p-t60 p-b90 site-bg-white twm-candidate-h-page7-wrap pos-relative ">
     <div class="container">
         <!-- TITLE START-->
-        <div class="section-head center wt-small-separator-outer mt-5">
-        <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
+        <div class="section-head center wt-small-separator-outer">
             <div class="wt-small-separator site-text-primary">
                 <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
             </div>
-            
+            <h2 class="wt-title">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
 
         </div>
         <!-- TITLE END-->

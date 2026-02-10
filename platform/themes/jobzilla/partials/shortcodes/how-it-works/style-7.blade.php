@@ -4,7 +4,7 @@
     <div class="container">
 
         <!-- TITLE START-->
-        <div class="section-head center wt-small-separator-outer mt-5  content-white">
+        <div class="section-head center wt-small-separator-outer  content-white">
             <div class="wt-small-separator">
                 <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
             </div>
