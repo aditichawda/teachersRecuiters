@@ -52,7 +52,7 @@
                                                     </div>
                                                     <div class="company-info">
                                                         <a href="{{ $job->company_url }}" class="company-name">{{ $job->company_name }}</a>
-                                                        <p class="company-address">{{ $job->location }}</p>
+                                                        <p class="company-address"><i class="feather-map-pin"></i> {{ $job->location ?: 'India' }}</p>
                                                     </div>
                                                 </div>
                                             </div>

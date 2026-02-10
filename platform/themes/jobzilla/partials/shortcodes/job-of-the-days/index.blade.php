@@ -24,9 +24,7 @@
                                         <img src="{{ $job->company_logo_thumb }}" alt="{{ $job->company_name ?: $job->name }}">
                                     </div>
                                     <div class="twm-com-info">
-                                        @if ($job->location)
-                                            <p class="twm-job-address">{{ $job->location }}</p>
-                                        @endif
+                                        <p class="twm-job-address"><i class="feather-map-pin"></i> {{ $job->location ?: 'India' }}</p>
                                         @if ($job->has_company)
                                             <a href="{{ $job->company_url }}" class="twm-job-com-name site-text-primary">
                                                 {{ $job->company_name }}

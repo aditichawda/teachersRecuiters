@@ -57,11 +57,9 @@
                                             @endif
                                         </div>
 
-                                        @if ($job->location)
-                                            <p class="twm-job-address">
-                                                <i class="feather-map-pin"></i>{{ $job->location }}
-                                            </p>
-                                        @endif
+                                        <p class="twm-job-address">
+                                            <i class="feather-map-pin"></i> {{ $job->location ?: 'India' }}
+                                        </p>
                                         <div class="twm-job-self-mid">
                                             <div class="twm-job-self-mid-left">
                                                 @if (! $job->hide_company && $company->id)

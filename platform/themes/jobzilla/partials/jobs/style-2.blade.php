@@ -15,13 +15,13 @@
         <a href="{{ $job->url }}" class="twm-job-title" title="{{ $job->name }}">
             <h4 class="text-truncate">{!! BaseHelper::clean($job->name) !!}</h4>
         </a>
-        <p class="twm-job-address">{{ $job->location }}</p>
+        <p class="twm-job-address"><i class="feather-map-pin"></i> {{ $job->location ?: 'India' }}</p>
         @if ($job->has_company)
             <a href="{{ $job->company_url }}" class="twm-job-websites site-text-primary">{{ $job->company_name }} {!! $job->company->badge !!}</a>
         @endif
     </div>
     <div class="twm-right-content">
         <div class="twm-jobs-amount">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</div>
-        <a href="{{ $job->url }}" class="twm-jobs-browse site-text-primary">{{ __('Browse Job') }}</a>
+        <a href="{{ $job->url }}" class="twm-jobs-browse site-text-primary">{{ __('View Job') }}</a>
     </div>
 </div>
