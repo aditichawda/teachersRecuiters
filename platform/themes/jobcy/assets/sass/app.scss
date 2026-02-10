@@ -6,8 +6,8 @@
 @import 'variables';
 @import '~bootstrap/scss/mixins';
 
-$primary: var(--primary-color);
-$primaryRgb: var(--primary-color-rgb);
+$primary: #5749cd; // fallback used by SASS functions (matches theme default)
+$primaryRgb: rgb(red($primary), green($primary), blue($primary)); // derived rgb color for rgba() usages
 
 // Structure
 @import 'structure/topbar';
