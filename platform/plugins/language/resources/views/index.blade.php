@@ -15,7 +15,7 @@
                 <li class="nav-item">
                     <a
                         href="#tabs-settings"
-                        class="nav-link"
+                        class="nav-link" style="color: black;"
                         data-bs-toggle="tab"
                     >{{ trans('plugins/language::language.settings') }}
                     </a>

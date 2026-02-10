@@ -1,4 +1,5 @@
 {{-- How It Works - Professional Corporate Layout (Screenshot Style) --}}
+{!! Theme::partial('hiw-styles') !!}
 
 {{-- SECTION 1: Hero Section - Title + Description left, Image right --}}
 <section class="hiw-hero-section">

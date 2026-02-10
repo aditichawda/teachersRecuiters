@@ -94,14 +94,19 @@
                     <ul class="nav navbar-nav">
                         <!-- How it Works -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/how-it-works') }}">
+                            <a class="nav-link" style="color: black;" href="{{ url('/') }}">
+                                <span>{{ __('Home') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" style="color: black;" href="{{ url('/how-it-works') }}">
                                 <span>{{ __('How it Works') }}</span>
                             </a>
                         </li>
 
                         <!-- Jobs Mega Menu Dropdown -->
                         <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
-                            <a class="nav-link dropdown-toggle" href="{{ JobBoardHelper::getJobsPageURL() }}" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
+                            <a class="nav-link dropdown-toggle" style="color: black;" href="{{ JobBoardHelper::getJobsPageURL() }}" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
                                 <span>{{ __('Jobs') }}</span>
                                 <i class="feather-chevron-down ms-1"></i>
                             </a>
@@ -215,7 +220,7 @@
 
                         <!-- For Schools / Start Hiring -->
                                      <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/start-hiring') }}">
+                            <a class="nav-link" style="color: black;" href="{{ url('/start-hiring') }}">
                                 <span>{{ __('Start Hiring') }}</span>
                             </a>
                         </li>

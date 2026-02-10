@@ -1,5 +1,5 @@
 <!-- TOP COMPANIES START -->
-<div class="section-full p-t120 p-b90 site-bg-white twm-companies-wrap">
+<div class="section-full p-t5 p-b6 site-bg-white twm-companies-wrap">
     <!-- TITLE START-->
     <div class="section-head center wt-small-separator-outer">
         <div class="wt-small-separator site-text-primary">
@@ -10,7 +10,7 @@
     <!-- TITLE END-->
     <div class="container">
         <div class="section-content">
-            <div class="owl-carousel home-client-carousel3 owl-btn-vertical-center">
+            <div class="owl-carousel home-client-carousel3 owl-btn-vertical-center" style="background-color: aliceblue;">
                 @foreach ($companies as $company)
                     <div class="item">
                         <div class="ow-client-logo">

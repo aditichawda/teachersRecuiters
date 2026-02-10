@@ -35,7 +35,7 @@
                         role="presentation"
                     >
                         <button
-                            class="nav-link"
+                            class="nav-link" style="color: black;"
                             id="recent-jobs-tab"
                             data-bs-toggle="pill"
                             data-bs-target="#recent-jobs"
@@ -52,7 +52,7 @@
                         role="presentation"
                     >
                         <button
-                            class="nav-link"
+                            class="nav-link" style="color: black;"
                             id="popular-jobs-tab"
                             data-bs-toggle="pill"
                             data-bs-target="#popular-jobs"
