@@ -327,7 +327,7 @@
                 <div class="step" data-step="2">
                     <span class="step-number">2</span>
                     <span>Verification</span>
-                </div>
+                </div> 
                 <div class="step" data-step="3">
                     <span class="step-number">3</span>
                     <span>Add Preferences & Resume</span>

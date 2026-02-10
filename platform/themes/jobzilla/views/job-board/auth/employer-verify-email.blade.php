@@ -184,8 +184,13 @@
 <div class="employer-verify-wrapper">
     <div class="employer-verify-container">
         <div class="employer-verify-header">
-            <h2><i class="ti ti-mail-check me-2"></i>Verify Your Email</h2>
-            <p>Step 2 of 4 - Email Verification</p>
+            @if(!empty($isWhatsappAvailable) && !empty($phone))
+                <h2><i class="ti ti-mail-check me-2"></i>Verify Your Account</h2>
+                <p>Step 2 of 4 - WhatsApp & Email Verification</p>
+            @else
+                <h2><i class="ti ti-mail-check me-2"></i>Verify Your Email</h2>
+                <p>Step 2 of 4 - Email Verification</p>
+            @endif
         </div>
         
         <div class="employer-verify-body">
@@ -201,32 +206,26 @@
                 </div>
                 <div class="step">
                     <span class="step-number">3</span>
-                    <span>School/Institution</span>
-                </div>
+                        <span>Institution Details</span>
+                    </div>
                 <div class="step">
                     <span class="step-number">4</span>
                     <span>Location</span>
                 </div>
             </div>
 
-            <!-- Logo -->
-            <div style="text-align: center; margin-bottom: 15px;">
-                @if (Theme::getLogo())
-                    <a href="{{ route('public.index') }}">
-                        {!! Theme::getLogoImage(['class' => 'site-logo', 'style' => 'max-width: 150px;'], 'logo', 140) !!}
-                    </a>
-                @else
-                    <a href="{{ route('public.index') }}" style="font-size: 20px; font-weight: 700; color: #434343; text-decoration: none;">
-                        <span style="color: #0073d1;">Teachers</span>Recruiter
-                    </a>
-                @endif
-            </div>
-
-            <div class="email-display">
-                Verification code sent to: <strong>{{ $email }}</strong>
-            </div>
-
-            <p class="text-muted mb-4">Enter the 6-digit code we sent to your email</p>
+            <!-- Verification Code Sent To -->
+            @if(!empty($isWhatsappAvailable) && !empty($phone))
+                <div class="email-display">
+                    Verification code sent to: <i class="ti ti-brand-whatsapp" style="color: #25D366; font-size: 15px; vertical-align: middle;"></i> <strong>{{ $phone }}</strong> & <i class="ti ti-mail" style="color: #0073d1; font-size: 15px; vertical-align: middle;"></i> <strong>{{ $email }}</strong>
+                </div>
+                <p class="text-muted mb-4">Enter the 6-digit code sent to your WhatsApp & Email</p>
+            @else
+                <div class="email-display">
+                    Verification code sent to: <i class="ti ti-mail" style="color: #0073d1; font-size: 15px; vertical-align: middle;"></i> <strong>{{ $email }}</strong>
+                </div>
+                <p class="text-muted mb-4">Enter the 6-digit code we sent to your email</p>
+            @endif
 
             <form id="otp-form">
                 @csrf
@@ -250,7 +249,12 @@
             </form>
 
             <p class="mt-4 text-muted">
-                Didn't receive the code? <a href="#" class="resend-link" onclick="resendCode()">Resend</a>
+                @if(!empty($isWhatsappAvailable) && !empty($phone))
+                    Didn't receive the code on WhatsApp or Email?
+                @else
+                    Didn't receive the code?
+                @endif
+                <a href="#" class="resend-link" onclick="resendCode()">Resend</a>
             </p>
 
             <p class="mt-3">
@@ -361,6 +365,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function resendCode() {
-    alert('Verification code resent to your email.');
+    @if(!empty($isWhatsappAvailable) && !empty($phone))
+        alert('Verification code resent to your WhatsApp ({{ $phone }}) and Email ({{ $email }})!');
+    @else
+        alert('Verification code resent to your Email ({{ $email }})!');
+    @endif
 }
 </script>

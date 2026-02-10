@@ -17,7 +17,7 @@
 
     .location-container {
         width: 100%;
-        max-width: 500px;
+        max-width: 536px;
         background: #ffffff;
         border-radius: 16px;
         box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.15);
@@ -151,6 +151,96 @@
         opacity: 0.7;
     }
 
+    /* City Autocomplete */
+    .city-search-wrapper {
+        position: relative;
+    }
+
+    .city-search-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #374151;
+        background: #fff;
+        transition: all 0.3s;
+    }
+
+    .city-search-input:focus {
+        border-color: #0073d1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 115, 209, 0.1);
+    }
+
+    .city-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1.5px solid #e2e8f0;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 100;
+        display: none;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .city-suggestions.show {
+        display: block;
+    }
+
+    .city-suggestion-item {
+        padding: 10px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #374151;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s;
+    }
+
+    .city-suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .city-suggestion-item:hover,
+    .city-suggestion-item.active {
+        background: #eff6ff;
+        color: #0073d1;
+    }
+
+    .city-suggestion-item .city-name {
+        font-weight: 600;
+    }
+
+    .city-suggestion-item .city-location {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+
+    .city-no-results {
+        padding: 12px 16px;
+        font-size: 13px;
+        color: #94a3b8;
+        text-align: center;
+    }
+
+    .city-loading {
+        padding: 12px 16px;
+        font-size: 13px;
+        color: #94a3b8;
+        text-align: center;
+    }
+
+    .auto-filled-field {
+        background-color: #f0fdf4 !important;
+        border-color: #86efac !important;
+    }
+
     /* Complete Button */
     .complete-btn {
         width: 100%;
@@ -231,7 +321,7 @@
     <div class="location-container">
         <div class="location-header">
             <h2>Location</h2>
-            <p>Step 4 of 4 - Select your location</p>
+            <p>Step 4 of 4 - What is your current location?</p>
         </div>
         
         <div class="location-body">
@@ -258,12 +348,30 @@
             <form id="location-form" onsubmit="return false;">
                 @csrf
                 <input type="hidden" name="email" id="location_email" value="" />
+                <input type="hidden" name="city_id" id="city_id" value="" />
                 
                 @if (is_plugin_active('location'))
-                    <!-- Country -->
+                    <!-- City (Primary - Search) -->
                     <div class="form-group">
-                        <label class="form-label">Country <span class="required">*</span></label>
-                        <select name="country_id" id="country_id" class="form-select" required>
+                        <label class="form-label">City <span class="required">*</span></label>
+                        <div class="city-search-wrapper">
+                            <input type="text" id="city_search" class="city-search-input" placeholder="Type your city name..." autocomplete="off" />
+                            <div class="city-suggestions" id="city-suggestions"></div>
+                        </div>
+                    </div>
+
+                    <!-- State (Auto-filled) -->
+                    <div class="form-group">
+                        <label class="form-label">State <span class="optional">(Auto-filled)</span></label>
+                        <select name="state_id" id="state_id" class="form-select" disabled>
+                            <option value="">Select State</option>
+                        </select>
+                    </div>
+
+                    <!-- Country (Auto-filled) -->
+                    <div class="form-group">
+                        <label class="form-label">Country <span class="optional">(Auto-filled)</span></label>
+                        <select name="country_id" id="country_id" class="form-select" disabled>
                             <option value="">Select Country</option>
                             @php
                                 try {
@@ -288,22 +396,6 @@
                             @endforeach
                         </select>
                     </div>
-
-                    <!-- State -->
-                    <div class="form-group">
-                        <label class="form-label">State <span class="optional">(Optional)</span></label>
-                        <select name="state_id" id="state_id" class="form-select" disabled>
-                            <option value="">Select State</option>
-                        </select>
-                    </div>
-
-                    <!-- City -->
-                    <div class="form-group">
-                        <label class="form-label">City <span class="optional">(Optional)</span></label>
-                        <select name="city_id" id="city_id" class="form-select" disabled>
-                            <option value="">Select City</option>
-                        </select>
-                    </div>
                 @endif
 
                 <!-- Complete Button -->
@@ -324,6 +416,9 @@
     'use strict';
     
     $(document).ready(function() {
+        let searchTimeout = null;
+        let activeSuggestionIndex = -1;
+
         // Load email from API
         $.ajax({
             url: '{{ route("public.account.register.getVerificationData") }}',
@@ -331,80 +426,139 @@
             success: function(response) {
                 if (response.data?.email) {
                     $('#location_email').val(response.data.email);
-                    
-                    if (response.data.country_id) {
-                        $('#country_id').val(response.data.country_id).trigger('change');
-                    }
                 }
             }
         });
-        
-        // Load states when country changes
-        $('#country_id').on('change', function() {
-            const countryId = $(this).val();
-            const $stateField = $('#state_id');
-            const $cityField = $('#city_id');
-            
-            if (countryId) {
-                $stateField.prop('disabled', false).html('<option value="">Loading...</option>');
-                $cityField.prop('disabled', true).html('<option value="">Select City</option>');
-                
+
+        // City search autocomplete
+        $('#city_search').on('input', function() {
+            const keyword = $(this).val().trim();
+            const $suggestions = $('#city-suggestions');
+            activeSuggestionIndex = -1;
+
+            // Clear city selection when user types
+            $('#city_id').val('');
+            resetStateCountry();
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (keyword.length < 2) {
+                $suggestions.removeClass('show').empty();
+                return;
+            }
+
+            $suggestions.html('<div class="city-loading">Searching...</div>').addClass('show');
+
+            searchTimeout = setTimeout(function() {
                 $.ajax({
-                    url: '{{ route("ajax.states-by-country") }}',
+                    url: '{{ route("ajax.search-cities") }}',
                     type: 'GET',
-                    data: { country_id: countryId },
+                    data: { k: keyword },
                     success: function(response) {
-                        let options = '<option value="">Select State</option>';
-                        if (response.data?.length > 0) {
-                            response.data.forEach(function(state) {
-                                if (state.id && state.id != 0) {
-                                    options += '<option value="' + state.id + '">' + state.name + '</option>';
-                                }
-                            });
+                        const cities = response.data || [];
+                        
+                        if (cities.length === 0) {
+                            $suggestions.html('<div class="city-no-results">No cities found</div>');
+                            return;
                         }
-                        $stateField.html(options);
+
+                        let html = '';
+                        cities.forEach(function(city) {
+                            const locationParts = [];
+                            if (city.state_name) locationParts.push(city.state_name);
+                            if (city.country_name) locationParts.push(city.country_name);
+                            
+                            html += '<div class="city-suggestion-item" ' +
+                                'data-id="' + city.id + '" ' +
+                                'data-name="' + city.name + '" ' +
+                                'data-state-id="' + (city.state_id || '') + '" ' +
+                                'data-state-name="' + (city.state_name || '') + '" ' +
+                                'data-country-id="' + (city.country_id || '') + '" ' +
+                                'data-country-name="' + (city.country_name || '') + '">' +
+                                '<div class="city-name">' + city.name + '</div>' +
+                                (locationParts.length ? '<div class="city-location">' + locationParts.join(', ') + '</div>' : '') +
+                                '</div>';
+                        });
+
+                        $suggestions.html(html);
                     },
                     error: function() {
-                        $stateField.html('<option value="">Select State</option>');
+                        $suggestions.html('<div class="city-no-results">Error searching cities</div>');
                     }
                 });
-            } else {
-                $stateField.prop('disabled', true).html('<option value="">Select State</option>');
-                $cityField.prop('disabled', true).html('<option value="">Select City</option>');
+            }, 300);
+        });
+
+        // Keyboard navigation for suggestions
+        $('#city_search').on('keydown', function(e) {
+            const $suggestions = $('#city-suggestions');
+            const $items = $suggestions.find('.city-suggestion-item');
+
+            if (!$suggestions.hasClass('show') || $items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeSuggestionIndex >= 0) {
+                    $items.eq(activeSuggestionIndex).trigger('click');
+                }
+            } else if (e.key === 'Escape') {
+                $suggestions.removeClass('show');
             }
         });
 
-        // Load cities when state changes
-        $('#state_id').on('change', function() {
-            const stateId = $(this).val();
-            const $cityField = $('#city_id');
-            
+        // Select city from suggestions
+        $(document).on('click', '.city-suggestion-item', function() {
+            const $item = $(this);
+            const cityId = $item.data('id');
+            const cityName = $item.data('name');
+            const stateId = $item.data('state-id');
+            const stateName = $item.data('state-name');
+            const countryId = $item.data('country-id');
+            const countryName = $item.data('country-name');
+
+            // Set city
+            $('#city_search').val(cityName);
+            $('#city_id').val(cityId);
+            $('#city-suggestions').removeClass('show');
+
+            // Auto-fill State
             if (stateId) {
-                $cityField.prop('disabled', false).html('<option value="">Loading...</option>');
-                
-                $.ajax({
-                    url: '{{ route("ajax.cities-by-state") }}',
-                    type: 'GET',
-                    data: { state_id: stateId },
-                    success: function(response) {
-                        let options = '<option value="">Select City</option>';
-                        if (response.data?.length > 0) {
-                            response.data.forEach(function(city) {
-                                if (city.id && city.id != 0) {
-                                    options += '<option value="' + city.id + '">' + city.name + '</option>';
-                                }
-                            });
-                        }
-                        $cityField.html(options);
-                    },
-                    error: function() {
-                        $cityField.html('<option value="">Select City</option>');
-                    }
-                });
+                $('#state_id').html('<option value="' + stateId + '" selected>' + stateName + '</option>')
+                    .addClass('auto-filled-field');
             } else {
-                $cityField.prop('disabled', true).html('<option value="">Select City</option>');
+                $('#state_id').html('<option value="">N/A</option>');
+            }
+
+            // Auto-fill Country
+            if (countryId) {
+                $('#country_id').val(countryId).addClass('auto-filled-field');
+                // If country option doesn't exist, add it
+                if ($('#country_id').val() != countryId) {
+                    $('#country_id').html('<option value="' + countryId + '" selected>' + countryName + '</option>')
+                        .addClass('auto-filled-field');
+                }
             }
         });
+
+        // Close suggestions on outside click
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.city-search-wrapper').length) {
+                $('#city-suggestions').removeClass('show');
+            }
+        });
+
+        function resetStateCountry() {
+            $('#state_id').html('<option value="">Select State</option>').removeClass('auto-filled-field');
+            $('#country_id').val('').removeClass('auto-filled-field');
+        }
         
         // Submit button handler
         $('#submit-btn').on('click', function(e) {
@@ -415,8 +569,9 @@
             const stateId = $('#state_id').val();
             const cityId = $('#city_id').val();
             
-            if (!countryId) {
-                alert('Please select a country');
+            if (!cityId) {
+                alert('Please search and select a city');
+                $('#city_search').focus();
                 return;
             }
             

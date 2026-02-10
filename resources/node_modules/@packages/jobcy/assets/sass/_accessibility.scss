@@ -1,0 +1,109 @@
+.btn-primary {
+    color: #fff !important;
+
+    &:hover,
+    &:focus,
+    &:active {
+        color: #fff !important;
+    }
+
+    span {
+        color: #fff !important;
+    }
+}
+
+.badge {
+    &.bg-soft-danger {
+        background-color: #dc3545 !important;
+        color: #fff !important;
+    }
+}
+
+.bg-footer {
+    .text-white-50 {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    a {
+        color: rgba(255, 255, 255, 0.9) !important;
+
+        &:hover,
+        &:focus {
+            color: #fff !important;
+        }
+    }
+}
+
+.footer-alt {
+    .text-white-50 {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+}
+
+.bg-subscribe {
+    .text-white-50 {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+}
+
+.choices__inner {
+    .choices__item {
+        &.choices__placeholder {
+            color: #495057 !important;
+            opacity: 1 !important;
+        }
+    }
+}
+
+.nav-pills {
+    .nav-link {
+        color: #212529 !important;
+
+        &.active {
+            color: #fff !important;
+        }
+    }
+}
+
+body#page-home {
+    .section {
+        .text-warning {
+            color: #d39e00 !important;
+        }
+    }
+}
+
+.form-label {
+    color: #212529;
+}
+
+.form-control {
+    color: #212529;
+
+    &::placeholder {
+        color: #6c757d !important;
+        opacity: 1;
+    }
+}
+
+.dropdown-menu {
+    .dropdown-item {
+        color: #212529;
+
+        &:hover,
+        &:focus {
+            color: #212529;
+        }
+    }
+}
+
+.visually-hidden-focusable {
+    &:focus {
+        clip: auto;
+        height: auto;
+        overflow: visible;
+        position: absolute;
+        width: auto;
+        z-index: 9999;
+    }
+}

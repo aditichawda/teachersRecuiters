@@ -8,7 +8,7 @@
         background: #f5f7fa;
         background-image: 
             radial-gradient(at 20% 30%, rgba(0, 115, 209, 0.08) 0%, transparent 50%),
-            radial-gradient(at 80% 70%, rgba(67, 67, 67, 0.06) 0%, transparent 50%);
+            radial-gradient(at 80% 70, rgba(67, 67, 67, 0.06) 0%, transparent 50%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -220,7 +220,7 @@
     <div class="employer-register-container">
         <div class="employer-register-header">
             <h2><i class="ti ti-briefcase me-2"></i>Employer Registration</h2>
-            <p>Step 1 of 4 - Create your account</p>
+            <p>Step 1 of 4 - Create your account and start hiring</p>
         </div>
         
         <div class="employer-register-body">
@@ -236,7 +236,7 @@
                 </div>
                 <div class="step">
                     <span class="step-number">3</span>
-                    <span>School/Institution</span>
+                    <span>Add school/institution</span>
                 </div>
                 <div class="step">
                     <span class="step-number">4</span>
@@ -245,7 +245,7 @@
             </div>
 
             <!-- Logo -->
-            <div class="employer-logo">
+            <!-- <div class="employer-logo">
                 @if (Theme::getLogo())
                     <a href="{{ route('public.index') }}">
                         {!! Theme::getLogoImage(['class' => 'site-logo', 'style' => 'max-width: 160px;'], 'logo', 150) !!}
@@ -255,7 +255,7 @@
                         <span>Teachers</span>Recruiter
                     </a>
                 @endif
-            </div>
+            </div> -->
 
             @if (session('error'))
                 <div class="alert alert-danger">

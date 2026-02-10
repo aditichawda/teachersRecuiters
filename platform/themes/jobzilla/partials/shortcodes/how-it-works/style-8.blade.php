@@ -1,7 +1,7 @@
 {{-- Working Process: small label "How It Works", big "Working Process", 2+1 grid, colored cards with white icon box + white text --}}
 <div class="section-full p-t80 p-b90 site-bg-white twm-how-it-work-area twm-how-it-work-working-process">
     <div class="container">
-        <div class="section-head center wt-small-separator-outer mt-5">
+        <div class="section-head center wt-small-separator-outer">
             <div class="wt-small-separator site-text-primary">
                 <div>{!! BaseHelper::clean($shortcode->subtitle) !!}</div>
             </div>

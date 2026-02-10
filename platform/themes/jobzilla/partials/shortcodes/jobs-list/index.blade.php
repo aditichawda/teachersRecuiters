@@ -3,13 +3,13 @@
     $perRow = (int)$shortcode->per_row ?: 3;
 @endphp
 
-<div @class(['section-full p-t0 p-b90', 'site-bg-light-purple twm-bg-ring-wrap' => $style === 1, 'site-bg-gray twm-bg-ring-wrap2' => $style === 2])>
+<div @class(['section-full p-t120 p-b90', 'site-bg-light-purple twm-bg-ring-wrap' => $style === 1, 'site-bg-gray twm-bg-ring-wrap2' => $style === 2])>
     <div class="twm-bg-ring-right"></div>
     <div class="twm-bg-ring-left"></div>
     <div class="container">
         @switch((int)$shortcode->style)
             @case(1)
-                <div class="section-head center wt-small-separator-outer mt-2">
+                <div class="section-head center wt-small-separator-outer">
                     <div class="wt-small-separator site-text-primary">
                         <div>{!! BaseHelper::clean($shortcode->subtitle) !!}</div>
                     </div>
@@ -28,7 +28,7 @@
             @case(2 || 3)
                 <div class="wt-separator-two-part">
                     <div class="row wt-separator-two-part-row">
-                        <div class="col-xl-8 col-lg-6 col-md-12 py02wt-separator-two-part-left">
+                        <div class="col-xl-8 col-lg-6 col-md-12 wt-separator-two-part-left">
                             <div class="section-head left wt-small-separator-outer">
                                 <div class="wt-small-separator site-text-primary">
                                     <div>{!! BaseHelper::clean($shortcode->subtitle) !!}</div>
@@ -37,7 +37,7 @@
                             </div>
                         </div>
                         <div class="col-xl-4 col-lg-6 col-md-12 wt-separator-two-part-right text-right">
-                            <a href="{{ JobBoardHelper::getJobsPageURL() }}" class="site-button">{{ __('View More') }}</a>
+                            <a href="{{ JobBoardHelper::getJobsPageURL() }}" class="site-button">{{ __('Vew More') }}</a>
                         </div>
                     </div>
                 </div>

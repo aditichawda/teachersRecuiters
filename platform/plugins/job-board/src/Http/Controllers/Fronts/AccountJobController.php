@@ -8,6 +8,7 @@ use Botble\Base\Events\UpdatedContentEvent;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\JobBoard\Enums\JobStatusEnum;
 use Botble\JobBoard\Enums\ModerationStatusEnum;
+use Botble\JobBoard\Enums\SalaryRangeEnum;
 use Botble\JobBoard\Events\EmployerPostedJobEvent;
 use Botble\JobBoard\Events\JobPublishedEvent;
 use Botble\JobBoard\Facades\JobBoardHelper;
@@ -15,9 +16,16 @@ use Botble\JobBoard\Forms\Fronts\JobForm;
 use Botble\JobBoard\Http\Requests\AccountJobRequest;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\AccountActivityLog;
+use Botble\JobBoard\Models\Currency;
 use Botble\JobBoard\Models\CustomFieldValue;
+use Botble\JobBoard\Models\DegreeLevel;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
+use Botble\JobBoard\Models\JobExperience;
+use Botble\JobBoard\Models\JobScreeningQuestion;
+use Botble\JobBoard\Models\JobShift;
+use Botble\JobBoard\Models\JobSkill;
+use Botble\JobBoard\Models\JobType;
 use Botble\JobBoard\Models\Tag;
 use Botble\JobBoard\Repositories\Interfaces\AnalyticsInterface;
 use Botble\JobBoard\Services\StoreTagService;
@@ -74,10 +82,75 @@ class AccountJobController extends BaseController
         }
 
         $this->pageTitle(trans('plugins/job-board::messages.post_job'));
-
         SeoHelper::setTitle(trans('plugins/job-board::messages.post_job'));
 
-        return JobForm::create()->renderForm();
+        // Prepare data for custom job posting form
+        $companies = $account->companies->pluck('name', 'id')->all();
+        $companyInstitutionTypes = $account->companies->pluck('institution_type', 'id')->all();
+
+        // Company details for auto-fill
+        $companyDetails = [];
+        foreach ($account->companies as $company) {
+            $cityName = '';
+            $stateName = '';
+            $countryName = '';
+
+            if ($company->city_id && is_plugin_active('location')) {
+                $city = \Botble\Location\Models\City::find($company->city_id);
+                $cityName = $city ? $city->name : '';
+            }
+            if ($company->state_id && is_plugin_active('location')) {
+                $state = \Botble\Location\Models\State::find($company->state_id);
+                $stateName = $state ? $state->name : '';
+            }
+            if ($company->country_id && is_plugin_active('location')) {
+                $country = \Botble\Location\Models\Country::find($company->country_id);
+                $countryName = $country ? $country->name : '';
+            }
+
+            $companyDetails[$company->id] = [
+                'institution_type' => $company->institution_type,
+                'address' => $company->address,
+                'postal_code' => $company->postal_code,
+                'city_id' => $company->city_id,
+                'city_name' => $cityName,
+                'state_id' => $company->state_id,
+                'state_name' => $stateName,
+                'country_id' => $company->country_id,
+                'country_name' => $countryName,
+            ];
+        }
+
+        $skills = JobSkill::query()->wherePublished()->oldest('order')->oldest('name')
+            ->select('name', 'id')->get()
+            ->mapWithKeys(fn ($item) => [$item->id => $item->name])->all();
+
+        $jobTypes = JobType::query()->wherePublished()->oldest('order')->oldest('name')
+            ->select('name', 'id')->get()
+            ->mapWithKeys(fn ($item) => [$item->id => $item->name])->all();
+
+        $degreeLevels = DegreeLevel::query()->wherePublished()->oldest('order')->oldest('name')
+            ->select('name', 'id')->get()
+            ->mapWithKeys(fn ($item) => [$item->id => $item->name])->all();
+
+        $jobExperiences = JobExperience::query()->wherePublished()->oldest('order')->oldest('name')
+            ->select('name', 'id')->get()
+            ->mapWithKeys(fn ($item) => [$item->id => $item->name])->all();
+
+        $jobShifts = JobShift::query()->wherePublished()->oldest('order')->oldest('name')
+            ->select('name', 'id')->get()
+            ->mapWithKeys(fn ($item) => [$item->id => $item->name])->all();
+
+        $currencies = Currency::query()->oldest('order')->oldest('title')
+            ->pluck('title', 'id')->all();
+
+        $salaryRanges = SalaryRangeEnum::labels();
+
+        return JobBoardHelper::view('dashboard.jobs.create', compact(
+            'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
+            'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
+            'jobShifts', 'currencies', 'salaryRanges'
+        ));
     }
 
     public function store(AccountJobRequest $request, StoreTagService $storeTagService)
@@ -110,6 +183,17 @@ class AccountJobController extends BaseController
             $request->merge(['employer_colleagues' => []]);
         }
 
+        // Handle checkbox fields
+        if (! $request->has('hide_salary')) {
+            $request->merge(['hide_salary' => 0]);
+        }
+        if (! $request->has('hide_company')) {
+            $request->merge(['hide_company' => 0]);
+        }
+        if (! $request->has('is_remote')) {
+            $request->merge(['is_remote' => 0]);
+        }
+
         $job = new Job();
         $job->fill($request->input());
 
@@ -136,6 +220,34 @@ class AccountJobController extends BaseController
         $job->categories()->sync($request->input('categories', []));
 
         $storeTagService->execute($request, $job);
+
+        // Save screening questions
+        $screeningQuestions = $request->input('screening_questions', []);
+        if (!empty($screeningQuestions)) {
+            foreach ($screeningQuestions as $sqData) {
+                if (empty($sqData['question'])) {
+                    continue;
+                }
+
+                // Convert options text (one per line) to JSON
+                $options = null;
+                if (!empty($sqData['options_text'])) {
+                    $optionsArray = array_filter(array_map('trim', explode("\n", $sqData['options_text'])));
+                    $options = json_encode(array_values($optionsArray));
+                }
+
+                JobScreeningQuestion::create([
+                    'job_id' => $job->id,
+                    'question' => $sqData['question'],
+                    'question_type' => $sqData['question_type'] ?? 'text',
+                    'options' => $options,
+                    'required_answer' => $sqData['required_answer'] ?? null,
+                    'is_required' => !empty($sqData['is_required']),
+                    'order' => (int) ($sqData['order'] ?? 0),
+                    'file_types' => $sqData['file_types'] ?? null,
+                ]);
+            }
+        }
 
         event(new CreatedContentEvent(JOB_MODULE_SCREEN_NAME, $request, $job));
 

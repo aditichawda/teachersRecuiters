@@ -21,9 +21,11 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Botble\JobBoard\Notifications\EmailVerificationNotification;
 
 class RegisterController extends BaseController
 {
@@ -326,10 +328,9 @@ class RegisterController extends BaseController
             $emailVerifiedAt = $existingAccount->email_verified_at;
             $isVerified = $emailVerifiedAt !== null && $emailVerifiedAt !== '';
             
-            \Log::info('sendVerificationCode - Email check:', [
+            Log::info('sendVerificationCode - Email check:', [
                 'email' => $email,
                 'email_verified_at' => $emailVerifiedAt,
-                'email_verified_at_is_null' => is_null($emailVerifiedAt),
                 'is_verified' => $isVerified
             ]);
             
@@ -341,12 +342,9 @@ class RegisterController extends BaseController
                     ->setNextUrl(route('public.account.login'))
                     ->setMessage('This email is already registered. Redirecting to login...');
             } else {
-                // Email exists but NOT verified (email_verified_at is NULL) - allow OTP verification
-                // Don't redirect, let user verify email
-                return $this
-                    ->httpResponse()
-                    ->setError()
-                    ->setMessage('Email exists but not verified. Please verify your email first.');
+                // Email exists but NOT verified - delete old unverified account and allow re-registration
+                Log::info('Deleting old unverified account for re-registration', ['email' => $email, 'account_id' => $existingAccount->id]);
+                $existingAccount->delete();
             }
         }
         
@@ -464,27 +462,18 @@ class RegisterController extends BaseController
             'form_data_keys' => array_keys($formData)
         ]);
 
-        // Check email driver configuration - prioritize .env over database settings
+        // Configure email driver from .env settings
         $mailDriver = env('MAIL_MAILER', config('mail.default', 'log'));
         
-        // Prevent sendmail on Windows - force log driver if sendmail is detected
-        if ($mailDriver === 'sendmail' || strpos(strtolower(PHP_OS), 'win') !== false) {
-            \Log::warning('Sendmail detected or Windows OS - forcing log driver', [
-                'original_driver' => $mailDriver,
-                'php_os' => PHP_OS,
-            ]);
+        // Prevent sendmail on Windows - only override if not SMTP
+        if ($mailDriver === 'sendmail' && strpos(strtolower(PHP_OS), 'win') !== false) {
             $mailDriver = 'log';
             config(['mail.default' => 'log']);
-            config(['mail.mailers.log' => ['transport' => 'log']]);
-        }
-        
-        // If driver is still 'log', check if we have SMTP settings in .env
-        if ($mailDriver === 'log' && env('MAIL_HOST')) {
-            $mailDriver = 'smtp';
         }
         
         // Force use .env SMTP settings if available
-        if ($mailDriver === 'smtp' && env('MAIL_HOST')) {
+        if (env('MAIL_HOST') && in_array($mailDriver, ['smtp', 'log'])) {
+            $mailDriver = 'smtp';
             config([
                 'mail.default' => 'smtp',
                 'mail.mailers.smtp.host' => env('MAIL_HOST'),
@@ -500,122 +489,43 @@ class RegisterController extends BaseController
                     'mail.from.name' => env('MAIL_FROM_NAME', 'TeachersRecruiter'),
                 ]);
             }
-        } else {
-            // Ensure log driver is properly configured
-            config(['mail.default' => 'log']);
         }
         
-        \Log::info('Email configuration check', [
+        Log::info('Email configuration', [
             'driver' => $mailDriver,
             'from_address' => config('mail.from.address'),
-            'from_name' => config('mail.from.name'),
             'smtp_host' => config('mail.mailers.smtp.host'),
-            'smtp_port' => config('mail.mailers.smtp.port'),
-            'env_MAIL_MAILER' => env('MAIL_MAILER'),
-            'env_MAIL_HOST' => env('MAIL_HOST') ? 'SET' : 'NOT SET',
+        ]);
+
+        // Always log the OTP code for debugging
+        Log::info('OTP Code Generated', [
+            'email' => $email,
+            'code' => $code,
+            'expires_at' => $expiresAt->toDateTimeString(),
+            'mail_driver' => $mailDriver,
         ]);
 
         try {
-            // Send email with OTP code
-            $emailBody = '<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .code-box { background: #f4f4f4; border: 2px dashed #007bff; padding: 20px; text-align: center; margin: 20px 0; }
-        .code { font-size: 32px; font-weight: bold; color: #007bff; letter-spacing: 5px; }
-        .footer { margin-top: 20px; font-size: 12px; color: #666; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Email Verification Code</h2>
-        <p>Hello,</p>
-        <p>Your verification code for TeachersRecruiter is:</p>
-        <div class="code-box">
-            <div class="code">' . $code . '</div>
-        </div>
-        <p>This code will expire in 10 minutes.</p>
-        <p>If you did not request this code, please ignore this email.</p>
-        <div class="footer">
-            <p>Best regards,<br>TeachersRecruiter Team</p>
-        </div>
-    </div>
-</body>
-</html>';
+            // Send verification email using Notification
+            $tempAccount->notify(new EmailVerificationNotification($code));
             
-            // Always log the OTP code for debugging (remove in production)
-            \Log::info('OTP Code Generated', [
+            Log::info('Verification code email sent successfully', [
                 'email' => $email,
                 'code' => $code,
-                'expires_at' => $expiresAt->toDateTimeString(),
+                'mail_driver' => $mailDriver,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Email send failed: ' . $e->getMessage(), [
+                'email' => $email,
+                'code' => $code,
+                'error' => $e->getMessage(),
                 'mail_driver' => $mailDriver,
             ]);
             
-            // If mail driver is 'log' or 'array', just log it (don't try to send)
-            if (in_array($mailDriver, ['log', 'array']) && !env('MAIL_HOST')) {
-                \Log::info('Email driver is set to "' . $mailDriver . '". OTP Code logged: ' . $code, [
-                    'email' => $email,
-                    'code' => $code,
-                    'note' => 'Please configure SMTP in .env file (MAIL_MAILER=smtp, MAIL_HOST, etc.) or Settings > Email Configuration',
-                ]);
-                
-                // Return success - OTP is logged and user can check logs
-                return $this
-                    ->httpResponse()
-                    ->setMessage('Verification code generated. OTP Code: ' . $code . ' (Please check server logs. Email driver: ' . $mailDriver . ')');
-            }
-            
-            // Try to send email only if SMTP is configured
-            if ($mailDriver === 'smtp' && env('MAIL_HOST')) {
-                Mail::html($emailBody, function ($message) use ($email): void {
-                    $message->to($email)
-                        ->subject('Verify your email address - TeachersRecruiter');
-                });
-                
-                \Log::info('Verification code email sent successfully via SMTP', [
-                    'email' => $email,
-                    'code' => $code,
-                    'mail_driver' => $mailDriver,
-                ]);
-            } else {
-                // Fallback: Just log it
-                \Log::info('Email not sent (driver: ' . $mailDriver . '). OTP Code: ' . $code, [
-                    'email' => $email,
-                    'code' => $code,
-                ]);
-                
-                return $this
-                    ->httpResponse()
-                    ->setMessage('Verification code generated. OTP Code: ' . $code . ' (Please check server logs. Configure SMTP in .env for email delivery)');
-            }
-            
-        } catch (Exception $exception) {
-            \Log::error('Failed to send verification code email', [
-                'email' => $email,
-                'code' => $code,
-                'error' => $exception->getMessage(),
-                'trace' => $exception->getTraceAsString(),
-                'mail_driver' => $mailDriver,
-            ]);
-            
-            // Don't fail registration - OTP is logged, user can check logs
+            // Don't fail registration - OTP is logged, user can still verify
             return $this
                 ->httpResponse()
-                ->setMessage('Verification code generated. OTP Code: ' . $code . ' (Email sending failed. Please check server logs. Error: ' . $exception->getMessage() . ')');
-            
-            // Even if email fails, log the code so user can still verify
-            \Log::warning('Email sending failed, but OTP code is: ' . $code, [
-                'email' => $email,
-                'code' => $code,
-            ]);
-            
-            return $this
-                ->httpResponse()
-                ->setError()
-                ->setMessage('Failed to send email. OTP code has been logged. Please check server logs or configure email settings. Error: ' . $exception->getMessage());
+                ->setMessage('Verification code generated. Email sending failed, please check server logs. OTP Code: ' . $code);
         }
 
         return $this
@@ -1492,7 +1402,7 @@ class RegisterController extends BaseController
 
         $account->confirmed_at = Carbon::now();
 
-        $account->is_public_profile = false;
+        $account->is_public_profile = true;
 
         $account->save();
 
@@ -1732,7 +1642,39 @@ class RegisterController extends BaseController
 
         $request->session()->put('employer_verify_email', $email);
 
-        \Log::info('Employer Step 1 completed - OTP sent:', [
+        // Configure email driver from .env settings
+        if (env('MAIL_HOST')) {
+            config([
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.host' => env('MAIL_HOST'),
+                'mail.mailers.smtp.port' => env('MAIL_PORT', 587),
+                'mail.mailers.smtp.username' => env('MAIL_USERNAME'),
+                'mail.mailers.smtp.password' => env('MAIL_PASSWORD'),
+                'mail.mailers.smtp.encryption' => env('MAIL_ENCRYPTION', 'tls'),
+            ]);
+            if (env('MAIL_FROM_ADDRESS')) {
+                config([
+                    'mail.from.address' => env('MAIL_FROM_ADDRESS'),
+                    'mail.from.name' => env('MAIL_FROM_NAME', 'TeachersRecruiter'),
+                ]);
+            }
+        }
+
+        // Send verification email using Notification
+        try {
+            $tempAccount->notify(new EmailVerificationNotification($code));
+            Log::info('Employer verification email sent successfully', [
+                'email' => $email,
+                'temp_account_id' => $tempAccount->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Employer email send failed: ' . $e->getMessage(), [
+                'email' => $email,
+                'temp_account_id' => $tempAccount->id,
+            ]);
+        }
+
+        Log::info('Employer Step 1 completed - OTP sent:', [
             'email' => $email,
             'temp_account_id' => $tempAccount->id,
         ]);
@@ -1756,10 +1698,23 @@ class RegisterController extends BaseController
                 ->with('error', 'Please complete the registration form first.');
         }
 
+        // Get phone and WhatsApp availability from temp account
+        $phone = '';
+        $isWhatsappAvailable = false;
+        $sessionData = session()->get('employer_registration', []);
+        $tempAccountId = $sessionData['temp_account_id'] ?? null;
+        if ($tempAccountId) {
+            $tempAccount = Account::find($tempAccountId);
+            if ($tempAccount) {
+                $phone = $tempAccount->phone ?? '';
+                $isWhatsappAvailable = !empty($tempAccount->is_whatsapp_available);
+            }
+        }
+
         SeoHelper::setTitle('Verify Email - Employer Registration');
         Theme::breadcrumb()->add(__('Home'), route('public.index'))->add('Verify Email');
 
-        return Theme::scope('job-board.auth.employer-verify-email', compact('email'), 'plugins/job-board::themes.auth.employer-verify-email')->render();
+        return Theme::scope('job-board.auth.employer-verify-email', compact('email', 'phone', 'isWhatsappAvailable'), 'plugins/job-board::themes.auth.employer-verify-email')->render();
     }
 
     /**
@@ -1851,14 +1806,25 @@ class RegisterController extends BaseController
     {
         abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
 
-        $request->validate([
-            'institution_type' => ['required', 'string', 'max:100'],
-            'institution_name' => ['required', 'string', 'max:255'],
-        ]);
-
         $sessionData = $request->session()->get('employer_registration');
         if (!$sessionData) {
             return $this->httpResponse()->setError()->setMessage('Session expired. Please try again.');
+        }
+
+        $registrationType = $request->input('registration_type', 'school_institution');
+
+        // Validation rules differ based on registration type
+        if ($registrationType === 'consultancy') {
+            $request->validate([
+                'registration_type' => ['required', 'string', 'in:school_institution,consultancy'],
+                'institution_name' => ['required', 'string', 'max:255'],
+            ]);
+        } else {
+            $request->validate([
+                'registration_type' => ['required', 'string', 'in:school_institution,consultancy'],
+                'institution_type' => ['required', 'string', 'max:100'],
+                'institution_name' => ['required', 'string', 'max:255'],
+            ]);
         }
 
         $account = Account::find($sessionData['temp_account_id']);
@@ -1866,14 +1832,23 @@ class RegisterController extends BaseController
             return $this->httpResponse()->setError()->setMessage('Account not found.');
         }
 
-        $account->update([
-            'institution_type' => $request->input('institution_type'),
+        $updateData = [
+            'registration_type' => $registrationType,
             'institution_name' => $request->input('institution_name'),
-        ]);
+        ];
+
+        if ($registrationType === 'consultancy') {
+            $updateData['institution_type'] = 'consultancy';
+        } else {
+            $updateData['institution_type'] = $request->input('institution_type');
+        }
+
+        $account->update($updateData);
 
         \Log::info('Employer institution type saved:', [
             'account_id' => $account->id,
-            'institution_type' => $request->input('institution_type'),
+            'registration_type' => $registrationType,
+            'institution_type' => $updateData['institution_type'],
             'institution_name' => $request->input('institution_name'),
         ]);
 
@@ -1911,9 +1886,9 @@ class RegisterController extends BaseController
         abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
 
         $request->validate([
-            'country_id' => ['required', 'integer'],
+            'country_id' => ['nullable', 'integer'],
             'state_id' => ['nullable', 'integer'],
-            'city_id' => ['nullable', 'integer'],
+            'city_id' => ['required', 'integer'],
         ]);
 
         $sessionData = $request->session()->get('employer_registration');

@@ -10,34 +10,10 @@ All JavaScript fuctions Start
 
     function select_picker_select() {
 
-        $('.selectpicker').each(function() {
-            var $el = $(this);
-            var opts = {};
-            var $parent = $el.closest('.twm-bnr-search-bar');
-            if ($parent.length) {
-                opts.dropdownParent = $parent;
-            }
-            $el.select2(opts);
-        });
-
-        // Keyword field - input-style Select2 with autosuggestion
-        $('.selectpicker-keyword').each(function() {
-            var $el = $(this);
-            var keywordOpts = {
-                placeholder: 'Type to search...',
-                allowClear: true,
-                minimumInputLength: 0,
-                tags: false
-            };
-            var $parent = $el.closest('.twm-bnr-search-bar');
-            if ($parent.length) {
-                keywordOpts.dropdownParent = $parent;
-            }
-            $el.select2(keywordOpts);
-        });
+        $('.selectpicker').select2();
         const $singleLocation = $('.selectpicker-location');
         if ($singleLocation.length) {
-            var locationOpts = {
+            $singleLocation.select2({
                 ajax: {
                     url: $singleLocation.data('url') || (window.siteUrl + '/ajax/cities'),
                     dataType: 'json',
@@ -60,12 +36,7 @@ All JavaScript fuctions Start
                         };
                     }
                 }
-            };
-            var $locParent = $singleLocation.closest('.twm-bnr-search-bar');
-            if ($locParent.length) {
-                locationOpts.dropdownParent = $locParent;
-            }
-            $singleLocation.select2(locationOpts);
+            });
         }
     }
 

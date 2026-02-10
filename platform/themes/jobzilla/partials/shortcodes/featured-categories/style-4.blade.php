@@ -6,7 +6,7 @@
 <div class="section-full p-t120 p-b90 site-bg-white job-categories-home-5-wrap twm-bdr-bottom-1">
     <div class="container">
 
-        <div class="section-head center wt-small-separator-outer mt-5">
+        <div class="section-head center wt-small-separator-outer">
             @if ($title = $shortcode->title)
                 <div class="wt-small-separator site-text-primary">
                     <div>{!! BaseHelper::clean($title) !!}</div>

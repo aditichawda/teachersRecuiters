@@ -156,13 +156,64 @@
     .back-link:hover {
         text-decoration: underline;
     }
+
+    /* Registration Type Radio Styles */
+    .reg-type-group {
+        display: flex;
+        gap: 16px;
+        margin-top: 6px;
+    }
+
+    .reg-type-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        padding: 10px 18px;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        transition: all 0.25s ease;
+        flex: 1;
+    }
+
+    .reg-type-option:hover {
+        border-color: #0073d1;
+        background: #f0f7ff;
+    }
+
+    .reg-type-option.selected {
+        border-color: #0073d1;
+        background: #f0f7ff;
+        box-shadow: 0 0 0 2px rgba(0, 115, 209, 0.12);
+    }
+
+    .reg-type-option input[type="radio"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #0073d1;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .reg-type-option label {
+        cursor: pointer;
+        font-size: 14px;
+        color: #434343;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .reg-type-option.selected label {
+        color: #0073d1;
+        font-weight: 600;
+    }
 </style>
 
 <div class="employer-institution-wrapper">
     <div class="employer-institution-container">
         <div class="employer-institution-header">
-            <h2><i class="ti ti-building me-2"></i>Institution Details</h2>
-            <p>Step 3 of 4 - Tell us about your institution</p>
+            <h2><i class="ti ti-building me-2"></i><span id="header-title">Institution Details</span></h2>
+            <p><span id="header-subtitle">Step 3 of 4 - Tell us about your institution</span></p>
         </div>
         
         <div class="employer-institution-body">
@@ -178,7 +229,7 @@
                 </div>
                 <div class="step active">
                     <span class="step-number">3</span>
-                    <span>School/Institution</span>
+                    <span id="step3-label">Add school/institution</span>
                 </div>
                 <div class="step">
                     <span class="step-number">4</span>
@@ -186,25 +237,28 @@
                 </div>
             </div>
 
-            <!-- Logo -->
-            <div style="text-align: center; margin-bottom: 15px;">
-                @if (Theme::getLogo())
-                    <a href="{{ route('public.index') }}">
-                        {!! Theme::getLogoImage(['class' => 'site-logo', 'style' => 'max-width: 150px;'], 'logo', 140) !!}
-                    </a>
-                @else
-                    <a href="{{ route('public.index') }}" style="font-size: 20px; font-weight: 700; color: #434343; text-decoration: none;">
-                        <span style="color: #0073d1;">Teachers</span>Recruiter
-                    </a>
-                @endif
-            </div>
-
             <form id="institution-form">
                 @csrf
                 
+                <!-- Are you registering as? -->
                 <div class="mb-3">
+                    <label class="form-label">Are you registering as? <span class="text-danger">*</span></label>
+                    <div class="reg-type-group">
+                        <div class="reg-type-option selected" id="opt-school" onclick="selectRegType('school_institution')">
+                            <input type="radio" name="registration_type" id="reg_type_school" value="school_institution" checked>
+                            <label for="reg_type_school">School/Institution</label>
+                        </div>
+                        <div class="reg-type-option" id="opt-consultancy" onclick="selectRegType('consultancy')">
+                            <input type="radio" name="registration_type" id="reg_type_consultancy" value="consultancy">
+                            <label for="reg_type_consultancy">Consultancy</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Institution Type (visible only for School/Institution) -->
+                <div class="mb-3" id="institution-type-group">
                     <label class="form-label">Institution Type <span class="text-danger">*</span></label>
-                    <select name="institution_type" id="institution_type" class="form-select" required>
+                    <select name="institution_type" id="institution_type" class="form-select">
                         <option value="">Select Institution Type</option>
                         <optgroup label="🏫 School">
                             <option value="cbse-school">CBSE School</option>
@@ -247,10 +301,12 @@
                     </select>
                 </div>
 
+                <!-- Name field (label changes dynamically) -->
                 <div class="mb-3">
-                    <label class="form-label">Institution/Organization Name <span class="text-danger">*</span></label>
+                    <label class="form-label" id="name-label">School/Institution Name (Whenregisterasschool/institution)
+                    <span class="text-danger">*</span></label>
                     <input type="text" name="institution_name" id="institution_name" class="form-control" 
-                           placeholder="Enter your institution name" required>
+                           placeholder="Enter your school/institution name" required>
                 </div>
 
                 <div id="error-message" class="alert alert-danger" style="display: none;"></div>
@@ -270,30 +326,80 @@
 </div>
 
 <script>
+// Registration type toggle - dynamic show/hide
+function selectRegType(type) {
+    var isConsultancy = (type === 'consultancy');
+
+    // Update radio buttons
+    document.getElementById('reg_type_school').checked = !isConsultancy;
+    document.getElementById('reg_type_consultancy').checked = isConsultancy;
+
+    // Update card styles
+    document.getElementById('opt-school').classList.toggle('selected', !isConsultancy);
+    document.getElementById('opt-consultancy').classList.toggle('selected', isConsultancy);
+
+    // Toggle institution type dropdown
+    var instTypeGroup = document.getElementById('institution-type-group');
+    instTypeGroup.style.display = isConsultancy ? 'none' : 'block';
+    if (isConsultancy) {
+        document.getElementById('institution_type').value = '';
+    }
+
+    // Update name label and placeholder
+    var nameLabel = document.getElementById('name-label');
+    var nameInput = document.getElementById('institution_name');
+    if (isConsultancy) {
+        nameLabel.innerHTML = 'Organization Name (When register as consultancy) <span class="text-danger">*</span>';
+        nameInput.placeholder = 'Enter your organization name';
+    } else {
+        nameLabel.innerHTML = 'School/Institution Name(When register as school/institution) <span class="text-danger">*</span>';
+        nameInput.placeholder = 'Enter your school/institution name';
+    }
+
+    // Update header
+    document.getElementById('header-title').textContent = isConsultancy ? 'Add school/institution' : 'Institution Details';
+    document.getElementById('header-subtitle').textContent = isConsultancy 
+        ? 'Step 3 of 4 - Tell us about your organization' 
+        : 'Step 3 of 4 - Tell us about your institution';
+
+    // Update step 3 label
+    document.getElementById('step3-label').textContent = isConsultancy ? 'Add school/institution' : 'Institution Details';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('institution-form');
-    const submitBtn = document.getElementById('submit-btn');
-    const errorMessage = document.getElementById('error-message');
+    var form = document.getElementById('institution-form');
+    var submitBtn = document.getElementById('submit-btn');
+    var errorMessage = document.getElementById('error-message');
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const institutionType = document.getElementById('institution_type').value;
-        const institutionName = document.getElementById('institution_name').value;
+        var regType = document.querySelector('input[name="registration_type"]:checked').value;
+        var isConsultancy = (regType === 'consultancy');
+        var institutionType = document.getElementById('institution_type').value;
+        var institutionName = document.getElementById('institution_name').value;
 
-        if (!institutionType) {
+        if (!isConsultancy && !institutionType) {
             showError('Please select institution type');
             return;
         }
 
         if (!institutionName.trim()) {
-            showError('Please enter institution name');
+            showError(isConsultancy ? 'Please enter organization name' : 'Please enter school/institution name');
             return;
         }
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = 'Saving...';
         errorMessage.style.display = 'none';
+
+        var postData = {
+            registration_type: regType,
+            institution_name: institutionName
+        };
+        if (!isConsultancy) {
+            postData.institution_type = institutionType;
+        }
 
         fetch('{{ route("public.account.register.employer.saveInstitutionType") }}', {
             method: 'POST',
@@ -302,13 +408,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({
-                institution_type: institutionType,
-                institution_name: institutionName
-            })
+            body: JSON.stringify(postData)
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
             if (data.error) {
                 showError(data.message);
                 submitBtn.disabled = false;
@@ -317,7 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = data.next_url || '{{ route("public.account.register.employer.locationPage") }}';
             }
         })
-        .catch(error => {
+        .catch(function(error) {
             showError('An error occurred. Please try again.');
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Continue <i class="ti ti-arrow-right ms-2"></i>';

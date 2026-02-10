@@ -1,6 +1,6 @@
 <div class="section-full p-t120 p-b90 site-bg-gray twm-job-categories-area2">
     <!-- TITLE START-->
-    <div class="section-head center wt-small-separator-outer mt-5">
+    <div class="section-head center wt-small-separator-outer">
         <div class="wt-small-separator site-text-primary">
             <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
         </div>

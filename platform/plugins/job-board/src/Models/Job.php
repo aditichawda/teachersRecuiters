@@ -34,11 +34,15 @@ class Job extends BaseModel
         'description',
         'content',
         'company_id',
+        'job_type_category',
         'address',
         'status',
         'apply_url',
+        'apply_type',
+        'apply_other_email',
         'external_apply_behavior',
         'is_freelance',
+        'is_remote',
         'career_level_id',
         'salary_from',
         'salary_to',
@@ -46,11 +50,17 @@ class Job extends BaseModel
         'salary_type',
         'currency_id',
         'degree_level_id',
+        'required_certifications',
         'job_shift_id',
         'job_experience_id',
         'functional_area_id',
         'hide_salary',
         'number_of_positions',
+        'gender_preference',
+        'application_location_type',
+        'application_locations',
+        'marital_status_preference',
+        'language_proficiency',
         'expire_date',
         'author_id',
         'author_type',
@@ -85,6 +95,7 @@ class Job extends BaseModel
         'content' => SafeContent::class,
         'address' => SafeContent::class,
         'apply_url' => SafeContent::class,
+        'is_remote' => 'boolean',
     ];
 
     public function skills(): BelongsToMany
@@ -454,6 +465,11 @@ class Job extends BaseModel
         };
     }
 
+    public function screeningQuestions(): HasMany
+    {
+        return $this->hasMany(JobScreeningQuestion::class, 'job_id')->orderBy('order');
+    }
+
     public function customFields(): MorphMany
     {
         return $this->morphMany(CustomFieldValue::class, 'reference', 'reference_type', 'reference_id')->with('customField.options');
@@ -479,6 +495,7 @@ class Job extends BaseModel
             $job->categories()->detach();
             $job->tags()->detach();
             $job->customFields()->delete();
+            $job->screeningQuestions()->delete();
         });
 
         self::updating(function (): void {

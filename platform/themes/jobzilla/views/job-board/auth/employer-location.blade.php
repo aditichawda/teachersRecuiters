@@ -166,13 +166,97 @@
     .back-link:hover {
         text-decoration: underline;
     }
+
+    /* City Autocomplete */
+    .city-search-wrapper {
+        position: relative;
+    }
+
+    .city-search-input {
+        width: 100%;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: #434343;
+        background: #fff;
+        transition: all 0.3s ease;
+    }
+
+    .city-search-input:focus {
+        border-color: #0073d1;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 115, 209, 0.1);
+    }
+
+    .city-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1.5px solid #e0e0e0;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 100;
+        display: none;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .city-suggestions.show {
+        display: block;
+    }
+
+    .city-suggestion-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #434343;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s;
+    }
+
+    .city-suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .city-suggestion-item:hover,
+    .city-suggestion-item.active {
+        background: #eff6ff;
+        color: #0073d1;
+    }
+
+    .city-suggestion-item .city-name {
+        font-weight: 600;
+    }
+
+    .city-suggestion-item .city-location {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+
+    .city-no-results,
+    .city-loading {
+        padding: 12px 14px;
+        font-size: 13px;
+        color: #94a3b8;
+        text-align: center;
+    }
+
+    .auto-filled-field {
+        background-color: #f0fdf4 !important;
+        border-color: #86efac !important;
+    }
 </style>
 
 <div class="employer-location-wrapper">
     <div class="employer-location-container">
         <div class="employer-location-header">
             <h2><i class="ti ti-map-pin me-2"></i>Location</h2>
-            <p>Step 4 of 4 - Where is your institution located?</p>
+            <p>Step 4 of 4 – What is your current location?</p>
         </div>
         
         <div class="employer-location-body">
@@ -188,7 +272,7 @@
                 </div>
                 <div class="step completed">
                     <span class="step-number">✓</span>
-                    <span>School/Institution</span>
+                    <span>Add school/institution</span>
                 </div>
                 <div class="step active">
                     <span class="step-number">4</span>
@@ -196,43 +280,38 @@
                 </div>
             </div>
 
-            <!-- Logo -->
-            <div style="text-align: center; margin-bottom: 15px;">
-                @if (Theme::getLogo())
-                    <a href="{{ route('public.index') }}">
-                        {!! Theme::getLogoImage(['class' => 'site-logo', 'style' => 'max-width: 150px;'], 'logo', 140) !!}
-                    </a>
-                @else
-                    <a href="{{ route('public.index') }}" style="font-size: 20px; font-weight: 700; color: #434343; text-decoration: none;">
-                        <span style="color: #0073d1;">Teachers</span>Recruiter
-                    </a>
-                @endif
-            </div>
+         
+         
 
             <form id="location-form">
                 @csrf
+                <input type="hidden" name="city_id" id="city_id" value="" />
                 
+                <!-- City (Primary - Search) -->
                 <div class="mb-3">
-                    <label class="form-label">Country <span class="text-danger">*</span></label>
-                    <select name="country_id" id="country_id" class="form-select" required>
-                        <option value="">Select Country</option>
-                        @foreach($countries as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="form-label">City <span class="text-danger">*</span></label>
+                    <div class="city-search-wrapper">
+                        <input type="text" id="city_search" class="city-search-input" placeholder="Type your city name..." autocomplete="off" />
+                        <div class="city-suggestions" id="city-suggestions"></div>
+                    </div>
                 </div>
 
+                <!-- State (Auto-filled) -->
                 <div class="mb-3">
-                    <label class="form-label">State <span class="text-muted">(Optional)</span></label>
+                    <label class="form-label">State <span class="text-muted">(Auto-filled)</span></label>
                     <select name="state_id" id="state_id" class="form-select" disabled>
                         <option value="">Select State</option>
                     </select>
                 </div>
 
+                <!-- Country (Auto-filled) -->
                 <div class="mb-3">
-                    <label class="form-label">City <span class="text-muted">(Optional)</span></label>
-                    <select name="city_id" id="city_id" class="form-select" disabled>
-                        <option value="">Select City</option>
+                    <label class="form-label">Country <span class="text-muted">(Auto-filled)</span></label>
+                    <select name="country_id" id="country_id" class="form-select" disabled>
+                        <option value="">Select Country</option>
+                        @foreach($countries as $id => $name)
+                            <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -256,64 +335,137 @@
 <script>
 $(document).ready(function() {
     const errorMessage = document.getElementById('error-message');
+    let searchTimeout = null;
+    let activeSuggestionIndex = -1;
 
-    // Load states when country changes
-    $('#country_id').on('change', function() {
-        const countryId = $(this).val();
-        const $stateField = $('#state_id');
-        const $cityField = $('#city_id');
+    // City search autocomplete
+    $('#city_search').on('input', function() {
+        const keyword = $(this).val().trim();
+        const $suggestions = $('#city-suggestions');
+        activeSuggestionIndex = -1;
 
-        $stateField.prop('disabled', true).html('<option value="">Loading...</option>');
-        $cityField.prop('disabled', true).html('<option value="">Select City</option>');
+        // Clear city selection when user types
+        $('#city_id').val('');
+        resetStateCountry();
 
-        if (countryId) {
+        if (searchTimeout) clearTimeout(searchTimeout);
+
+        if (keyword.length < 2) {
+            $suggestions.removeClass('show').empty();
+            return;
+        }
+
+        $suggestions.html('<div class="city-loading">Searching...</div>').addClass('show');
+
+        searchTimeout = setTimeout(function() {
             $.ajax({
-                url: '{{ route("ajax.states-by-country") }}',
+                url: '{{ route("ajax.search-cities") }}',
                 type: 'GET',
-                data: { country_id: countryId },
+                data: { k: keyword },
                 success: function(response) {
-                    let options = '<option value="">Select State</option>';
-                    if (response.data && response.data.length > 0) {
-                        response.data.forEach(function(state) {
-                            options += `<option value="${state.id}">${state.name}</option>`;
-                        });
+                    const cities = response.data || [];
+
+                    if (cities.length === 0) {
+                        $suggestions.html('<div class="city-no-results">No cities found</div>');
+                        return;
                     }
-                    $stateField.html(options).prop('disabled', false);
+
+                    let html = '';
+                    cities.forEach(function(city) {
+                        const locationParts = [];
+                        if (city.state_name) locationParts.push(city.state_name);
+                        if (city.country_name) locationParts.push(city.country_name);
+
+                        html += '<div class="city-suggestion-item" ' +
+                            'data-id="' + city.id + '" ' +
+                            'data-name="' + city.name + '" ' +
+                            'data-state-id="' + (city.state_id || '') + '" ' +
+                            'data-state-name="' + (city.state_name || '') + '" ' +
+                            'data-country-id="' + (city.country_id || '') + '" ' +
+                            'data-country-name="' + (city.country_name || '') + '">' +
+                            '<div class="city-name">' + city.name + '</div>' +
+                            (locationParts.length ? '<div class="city-location">' + locationParts.join(', ') + '</div>' : '') +
+                            '</div>';
+                    });
+
+                    $suggestions.html(html);
                 },
                 error: function() {
-                    $stateField.html('<option value="">Select State</option>').prop('disabled', false);
+                    $suggestions.html('<div class="city-no-results">Error searching cities</div>');
                 }
             });
+        }, 300);
+    });
+
+    // Keyboard navigation for suggestions
+    $('#city_search').on('keydown', function(e) {
+        const $suggestions = $('#city-suggestions');
+        const $items = $suggestions.find('.city-suggestion-item');
+
+        if (!$suggestions.hasClass('show') || $items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+            $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+            $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeSuggestionIndex >= 0) {
+                $items.eq(activeSuggestionIndex).trigger('click');
+            }
+        } else if (e.key === 'Escape') {
+            $suggestions.removeClass('show');
         }
     });
 
-    // Load cities when state changes
-    $('#state_id').on('change', function() {
-        const stateId = $(this).val();
-        const $cityField = $('#city_id');
+    // Select city from suggestions
+    $(document).on('click', '.city-suggestion-item', function() {
+        const $item = $(this);
+        const cityId = $item.data('id');
+        const cityName = $item.data('name');
+        const stateId = $item.data('state-id');
+        const stateName = $item.data('state-name');
+        const countryId = $item.data('country-id');
+        const countryName = $item.data('country-name');
 
-        $cityField.prop('disabled', true).html('<option value="">Loading...</option>');
+        // Set city
+        $('#city_search').val(cityName);
+        $('#city_id').val(cityId);
+        $('#city-suggestions').removeClass('show');
 
+        // Auto-fill State
         if (stateId) {
-            $.ajax({
-                url: '{{ route("ajax.cities-by-state") }}',
-                type: 'GET',
-                data: { state_id: stateId },
-                success: function(response) {
-                    let options = '<option value="">Select City</option>';
-                    if (response.data && response.data.length > 0) {
-                        response.data.forEach(function(city) {
-                            options += `<option value="${city.id}">${city.name}</option>`;
-                        });
-                    }
-                    $cityField.html(options).prop('disabled', false);
-                },
-                error: function() {
-                    $cityField.html('<option value="">Select City</option>').prop('disabled', false);
-                }
-            });
+            $('#state_id').html('<option value="' + stateId + '" selected>' + stateName + '</option>')
+                .addClass('auto-filled-field');
+        } else {
+            $('#state_id').html('<option value="">N/A</option>');
+        }
+
+        // Auto-fill Country
+        if (countryId) {
+            $('#country_id').val(countryId).addClass('auto-filled-field');
+            if ($('#country_id').val() != countryId) {
+                $('#country_id').html('<option value="' + countryId + '" selected>' + countryName + '</option>')
+                    .addClass('auto-filled-field');
+            }
         }
     });
+
+    // Close suggestions on outside click
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.city-search-wrapper').length) {
+            $('#city-suggestions').removeClass('show');
+        }
+    });
+
+    function resetStateCountry() {
+        $('#state_id').html('<option value="">Select State</option>').removeClass('auto-filled-field');
+        $('#country_id').val('').removeClass('auto-filled-field');
+    }
 
     // Form submission
     $('#location-form').on('submit', function(e) {
@@ -323,8 +475,9 @@ $(document).ready(function() {
         const stateId = $('#state_id').val();
         const cityId = $('#city_id').val();
 
-        if (!countryId) {
-            showError('Please select country');
+        if (!cityId) {
+            showError('Please search and select a city');
+            $('#city_search').focus();
             return;
         }
 

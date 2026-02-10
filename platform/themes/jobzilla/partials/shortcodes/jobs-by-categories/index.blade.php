@@ -6,10 +6,10 @@
 @endphp
 
 <!-- JOBS BY CATEGORIES SECTION START -->
-<div class="section-full py-3 site-bg-light" style="background-color: {{ $bgColor }};">
+<div class="section-full p-t80 p-b80 site-bg-light" style="background-color: {{ $bgColor }};">
     <div class="container">
         @if ($shortcode->title || $shortcode->subtitle)
-            <div class="section-head center wt-small-separator-outer mt-5 text-center">
+            <div class="section-head center wt-small-separator-outer text-center">
                 @if ($shortcode->title)
                     <div class="wt-small-separator site-text-primary">
                         <div>{!! BaseHelper::clean($shortcode->title) !!}</div>

@@ -1,5 +1,5 @@
 <div class="section-full p-t120 p-b90 site-bg-white twm-job-categories-hpage-6-area">
-    <div class="section-head center wt-small-separator-outer mt-5">
+    <div class="section-head center wt-small-separator-outer">
         @if ($subtitle = $shortcode->subtitle)
             <div class="wt-small-separator site-text-primary">
                 <div>{!! BaseHelper::clean($subtitle) !!}</div>
