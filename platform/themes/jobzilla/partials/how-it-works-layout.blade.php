@@ -118,6 +118,29 @@
     </div>
 </section>
 
+{{-- SECTION 3.5: Watch How It Works - Video --}}
+<section class="hiw-video-section">
+    <div class="container">
+        <div class="hiw-section-header">
+            <span class="hiw-label">Watch Video</span>
+            <h2 class="hiw-section-title">See How It Works</h2>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="hiw-video-wrapper-large">
+                    <iframe 
+                        src="https://www.youtube.com/embed/r4PevhrJA_A?si=oVH36shDIgdaL5D4" 
+                        title="Teachers Recruiter - How It Works" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 {{-- SECTION 4: Image + Text Alternating --}}
 <section class="hiw-alternating-section">
     <div class="container">
@@ -246,7 +269,7 @@
             <p>Join thousands of educators who have found their dream jobs through Teachers Recruiter.</p>
             <div class="hiw-cta-buttons">
                 <a href="{{ route('public.account.register') }}" class="hiw-btn-white">Get Started Free</a>
-                <a href="/jobs" class="hiw-btn-outline">Browse Jobs</a>
+                <a href="/jobs" class="hiw-btn-outline">View Jobs</a>
             </div>
         </div>
     </div>

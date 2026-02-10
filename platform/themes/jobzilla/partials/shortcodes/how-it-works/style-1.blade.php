@@ -1,6 +1,6 @@
 <div class="section-full p-t120 p-b90 site-bg-white twm-how-it-work-area">
     <div class="container">
-        <div class="section-head center wt-small-separator-outer">
+        <div class="section-head center wt-small-separator-outer mt-5">
             <div class="wt-small-separator site-text-primary">
                 <div>{!! BaseHelper::clean($shortcode->subtitle) !!}</div>
             </div>
