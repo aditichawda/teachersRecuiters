@@ -21,7 +21,7 @@
             </div>
         @endif
 
-        <div class="row">
+        <div class="row" style="padding: 0 4rem;">
             <!-- Jobs by Location -->
             <!-- <div class="col-lg-3 col-md-6 col-sm-12 m-b30">
                 <div class="jobs-category-box">
@@ -127,12 +127,39 @@
 <!-- JOBS BY CATEGORIES SECTION END -->
 
 <style>
+/* Section Container - Keep content within blue background */
+.section-full.site-bg-light {
+    overflow: hidden;
+    position: relative;
+}
+
+.section-full.site-bg-light .container {
+    max-width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+    overflow: hidden;
+}
+
+.section-full.site-bg-light .row {
+    margin-left: -15px;
+    margin-right: -15px;
+    overflow: hidden;
+}
+
+.section-full.site-bg-light .row > [class*="col-"] {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
 .jobs-category-box {
     background: #ffffff;
     border-radius: 8px;
     padding: 30px;
     height: 100%;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .jobs-category-header {
@@ -154,6 +181,30 @@
     list-style: none;
     padding: 0;
     margin: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.jobs-category-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.jobs-category-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.jobs-category-list::-webkit-scrollbar-thumb {
+    background: #1967D2;
+    border-radius: 10px;
+}
+
+.jobs-category-list::-webkit-scrollbar-thumb:hover {
+    background: #1557b8;
 }
 
 .jobs-category-list li {
@@ -176,6 +227,9 @@
     display: block;
     position: relative;
     padding-left: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
 }
 
 .jobs-category-link:hover {

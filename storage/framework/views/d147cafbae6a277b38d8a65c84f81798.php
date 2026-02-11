@@ -49,6 +49,3 @@
 </div>
 <!-- TOP COMPANIES END -->
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/shortcodes/featured-companies/style-2.blade.php ENDPATH**/ ?>
-<!-- TOP COMPANIES START -->
-<!-- TOP COMPANIES END -->
-<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/shortcodes/featured-companies/style-2.blade.php ENDPATH**/ ?>

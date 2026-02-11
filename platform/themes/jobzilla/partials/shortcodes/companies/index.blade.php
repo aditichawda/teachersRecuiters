@@ -74,7 +74,7 @@
 <div class="section-full p-t120 p-b90 site-bg-white">
     <div class="container companies">
         <div class="companies-heading">
-            <h2>{{ __('Companies') }}</h2>
+            <h2>{{ __('Institutions') }}</h2>
             <p>{{ __('Explore top schools and institutions hiring teachers') }}</p>
         </div>
 

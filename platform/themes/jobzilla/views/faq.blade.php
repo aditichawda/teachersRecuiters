@@ -9,7 +9,7 @@
     $categories = FaqCategory::where('status', 'published')
         ->orderBy('order')
         ->with(['faqs' => function($q) { 
-            $q->where('status', 'published')->orderBy('order'); 
+            $q->where('status', 'published')->orderBy('id'); 
         }])
         ->get();
 @endphp
