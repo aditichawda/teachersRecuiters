@@ -24,7 +24,7 @@
     right: -100px;
     width: 350px;
     height: 350px;
-    background: radial-gradient(circle, rgba(14,165,233,.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0,115,209,.1) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
@@ -35,7 +35,7 @@
     margin-bottom: 20px;
     font-size: 13px;
 }
-.cd-breadcrumb a { color: #0369a1; text-decoration: none; font-weight: 500; }
+.cd-breadcrumb a { color: #0073d1; text-decoration: none; font-weight: 500; }
 .cd-breadcrumb a:hover { color: #0c4a6e; }
 .cd-breadcrumb span { color: #94a3b8; }
 .cd-hero-content {
@@ -83,8 +83,8 @@
     align-items: center;
     gap: 5px;
 }
-.cd-hero-meta a { color: #0ea5e9; text-decoration: none; font-weight: 500; }
-.cd-hero-meta a:hover { color: #0369a1; }
+.cd-hero-meta a { color: #0073d1; text-decoration: none; font-weight: 500; }
+.cd-hero-meta a:hover { color: #0073d1; }
 .cd-hero-meta i { color: #94a3b8; font-size: 14px; }
 .cd-hero-desc {
     font-size: 14px;
@@ -122,7 +122,7 @@
     left: 0;
     width: 40px;
     height: 2px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: linear-gradient(135deg, #0073d1, #0073d1);
     border-radius: 2px;
 }
 .cd-content-card .ck-content {
@@ -197,7 +197,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #0ea5e9;
+    color: #0073d1;
     font-size: 14px;
     flex-shrink: 0;
 }
@@ -221,7 +221,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: #0369a1;
+    color: #0073d1;
     text-decoration: none;
     font-weight: 600;
     font-size: 14px;

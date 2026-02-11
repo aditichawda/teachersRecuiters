@@ -14,7 +14,20 @@
             <?php endif; ?>
 
             <?php if($shortcode->button_url): ?>
-                    <a href="<?php echo e($shortcode->button_url); ?>" class="site-button"><?php echo e($shortcode->button_name ?: __('Get Started')); ?></a>
+                    <?php
+                        $buttonUrl = $shortcode->button_url;
+                        if (auth('account')->check()) {
+                            $account = auth('account')->user();
+                            if ($account->isEmployer()) {
+                                $buttonUrl = route('public.account.dashboard');
+                            } else {
+                                $buttonUrl = route('public.account.jobseeker.dashboard');
+                            }
+                        } else {
+                            $buttonUrl = route('public.account.register');
+                        }
+                    ?>
+                    <a href="<?php echo e($buttonUrl); ?>" class="site-button"><?php echo e($shortcode->button_name ?: __('Get Started')); ?></a>
                 <?php endif; ?>
         </div>
         <!-- <div class="twm-bnr-bottom-section">

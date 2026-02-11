@@ -76,13 +76,63 @@ class EmployerSettingController extends BaseController
             }
         }
 
-        return JobBoardHelper::view('dashboard.employer-settings', compact('account', 'company'));
+        // Load saved location names for display (Country, State, City)
+        $locationCityName = '';
+        $locationStateName = '';
+        $locationCountryName = '';
+        if ($company && is_plugin_active('location')) {
+            if (!empty($company->city_id)) {
+                try {
+                    $city = \Botble\Location\Models\City::with(['state', 'country'])->find($company->city_id);
+                    if ($city) {
+                        $locationCityName = $city->name ?? '';
+                        $locationStateName = $city->state->name ?? (\Botble\Location\Models\State::find($company->state_id)->name ?? '');
+                        $locationCountryName = $city->country->name ?? ($city->state->country->name ?? (\Botble\Location\Models\Country::find($company->country_id)->name ?? ''));
+                    }
+                } catch (\Throwable $e) {
+                    // fallback by ID only
+                    try {
+                        if (empty($locationCityName) && $company->city_id) {
+                            $locationCityName = \Botble\Location\Models\City::find($company->city_id)->name ?? '';
+                        }
+                        if (empty($locationStateName) && $company->state_id) {
+                            $locationStateName = \Botble\Location\Models\State::find($company->state_id)->name ?? '';
+                        }
+                        if (empty($locationCountryName) && $company->country_id) {
+                            $locationCountryName = \Botble\Location\Models\Country::find($company->country_id)->name ?? '';
+                        }
+                    } catch (\Throwable $e2) {
+                    }
+                }
+            }
+            if (empty($locationStateName) && !empty($company->state_id)) {
+                try {
+                    $locationStateName = \Botble\Location\Models\State::find($company->state_id)->name ?? '';
+                } catch (\Throwable $e) {
+                }
+            }
+            if (empty($locationCountryName) && !empty($company->country_id)) {
+                try {
+                    $locationCountryName = \Botble\Location\Models\Country::find($company->country_id)->name ?? '';
+                } catch (\Throwable $e) {
+                }
+            }
+        }
+
+        return JobBoardHelper::view('dashboard.employer-settings', compact('account', 'company', 'locationCityName', 'locationStateName', 'locationCountryName'));
     }
 
     public function update(Request $request)
     {
         /** @var Account $account */
         $account = auth('account')->user();
+
+        // Normalize empty location IDs to null so validation (nullable|integer) passes when city is changed/cleared
+        $request->merge([
+            'city_id' => $request->input('city_id') !== '' && $request->input('city_id') !== null ? (int) $request->input('city_id') : null,
+            'state_id' => $request->input('state_id') !== '' && $request->input('state_id') !== null ? (int) $request->input('state_id') : null,
+            'country_id' => $request->input('country_id') !== '' && $request->input('country_id') !== null ? (int) $request->input('country_id') : null,
+        ]);
 
         $request->validate([
             // Account fields
@@ -103,7 +153,7 @@ class EmployerSettingController extends BaseController
             'standard_level.*' => 'string',
             'staff_facilities' => 'required|array|min:1',
             'staff_facilities.*' => 'string',
-            'country_id' => 'required|integer',
+            'country_id' => 'nullable|integer',
             'state_id' => 'nullable|integer',
             'city_id' => 'nullable|integer',
             'address' => 'required|string|max:250',
@@ -156,7 +206,7 @@ class EmployerSettingController extends BaseController
             'facebook', 'linkedin', 'youtube_video', 'google', 'twitter', 'instagram',
         ]);
 
-        // Handle logo upload
+        // Institution logo (right side): store in jb_companies.logo only. Left profile logo = account avatar, unchanged.
         if ($request->hasFile('logo')) {
             $result = RvMedia::handleUpload($request->file('logo'), 0, $account->upload_folder);
 

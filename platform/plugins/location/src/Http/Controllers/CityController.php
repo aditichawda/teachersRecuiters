@@ -140,35 +140,43 @@ class CityController extends BaseController
 
     public function ajaxSearchCities(Request $request)
     {
-        $keyword = BaseHelper::stringify($request->query('k'));
+        try {
+            $keyword = BaseHelper::stringify($request->query('k'));
 
-        if (! $keyword || strlen($keyword) < 2) {
+            if (! $keyword || strlen($keyword) < 2) {
+                return $this
+                    ->httpResponse()
+                    ->setData([]);
+            }
+
+            $cities = City::query()
+                ->select(['id', 'name', 'state_id', 'country_id'])
+                ->with(['state:id,name,country_id', 'state.country:id,name', 'country:id,name'])
+                ->where('name', 'LIKE', '%' . $keyword . '%')
+                ->orderBy('name')
+                ->limit(15)
+                ->get()
+                ->map(function ($city) {
+                    $countryId = $city->country_id ?: $city->state?->country_id;
+                    $countryName = $city->country?->name ?: $city->state?->country?->name;
+
+                    return [
+                        'id' => $city->id,
+                        'name' => $city->name,
+                        'state_id' => $city->state_id,
+                        'state_name' => $city->state?->name,
+                        'country_id' => $countryId,
+                        'country_name' => $countryName,
+                    ];
+                });
+
+            return $this
+                ->httpResponse()
+                ->setData($cities);
+        } catch (\Throwable $e) {
             return $this
                 ->httpResponse()
                 ->setData([]);
         }
-
-        $cities = City::query()
-            ->select(['id', 'name', 'state_id', 'country_id'])
-            ->with(['state:id,name', 'country:id,name'])
-            ->wherePublished()
-            ->where('name', 'LIKE', '%' . $keyword . '%')
-            ->orderBy('name')
-            ->limit(15)
-            ->get()
-            ->map(function ($city) {
-                return [
-                    'id' => $city->id,
-                    'name' => $city->name,
-                    'state_id' => $city->state_id,
-                    'state_name' => $city->state?->name,
-                    'country_id' => $city->country_id,
-                    'country_name' => $city->country?->name,
-                ];
-            });
-
-        return $this
-            ->httpResponse()
-            ->setData($cities);
     }
 }

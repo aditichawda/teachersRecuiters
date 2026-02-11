@@ -12,101 +12,92 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .emp-dash-header h2 {
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 600;
     color: #333;
     margin: 0;
 }
 
 .emp-dash-header a {
     color: #0073d1;
-    font-weight: 600;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .emp-dash-header a:hover {
-    color: #005ba1;
+    text-decoration: underline;
 }
 
 /* Credits Section */
 .emp-credits-info {
-    background: #fff;
-    border-radius: 12px;
-    padding: 15px 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 1px solid #ffcc80;
+    border-radius: 8px;
+    padding: 12px 15px;
     margin-bottom: 20px;
+    font-size: 13px;
+    color: #e65100;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 8px;
 }
 
 .emp-credits-info i {
-    font-size: 22px;
-    color: #f59e0b;
-}
-
-.emp-credits-info .credits-text {
-    font-size: 14px;
-    color: #555;
-}
-
-.emp-credits-info .credits-text strong {
-    color: #333;
-    font-size: 18px;
+    font-size: 20px;
+    color: #f57c00;
 }
 
 .emp-credits-info a {
-    margin-left: auto;
-    color: #0073d1;
+    color: #e65100;
     font-weight: 600;
-    font-size: 13px;
-    text-decoration: none;
 }
 
 /* Stat Cards */
 .emp-stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-bottom: 25px;
+    gap: 20px;
+    margin-bottom: 30px;
 }
 
 .emp-stat-card {
     border-radius: 12px;
-    padding: 20px;
+    padding: 25px;
     color: #fff;
     position: relative;
     overflow: hidden;
 }
 
-.emp-stat-card.blue { background: linear-gradient(135deg, #2196F3, #1976D2); }
-.emp-stat-card.green { background: linear-gradient(135deg, #4CAF50, #388E3C); }
-.emp-stat-card.red { background: linear-gradient(135deg, #f44336, #c62828); }
+.emp-stat-card.blue { background: linear-gradient(135deg, #0073d1, #005bb5); }
+.emp-stat-card.green { background: linear-gradient(135deg, #28a745, #1e7e34); }
+.emp-stat-card.red { background: linear-gradient(135deg, #fd7e14, #e06600); }
 
 .emp-stat-card h6 {
     font-size: 14px;
     font-weight: 500;
-    margin: 0 0 8px 0;
+    margin: 0 0 10px 0;
     opacity: 0.9;
 }
 
 .emp-stat-card h2 {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 700;
     margin: 0;
 }
 
 .emp-stat-card .stat-icon {
     position: absolute;
-    right: 15px;
+    right: 20px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 40px;
-    opacity: 0.2;
+    font-size: 50px;
+    opacity: 0.3;
 }
 
 /* Content Cards */
@@ -125,7 +116,7 @@
 }
 
 .emp-content-card-header {
-    padding: 16px 20px;
+    padding: 20px;
     border-bottom: 1px solid #f0f0f0;
 }
 
@@ -137,25 +128,24 @@
 }
 
 .emp-content-card-body {
-    padding: 0;
+    padding: 20px;
 }
 
-/* Applicant/Activity Item */
+/* List Items */
 .emp-list-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 20px;
+    padding: 12px 0;
     border-bottom: 1px solid #f5f5f5;
     transition: background 0.15s;
 }
 
 .emp-list-item:last-child { border-bottom: none; }
-.emp-list-item:hover { background: #fafafa; }
 
 .emp-list-item .item-icon {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -164,9 +154,10 @@
     font-size: 14px;
 }
 
-.emp-list-item .item-icon.blue { background: #e3f2fd; color: #1976D2; }
-.emp-list-item .item-icon.green { background: #e8f5e9; color: #388E3C; }
+.emp-list-item .item-icon.blue { background: #e8f4fc; color: #0073d1; }
+.emp-list-item .item-icon.green { background: #e8f5e9; color: #28a745; }
 .emp-list-item .item-icon.gray { background: #f5f5f5; color: #888; }
+.emp-list-item .item-icon.orange { background: #fff3e0; color: #f57c00; }
 
 .emp-list-item .item-info {
     flex: 1;
@@ -176,11 +167,8 @@
 .emp-list-item .item-info h6 {
     font-size: 14px;
     font-weight: 500;
-    margin: 0 0 2px 0;
+    margin: 0 0 3px 0;
     color: #333;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .emp-list-item .item-info h6 a {
@@ -208,35 +196,44 @@
 /* Empty State */
 .emp-empty-state {
     text-align: center;
-    padding: 30px 20px;
-    color: #999;
+    padding: 40px 20px;
 }
 
 .emp-empty-state i {
-    font-size: 32px;
-    margin-bottom: 10px;
+    font-size: 50px;
+    color: #ddd;
+    margin-bottom: 15px;
     display: block;
-    opacity: 0.4;
 }
 
 .emp-empty-state h6 {
-    font-size: 15px;
-    color: #666;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
     margin: 0 0 5px 0;
 }
 
 .emp-empty-state p {
     font-size: 13px;
+    color: #888;
     margin: 0;
 }
 
-@media (max-width: 768px) {
+/* Section Gap */
+.emp-section-gap {
+    margin-top: 20px;
+}
+
+@media (max-width: 991px) {
     .emp-stats-row {
         grid-template-columns: 1fr;
     }
     .emp-content-row {
         grid-template-columns: 1fr;
     }
+}
+
+@media (max-width: 768px) {
     .emp-dash-header {
         flex-direction: column;
         gap: 8px;
@@ -245,29 +242,20 @@
 }
 </style>
 
+<!-- Header -->
 <div class="emp-dash-header">
     <h2>{{ __('Dashboard') }}</h2>
-    <a href="{{ url('/') }}">{{ __('GO TO HOMEPAGE') }} →</a>
+    <a href="{{ url('/') }}">{{ __('GO TO HOMEPAGE') }} &rarr;</a>
 </div>
-
-@if(isset($account) && $account->credits !== null)
-<div class="emp-credits-info">
-    <i class="fa fa-coins"></i>
-    <div class="credits-text">
-        {{ __('Credits') }}<br>
-        <strong>{{ $account->credits ?? 0 }}</strong>
-    </div>
-    @if(JobBoardHelper::isEnabledCreditsSystem())
-    <a href="{{ route('public.account.packages') }}">{{ __('Buy credits') }}</a>
-    @endif
-</div>
-@endif
 
 <!-- Alert for buy credits -->
 @if(isset($account) && JobBoardHelper::isEnabledCreditsSystem() && ($account->credits ?? 0) <= 0)
-<div class="alert alert-info d-flex align-items-center mb-4" style="border-radius: 8px;">
-    <i class="fa fa-info-circle me-2"></i>
-    <span>{{ __('Please add your credit to create your own posts here:') }} <a href="{{ route('public.account.packages') }}">{{ __('Buy credits') }}</a> {{ $account->credits ?? 0 }}</span>
+<div class="emp-credits-info">
+    <i class="fa fa-gift"></i>
+    <span>
+        <strong>{{ __('Please add your credits to create your own posts.') }}</strong><br>
+        <small><a href="{{ route('public.account.packages') }}">{{ __('Buy credits') }}</a> to start posting jobs.</small>
+    </span>
 </div>
 @endif
 
@@ -290,12 +278,12 @@
     </div>
 </div>
 
-<!-- Content Row -->
+<!-- Content Row: Applicants + Recent Activities -->
 <div class="emp-content-row">
     <!-- New Applicants -->
     <div class="emp-content-card">
         <div class="emp-content-card-header">
-            <h5>{{ __('New Applicants') }}</h5>
+            <h5><i class="fa fa-user-friends me-2" style="color: #0073d1;"></i>{{ __('New Applicants') }}</h5>
         </div>
         <div class="emp-content-card-body">
             @forelse($newApplicants ?? [] as $applicant)
@@ -321,12 +309,12 @@
     <!-- Recent Activities -->
     <div class="emp-content-card">
         <div class="emp-content-card-header">
-            <h5>{{ __('Recent activities') }}</h5>
+            <h5><i class="fa fa-history me-2" style="color: #28a745;"></i>{{ __('Recent Activities') }}</h5>
         </div>
         <div class="emp-content-card-body">
             @forelse($activities ?? [] as $activity)
                 <div class="emp-list-item">
-                    <div class="item-icon gray">
+                    <div class="item-icon green">
                         <i class="fa fa-clock"></i>
                     </div>
                     <div class="item-info">
@@ -350,38 +338,26 @@
 
 <!-- Expiring Jobs -->
 @if(isset($expiredJobs) && count($expiredJobs) > 0)
-<div class="emp-content-card">
-    <div class="emp-content-card-header">
-        <h5>{{ __('Jobs About to Expire') }}</h5>
-    </div>
-    <div class="emp-content-card-body">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>{{ __('Job Name') }}</th>
-                        <th>{{ __('Company') }}</th>
-                        <th>{{ __('Expire Date') }}</th>
-                        <th>{{ __('Status') }}</th>
-                        <th>{{ __('Applicants') }}</th>
-                        <th>{{ __('Actions') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($expiredJobs as $job)
-                    <tr>
-                        <td><a href="{{ route('public.account.jobs.edit', $job->id) }}" class="fw-bold text-decoration-none">{{ $job->name }}</a></td>
-                        <td>{{ $job->company->name ?? '' }}</td>
-                        <td>{{ BaseHelper::formatDate($job->expire_date) }}</td>
-                        <td>{!! $job->status->toHtml() !!}</td>
-                        <td>{{ $job->applicants_count }}</td>
-                        <td>
-                            <a href="{{ route('public.account.jobs.edit', $job->id) }}" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i></a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+<div class="emp-section-gap">
+    <div class="emp-content-card">
+        <div class="emp-content-card-header">
+            <h5><i class="fa fa-exclamation-triangle me-2" style="color: #dc3545;"></i>{{ __('Jobs About to Expire') }}</h5>
+        </div>
+        <div class="emp-content-card-body">
+            @foreach($expiredJobs as $job)
+                <div class="emp-list-item">
+                    <div class="item-icon orange">
+                        <i class="fa fa-briefcase"></i>
+                    </div>
+                    <div class="item-info">
+                        <h6><a href="{{ route('public.account.jobs.edit', $job->id) }}">{{ $job->name }}</a></h6>
+                        <p>{{ $job->company->name ?? '' }} &bull; Expires: {{ BaseHelper::formatDate($job->expire_date) }} &bull; {{ $job->applicants_count }} applicants</p>
+                    </div>
+                    <div class="item-time">
+                        <a href="{{ route('public.account.jobs.edit', $job->id) }}" class="btn btn-sm btn-outline-primary" style="border-radius:6px;font-size:12px;"><i class="fa fa-edit"></i> Edit</a>
+                    </div>
+                </div>
+            @endforeach
         </div>
     </div>
 </div>

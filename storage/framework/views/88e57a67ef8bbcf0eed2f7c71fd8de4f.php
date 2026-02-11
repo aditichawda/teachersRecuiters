@@ -96,141 +96,175 @@
                 <!-- MAIN Nav -->
                 <div class="nav-animation header-nav navbar-collapse collapse d-flex justify-content-end">
                     <ul class="nav navbar-nav">
-                        <!-- How it Works -->
-                        <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/')); ?>">
-                                <span><?php echo e(__('Home')); ?></span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/how-it-works')); ?>">
-                                <span><?php echo e(__('How it Works')); ?></span>
-                            </a>
-                        </li>
+                        <?php
+                            $isJobSeeker = auth('account')->check() && auth('account')->user()->isJobSeeker();
+                            $isEmployer = auth('account')->check() && auth('account')->user()->isEmployer();
+                        ?>
 
-                        <!-- Jobs Mega Menu Dropdown -->
-                        <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
-                            <a class="nav-link dropdown-toggle" style="color: black;" href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
-                                <span><?php echo e(__('Jobs')); ?></span>
-                                <i class="feather-chevron-down ms-1"></i>
-                            </a>
-                            <div class="dropdown-menu mega-menu" id="jobs-mega-menu" aria-labelledby="jobs-dropdown">
-                                <div class="mega-menu-wrapper">
-                                    <!-- Tabs Navigation -->
-                                    <div class="mega-menu-tabs-wrapper">
-                                        <button class="mega-menu-tab-btn active" onclick="switchMegaMenuTab('categories')" data-tab="categories">
-                                            <?php echo e(__('JOBS BY CATEGORIES')); ?>
+                        <?php if($isJobSeeker): ?>
+                            <!-- Job Seeker Menu -->
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>">
+                                    <span><?php echo e(__('Find Jobs')); ?></span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="<?php echo e(JobBoardHelper::getJobCompaniesPageURL()); ?>">
+                                    <span><?php echo e(__('Find Schools')); ?></span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.faq')); ?>">
+                                    <span><?php echo e(__('FAQ')); ?></span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.premium-service')); ?>">
+                                    <span><?php echo e(__('Premium Service')); ?></span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.notifications')); ?>">
+                                    <span><?php echo e(__('Notifications')); ?></span>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <!-- Default Menu for Employer and Non-logged-in Users -->
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="<?php echo e(url('/')); ?>">
+                                    <span><?php echo e(__('Home')); ?></span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="<?php echo e(url('/how-it-works')); ?>">
+                                    <span><?php echo e(__('How it Works')); ?></span>
+                                </a>
+                            </li>
 
-                                            <i class="feather-chevron-down"></i>
-                                        </button>
-                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('location')" data-tab="location">
-                                            <?php echo e(__('JOBS BY LOCATIONS')); ?>
+                            <!-- Jobs Mega Menu Dropdown -->
+                            <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
+                                <a class="nav-link dropdown-toggle" style="color: black;" href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
+                                    <span><?php echo e(__('Jobs')); ?></span>
+                                    <i class="feather-chevron-down ms-1"></i>
+                                </a>
+                                <div class="dropdown-menu mega-menu" id="jobs-mega-menu" aria-labelledby="jobs-dropdown">
+                                    <div class="mega-menu-wrapper">
+                                        <!-- Tabs Navigation -->
+                                        <div class="mega-menu-tabs-wrapper">
+                                            <button class="mega-menu-tab-btn active" onclick="switchMegaMenuTab('categories')" data-tab="categories">
+                                                <?php echo e(__('JOBS BY CATEGORIES')); ?>
 
-                                            <i class="feather-chevron-down"></i>
-                                        </button>
-                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('institution')" data-tab="institution">
-                                            <?php echo e(__('JOBS BY INSTITUTION TYPE')); ?>
+                                                <i class="feather-chevron-down"></i>
+                                            </button>
+                                            <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('location')" data-tab="location">
+                                                <?php echo e(__('JOBS BY LOCATIONS')); ?>
 
-                                            <i class="feather-chevron-down"></i>
-                                        </button>
-                                    </div>
+                                                <i class="feather-chevron-down"></i>
+                                            </button>
+                                            <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('institution')" data-tab="institution">
+                                                <?php echo e(__('JOBS BY INSTITUTION TYPE')); ?>
 
-                                    <!-- Tab Content -->
-                                    <div class="mega-menu-content-wrapper">
-                                        <!-- Jobs by Categories Content -->
-                                        <div class="mega-menu-tab-content active" id="content-categories">
-                                            <div class="mega-menu-grid">
-                                                <?php
-                                                    $categories = $featuredCategories->chunk(ceil($featuredCategories->count() / 2));
-                                                ?>
-                                                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                    <div class="mega-menu-column">
-                                                        <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <a href="<?php echo e($category->url); ?>" class="mega-menu-grid-item">
-                                                                <div class="mega-menu-grid-icon">
-                                                                    <?php if($category->icon): ?>
-                                                                        <i class="<?php echo e($category->icon); ?>"></i>
-                                                                    <?php else: ?>
-                                                                        <i class="feather-briefcase"></i>
-                                                                    <?php endif; ?>
-                                                                </div>
-                                                                <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name"><?php echo e($category->name); ?></span>
-                                                                    <span class="mega-menu-grid-count"><?php echo e(number_format($category->active_jobs_count ?? 0)); ?> Jobs</span>
-                                                                </div>
-                                                            </a>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    </div>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                <?php if($featuredCategories->isEmpty()): ?>
-                                                    <div class="mega-menu-empty">No categories available</div>
-                                                <?php endif; ?>
-                                            </div>
+                                                <i class="feather-chevron-down"></i>
+                                            </button>
                                         </div>
 
-                                        <!-- Jobs by Location Content -->
-                                        <div class="mega-menu-tab-content" id="content-location">
-                                            <div class="mega-menu-grid">
-                                                <?php
-                                                    $locations = $topLocations->chunk(ceil($topLocations->count() / 2));
-                                                ?>
-                                                <?php $__currentLoopData = $locations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                    <div class="mega-menu-column">
-                                                        <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $location): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <a href="<?php echo e(route('public.jobs-by-city', $location->slug)); ?>" class="mega-menu-grid-item">
-                                                                <div class="mega-menu-grid-icon">
-                                                                    <i class="feather-map-pin"></i>
-                                                                </div>
-                                                                <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name">Teacher jobs in <?php echo e($location->name); ?></span>
-                                                                </div>
-                                                            </a>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    </div>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                <?php if($topLocations->isEmpty()): ?>
-                                                    <div class="mega-menu-empty">No locations available</div>
-                                                <?php endif; ?>
+                                        <!-- Tab Content -->
+                                        <div class="mega-menu-content-wrapper">
+                                            <!-- Jobs by Categories Content -->
+                                            <div class="mega-menu-tab-content active" id="content-categories">
+                                                <div class="mega-menu-grid">
+                                                    <?php
+                                                        $categories = $featuredCategories->chunk(ceil($featuredCategories->count() / 2));
+                                                    ?>
+                                                    <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <div class="mega-menu-column">
+                                                            <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                <a href="<?php echo e($category->url); ?>" class="mega-menu-grid-item">
+                                                                    <div class="mega-menu-grid-icon">
+                                                                        <?php if($category->icon): ?>
+                                                                            <i class="<?php echo e($category->icon); ?>"></i>
+                                                                        <?php else: ?>
+                                                                            <i class="feather-briefcase"></i>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                    <div class="mega-menu-grid-text">
+                                                                        <span class="mega-menu-grid-name"><?php echo e($category->name); ?></span>
+                                                                        <span class="mega-menu-grid-count"><?php echo e(number_format($category->active_jobs_count ?? 0)); ?> Jobs</span>
+                                                                    </div>
+                                                                </a>
+                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                        </div>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php if($featuredCategories->isEmpty()): ?>
+                                                        <div class="mega-menu-empty">No categories available</div>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <!-- Jobs by Institution Type Content -->
-                                        <div class="mega-menu-tab-content" id="content-institution">
-                                            <div class="mega-menu-grid">
-                                                <?php
-                                                    $institutions = $institutionTypes->chunk(ceil($institutionTypes->count() / 2));
-                                                ?>
-                                                <?php $__currentLoopData = $institutions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                    <div class="mega-menu-column">
-                                                        <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $institution): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <a href="<?php echo e($institution->url); ?>" class="mega-menu-grid-item">
-                                                                <div class="mega-menu-grid-icon">
-                                                                    <i class="feather-building"></i>
-                                                                </div>
-                                                                <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name"><?php echo e($institution->name); ?></span>
-                                                                    <span class="mega-menu-grid-count"><?php echo e(number_format($institution->active_jobs_count ?? 0)); ?> Jobs</span>
-                                                                </div>
-                                                            </a>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    </div>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                <?php if($institutionTypes->isEmpty()): ?>
-                                                    <div class="mega-menu-empty">No institution types available</div>
-                                                <?php endif; ?>
+                                            <!-- Jobs by Location Content -->
+                                            <div class="mega-menu-tab-content" id="content-location">
+                                                <div class="mega-menu-grid">
+                                                    <?php
+                                                        $locations = $topLocations->chunk(ceil($topLocations->count() / 2));
+                                                    ?>
+                                                    <?php $__currentLoopData = $locations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <div class="mega-menu-column">
+                                                            <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $location): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                <a href="<?php echo e(route('public.jobs-by-city', $location->slug)); ?>" class="mega-menu-grid-item">
+                                                                    <div class="mega-menu-grid-icon">
+                                                                        <i class="feather-map-pin"></i>
+                                                                    </div>
+                                                                    <div class="mega-menu-grid-text">
+                                                                        <span class="mega-menu-grid-name">Teacher jobs in <?php echo e($location->name); ?></span>
+                                                                    </div>
+                                                                </a>
+                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                        </div>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php if($topLocations->isEmpty()): ?>
+                                                        <div class="mega-menu-empty">No locations available</div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+
+                                            <!-- Jobs by Institution Type Content -->
+                                            <div class="mega-menu-tab-content" id="content-institution">
+                                                <div class="mega-menu-grid">
+                                                    <?php
+                                                        $institutions = $institutionTypes->chunk(ceil($institutionTypes->count() / 2));
+                                                    ?>
+                                                    <?php $__currentLoopData = $institutions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <div class="mega-menu-column">
+                                                            <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $institution): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                <a href="<?php echo e($institution->url); ?>" class="mega-menu-grid-item">
+                                                                    <div class="mega-menu-grid-icon">
+                                                                        <i class="feather-building"></i>
+                                                                    </div>
+                                                                    <div class="mega-menu-grid-text">
+                                                                        <span class="mega-menu-grid-name"><?php echo e($institution->name); ?></span>
+                                                                        <span class="mega-menu-grid-count"><?php echo e(number_format($institution->active_jobs_count ?? 0)); ?> Jobs</span>
+                                                                    </div>
+                                                                </a>
+                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                        </div>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php if($institutionTypes->isEmpty()): ?>
+                                                        <div class="mega-menu-empty">No institution types available</div>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </li>
+                            </li>
 
-                        <!-- For Schools / Start Hiring -->
-                                     <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/start-hiring')); ?>">
-                                <span><?php echo e(__('Start Hiring')); ?></span>
-                            </a>
-                        </li>
+                            <!-- For Schools / Start Hiring -->
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="<?php echo e(url('/start-hiring')); ?>">
+                                    <span><?php echo e(__('Start Hiring')); ?></span>
+                                </a>
+                            </li>
+                        <?php endif; ?>
                     </ul>
                 </div>
 

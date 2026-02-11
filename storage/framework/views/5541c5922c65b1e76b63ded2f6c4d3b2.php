@@ -1,4 +1,8 @@
-<?php if (! $__env->hasRenderedOnce('693d87d3-03c3-4393-9ee0-ce2107b26109')): $__env->markAsRenderedOnce('693d87d3-03c3-4393-9ee0-ce2107b26109'); ?>
+<<<<<<< HEAD:storage/framework/views/04f04d0c791d5ee9075a7e221573ae4f.php
+<?php if (! $__env->hasRenderedOnce('4d7dfcff-891b-4b11-9c37-ceec396ee32c')): $__env->markAsRenderedOnce('4d7dfcff-891b-4b11-9c37-ceec396ee32c'); ?>
+=======
+<?php if (! $__env->hasRenderedOnce('76fbd958-2ac9-4f76-ad37-e25aaf37ed85')): $__env->markAsRenderedOnce('76fbd958-2ac9-4f76-ad37-e25aaf37ed85'); ?>
+>>>>>>> 810cf0467926987b37ae45c63e2ce44bee46c8b4:storage/framework/views/5541c5922c65b1e76b63ded2f6c4d3b2.php
     <script src="<?php echo e(asset('vendor/core/packages/theme/js/toast.js')); ?>?v=<?php echo e(get_cms_version()); ?>"></script>
 
     <?php if(session()->has('success_msg') ||

@@ -21,7 +21,7 @@
     right: -100px;
     width: 350px;
     height: 350px;
-    background: radial-gradient(circle, rgba(14,165,233,.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0,115,209,.1) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
@@ -32,7 +32,7 @@
     margin-bottom: 24px;
     font-size: 13px;
 }
-.cdt-breadcrumb a { color: #0369a1; text-decoration: none; font-weight: 500; }
+.cdt-breadcrumb a { color: #0073d1; text-decoration: none; font-weight: 500; }
 .cdt-breadcrumb a:hover { color: #0c4a6e; }
 .cdt-breadcrumb span { color: #94a3b8; }
 .cdt-hero-content {
@@ -77,7 +77,7 @@
     align-items: center;
     gap: 6px;
     padding: 10px 24px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: linear-gradient(135deg, #0073d1, #0073d1);
     color: #fff;
     border-radius: 10px;
     font-size: 14px;
@@ -89,7 +89,7 @@
 }
 .cdt-btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(14,165,233,.3);
+    box-shadow: 0 6px 16px rgba(0,115,209,.3);
     color: #fff;
 }
 .cdt-btn-outline {
@@ -98,8 +98,8 @@
     gap: 6px;
     padding: 10px 24px;
     background: #fff;
-    color: #0369a1;
-    border: 2px solid #0369a1;
+    color: #0073d1;
+    border: 2px solid #0073d1;
     border-radius: 10px;
     font-size: 14px;
     font-weight: 600;
@@ -109,7 +109,7 @@
 .cdt-btn-outline:hover {
     background: #f0f9ff;
     transform: translateY(-2px);
-    color: #0369a1;
+    color: #0073d1;
 }
 
 /* ===== Main Area ===== */
@@ -141,7 +141,7 @@
     left: 0;
     width: 40px;
     height: 2px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: linear-gradient(135deg, #0073d1, #0073d1);
     border-radius: 2px;
 }
 .cdt-card .ck-content {
@@ -159,7 +159,7 @@
     top: 8px;
     bottom: 8px;
     width: 2px;
-    background: linear-gradient(180deg, #0ea5e9, #e2e8f0);
+    background: linear-gradient(180deg, #0073d1, #e2e8f0);
     border-radius: 2px;
 }
 .cdt-timeline-item {
@@ -176,14 +176,14 @@
     height: 12px;
     border-radius: 50%;
     background: #fff;
-    border: 3px solid #0ea5e9;
+    border: 3px solid #0073d1;
     z-index: 1;
 }
 .cdt-timeline-date {
     display: inline-block;
     font-size: 12px;
     font-weight: 600;
-    color: #0ea5e9;
+    color: #0073d1;
     background: #f0f9ff;
     padding: 3px 12px;
     border-radius: 20px;
@@ -198,7 +198,7 @@
 .cdt-timeline-subtitle {
     font-size: 14px;
     font-weight: 500;
-    color: #0369a1;
+    color: #0073d1;
     margin-bottom: 6px;
 }
 .cdt-timeline-desc {
@@ -245,7 +245,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #0ea5e9;
+    color: #0073d1;
     font-size: 14px;
     flex-shrink: 0;
 }
@@ -269,7 +269,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: #0369a1;
+    color: #0073d1;
     text-decoration: none;
     font-weight: 600;
     font-size: 14px;
@@ -362,7 +362,7 @@
                                     <span class="cdt-timeline-date">
                                         {{ __(':from to :to', [
                                             'from' => $experience->started_at->format('Y'),
-                                            'to' => $experience->ended_at ? $experience->ended_at->format('Y') : __('Now'),
+                                            'to' => ($experience->is_current || !$experience->ended_at) ? __('Present') : $experience->ended_at->format('Y'),
                                         ]) }}
                                     </span>
                                     <div class="cdt-timeline-title">{{ $experience->company }}</div>
@@ -390,7 +390,7 @@
                                     <span class="cdt-timeline-date">
                                         {{ __(':from to :to', [
                                             'from' => $education->started_at->format('Y'),
-                                            'to' => $education->ended_at ? $education->ended_at->format('Y') : __('Now'),
+                                            'to' => ($education->is_current || !$education->ended_at) ? __('Present') : $education->ended_at->format('Y'),
                                         ]) }}
                                     </span>
                                     @if ($education->school)

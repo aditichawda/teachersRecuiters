@@ -40,10 +40,20 @@
         padding: 10px 14px;
         font-size: 14px;
         transition: all 0.2s;
+        background-color: #fff !important;
     }
     .form-control:focus, .form-select:focus {
         border-color: #0073d1;
         box-shadow: 0 0 0 3px rgba(0,115,209,0.1);
+    }
+    /* All dropdowns - white background */
+    .emp-section-body select.form-select,
+    .emp-section-body select,
+    .emp-section-body .form-select {
+        background-color: #fff !important;
+    }
+    .emp-section-body select option {
+        background-color: #fff !important;
     }
     .btn-save-profile {
         background: linear-gradient(135deg, #0073d1, #005bb5);
@@ -122,10 +132,13 @@
         background: #e0efff;
     }
     
-    /* TomSelect overrides */
+    /* TomSelect overrides - white background for dropdown */
     .ts-wrapper { margin-bottom: 0 !important; }
-    .ts-control { border: 1.5px solid #e2e8f0 !important; border-radius: 8px !important; padding: 6px 10px !important; min-height: 42px !important; }
+    .ts-control { border: 1.5px solid #e2e8f0 !important; border-radius: 8px !important; padding: 6px 10px !important; min-height: 42px !important; background-color: #fff !important; }
     .ts-control:focus, .ts-wrapper.focus .ts-control { border-color: #0073d1 !important; box-shadow: 0 0 0 3px rgba(0,115,209,0.1) !important; }
+    .ts-dropdown { background-color: #fff !important; }
+    .ts-dropdown .option { background-color: #fff !important; }
+    .ts-dropdown .option:hover { background-color: #f0f7ff !important; }
     
     @media (max-width: 768px) {
         .emp-section-body { padding: 15px; }
@@ -366,60 +379,50 @@
         <div class="emp-section-body">
             <div class="row">
                 @php
-                    $countries = [];
-                    $states = [];
-                    $cities = [];
+                    $empCityName = old('city_search_display', $locationCityName ?? '');
+                    $empStateName = old('state_display', $locationStateName ?? '');
+                    $empCountryName = old('country_display', $locationCountryName ?? '');
                     if (is_plugin_active('location')) {
-                        $countries = \Botble\Location\Models\Country::query()
-                            ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
-                            ->orderBy('name')
-                            ->pluck('name', 'id')
-                            ->toArray();
-                        if($company && $company->country_id) {
-                            $states = \Botble\Location\Models\State::query()
-                                ->where('country_id', $company->country_id)
-                                ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
-                                ->orderBy('name')
-                                ->pluck('name', 'id')
-                                ->toArray();
+                        if (empty($empCityName) && $company && $company->city_id) {
+                            try { $empCityName = \Botble\Location\Models\City::find($company->city_id)->name ?? ''; } catch (\Throwable $e) {}
                         }
-                        if($company && $company->state_id) {
-                            $cities = \Botble\Location\Models\City::query()
-                                ->where('state_id', $company->state_id)
-                                ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
-                                ->orderBy('name')
-                                ->pluck('name', 'id')
-                                ->toArray();
+                        if (empty($empStateName) && $company && $company->state_id) {
+                            try { $empStateName = \Botble\Location\Models\State::find($company->state_id)->name ?? ''; } catch (\Throwable $e) {}
+                        }
+                        if (empty($empCountryName) && $company && $company->country_id) {
+                            try { $empCountryName = \Botble\Location\Models\Country::find($company->country_id)->name ?? ''; } catch (\Throwable $e) {}
                         }
                     }
                 @endphp
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Country') }} <span class="required">*</span></label>
-                    <select name="country_id" id="emp-country" class="form-select" required>
-                        <option value="">{{ __('Select Country') }}</option>
-                        @foreach($countries as $id => $name)
-                            <option value="{{ $id }}" @selected(old('country_id', $company->country_id ?? '') == $id)>{{ $name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('State') }}</label>
-                    <select name="state_id" id="emp-state" class="form-select">
-                        <option value="">{{ __('Select State') }}</option>
-                        @foreach($states as $id => $name)
-                            <option value="{{ $id }}" @selected(old('state_id', $company->state_id ?? '') == $id)>{{ $name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                @if(is_plugin_active('location'))
+                {{-- City first: type to search city, then State and Country auto-fill. Country not required. --}}
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('City') }}</label>
-                    <select name="city_id" id="emp-city" class="form-select">
-                        <option value="">{{ __('Select City') }}</option>
-                        @foreach($cities as $id => $name)
-                            <option value="{{ $id }}" @selected(old('city_id', $company->city_id ?? '') == $id)>{{ $name }}</option>
-                        @endforeach
-                    </select>
+                    <div style="position:relative;">
+                        <input type="text" id="emp-city-search" class="form-control" value="{{ $empCityName }}" placeholder="{{ __('Type city name to search...') }}" autocomplete="off">
+                        <div id="emp-city-suggestions" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:100; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+                    </div>
+                    <small class="text-muted">{{ __('Type city first; State and Country will auto-fill.') }}</small>
+                    <input type="hidden" name="city_id" id="emp-city-id" value="{{ old('city_id', $company->city_id ?? '') }}">
                 </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('State') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                    <input type="text" id="emp-state-display" class="form-control" readonly value="{{ $empStateName }}" style="background:#f8f9fa;" placeholder="{{ __('Select city first') }}">
+                    <input type="hidden" name="state_id" id="emp-state-id" value="{{ old('state_id', $company->state_id ?? '') }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('Country') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                    <input type="text" id="emp-country-display" class="form-control" readonly value="{{ $empCountryName }}" style="background:#f8f9fa;" placeholder="{{ __('Select city first') }}">
+                    <input type="hidden" name="country_id" id="emp-country-id" value="{{ old('country_id', $company->country_id ?? '') }}">
+                </div>
+                @else
+                <input type="hidden" name="country_id" value="">
+                <input type="hidden" name="state_id" value="">
+                <input type="hidden" name="city_id" value="">
+                <div class="col-12 mb-3">
+                    <p class="text-muted small">{{ __('Enable Location plugin for City / State / Country.') }}</p>
+                </div>
+                @endif
                 <div class="col-md-8 mb-3">
                     <label class="form-label">{{ __('Address') }} <span class="required">*</span></label>
                     <input type="text" name="address" class="form-control" value="{{ old('address', $company->address ?? '') }}" required placeholder="{{ __('Full address') }}">
@@ -635,56 +638,68 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Country -> State -> City cascade
-    const countrySelect = document.getElementById('emp-country');
-    const stateSelect = document.getElementById('emp-state');
-    const citySelect = document.getElementById('emp-city');
+    // City first: type to search city, then State and Country auto-fill
+    const empCitySearch = document.getElementById('emp-city-search');
+    const empCitySuggestions = document.getElementById('emp-city-suggestions');
+    const empCityId = document.getElementById('emp-city-id');
+    const empStateId = document.getElementById('emp-state-id');
+    const empCountryId = document.getElementById('emp-country-id');
+    const empStateDisplay = document.getElementById('emp-state-display');
+    const empCountryDisplay = document.getElementById('emp-country-display');
 
-    if (countrySelect) {
-        countrySelect.addEventListener('change', function() {
-            const countryId = this.value;
-            stateSelect.innerHTML = '<option value="">Loading...</option>';
-            citySelect.innerHTML = '<option value="">{{ __("Select City") }}</option>';
-            
-            if (countryId) {
-                fetch('{{ route("ajax.states-by-country") }}?country_id=' + countryId)
-                    .then(r => r.json())
-                    .then(data => {
-                        let html = '<option value="">{{ __("Select State") }}</option>';
-                        if (data.data) {
-                            data.data.forEach(s => {
-                                html += '<option value="' + s.id + '">' + s.name + '</option>';
-                            });
-                        }
-                        stateSelect.innerHTML = html;
+    if (empCitySearch && empCitySuggestions) {
+        let empSearchTimeout = null;
+        empCitySearch.addEventListener('input', function() {
+            const k = this.value.trim();
+            if (empSearchTimeout) clearTimeout(empSearchTimeout);
+            if (empCityId) empCityId.value = '';
+            if (empStateId) empStateId.value = '';
+            if (empCountryId) empCountryId.value = '';
+            if (empStateDisplay) empStateDisplay.value = '';
+            if (empCountryDisplay) empCountryDisplay.value = '';
+            empCitySuggestions.style.display = 'none';
+            empCitySuggestions.innerHTML = '';
+            if (k.length < 2) return;
+            empSearchTimeout = setTimeout(function() {
+                empCitySuggestions.innerHTML = '<div class="p-2 text-muted">Searching...</div>';
+                empCitySuggestions.style.display = 'block';
+                fetch('{{ route("ajax.search-cities") }}?k=' + encodeURIComponent(k))
+                    .then(function(r) {
+                        if (!r.ok) return { data: [] };
+                        return r.json().catch(function() { return { data: [] }; });
                     })
-                    .catch(() => {
-                        stateSelect.innerHTML = '<option value="">{{ __("Select State") }}</option>';
-                    });
-            }
+                    .then(function(res) {
+                        const cities = (res && res.data) ? res.data : [];
+                        if (cities.length === 0) {
+                            empCitySuggestions.innerHTML = '<div class="p-2 text-muted">No cities found. Add cities in Admin → Location → Cities.</div>';
+                            return;
+                        }
+                        let html = '';
+                        cities.forEach(function(c) {
+                            const parts = [];
+                            if (c.state_name) parts.push(c.state_name);
+                            if (c.country_name) parts.push(c.country_name);
+                            html += '<div class="p-2 border-bottom" style="cursor:pointer;" data-id="' + (c.id || '') + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '"><strong>' + (c.name || '') + '</strong>' + (parts.length ? ' <span class="text-muted">' + parts.join(', ') + '</span>' : '') + '</div>';
+                        });
+                        empCitySuggestions.innerHTML = html;
+                        empCitySuggestions.querySelectorAll('[data-id]').forEach(function(el) {
+                            el.addEventListener('click', function() {
+                                empCitySearch.value = this.getAttribute('data-name');
+                                if (empCityId) empCityId.value = this.getAttribute('data-id');
+                                if (empStateId) empStateId.value = this.getAttribute('data-state-id');
+                                if (empCountryId) empCountryId.value = this.getAttribute('data-country-id');
+                                if (empStateDisplay) empStateDisplay.value = this.getAttribute('data-state-name') || '';
+                                if (empCountryDisplay) empCountryDisplay.value = this.getAttribute('data-country-name') || '';
+                                empCitySuggestions.style.display = 'none';
+                            });
+                        });
+                    })
+                    .catch(function() { empCitySuggestions.innerHTML = '<div class="p-2 text-muted">Search unavailable. Please try again.</div>'; });
+            }, 300);
         });
-    }
-
-    if (stateSelect) {
-        stateSelect.addEventListener('change', function() {
-            const stateId = this.value;
-            citySelect.innerHTML = '<option value="">Loading...</option>';
-            
-            if (stateId) {
-                fetch('{{ route("ajax.cities-by-state") }}?state_id=' + stateId)
-                    .then(r => r.json())
-                    .then(data => {
-                        let html = '<option value="">{{ __("Select City") }}</option>';
-                        if (data.data) {
-                            data.data.forEach(c => {
-                                html += '<option value="' + c.id + '">' + c.name + '</option>';
-                            });
-                        }
-                        citySelect.innerHTML = html;
-                    })
-                    .catch(() => {
-                        citySelect.innerHTML = '<option value="">{{ __("Select City") }}</option>';
-                    });
+        document.addEventListener('click', function(e) {
+            if (!empCitySearch.contains(e.target) && !empCitySuggestions.contains(e.target)) {
+                empCitySuggestions.style.display = 'none';
             }
         });
     }

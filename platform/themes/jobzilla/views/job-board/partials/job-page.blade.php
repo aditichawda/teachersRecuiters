@@ -29,7 +29,7 @@
     right: -120px;
     width: 400px;
     height: 400px;
-    background: radial-gradient(circle, rgba(14,165,233,.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0,115,209,.12) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
@@ -40,7 +40,7 @@
     left: -80px;
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, rgba(3,105,161,.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0,115,209,.08) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
@@ -48,9 +48,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(3,105,161,.1);
-    border: 1px solid rgba(3,105,161,.15);
-    color: #0369a1;
+    background: rgba(0,115,209,.1);
+    border: 1px solid rgba(0,115,209,.15);
+    color: #0073d1;
     padding: 6px 16px;
     border-radius: 50px;
     font-size: 13px;
@@ -81,7 +81,7 @@
     display: block;
     font-size: 24px;
     font-weight: 800;
-    color: #0369a1;
+    color: #0073d1;
 }
 .jobs-hero-stat .stat-label {
     font-size: 12px;
@@ -133,8 +133,8 @@
     transition: all .2s;
 }
 .jobs-sidebar-modern .input-group:focus-within {
-    border-color: #0ea5e9;
-    box-shadow: 0 0 0 3px rgba(14,165,233,.1);
+    border-color: #0073d1;
+    box-shadow: 0 0 0 3px rgba(0,115,209,.1);
 }
 .jobs-sidebar-modern .input-group .form-control {
     border: none;
@@ -166,8 +166,8 @@
     height: 18px;
 }
 .jobs-sidebar-modern .form-check-input:checked {
-    background-color: #0ea5e9;
-    border-color: #0ea5e9;
+    background-color: #0073d1;
+    border-color: #0073d1;
 }
 .jobs-sidebar-modern .form-check-label {
     font-size: 14px;
@@ -213,12 +213,12 @@
     -webkit-appearance: auto;
 }
 .jobs-toolbar select:focus {
-    border-color: #0ea5e9;
+    border-color: #0073d1;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(14,165,233,.1);
+    box-shadow: 0 0 0 3px rgba(0,115,209,.1);
 }
 .btn-open-filter {
-    background: #0ea5e9;
+    background: #0073d1;
     color: #fff;
     border-radius: 8px;
     padding: 8px 14px;
@@ -258,15 +258,15 @@
     transition: all .25s;
 }
 .jobs-main-section .pagination-style1 .pagination li.active a {
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: linear-gradient(135deg, #0073d1, #0073d1);
     color: #fff;
     border-color: transparent;
-    box-shadow: 0 4px 12px rgba(14,165,233,.3);
+    box-shadow: 0 4px 12px rgba(0,115,209,.3);
 }
 .jobs-main-section .pagination-style1 .pagination li:not(.disabled):not(.active) a:hover {
     background: #f0f9ff;
     border-color: #bae6fd;
-    color: #0369a1;
+    color: #0073d1;
 }
 
 /* ===== Loading Spinner ===== */
@@ -285,7 +285,7 @@
     width: 36px;
     height: 36px;
     border: 3px solid #e2e8f0;
-    border-top-color: #0ea5e9;
+    border-top-color: #0073d1;
     border-radius: 50%;
     animation: spin .6s linear infinite;
 }

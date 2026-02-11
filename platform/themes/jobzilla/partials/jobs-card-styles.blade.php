@@ -27,11 +27,11 @@
 }
 .job-card-modern:hover {
     border-color: #bae6fd;
-    box-shadow: 0 8px 25px rgba(14,165,233,.08);
+    box-shadow: 0 8px 25px rgba(0,115,209,.08);
     transform: translateY(-2px);
 }
 .job-card-modern:hover::before {
-    background: linear-gradient(180deg, #0ea5e9, #0369a1);
+    background: #0073d1;
 }
 .job-card-modern .jcm-logo {
     width: 56px;
@@ -67,7 +67,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.job-card-modern .jcm-title:hover { color: #0369a1; }
+.job-card-modern .jcm-title:hover { color: #0073d1; }
 .job-card-modern .jcm-meta {
     display: flex;
     align-items: center;
@@ -85,11 +85,11 @@
 .job-card-modern .jcm-meta span i { font-size: 13px; color: #94a3b8; }
 .job-card-modern .jcm-meta a {
     font-size: 13px;
-    color: #0ea5e9;
+    color: #0073d1;
     text-decoration: none;
     font-weight: 500;
 }
-.job-card-modern .jcm-meta a:hover { color: #0369a1; }
+.job-card-modern .jcm-meta a:hover { color: #005ba1; }
 .job-card-modern .jcm-tags {
     display: flex;
     gap: 6px;
@@ -115,7 +115,7 @@
 .job-card-modern .jcm-salary {
     font-size: 15px;
     font-weight: 700;
-    color: #0369a1;
+    color: #0073d1;
 }
 .job-card-modern .jcm-time {
     font-size: 12px;
@@ -126,7 +126,7 @@
     align-items: center;
     gap: 5px;
     padding: 7px 18px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: #0073d1;
     color: #fff;
     border-radius: 8px;
     font-size: 13px;
@@ -136,7 +136,8 @@
 }
 .job-card-modern .jcm-apply:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(14,165,233,.3);
+    box-shadow: 0 4px 12px rgba(0,115,209,.3);
+    background: #005ba1;
     color: #fff;
 }
 
@@ -155,7 +156,7 @@
 }
 .job-grid-modern:hover {
     border-color: #bae6fd;
-    box-shadow: 0 12px 30px rgba(14,165,233,.1);
+    box-shadow: 0 12px 30px rgba(0,115,209,.1);
     transform: translateY(-4px);
 }
 .job-grid-modern .jgm-top {
@@ -213,7 +214,7 @@
     text-decoration: none;
     transition: color .2s;
 }
-.job-grid-modern .jgm-title:hover { color: #0369a1; }
+.job-grid-modern .jgm-title:hover { color: #0073d1; }
 .job-grid-modern .jgm-location {
     font-size: 13px;
     color: #64748b;
@@ -225,13 +226,13 @@
 .job-grid-modern .jgm-location i { color: #94a3b8; font-size: 13px; }
 .job-grid-modern .jgm-company {
     font-size: 13px;
-    color: #0ea5e9;
+    color: #0073d1;
     text-decoration: none;
     font-weight: 500;
     margin-bottom: 16px;
     display: inline-block;
 }
-.job-grid-modern .jgm-company:hover { color: #0369a1; }
+.job-grid-modern .jgm-company:hover { color: #005ba1; }
 .job-grid-modern .jgm-bottom {
     margin-top: auto;
     display: flex;
@@ -243,14 +244,14 @@
 .job-grid-modern .jgm-salary {
     font-size: 15px;
     font-weight: 700;
-    color: #0369a1;
+    color: #0073d1;
 }
 .job-grid-modern .jgm-view {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     padding: 6px 16px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: #0073d1;
     color: #fff;
     border-radius: 8px;
     font-size: 12px;
@@ -260,7 +261,8 @@
 }
 .job-grid-modern .jgm-view:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(14,165,233,.3);
+    box-shadow: 0 4px 12px rgba(0,115,209,.3);
+    background: #005ba1;
     color: #fff;
 }
 
@@ -272,7 +274,7 @@
         display: block;
         font-size: 14px;
         font-weight: 700;
-        color: #0369a1;
+        color: #0073d1;
         margin-top: 4px;
     }
 }
