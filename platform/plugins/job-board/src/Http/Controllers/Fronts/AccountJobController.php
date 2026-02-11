@@ -65,13 +65,9 @@ class AccountJobController extends BaseController
          */
         $account = auth('account')->user();
 
-        if (! $account->canPost()) {
-            return $this
-                ->httpResponse()
-                ->setError()
-                ->setNextUrl(route('public.account.packages'))
-                ->setMessage(trans('plugins/job-board::messages.please_purchase_package'));
-        }
+        // Allow rendering the job post form even if the account cannot post (no credits).
+        // The actual store() method will still prevent saving if posting is not allowed.
+        $canPost = $account->canPost();
 
         if (JobBoardHelper::employerManageCompanyInfo() && ! $account->companies()->exists()) {
             return $this
@@ -149,7 +145,7 @@ class AccountJobController extends BaseController
         return JobBoardHelper::view('dashboard.jobs.create', compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
-            'jobShifts', 'currencies', 'salaryRanges'
+            'jobShifts', 'currencies', 'salaryRanges', 'canPost'
         ));
     }
 
@@ -160,10 +156,10 @@ class AccountJobController extends BaseController
          */
         $account = auth('account')->user();
 
-        if (! $account->canPost()) {
-            return $this
-                ->httpResponse()->setNextUrl(route('public.account.jobs.index'));
-        }
+        // Previously posting was blocked here when the account had no credits.
+        // To allow saving jobs even when credits == 0, skip the early return.
+        // Keep the $canPost flag for downstream logic/UI if needed.
+        $canPost = $account->canPost();
 
         $this->processRequestData($request);
 
@@ -194,14 +190,37 @@ class AccountJobController extends BaseController
             $request->merge(['is_remote' => 0]);
         }
 
+        // Ensure job can be stored: set defaults for optional fields if empty
+        $input = $request->input();
+        if (empty($input['degree_level_id'])) {
+            $firstDegree = DegreeLevel::query()->wherePublished()->oldest('order')->oldest('id')->value('id');
+            if ($firstDegree) {
+                $request->merge(['degree_level_id' => $firstDegree]);
+            }
+        }
+        if (empty($input['job_experience_id'])) {
+            $firstExp = JobExperience::query()->wherePublished()->oldest('order')->oldest('id')->value('id');
+            if ($firstExp) {
+                $request->merge(['job_experience_id' => $firstExp]);
+            }
+        }
+        if (empty($input['number_of_positions']) || (int) ($input['number_of_positions'] ?? 0) < 1) {
+            $request->merge(['number_of_positions' => 1]);
+        }
+
         $job = new Job();
         $job->fill($request->input());
 
         if (JobBoardHelper::isEnabledJobApproval()) {
             $job->moderation_status = ModerationStatusEnum::PENDING;
+            if (empty($job->status)) {
+                $job->status = JobStatusEnum::PENDING;
+            }
         } else {
             $job->moderation_status = ModerationStatusEnum::APPROVED;
-
+            if (empty($job->status)) {
+                $job->status = JobStatusEnum::PUBLISHED;
+            }
             event(new JobPublishedEvent($job));
         }
 

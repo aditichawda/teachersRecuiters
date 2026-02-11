@@ -364,12 +364,8 @@ class RegisterController extends BaseController
             ];
         }
 
-        // Generate OTP code - For testing use fixed code, for production use random
-        // Fixed code for testing:
+        // Generate OTP code - fixed code for testing (use 123456 to verify)
         $code = '123456';
-        
-        // Random code for production (uncomment when ready):
-        // $code = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
         $expiresAt = now()->addMinutes(10);
 
@@ -1597,9 +1593,8 @@ class RegisterController extends BaseController
                 ->setNextUrl(route('public.account.login'));
         }
 
-        // Generate OTP
-        $code = '123456'; // For testing, use fixed code
-        // $code = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT); // For production
+        // Generate OTP - fixed code for testing (use 123456 to verify)
+        $code = '123456';
         $expiresAt = now()->addMinutes(10);
 
         // Map phone_display to phone

@@ -121,6 +121,8 @@
     text-decoration: none;
     transition: all 0.2s;
     margin-bottom: 20px;
+    border: none;
+    cursor: pointer;
 }
 
 .js-view-profile-btn:hover {
@@ -400,11 +402,9 @@
                                 ->where('reference_id', $account->id)
                                 ->value('key');
                         @endphp
-                        @if($candidateSlug)
-                            <a href="{{ url('candidates/' . $candidateSlug) }}" target="_blank" class="js-view-profile-btn">
-                                <i class="fa fa-eye"></i> {{ __('View Profile') }}
-                            </a>
-                        @endif
+                        <button type="button" class="js-view-profile-btn" onclick="document.getElementById('profileModal').style.display='flex'">
+                            <i class="fa fa-eye"></i> {{ __('View Profile') }}
+                        </button>
                     </div>
                     
                     <!-- Wallet -->
@@ -414,37 +414,6 @@
                         <span class="js-wallet-points">{{ $walletPoints }}</span>
                     </div>
 
-                    <!-- Profile Completion -->
-                    <div class="js-profile-completion">
-                        <h6>Profile Completion</h6>
-                        <div class="js-completion-bar">
-                            <div class="js-completion-fill" style="width: {{ $completion }}%"></div>
-                        </div>
-                        <span class="js-completion-text">{{ $completion }}% Complete</span>
-
-                        <!-- Per-field progress -->
-                        <div class="js-field-progress">
-                            @foreach($profileFields as $pf)
-                                <div class="js-field-item">
-                                    <span class="field-name">
-                                        <i class="fa {{ $pf['filled'] ? 'fa-check-circle completed' : 'fa-times-circle pending' }}"></i>
-                                        {{ $pf['label'] }}
-                                    </span>
-                                    <span class="field-points {{ $pf['filled'] ? 'earned' : 'available' }}">
-                                        {{ $pf['filled'] ? '+' . $pf['points'] . ' pts' : $pf['points'] . ' pts' }}
-                                    </span>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    @if($completion < 100)
-                        <div class="js-reward-message">
-                            <i class="fa fa-gift"></i>
-                            <span>Complete your profile and earn <strong>{{ $totalPoints - $earnedPoints }}</strong> more points!</span>
-                        </div>
-                    @endif
-                    
                     <!-- Navigation -->
                     @php
                         $currentUrl = url()->current();
@@ -515,6 +484,140 @@
         </div>
     </div>
 </div>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="pm-overlay" style="display:none;">
+    <div class="pm-modal">
+        <button type="button" class="pm-close" onclick="document.getElementById('profileModal').style.display='none'">&times;</button>
+        
+        <!-- Reward Points Badge -->
+        <div class="pm-reward-badge">
+            <i class="fa fa-wallet"></i>
+            <span>Reward Points:</span>
+            <span class="pm-reward-points">{{ $walletPoints }}</span>
+        </div>
+
+        <!-- Profile Completion -->
+        <div class="pm-completion-section">
+            <h6 class="pm-completion-title">Profile Completion</h6>
+            <div class="pm-progress-bar">
+                <div class="pm-progress-fill" style="width: {{ $completion }}%"></div>
+            </div>
+            <span class="pm-completion-text">{{ $completion }}% Complete</span>
+        </div>
+
+        <!-- Per-field Progress -->
+        <div class="pm-field-list">
+            @foreach($profileFields as $pf)
+                <div class="pm-field-item">
+                    <span class="pm-field-name">
+                        <i class="fa {{ $pf['filled'] ? 'fa-check-circle' : 'fa-times-circle' }}" style="color: {{ $pf['filled'] ? '#28a745' : '#dc3545' }}; margin-right: 8px;"></i>
+                        {{ $pf['label'] }}
+                    </span>
+                    <span class="pm-field-points {{ $pf['filled'] ? 'pm-earned' : 'pm-pending' }}">
+                        +{{ $pf['points'] }} pts
+                    </span>
+                </div>
+            @endforeach
+        </div>
+
+        @if($completion < 100)
+            <a href="{{ route('public.account.settings') }}" class="pm-complete-btn">
+                <i class="fa fa-user-edit"></i> Complete Your Profile
+            </a>
+        @else
+            <div class="pm-congrats">
+                <i class="fa fa-trophy" style="color: #f59e0b; font-size: 20px;"></i>
+                <span>Congratulations! Your profile is 100% complete.</span>
+            </div>
+        @endif
+    </div>
+</div>
+
+<style>
+.pm-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: pmFadeIn 0.25s ease;
+}
+@keyframes pmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pmSlideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.pm-modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 25px 20px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: pmSlideUp 0.3s ease;
+}
+.pm-modal::-webkit-scrollbar { width: 4px; }
+.pm-modal::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+.pm-close {
+    position: absolute; top: 10px; right: 14px;
+    background: none; border: none; font-size: 28px; color: #999; cursor: pointer; line-height: 1; z-index: 10; transition: color 0.2s;
+}
+.pm-close:hover { color: #333; }
+.pm-reward-badge {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #fff; border-radius: 30px; width: 90%;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 14spx; font-weight: 500; margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+.pm-reward-badge i { font-size: 18px; }
+.pm-reward-points { font-size: 18px; font-weight: 600; }
+.pm-completion-section { margin-bottom: 18px; }
+.pm-completion-title { font-size: 15px; font-weight: 700; color: #333; margin-bottom: 8px; }
+.pm-progress-bar { height: 10px; background: #e9ecef; border-radius: 10px; overflow: hidden; margin-bottom: 6px; }
+.pm-progress-fill { height: 100%; background: linear-gradient(90deg, #0073d1, #00b4d8); border-radius: 10px; transition: width 0.6s ease; }
+.pm-completion-text { font-size: 13px; font-weight: 600; color: #0073d1; text-decoration: underline; }
+.pm-field-list { margin-top: 15px; }
+.pm-field-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; background: #f8f9fa; transition: background 0.2s;
+}
+.pm-field-item:hover { background: #f0f4f8; }
+.pm-field-name { display: flex; align-items: center; font-size: 14px; font-weight: 500; color: #333; }
+.pm-field-points { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; white-space: nowrap; }
+.pm-field-points.pm-earned { background: #d4edda; color: #28a745; }
+.pm-field-points.pm-pending { background: #fff3cd; color: #856404; }
+.pm-complete-btn {
+    display: block; text-align: center; margin-top: 18px; padding: 12px;
+    background: linear-gradient(135deg, #0073d1, #00b4d8); color: #fff !important;
+    border-radius: 10px; font-weight: 600; font-size: 14px; text-decoration: none !important;
+    transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(0, 115, 209, 0.3);
+}
+.pm-complete-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 115, 209, 0.4); color: #fff !important; }
+.pm-complete-btn i { margin-right: 6px; }
+.pm-congrats {
+    display: flex; align-items: center; gap: 10px; padding: 14px;
+    background: #fff8e1; border-radius: 10px; margin-top: 18px; font-size: 13px; font-weight: 600; color: #333;
+}
+@media (max-width: 480px) {
+    .pm-modal { padding: 20px 15px; max-height: 90vh; border-radius: 12px; }
+    .pm-reward-badge { font-size: 14px; padding: 10px 18px; }
+    .pm-reward-points { font-size: 20px; }
+}
+</style>
+
+<script>
+document.getElementById('profileModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.getElementById('profileModal').style.display = 'none';
+});
+</script>
 
 @push('footer')
     <script>

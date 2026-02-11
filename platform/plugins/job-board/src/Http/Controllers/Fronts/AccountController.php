@@ -216,6 +216,54 @@ class AccountController extends BaseController
             Arr::forget($data, 'favorite_tags');
         }
 
+        // When native same as current, clear native location fields
+        if (!empty($data['native_same_as_current'])) {
+            $data['native_country_id'] = null;
+            $data['native_state_id'] = null;
+            $data['native_city_id'] = null;
+            $data['native_country_name'] = null;
+            $data['native_state_name'] = null;
+            $data['native_city_name'] = null;
+            $data['native_address'] = null;
+            $data['native_locality'] = null;
+            $data['native_pin_code'] = null;
+        }
+
+        // When using text location (country_name etc.), clear ID fields so name fields are used
+        if (!empty($data['country_name']) || !empty($data['state_name']) || !empty($data['city_name'])) {
+            $data['country_id'] = null;
+            $data['state_id'] = null;
+            $data['city_id'] = null;
+        }
+        if (!empty($data['native_country_name']) || !empty($data['native_state_name']) || !empty($data['native_city_name'])) {
+            $data['native_country_id'] = null;
+            $data['native_state_id'] = null;
+            $data['native_city_id'] = null;
+        }
+
+        // Normalize work_location_preferences: keep only non-empty entries with priority
+        if (isset($data['work_location_preferences']) && is_array($data['work_location_preferences'])) {
+            $data['work_location_preferences'] = array_values(array_filter(array_map(function ($item, $index) {
+                $hasId = !empty($item['country_id']) || !empty($item['state_id']) || !empty($item['city_id']);
+                $hasName = !empty($item['country_name'] ?? '') || !empty($item['state_name'] ?? '') || !empty($item['city_name'] ?? '');
+                $hasLocality = !empty($item['locality'] ?? '');
+                if (!$hasId && !$hasName && !$hasLocality) {
+                    return null;
+                }
+                $entry = [
+                    'country_id' => $item['country_id'] ?? null,
+                    'state_id' => $item['state_id'] ?? null,
+                    'city_id' => $item['city_id'] ?? null,
+                    'country_name' => $item['country_name'] ?? null,
+                    'state_name' => $item['state_name'] ?? null,
+                    'city_name' => $item['city_name'] ?? null,
+                    'locality' => $item['locality'] ?? null,
+                    'priority' => $index + 1,
+                ];
+                return $entry;
+            }, $data['work_location_preferences'], array_keys($data['work_location_preferences']))));
+        }
+
         AccountSettingForm::createFromModel($account)
             ->saving(function (AccountSettingForm $form) use ($data): void {
                 $model = $form->getModel();

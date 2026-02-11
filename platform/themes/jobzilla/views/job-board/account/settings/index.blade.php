@@ -103,6 +103,7 @@
         font-size: 11px;
         font-weight: 600;
     }
+    .city-suggestion-item:hover { background: #f0f7ff; }
     .password-toggle-section {
         background: #f8fafc;
         padding: 15px;
@@ -376,71 +377,6 @@
         font-weight: 500;
     }
 
-    /* Voice Recorder Styles */
-    .voice-recorder-wrapper {
-        border: 1.5px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 15px;
-        background: #f8fafc;
-        margin-top: 8px;
-    }
-    .voice-recorder-controls {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    .btn-record {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #dc3545;
-        color: #fff;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .btn-record:hover { background: #c82333; }
-    .btn-record.recording {
-        animation: pulse-recording 1.5s infinite;
-    }
-    .btn-record-stop {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #333;
-        color: #fff;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-    }
-    .recording-timer {
-        font-size: 14px;
-        font-weight: 600;
-        color: #dc3545;
-        font-family: monospace;
-    }
-    .recorded-audio-preview {
-        margin-top: 10px;
-        display: none;
-    }
-    .recorded-audio-preview audio {
-        width: 100%;
-        max-width: 400px;
-    }
-    .recorded-audio-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 8px;
-    }
-
     /* Autocomplete Styles for Specialization */
     .specialization-autocomplete-wrapper {
         position: relative;
@@ -480,36 +416,11 @@
 </style>
 
     <!-- Page Header -->
-    <div class="js-page-header">
+    <!-- <div class="js-page-header">
         <h2>{{ __('My Profile') }}</h2>
         <a href="{{ url('/') }}">GO TO HOMEPAGE →</a>
-    </div>
+    </div> -->
 
-    <!-- Profile Photo Section -->
-    <div class="profile-photo-section">
-        <div class="profile-photo-wrapper">
-            <div class="profile-photo-img avatar-view">
-                <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}" id="profile-photo-display">
-                <div class="profile-photo-badge" title="{{ __('Change Photo') }}">
-                    <i class="fa fa-camera"></i>
-                </div>
-            </div>
-            <div class="profile-photo-info">
-                <h5>{{ __('Profile Photo') }}</h5>
-                <p>{{ __('JPG, PNG or GIF. Max size 2MB. A clear face photo helps schools recognize you.') }}</p>
-                <div class="profile-photo-actions">
-                    <button type="button" class="btn-change-photo" data-bs-toggle="modal" data-bs-target="#avatar-modal">
-                        <i class="fa fa-upload me-1"></i> {{ __('Change Photo') }}
-                    </button>
-                    @if($account->avatar_id)
-                        <button type="button" class="btn-remove-photo" id="remove-avatar-btn">
-                            <i class="fa fa-trash me-1"></i> {{ __('Remove') }}
-                        </button>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
 
     {!! Form::open(['route' => 'public.account.post.settings', 'method' => 'POST', 'files' => true, 'id' => 'profile-form']) !!}
 
@@ -704,7 +615,10 @@
                     <div class="col-md-6 mb-3">
                         <label class="form-label">{{ __('Looking job for which type of Educational Institutions') }} <span class="required">*</span></label>
                         <select id="ts-institution-types" name="institution_types[]" multiple placeholder="{{ __('Search & select up to 3...') }}">
-                            @php $instTypes = old('institution_types', $account->institution_types ?? []); @endphp
+                            @php
+                                $instTypes = old('institution_types', $account->institution_types ?? []);
+                                $instTypes = is_array($instTypes) ? $instTypes : (is_string($instTypes) ? (json_decode($instTypes, true) ?? (array)$instTypes) : (array)$instTypes);
+                            @endphp
                             <optgroup label="School">
                                 @foreach(['cbse_school' => 'CBSE School', 'icse_school' => 'ICSE School', 'cambridge_school' => 'Cambridge School', 'ib_school' => 'IB School', 'state_board_school' => 'State Board School', 'play_school' => 'Play School'] as $val => $lbl)
                                     <option value="{{ $val }}" @selected(in_array($val, $instTypes))>{{ $lbl }}</option>
@@ -874,59 +788,277 @@
    
 
     <!-- Section 5: Location -->
+    @php
+        $countries = [];
+        $currentStates = [];
+        $currentCities = [];
+        $nativeStates = [];
+        $nativeCities = [];
+        if (is_plugin_active('location')) {
+            $countries = \Botble\Location\Models\Country::query()
+                ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                ->orderBy('name')
+                ->pluck('name', 'id')
+                ->toArray();
+            $cid = old('country_id', $account->country_id);
+            if ($cid) {
+                $currentStates = \Botble\Location\Models\State::query()
+                    ->where('country_id', $cid)
+                    ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                    ->orderBy('name')
+                    ->pluck('name', 'id')
+                    ->toArray();
+            }
+            $sid = old('state_id', $account->state_id);
+            if ($sid) {
+                $currentCities = \Botble\Location\Models\City::query()
+                    ->where('state_id', $sid)
+                    ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                    ->orderBy('name')
+                    ->pluck('name', 'id')
+                    ->toArray();
+            }
+            $nCid = old('native_country_id', $account->native_country_id);
+            if ($nCid) {
+                $nativeStates = \Botble\Location\Models\State::query()
+                    ->where('country_id', $nCid)
+                    ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                    ->orderBy('name')
+                    ->pluck('name', 'id')
+                    ->toArray();
+            }
+            $nSid = old('native_state_id', $account->native_state_id);
+            if ($nSid) {
+                $nativeCities = \Botble\Location\Models\City::query()
+                    ->where('state_id', $nSid)
+                    ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                    ->orderBy('name')
+                    ->pluck('name', 'id')
+                    ->toArray();
+            }
+        }
+        $workLocationPreferenceType = old('work_location_preference_type', $account->work_location_preference_type ?? '');
+        $workLocations = old('work_location_preferences', $account->work_location_preferences ?? []);
+        if (!is_array($workLocations)) $workLocations = [];
+        $workLocations = array_slice(array_values($workLocations), 0, 3);
+        $useLocationDropdowns = is_plugin_active('location');
+        $currentCountryName = old('country_name', $account->country_name ?? '');
+        $currentStateName = old('state_name', $account->state_name ?? '');
+        $currentCityName = old('city_name', $account->city_name ?? '');
+        if (!$currentCountryName && is_plugin_active('location') && $account->country_id) {
+            try { $currentCountryName = \Botble\Location\Models\Country::find($account->country_id)->name ?? ''; } catch (\Throwable $e) {}
+        }
+        if (is_plugin_active('location')) {
+            if (!$currentCountryName && $account->country_id) { try { $currentCountryName = \Botble\Location\Models\Country::find($account->country_id)->name ?? ''; } catch (\Throwable $e) {} }
+            if (!$currentStateName && $account->state_id) { try { $currentStateName = \Botble\Location\Models\State::find($account->state_id)->name ?? ''; } catch (\Throwable $e) {} }
+            if (!$currentCityName && $account->city_id) { try { $currentCityName = \Botble\Location\Models\City::find($account->city_id)->name ?? ''; } catch (\Throwable $e) {} }
+        }
+        $nativeCountryName = old('native_country_name', $account->native_country_name ?? '');
+        $nativeStateName = old('native_state_name', $account->native_state_name ?? '');
+        $nativeCityName = old('native_city_name', $account->native_city_name ?? '');
+        if (!$nativeCountryName && is_plugin_active('location') && $account->native_country_id) {
+            try { $nativeCountryName = \Botble\Location\Models\Country::find($account->native_country_id)->name ?? ''; } catch (\Throwable $e) {}
+        }
+        if (!$nativeStateName && is_plugin_active('location') && $account->native_state_id) {
+            try { $nativeStateName = \Botble\Location\Models\State::find($account->native_state_id)->name ?? ''; } catch (\Throwable $e) {}
+        }
+        if (!$nativeCityName && is_plugin_active('location') && $account->native_city_id) {
+            try { $nativeCityName = \Botble\Location\Models\City::find($account->native_city_id)->name ?? ''; } catch (\Throwable $e) {}
+        }
+    @endphp
     <div class="profile-section">
         <div class="profile-section-header">
             <i class="fa fa-map-marker-alt"></i> {{ __('Location') }}
         </div>
         <div class="profile-section-body">
-            <div class="row">
-                <!-- 18. Current Location -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Location Type') }}</label>
-                    <select class="form-select" name="location_type">
-                        <option value="current" @selected(old('location_type', $account->location_type ?? '') == 'current')>{{ __('Current Location') }}</option>
-                        <option value="native" @selected(old('location_type', $account->location_type ?? '') == 'native')>{{ __('Native Location') }}</option>
-                    </select>
+            {{-- Current Location (pre-filled from registration) --}}
+            <h6 class="mb-3 text-dark">{{ __('Current Location') }}</h6>
+            <p class="form-text mb-3">{{ __('Used for resume. Pre-filled from registration.') }}</p>
+            <div class="row mb-4">
+                @if($useLocationDropdowns)
+                {{-- City first: type to search city then State & Country auto-fill (no required) --}}
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('City') }}</label>
+                    <div class="city-search-wrapper" style="position:relative;">
+                        <input type="text" id="js-current-city-search" class="form-control" value="{{ $currentCityName }}" placeholder="{{ __('Type city name to search...') }}" autocomplete="off">
+                        <div id="js-current-city-suggestions" class="city-suggestions-dropdown" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:100; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+                    </div>
+                    <small class="text-muted">{{ __('Type and select city; State and Country will auto-fill.') }}</small>
+                    <input type="hidden" name="city_id" id="js-current-city-id" value="{{ old('city_id', $account->city_id) }}">
                 </div>
-
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('State') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                    <input type="text" id="js-current-state-display" class="form-control" readonly placeholder="{{ __('Select city first') }}" value="{{ $currentStateName }}" style="background:#f8f9fa;">
+                    <input type="hidden" name="state_id" id="js-current-state-id" value="{{ old('state_id', $account->state_id) }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('Country') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                    <input type="text" id="js-current-country-display" class="form-control" readonly placeholder="{{ __('Select city first') }}" value="{{ $currentCountryName }}" style="background:#f8f9fa;">
+                    <input type="hidden" name="country_id" id="js-current-country-id" value="{{ old('country_id', $account->country_id) }}">
+                </div>
+                @else
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('Country') }}</label>
+                    <input type="text" class="form-control" name="country_name" value="{{ $currentCountryName }}" placeholder="{{ __('Country') }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('State') }}</label>
+                    <input type="text" class="form-control" name="state_name" value="{{ $currentStateName }}" placeholder="{{ __('State') }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('City') }}</label>
+                    <input type="text" class="form-control" name="city_name" value="{{ $currentCityName }}" placeholder="{{ __('City') }}">
+                </div>
+                @endif
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ __('Locality') }}</label>
+                    <input type="text" class="form-control" name="locality" value="{{ old('locality', $account->locality ?? '') }}" placeholder="{{ __('Locality / Area') }}">
+                </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Address') }}</label>
                     <input type="text" class="form-control" name="address" value="{{ old('address', $account->address) }}" placeholder="{{ __('Enter your address') }}">
                 </div>
-
-                <!-- 19. Ready for Relocation -->
                 <div class="col-md-6 mb-3">
-                    <div class="form-check mt-3">
-                        <input type="hidden" name="ready_for_relocation" value="0">
-                        <input type="checkbox" class="form-check-input" name="ready_for_relocation" value="1" id="ready_for_relocation" @checked(old('ready_for_relocation', $account->ready_for_relocation ?? false))>
-                        <label class="form-check-label" for="ready_for_relocation">{{ __('Are you ready for relocation?') }}</label>
+                    <label class="form-label">{{ __('Pin Code') }}</label>
+                    <input type="text" class="form-control" name="pin_code" value="{{ old('pin_code', $account->pin_code ?? '') }}" placeholder="{{ __('e.g. 110001') }}" maxlength="20">
+                </div>
+            </div>
+
+            {{-- Native Location --}}
+            <h6 class="mb-3 text-dark">{{ __('Native Location') }}</h6>
+            <div class="row mb-3">
+                <div class="col-12 mb-3">
+                    <div class="form-check">
+                        <input type="hidden" name="native_same_as_current" value="0">
+                        <input type="checkbox" class="form-check-input" name="native_same_as_current" value="1" id="native_same_as_current" @checked(old('native_same_as_current', $account->native_same_as_current ?? false))>
+                        <label class="form-check-label" for="native_same_as_current">{{ __('My Native Location is same as Current Location') }}</label>
                     </div>
                 </div>
+            </div>
+            <div id="native_location_fields" class="row mb-4" style="{{ old('native_same_as_current', $account->native_same_as_current ?? false) ? 'display:none;' : '' }}">
+                @if($useLocationDropdowns)
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('City') }}</label>
+                    <div class="city-search-wrapper" style="position:relative;">
+                        <input type="text" id="js-native-city-search" class="form-control" value="{{ $nativeCityName }}" placeholder="{{ __('Type city name...') }}" autocomplete="off">
+                        <div id="js-native-city-suggestions" class="city-suggestions-dropdown" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:100; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+                    </div>
+                    <input type="hidden" name="native_city_id" id="js-native-city-id" value="{{ old('native_city_id', $account->native_city_id) }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('State') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                    <input type="text" id="js-native-state-display" class="form-control" readonly value="{{ $nativeStateName }}" style="background:#f8f9fa;">
+                    <input type="hidden" name="native_state_id" id="js-native-state-id" value="{{ old('native_state_id', $account->native_state_id) }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('Country') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                    <input type="text" id="js-native-country-display" class="form-control" readonly value="{{ $nativeCountryName }}" style="background:#f8f9fa;">
+                    <input type="hidden" name="native_country_id" id="js-native-country-id" value="{{ old('native_country_id', $account->native_country_id) }}">
+                </div>
+                @else
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('Country') }}</label>
+                    <input type="text" class="form-control" name="native_country_name" value="{{ $nativeCountryName }}" placeholder="{{ __('Country') }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('State') }}</label>
+                    <input type="text" class="form-control" name="native_state_name" value="{{ $nativeStateName }}" placeholder="{{ __('State') }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('City') }}</label>
+                    <input type="text" class="form-control" name="native_city_name" value="{{ $nativeCityName }}" placeholder="{{ __('City') }}">
+                </div>
+                @endif
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('Locality') }}</label>
+                    <input type="text" class="form-control" name="native_locality" value="{{ old('native_locality', $account->native_locality ?? '') }}" placeholder="{{ __('Locality / Area') }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('Address') }}</label>
+                    <input type="text" class="form-control" name="native_address" value="{{ old('native_address', $account->native_address ?? '') }}" placeholder="{{ __('Address') }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('Pin Code') }}</label>
+                    <input type="text" class="form-control" name="native_pin_code" value="{{ old('native_pin_code', $account->native_pin_code ?? '') }}" placeholder="{{ __('e.g. 110001') }}" maxlength="20">
+                </div>
+            </div>
 
-                <!-- 20. Work Location Preferences (shown when ready for relocation) -->
-                <div class="col-12 mb-3" id="work_location_preferences_wrapper" style="display: none;">
-                    <label class="form-label">{{ __('Work Location Preferences') }} ({{ __('Max 3, set priority') }})</label>
-                    <div id="work-locations-container">
-                        @php $workLocations = old('work_location_preferences', $account->work_location_preferences ?? [['state' => '', 'city' => '']]); @endphp
-                        @foreach(array_slice($workLocations, 0, 3) as $index => $loc)
-                        <div class="removable-item work-location-item">
-                            @if($index > 0)<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>@endif
-                            <div class="row">
-                                <div class="col-md-1 d-flex align-items-center">
-                                    <span class="priority-badge">{{ $index + 1 }}</span>
-                                </div>
-                                <div class="col-md-5 mb-2">
-                                    <input type="text" class="form-control" name="work_location_preferences[{{ $index }}][state]" value="{{ $loc['state'] ?? '' }}" placeholder="{{ __('State') }}">
-                                </div>
-                                <div class="col-md-5 mb-2">
-                                    <input type="text" class="form-control" name="work_location_preferences[{{ $index }}][city]" value="{{ $loc['city'] ?? '' }}" placeholder="{{ __('City') }}">
-                                </div>
+            {{-- Work Location Preference --}}
+            <h6 class="mb-3 text-dark">{{ __('Work Location Preference') }}</h6>
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="form-check mb-2">
+                        <input type="radio" class="form-check-input" name="work_location_preference_type" value="current_only" id="wl_current_only" @checked($workLocationPreferenceType == 'current_only' || $workLocationPreferenceType === '')>
+                        <label class="form-check-label" for="wl_current_only">{{ __('Open to work only at Current Location') }}</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="radio" class="form-check-input" name="work_location_preference_type" value="relocation_india" id="wl_relocation_india" @checked($workLocationPreferenceType == 'relocation_india')>
+                        <label class="form-check-label" for="wl_relocation_india">{{ __('Open for relocation across India') }} ({{ __('as per current location country') }})</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="radio" class="form-check-input" name="work_location_preference_type" value="other" id="wl_other" @checked($workLocationPreferenceType == 'other')>
+                        <label class="form-check-label" for="wl_other">{{ __('Other work location preferences') }}</label>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="js-default-country-id" value="{{ $account->country_id ?? '' }}">
+            <input type="hidden" id="js-use-location-dropdowns" value="{{ $useLocationDropdowns ? '1' : '0' }}">
+            <div id="work_location_preferences_wrapper" class="mb-3" style="display: {{ $workLocationPreferenceType == 'other' ? 'block' : 'none' }};">
+                <label class="form-label">{{ __('Add up to 3 preferred locations (set priority)') }}</label>
+                <p class="form-text">{{ $useLocationDropdowns ? __('Default country is same as current location; you can select other countries.') : __('Enter Country, State, City and Locality for each preferred location.') }}</p>
+                <div id="work-locations-container">
+                    @foreach($workLocations as $index => $loc)
+                    <div class="removable-item work-location-item" data-state-id="{{ $loc['state_id'] ?? '' }}" data-city-id="{{ $loc['city_id'] ?? '' }}">
+                        @if($index > 0)<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>@endif
+                        <div class="row align-items-end">
+                            <div class="col-md-1 d-flex align-items-center mb-2">
+                                <span class="priority-badge">{{ $index + 1 }}</span>
+                            </div>
+                            @if($useLocationDropdowns)
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">{{ __('Country') }}</label>
+                                <select class="form-select form-select-sm work-pref-country" name="work_location_preferences[{{ $index }}][country_id]" data-index="{{ $index }}">
+                                    <option value="">{{ __('Select') }}</option>
+                                    @foreach($countries as $id => $name)
+                                        <option value="{{ $id }}" @selected(($loc['country_id'] ?? '') == $id)>{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">{{ __('State') }}</label>
+                                <select class="form-select form-select-sm work-pref-state" name="work_location_preferences[{{ $index }}][state_id]" data-index="{{ $index }}">
+                                    <option value="">{{ __('Select') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">{{ __('City') }}</label>
+                                <select class="form-select form-select-sm work-pref-city" name="work_location_preferences[{{ $index }}][city_id]" data-index="{{ $index }}">
+                                    <option value="">{{ __('Select') }}</option>
+                                </select>
+                            </div>
+                            @else
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">{{ __('Country') }}</label>
+                                <input type="text" class="form-control form-control-sm" name="work_location_preferences[{{ $index }}][country_name]" value="{{ $loc['country_name'] ?? '' }}" placeholder="{{ __('Country') }}">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">{{ __('State') }}</label>
+                                <input type="text" class="form-control form-control-sm" name="work_location_preferences[{{ $index }}][state_name]" value="{{ $loc['state_name'] ?? '' }}" placeholder="{{ __('State') }}">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">{{ __('City') }}</label>
+                                <input type="text" class="form-control form-control-sm" name="work_location_preferences[{{ $index }}][city_name]" value="{{ $loc['city_name'] ?? '' }}" placeholder="{{ __('City') }}">
+                            </div>
+                            @endif
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label small">{{ __('Locality') }}</label>
+                                <input type="text" class="form-control form-control-sm" name="work_location_preferences[{{ $index }}][locality]" value="{{ $loc['locality'] ?? '' }}" placeholder="{{ __('Locality') }}">
                             </div>
                         </div>
-                        @endforeach
                     </div>
-                    <button type="button" class="add-more-btn" onclick="addWorkLocation()" id="add-work-location-btn">+ {{ __('Add Location Preference') }}</button>
+                    @endforeach
                 </div>
+                <button type="button" class="add-more-btn" onclick="addWorkLocation()" id="add-work-location-btn">+ {{ __('Add Location Preference') }}</button>
             </div>
         </div>
     </div>
@@ -974,7 +1106,10 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">{{ __('Teaching Certifications') }} <span class="required">*</span></label>
                                     <select id="ts-teaching-certifications" name="teaching_certifications[]" multiple placeholder="{{ __('Search & select certifications...') }}">
-                                        @php $certs = old('teaching_certifications', $account->teaching_certifications ?? []); @endphp
+                                        @php
+                                        $certs = old('teaching_certifications', $account->teaching_certifications ?? []);
+                                        $certs = is_array($certs) ? $certs : (is_string($certs) ? (json_decode($certs, true) ?? (array)$certs) : (array)$certs);
+                                    @endphp
                                         @foreach(['b_ed' => 'B.Ed', 'm_ed' => 'M.Ed', 'ctet' => 'CTET', 'tet' => 'TET', 'ntt' => 'NTT', 'montessori' => 'Montessori', 'teacher_training' => 'Teacher Training Course', 'net' => 'NET', 'set' => 'SET', 'gate' => 'GATE'] as $val => $lbl)
                                             <option value="{{ $val }}" @selected(in_array($val, $certs))>{{ $lbl }}</option>
                                         @endforeach
@@ -1089,35 +1224,7 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Introductory Audio') }}</label>
                     <input type="file" class="form-control" name="introductory_audio" id="introductory_audio_file" accept="audio/*">
-                    <small class="form-text">{{ __('Upload an audio file OR record directly below (max 2 minutes).') }}</small>
-
-                    <!-- Voice Recorder -->
-                    <div class="voice-recorder-wrapper mt-2">
-                        <label class="form-label" style="font-size:13px; margin-bottom:8px;">
-                            <i class="fa fa-microphone me-1 text-danger"></i> {{ __('Or Record Your Voice') }}
-                        </label>
-                        <div class="voice-recorder-controls">
-                            <button type="button" class="btn-record" id="btn-start-recording" onclick="startAudioRecording()">
-                                <i class="fa fa-circle"></i> {{ __('Record') }}
-                            </button>
-                            <button type="button" class="btn-record-stop" id="btn-stop-recording" style="display:none;" onclick="stopAudioRecording()">
-                                <i class="fa fa-stop"></i> {{ __('Stop') }}
-                            </button>
-                            <span class="recording-timer" id="recording-timer" style="display:none;">00:00</span>
-                        </div>
-                        <div class="recorded-audio-preview" id="recorded-audio-preview">
-                            <audio controls id="recorded-audio-player"></audio>
-                            <div class="recorded-audio-actions">
-                                <button type="button" class="add-more-btn" onclick="useRecordedAudio()">
-                                    <i class="fa fa-check me-1"></i> {{ __('Use This Recording') }}
-                                </button>
-                                <button type="button" class="btn-remove-photo" style="padding:6px 12px; font-size:12px;" onclick="discardRecording()">
-                                    <i class="fa fa-trash me-1"></i> {{ __('Discard') }}
-                                </button>
-                            </div>
-                        </div>
-                        <small class="form-text mt-1">{{ __('Include: qualifications, experience, teaching style. Max 2 minutes.') }}</small>
-                    </div>
+                    <small class="form-text">{{ __('Upload an audio file (max 2 minutes). Include: qualifications, experience, teaching style.') }}</small>
                 </div>
 
                 <!-- 30. Introductory Video Link -->
@@ -1297,20 +1404,189 @@ document.addEventListener('DOMContentLoaded', function() {
     if (nonTeachingCheck) nonTeachingCheck.addEventListener('change', togglePositionFields);
     togglePositionFields();
 
-    // Relocation toggle for work location preferences
-    const relocationCheck = document.getElementById('ready_for_relocation');
-    const workLocationWrapper = document.getElementById('work_location_preferences_wrapper');
+    // Native same as current toggle
+    const nativeSameCheck = document.getElementById('native_same_as_current');
+    const nativeFields = document.getElementById('native_location_fields');
+    if (nativeSameCheck && nativeFields) {
+        function toggleNativeFields() {
+            nativeFields.style.display = nativeSameCheck.checked ? 'none' : 'block';
+        }
+        nativeSameCheck.addEventListener('change', toggleNativeFields);
+    }
 
-    function toggleWorkLocationPreferences() {
+    // Work location preference type: show "Other" locations only when "other" is selected
+    const wlOther = document.getElementById('wl_other');
+    const workLocationWrapper = document.getElementById('work_location_preferences_wrapper');
+    function toggleWorkPrefWrapper() {
         if (workLocationWrapper) {
-            workLocationWrapper.style.display = relocationCheck.checked ? 'block' : 'none';
+            workLocationWrapper.style.display = wlOther && wlOther.checked ? 'block' : 'none';
         }
     }
+    document.querySelectorAll('input[name="work_location_preference_type"]').forEach(function(radio) {
+        radio.addEventListener('change', toggleWorkPrefWrapper);
+    });
 
-    if (relocationCheck) {
-        relocationCheck.addEventListener('change', toggleWorkLocationPreferences);
-        toggleWorkLocationPreferences();
-    }
+    // City-first: Current location - search city then auto-fill State & Country
+    (function() {
+        var searchEl = document.getElementById('js-current-city-search');
+        var suggestionsEl = document.getElementById('js-current-city-suggestions');
+        var cityIdEl = document.getElementById('js-current-city-id');
+        var stateIdEl = document.getElementById('js-current-state-id');
+        var countryIdEl = document.getElementById('js-current-country-id');
+        var stateDisplay = document.getElementById('js-current-state-display');
+        var countryDisplay = document.getElementById('js-current-country-display');
+        if (!searchEl || !suggestionsEl) return;
+        var searchTimeout = null;
+        searchEl.addEventListener('input', function() {
+            var k = this.value.trim();
+            if (searchTimeout) clearTimeout(searchTimeout);
+            cityIdEl.value = ''; stateIdEl.value = ''; countryIdEl.value = '';
+            if (stateDisplay) stateDisplay.value = ''; if (countryDisplay) countryDisplay.value = '';
+            suggestionsEl.style.display = 'none'; suggestionsEl.innerHTML = '';
+            if (k.length < 2) return;
+            searchTimeout = setTimeout(function() {
+                suggestionsEl.innerHTML = '<div class="p-2 text-muted">Searching...</div>';
+                suggestionsEl.style.display = 'block';
+                fetch('{{ route("ajax.search-cities") }}?k=' + encodeURIComponent(k))
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        var cities = res.data || [];
+                        if (cities.length === 0) { suggestionsEl.innerHTML = '<div class="p-2 text-muted">No cities found</div>'; return; }
+                        var html = '';
+                        cities.forEach(function(c) {
+                            var parts = []; if (c.state_name) parts.push(c.state_name); if (c.country_name) parts.push(c.country_name);
+                            html += '<div class="city-suggestion-item p-2 border-bottom" style="cursor:pointer;" data-id="' + c.id + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '"><strong>' + (c.name || '') + '</strong>' + (parts.length ? ' <span class="text-muted">' + parts.join(', ') + '</span>' : '') + '</div>';
+                        });
+                        suggestionsEl.innerHTML = html;
+                        suggestionsEl.querySelectorAll('.city-suggestion-item').forEach(function(el) {
+                            el.addEventListener('click', function() {
+                                searchEl.value = this.getAttribute('data-name');
+                                cityIdEl.value = this.getAttribute('data-id');
+                                stateIdEl.value = this.getAttribute('data-state-id');
+                                countryIdEl.value = this.getAttribute('data-country-id');
+                                if (stateDisplay) stateDisplay.value = this.getAttribute('data-state-name') || '';
+                                if (countryDisplay) countryDisplay.value = this.getAttribute('data-country-name') || '';
+                                suggestionsEl.style.display = 'none';
+                            });
+                        });
+                    })
+                    .catch(function() { suggestionsEl.innerHTML = '<div class="p-2 text-muted">Error</div>'; });
+            }, 300);
+        });
+        document.addEventListener('click', function(e) {
+            if (!searchEl.contains(e.target) && !suggestionsEl.contains(e.target)) suggestionsEl.style.display = 'none';
+        });
+    })();
+
+    // City-first: Native location - search city then auto-fill State & Country
+    (function() {
+        var searchEl = document.getElementById('js-native-city-search');
+        var suggestionsEl = document.getElementById('js-native-city-suggestions');
+        var cityIdEl = document.getElementById('js-native-city-id');
+        var stateIdEl = document.getElementById('js-native-state-id');
+        var countryIdEl = document.getElementById('js-native-country-id');
+        var stateDisplay = document.getElementById('js-native-state-display');
+        var countryDisplay = document.getElementById('js-native-country-display');
+        if (!searchEl || !suggestionsEl) return;
+        var searchTimeout = null;
+        searchEl.addEventListener('input', function() {
+            var k = this.value.trim();
+            if (searchTimeout) clearTimeout(searchTimeout);
+            cityIdEl.value = ''; stateIdEl.value = ''; countryIdEl.value = '';
+            if (stateDisplay) stateDisplay.value = ''; if (countryDisplay) countryDisplay.value = '';
+            suggestionsEl.style.display = 'none'; suggestionsEl.innerHTML = '';
+            if (k.length < 2) return;
+            searchTimeout = setTimeout(function() {
+                suggestionsEl.innerHTML = '<div class="p-2 text-muted">Searching...</div>';
+                suggestionsEl.style.display = 'block';
+                fetch('{{ route("ajax.search-cities") }}?k=' + encodeURIComponent(k))
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        var cities = res.data || [];
+                        if (cities.length === 0) { suggestionsEl.innerHTML = '<div class="p-2 text-muted">No cities found</div>'; return; }
+                        var html = '';
+                        cities.forEach(function(c) {
+                            var parts = []; if (c.state_name) parts.push(c.state_name); if (c.country_name) parts.push(c.country_name);
+                            html += '<div class="city-suggestion-item p-2 border-bottom" style="cursor:pointer;" data-id="' + c.id + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '"><strong>' + (c.name || '') + '</strong>' + (parts.length ? ' <span class="text-muted">' + parts.join(', ') + '</span>' : '') + '</div>';
+                        });
+                        suggestionsEl.innerHTML = html;
+                        suggestionsEl.querySelectorAll('.city-suggestion-item').forEach(function(el) {
+                            el.addEventListener('click', function() {
+                                searchEl.value = this.getAttribute('data-name');
+                                cityIdEl.value = this.getAttribute('data-id');
+                                stateIdEl.value = this.getAttribute('data-state-id');
+                                countryIdEl.value = this.getAttribute('data-country-id');
+                                if (stateDisplay) stateDisplay.value = this.getAttribute('data-state-name') || '';
+                                if (countryDisplay) countryDisplay.value = this.getAttribute('data-country-name') || '';
+                                suggestionsEl.style.display = 'none';
+                            });
+                        });
+                    })
+                    .catch(function() { suggestionsEl.innerHTML = '<div class="p-2 text-muted">Error</div>'; });
+            }, 300);
+        });
+        document.addEventListener('click', function(e) {
+            if (!searchEl.contains(e.target) && !suggestionsEl.contains(e.target)) suggestionsEl.style.display = 'none';
+        });
+    })();
+
+    // Work preference rows: load states/cities for existing rows on page load
+    document.querySelectorAll('.work-location-item').forEach(function(row) {
+        var countrySel = row.querySelector('.work-pref-country');
+        var stateSel = row.querySelector('.work-pref-state');
+        var citySel = row.querySelector('.work-pref-city');
+        var stateId = row.getAttribute('data-state-id');
+        var cityId = row.getAttribute('data-city-id');
+        if (countrySel && countrySel.value) {
+            fetch('{{ route("ajax.states-by-country") }}?country_id=' + countrySel.value)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var html = '<option value="">{{ __("Select") }}</option>';
+                    if (data.data) data.data.forEach(function(s) { html += '<option value="' + s.id + '"' + (s.id == stateId ? ' selected' : '') + '>' + s.name + '</option>'; });
+                    stateSel.innerHTML = html;
+                    if (stateId && stateSel.value) {
+                        fetch('{{ route("ajax.cities-by-state") }}?state_id=' + stateSel.value)
+                            .then(function(r2) { return r2.json(); })
+                            .then(function(data2) {
+                                var html2 = '<option value="">{{ __("Select") }}</option>';
+                                if (data2.data) data2.data.forEach(function(c) { html2 += '<option value="' + c.id + '"' + (c.id == cityId ? ' selected' : '') + '>' + c.name + '</option>'; });
+                                citySel.innerHTML = html2;
+                            });
+                    }
+                });
+        }
+    });
+
+    // Work preference: country/state change for dynamic rows
+    document.getElementById('work-locations-container').addEventListener('change', function(e) {
+        if (e.target.classList.contains('work-pref-country')) {
+            var stateSel = e.target.closest('.work-location-item').querySelector('.work-pref-state');
+            var citySel = e.target.closest('.work-location-item').querySelector('.work-pref-city');
+            stateSel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+            citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+            if (e.target.value) {
+                fetch('{{ route("ajax.states-by-country") }}?country_id=' + e.target.value)
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var html = '<option value="">{{ __("Select") }}</option>';
+                        if (data.data) data.data.forEach(function(s) { html += '<option value="' + s.id + '">' + s.name + '</option>'; });
+                        stateSel.innerHTML = html;
+                    });
+            }
+        } else if (e.target.classList.contains('work-pref-state')) {
+            var citySel = e.target.closest('.work-location-item').querySelector('.work-pref-city');
+            citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+            if (e.target.value) {
+                fetch('{{ route("ajax.cities-by-state") }}?state_id=' + e.target.value)
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var html = '<option value="">{{ __("Select") }}</option>';
+                        if (data.data) data.data.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
+                        citySel.innerHTML = html;
+                    });
+            }
+        }
+    });
 });
 
 // Add qualification
@@ -1381,30 +1657,67 @@ function addLanguage() {
 }
 
 // Add work location preference (max 3)
-let workLocationIndex = {{ count($workLocations ?? [1]) }};
+let workLocationIndex = {{ count($workLocations) }};
+var defaultCountryId = document.getElementById('js-default-country-id') ? document.getElementById('js-default-country-id').value : '';
+var useLocationDropdowns = document.getElementById('js-use-location-dropdowns') && document.getElementById('js-use-location-dropdowns').value === '1';
+var countriesData = @json($countries ?? []);
 function addWorkLocation() {
     if (document.querySelectorAll('.work-location-item').length >= 3) {
-        alert('Maximum 3 location preferences allowed');
+        alert('{{ __("Maximum 3 location preferences allowed") }}');
         return;
     }
-    const container = document.getElementById('work-locations-container');
-    const html = `
-        <div class="removable-item work-location-item">
-            <button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>
-            <div class="row">
-                <div class="col-md-1 d-flex align-items-center">
-                    <span class="priority-badge">${workLocationIndex + 1}</span>
-                </div>
-                <div class="col-md-5 mb-2">
-                    <input type="text" class="form-control" name="work_location_preferences[${workLocationIndex}][state]" placeholder="State">
-                </div>
-                <div class="col-md-5 mb-2">
-                    <input type="text" class="form-control" name="work_location_preferences[${workLocationIndex}][city]" placeholder="City">
-                </div>
-            </div>
-        </div>
-    `;
-    container.insertAdjacentHTML('beforeend', html);
+    var idx = workLocationIndex;
+    var html;
+    if (useLocationDropdowns) {
+        var countryOptionsHtml = '<option value="">{{ __("Select") }}</option>';
+        for (var id in countriesData) {
+            if (countriesData.hasOwnProperty(id)) {
+                countryOptionsHtml += '<option value="' + id + '"' + (id == defaultCountryId ? ' selected' : '') + '>' + countriesData[id] + '</option>';
+            }
+        }
+        html = '<div class="removable-item work-location-item">' +
+            '<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>' +
+            '<div class="row align-items-end">' +
+            '<div class="col-md-1 d-flex align-items-center mb-2"><span class="priority-badge">' + (idx + 1) + '</span></div>' +
+            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("Country") }}</label>' +
+            '<select class="form-select form-select-sm work-pref-country" name="work_location_preferences[' + idx + '][country_id]" data-index="' + idx + '">' + countryOptionsHtml + '</select></div>' +
+            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("State") }}</label>' +
+            '<select class="form-select form-select-sm work-pref-state" name="work_location_preferences[' + idx + '][state_id]" data-index="' + idx + '"><option value="">{{ __("Select") }}</option></select></div>' +
+            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("City") }}</label>' +
+            '<select class="form-select form-select-sm work-pref-city" name="work_location_preferences[' + idx + '][city_id]" data-index="' + idx + '"><option value="">{{ __("Select") }}</option></select></div>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("Locality") }}</label>' +
+            '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][locality]" placeholder="{{ __("Locality") }}"></div>' +
+            '</div></div>';
+        document.getElementById('work-locations-container').insertAdjacentHTML('beforeend', html);
+        if (defaultCountryId) {
+            var newRow = document.getElementById('work-locations-container').lastElementChild;
+            var stateSel = newRow.querySelector('.work-pref-state');
+            if (stateSel) {
+                fetch('{{ route("ajax.states-by-country") }}?country_id=' + defaultCountryId)
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var h = '<option value="">{{ __("Select") }}</option>';
+                        if (data.data) data.data.forEach(function(s) { h += '<option value="' + s.id + '">' + s.name + '</option>'; });
+                        stateSel.innerHTML = h;
+                    });
+            }
+        }
+    } else {
+        html = '<div class="removable-item work-location-item">' +
+            '<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>' +
+            '<div class="row align-items-end">' +
+            '<div class="col-md-1 d-flex align-items-center mb-2"><span class="priority-badge">' + (idx + 1) + '</span></div>' +
+            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("Country") }}</label>' +
+            '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][country_name]" placeholder="{{ __("Country") }}"></div>' +
+            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("State") }}</label>' +
+            '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][state_name]" placeholder="{{ __("State") }}"></div>' +
+            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("City") }}</label>' +
+            '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][city_name]" placeholder="{{ __("City") }}"></div>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("Locality") }}</label>' +
+            '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][locality]" placeholder="{{ __("Locality") }}"></div>' +
+            '</div></div>';
+        document.getElementById('work-locations-container').insertAdjacentHTML('beforeend', html);
+    }
     workLocationIndex++;
 }
 
@@ -1697,105 +2010,5 @@ function handleSpecializationKeydown(e) {
     }
 }
 
-// ==========================================
-// Voice Recording for Introductory Audio
-// ==========================================
-var mediaRecorder = null;
-var audioChunks = [];
-var recordedBlob = null;
-var recordingTimerInterval = null;
-var recordingSeconds = 0;
-var maxRecordingSeconds = 120; // 2 minutes
-
-function startAudioRecording() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('{{ __("Audio recording is not supported in your browser.") }}');
-        return;
-    }
-
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
-            audioChunks = [];
-            mediaRecorder = new MediaRecorder(stream);
-
-            mediaRecorder.ondataavailable = function(e) {
-                if (e.data.size > 0) audioChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = function() {
-                stream.getTracks().forEach(function(track) { track.stop(); });
-                recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                var audioUrl = URL.createObjectURL(recordedBlob);
-                var audioPlayer = document.getElementById('recorded-audio-player');
-                audioPlayer.src = audioUrl;
-                document.getElementById('recorded-audio-preview').style.display = 'block';
-            };
-
-            mediaRecorder.start();
-
-            // UI Updates
-            document.getElementById('btn-start-recording').style.display = 'none';
-            document.getElementById('btn-stop-recording').style.display = 'inline-flex';
-            document.getElementById('recording-timer').style.display = 'inline';
-            document.getElementById('btn-start-recording').classList.add('recording');
-
-            // Start timer
-            recordingSeconds = 0;
-            updateRecordingTimer();
-            recordingTimerInterval = setInterval(function() {
-                recordingSeconds++;
-                updateRecordingTimer();
-                if (recordingSeconds >= maxRecordingSeconds) {
-                    stopAudioRecording();
-                }
-            }, 1000);
-        })
-        .catch(function(err) {
-            console.error('Microphone access error:', err);
-            alert('{{ __("Could not access microphone. Please allow microphone access.") }}');
-        });
-}
-
-function stopAudioRecording() {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-    }
-    clearInterval(recordingTimerInterval);
-
-    // UI Updates
-    document.getElementById('btn-start-recording').style.display = 'inline-flex';
-    document.getElementById('btn-start-recording').classList.remove('recording');
-    document.getElementById('btn-stop-recording').style.display = 'none';
-    document.getElementById('recording-timer').style.display = 'none';
-}
-
-function updateRecordingTimer() {
-    var mins = Math.floor(recordingSeconds / 60).toString().padStart(2, '0');
-    var secs = (recordingSeconds % 60).toString().padStart(2, '0');
-    document.getElementById('recording-timer').textContent = mins + ':' + secs;
-}
-
-function useRecordedAudio() {
-    if (!recordedBlob) return;
-
-    // Create a File from the Blob and assign to the file input
-    var file = new File([recordedBlob], 'introductory-audio-recording.webm', { type: 'audio/webm' });
-    var dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    document.getElementById('introductory_audio_file').files = dataTransfer.files;
-
-    // Show confirmation
-    document.getElementById('recorded-audio-preview').innerHTML = 
-        '<div style="background:#e8f5e9;padding:10px;border-radius:8px;color:#2e7d32;font-size:13px;">' +
-        '<i class="fa fa-check-circle me-1"></i> {{ __("Recording attached! It will be uploaded when you save your profile.") }}' +
-        '</div>';
-    document.getElementById('recorded-audio-preview').style.display = 'block';
-}
-
-function discardRecording() {
-    recordedBlob = null;
-    document.getElementById('recorded-audio-preview').style.display = 'none';
-    document.getElementById('recorded-audio-player').src = '';
-}
 </script>
 @endsection
