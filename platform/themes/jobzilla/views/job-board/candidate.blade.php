@@ -362,7 +362,7 @@
                                     <span class="cdt-timeline-date">
                                         {{ __(':from to :to', [
                                             'from' => $experience->started_at->format('Y'),
-                                            'to' => $experience->ended_at ? $experience->ended_at->format('Y') : __('Now'),
+                                            'to' => ($experience->is_current || !$experience->ended_at) ? __('Present') : $experience->ended_at->format('Y'),
                                         ]) }}
                                     </span>
                                     <div class="cdt-timeline-title">{{ $experience->company }}</div>
@@ -390,7 +390,7 @@
                                     <span class="cdt-timeline-date">
                                         {{ __(':from to :to', [
                                             'from' => $education->started_at->format('Y'),
-                                            'to' => $education->ended_at ? $education->ended_at->format('Y') : __('Now'),
+                                            'to' => ($education->is_current || !$education->ended_at) ? __('Present') : $education->ended_at->format('Y'),
                                         ]) }}
                                     </span>
                                     @if ($education->school)

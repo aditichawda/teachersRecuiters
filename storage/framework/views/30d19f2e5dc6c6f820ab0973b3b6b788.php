@@ -305,6 +305,156 @@
 <?php echo Theme::footer(); ?>
 
 
+
+<script>
+(function() {
+    function equalizeTestimonialHeights() {
+        var $carousel = jQuery('.twm-testimonial-2-carousel');
+        if ($carousel.length && $carousel.data('owl.carousel')) {
+            var $items = $carousel.find('.owl-item:not(.cloned)');
+            if ($items.length === 0) return;
+            
+            var maxHeight = 0;
+            
+            // Reset heights first
+            $items.each(function() {
+                var $item = jQuery(this);
+                $item.css('height', 'auto');
+                var $testimonial = $item.find('.twm-testimonial-2');
+                if ($testimonial.length) {
+                    $testimonial.css('height', 'auto');
+                }
+            });
+            
+            // Find max height
+            $items.each(function() {
+                var height = jQuery(this).outerHeight(true);
+                if (height > maxHeight) {
+                    maxHeight = height;
+                }
+            });
+            
+            // Apply max height to all items
+            if (maxHeight > 0) {
+                $items.each(function() {
+                    var $item = jQuery(this);
+                    $item.css('height', maxHeight + 'px');
+                    var $testimonial = $item.find('.twm-testimonial-2');
+                    if ($testimonial.length) {
+                        $testimonial.css('height', '100%');
+                    }
+                });
+            }
+        }
+    }
+    
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function() {
+            // Hook into owl carousel initialization
+            var originalOwlCarousel = jQuery.fn.owlCarousel;
+            jQuery.fn.owlCarousel = function(options) {
+                var result = originalOwlCarousel.apply(this, arguments);
+                
+                if (this.hasClass('twm-testimonial-2-carousel')) {
+                    this.on('initialized.owl.carousel', function() {
+                        setTimeout(equalizeTestimonialHeights, 50);
+                    });
+                    
+                    this.on('refreshed.owl.carousel changed.owl.carousel', function() {
+                        setTimeout(equalizeTestimonialHeights, 50);
+                    });
+                    
+                    // Initial equalization
+                    setTimeout(equalizeTestimonialHeights, 200);
+                }
+                
+                return result;
+            };
+            
+            // Also run for already initialized carousels
+            setTimeout(function() {
+                var $carousel = jQuery('.twm-testimonial-2-carousel');
+                if ($carousel.length && $carousel.data('owl.carousel')) {
+                    $carousel.on('initialized.owl.carousel refreshed.owl.carousel changed.owl.carousel', function() {
+                        setTimeout(equalizeTestimonialHeights, 50);
+                    });
+                    equalizeTestimonialHeights();
+                }
+            }, 300);
+        });
+        
+        // Also run after window load
+        jQuery(window).on('load', function() {
+            setTimeout(equalizeTestimonialHeights, 500);
+        });
+        
+        // Run on window resize
+        var resizeTimer;
+        jQuery(window).on('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(equalizeTestimonialHeights, 250);
+        });
+    }
+})();
+</script>
+
+
+<style>
+    #newsletter-popup,
+    .newsletter-popup,
+    .modal.newsletter-popup,
+    .modal#newsletter-popup {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        left: -9999px !important;
+    }
+</style>
+<script>
+    (function() {
+        // Remove newsletter popup immediately
+        function removeNewsletterPopup() {
+            var popup = document.getElementById('newsletter-popup');
+            if (popup) {
+                popup.remove();
+            }
+            var modals = document.querySelectorAll('.newsletter-popup, .modal.newsletter-popup, .modal#newsletter-popup');
+            modals.forEach(function(modal) {
+                modal.remove();
+            });
+        }
+        
+        // Remove on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', removeNewsletterPopup);
+        } else {
+            removeNewsletterPopup();
+        }
+        
+        // Also remove after a short delay to catch dynamically added elements
+        setTimeout(removeNewsletterPopup, 100);
+        setTimeout(removeNewsletterPopup, 500);
+        setTimeout(removeNewsletterPopup, 1000);
+        
+        // Prevent jQuery from initializing it
+        if (typeof jQuery !== 'undefined') {
+            jQuery(document).ready(function($) {
+                removeNewsletterPopup();
+                // Override modal show for newsletter popup
+                var originalModal = $.fn.modal;
+                $.fn.modal = function(options) {
+                    if (this.attr('id') === 'newsletter-popup' || this.hasClass('newsletter-popup')) {
+                        return this;
+                    }
+                    return originalModal.apply(this, arguments);
+                };
+            });
+        }
+    })();
+</script>
+
 <?php if(session()->has('status') ||
         session()->has('success_msg') ||
         session()->has('error_msg') ||
