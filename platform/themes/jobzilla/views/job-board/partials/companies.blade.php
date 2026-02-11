@@ -1,6 +1,6 @@
 <div class="info-pagination" style="display: none">
     {{
-        __('Showing :from – :to of :total job(s)', [
+        __('Showing :from – :to of :total results', [
                 'from' => $companies->firstItem(),
                 'to' => $companies->lastItem(),
                 'total' => $companies->total(),

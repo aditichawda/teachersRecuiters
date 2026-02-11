@@ -3,6 +3,8 @@
     $perRow = (int)$shortcode->per_row ?: 3;
 @endphp
 
+{!! Theme::partial('jobs-card-styles') !!}
+
 <div @class(['section-full p-t5 p-b6', 'site-bg-light-purple twm-bg-ring-wrap' => $style === 1, 'site-bg-gray twm-bg-ring-wrap2' => $style === 2])>
     <div class="twm-bg-ring-right"></div>
     <div class="twm-bg-ring-left"></div>

@@ -12,7 +12,20 @@
             @endif
 
             @if ($shortcode->button_url)
-                    <a href="{{ $shortcode->button_url }}" class="site-button">{{ $shortcode->button_name ?: __('Get Started') }}</a>
+                    @php
+                        $buttonUrl = $shortcode->button_url;
+                        if (auth('account')->check()) {
+                            $account = auth('account')->user();
+                            if ($account->isEmployer()) {
+                                $buttonUrl = route('public.account.dashboard');
+                            } else {
+                                $buttonUrl = route('public.account.jobseeker.dashboard');
+                            }
+                        } else {
+                            $buttonUrl = route('public.account.register');
+                        }
+                    @endphp
+                    <a href="{{ $buttonUrl }}" class="site-button">{{ $shortcode->button_name ?: __('Get Started') }}</a>
                 @endif
         </div>
         <!-- <div class="twm-bnr-bottom-section">
