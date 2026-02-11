@@ -17,7 +17,7 @@
 }
 .cand-card-grid:hover {
     border-color: #bae6fd;
-    box-shadow: 0 12px 30px rgba(14,165,233,.1);
+    box-shadow: 0 12px 30px rgba(0,115,209,.1);
     transform: translateY(-4px);
 }
 .cand-card-grid .cg-featured {
@@ -30,7 +30,7 @@
     letter-spacing: .5px;
     padding: 3px 10px;
     border-radius: 50px;
-    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    background: #ef3800;
     color: #fff;
 }
 .cand-card-grid .cg-avatar {
@@ -56,7 +56,7 @@
     display: block;
     transition: color .2s;
 }
-.cand-card-grid .cg-name:hover { color: #0369a1; }
+.cand-card-grid .cg-name:hover { color: #0073d1; }
 .cand-card-grid .cg-desc {
     font-size: 13px;
     color: #64748b;
@@ -82,7 +82,7 @@
     align-items: center;
     gap: 5px;
     padding: 8px 22px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: #0073d1;
     color: #fff;
     border-radius: 8px;
     font-size: 13px;
@@ -93,7 +93,8 @@
 }
 .cand-card-grid .cg-view-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(14,165,233,.3);
+    box-shadow: 0 4px 12px rgba(0,115,209,.3);
+    background: #005ba1;
     color: #fff;
 }
 
@@ -124,11 +125,11 @@
 }
 .cand-card-list:hover {
     border-color: #bae6fd;
-    box-shadow: 0 8px 25px rgba(14,165,233,.08);
+    box-shadow: 0 8px 25px rgba(0,115,209,.08);
     transform: translateY(-2px);
 }
 .cand-card-list:hover::before {
-    background: linear-gradient(180deg, #0ea5e9, #0369a1);
+    background: #0073d1;
 }
 .cand-card-list .cl-avatar {
     width: 56px;
@@ -169,7 +170,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.cand-card-list .cl-name:hover { color: #0369a1; }
+.cand-card-list .cl-name:hover { color: #0073d1; }
 .cand-card-list .cl-desc {
     font-size: 13px;
     color: #64748b;
@@ -192,7 +193,7 @@
     align-items: center;
     gap: 5px;
     padding: 8px 20px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: #0073d1;
     color: #fff;
     border-radius: 8px;
     font-size: 13px;
@@ -202,7 +203,8 @@
 }
 .cand-card-list .cl-view-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(14,165,233,.3);
+    box-shadow: 0 4px 12px rgba(0,115,209,.3);
+    background: #005ba1;
     color: #fff;
 }
 

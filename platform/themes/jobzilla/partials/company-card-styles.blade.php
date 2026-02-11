@@ -15,7 +15,7 @@
 }
 .company-card-grid:hover {
     border-color: #bae6fd;
-    box-shadow: 0 12px 30px rgba(14,165,233,.12);
+    box-shadow: 0 12px 30px rgba(0,115,209,.12);
     transform: translateY(-4px);
 }
 .company-card-grid .ccg-featured {
@@ -28,7 +28,7 @@
     letter-spacing: .5px;
     padding: 3px 10px;
     border-radius: 50px;
-    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    background: #ef3800;
     color: #fff;
     z-index: 2;
 }
@@ -81,12 +81,12 @@
     display: block;
     transition: color .2s;
 }
-.company-card-grid .ccg-name:hover { color: #0369a1; }
+.company-card-grid .ccg-name:hover { color: #0073d1; }
 .company-card-grid .ccg-type {
     display: inline-block;
     font-size: 11px;
     font-weight: 600;
-    color: #0369a1;
+    color: #0073d1;
     background: #e0f2fe;
     padding: 2px 10px;
     border-radius: 20px;
@@ -126,7 +126,7 @@
     height: 28px;
     border-radius: 8px;
     background: #f0f9ff;
-    color: #0ea5e9;
+    color: #0073d1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -144,7 +144,7 @@
 }
 .company-card-grid .ccg-jobs-count {
     font-size: 13px;
-    color: #0369a1;
+    color: #0073d1;
     font-weight: 600;
 }
 .company-card-grid .ccg-view-btn {
@@ -152,7 +152,7 @@
     align-items: center;
     gap: 4px;
     padding: 7px 16px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: #0073d1;
     color: #fff;
     border-radius: 8px;
     font-size: 12px;
@@ -162,7 +162,8 @@
 }
 .company-card-grid .ccg-view-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(14,165,233,.3);
+    box-shadow: 0 4px 12px rgba(0,115,209,.3);
+    background: #005ba1;
     color: #fff;
 }
 
@@ -193,23 +194,23 @@
 }
 .company-card-list:hover {
     border-color: #bae6fd;
-    box-shadow: 0 8px 25px rgba(14,165,233,.08);
+    box-shadow: 0 8px 25px rgba(0,115,209,.08);
     transform: translateY(-2px);
 }
 .company-card-list:hover::before {
-    background: linear-gradient(180deg, #0ea5e9, #0369a1);
+    background: #0073d1;
 }
-.company-card-list .ccl-featured {
-    position: absolute;
-    top: 10px;
-    right: 14px;
+.company-card-list .ccl-featured-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .5px;
-    padding: 3px 10px;
-    border-radius: 50px;
-    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #ef3800;
     color: #fff;
 }
 .company-card-list .ccl-logo {
@@ -245,12 +246,12 @@
     text-decoration: none;
     transition: color .2s;
 }
-.company-card-list .ccl-name:hover { color: #0369a1; }
+.company-card-list .ccl-name:hover { color: #0073d1; }
 .company-card-list .ccl-type {
     display: inline-block;
     font-size: 10px;
     font-weight: 600;
-    color: #0369a1;
+    color: #0073d1;
     background: #e0f2fe;
     padding: 2px 8px;
     border-radius: 20px;
@@ -290,7 +291,7 @@
     color: #475569;
 }
 .company-card-list .ccl-meta-item i {
-    color: #0ea5e9;
+    color: #0073d1;
     font-size: 13px;
 }
 .company-card-list .ccl-right {
@@ -302,7 +303,7 @@
 }
 .company-card-list .ccl-jobs-count {
     font-size: 13px;
-    color: #0369a1;
+    color: #0073d1;
     font-weight: 600;
     background: #f0f9ff;
     padding: 4px 12px;
@@ -313,7 +314,7 @@
     align-items: center;
     gap: 5px;
     padding: 8px 20px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: #0073d1;
     color: #fff;
     border-radius: 8px;
     font-size: 13px;
@@ -323,7 +324,8 @@
 }
 .company-card-list .ccl-view-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(14,165,233,.3);
+    box-shadow: 0 4px 12px rgba(0,115,209,.3);
+    background: #005ba1;
     color: #fff;
 }
 

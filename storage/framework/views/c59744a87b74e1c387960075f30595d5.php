@@ -1,4 +1,4 @@
-<div class="section-full p-t120 p-b90 site-bg-gray twm-testimonial-2-area">
+<div class="section-full p-t5 p-b6 site-bg-gray twm-testimonial-2-area">
     <div class="section-head center wt-small-separator-outer">
         <div class="wt-small-separator site-text-primary">
             <div><?php echo BaseHelper::clean($shortcode->title); ?></div>

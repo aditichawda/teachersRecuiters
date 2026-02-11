@@ -1,9 +1,5 @@
 @forelse($companies as $company)
     <div class="company-card-list">
-        @if ($company->is_featured)
-            <span class="ccl-featured">★ {{ __('Featured') }}</span>
-        @endif
-
         <div class="ccl-logo">
             <img src="{{ RvMedia::getImageUrl($company->logo) }}" alt="{{ $company->name }}">
         </div>
@@ -17,6 +13,9 @@
                 @endif
                 @if ($company->is_verified)
                     <span class="ccl-verified"><i class="fas fa-check-circle"></i> {{ __('Verified') }}</span>
+                @endif
+                @if ($company->is_featured)
+                    <span class="ccl-featured-inline">★ {{ __('Featured') }}</span>
                 @endif
             </div>
             @if ($company->description)

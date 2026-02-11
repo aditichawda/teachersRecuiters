@@ -28,7 +28,7 @@
     display: block;
     width: 50px;
     height: 4px;
-    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    background: linear-gradient(135deg, #0073d1, #0073d1);
     border-radius: 4px;
     margin: 10px auto 0;
 }
