@@ -77,11 +77,6 @@
         .footer-screenshot-style .footer-social-links li a:hover svg {
             color: #ffffff;
         }
-        .footer-screenshot-style .footer-partners {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding: 20px 0;
-        }
         .footer-screenshot-style .footer-partners-inner {
             display: flex;
             align-items: center;
@@ -198,7 +193,7 @@
                             <ul class="footer-links">
                                 <li><a href="/">Home</a></li>
                                 <li><a href="/jobs">Jobs</a></li>
-                                <li><a href="/companies">Companies</a></li>
+                                <li><a href="/companies">Institutes</a></li>
                                 <li><a href="/candidates">Candidates</a></li>
                                 <li><a href="/contact">Help & Support</a></li>
                             </ul>
@@ -254,10 +249,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Section 2: Partners -->
-            <div class="footer-partners">
+                <div class="footer-partners">
                 <div class="footer-partners-inner">
                     <span class="footer-partners-label">Our Partner:</span>
                     <div class="footer-partners-list">
@@ -268,6 +260,10 @@
                     <a href="/companies" class="footer-see-all">See All →</a>
                 </div>
             </div>
+            </div>
+
+            <!-- Section 2: Partners -->
+            
 
             <!-- Section 3: Bottom – Copyright + Legal -->
             <div class="footer-bottom">

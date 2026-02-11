@@ -9,6 +9,7 @@
     $isTermsPage = $page->slug == 'terms' || $page->slug == 'terms-and-conditions' || $page->slug == 'terms-conditions';
     $isPrivacyPage = $page->slug == 'privacy-policy' || $page->slug == 'privacy';
     $isFraudPage = $page->slug == 'fraud-alert' || $page->slug == 'fraud';
+    $isFaqPage = $page->slug == 'faq';
     
     // Hide banner for special pages
     if ($isAboutPage) {
@@ -29,25 +30,31 @@
     } elseif ($isFraudPage) {
         Theme::set('withPageHeader', false);
         Theme::set('bodyClass', 'hide-page-banner fraud-page');
+    } elseif ($isFaqPage) {
+        Theme::set('withPageHeader', false);
+        Theme::set('bodyClass', 'hide-page-banner faq-page');
     }
 @endphp
 
 <div class="page-content-wrapper {{ $isHowItWorksPage ? 'how-it-works-page' : '' }} {{ $isAboutPage ? 'about-page' : '' }} {{ $isTermsPage ? 'terms-page' : '' }} {{ $isPrivacyPage ? 'privacy-page' : '' }} {{ $isFraudPage ? 'fraud-page' : '' }}">
     @if ($isAboutPage)
-        {{-- Professional Corporate Layout (Like How It Works) --}}
-        {!! Theme::partial('about-us-layout') !!}
+        {{-- About Us Layout (CSS in partial, content from admin) --}}
+        {!! Theme::partial('about-us-layout', ['page' => $page]) !!}
     @elseif ($isHowItWorksPage)
-        {{-- Professional Corporate Layout (Screenshot Style) --}}
-        {!! Theme::partial('how-it-works-layout') !!}
+        {{-- How It Works Layout (CSS in partial, content from admin) --}}
+        {!! Theme::partial('how-it-works-layout', ['page' => $page]) !!}
     @elseif ($isTermsPage)
-        {{-- Terms & Conditions Layout --}}
-        {!! Theme::partial('terms-layout') !!}
+        {{-- Terms & Conditions Layout (CSS in partial, content from admin) --}}
+        {!! Theme::partial('terms-layout', ['page' => $page]) !!}
     @elseif ($isPrivacyPage)
-        {{-- Privacy Policy Layout --}}
-        {!! Theme::partial('privacy-layout') !!}
+        {{-- Privacy Policy Layout (CSS in partial, content from admin) --}}
+        {!! Theme::partial('privacy-layout', ['page' => $page]) !!}
     @elseif ($isFraudPage)
         {{-- Fraud Alert Layout --}}
-        {!! Theme::partial('fraud-alert-layout') !!}
+        {!! Theme::partial('fraud-alert-layout', ['page' => $page]) !!}
+    @elseif ($isFaqPage)
+        {{-- FAQ Layout (CSS in partial, FAQs from DB) --}}
+        {!! Theme::partial('faq-layout', ['page' => $page]) !!}
     @else
         {!! apply_filters(PAGE_FILTER_FRONT_PAGE_CONTENT, Html::tag('div', BaseHelper::clean($page->content), ['class' => 'ck-content'])->toHtml(), $page) !!}
     @endif

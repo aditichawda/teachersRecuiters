@@ -8,8 +8,47 @@
     $layout = \Theme\Jobzilla\Supports\ThemeHelper::getCurrentLayout();
 @endphp
 
+{!! Theme::partial('jobs-card-styles') !!}
+
+<style>
+.jobs-sc-heading {
+    text-align: center;
+    padding: 30px 0 10px;
+}
+.jobs-sc-heading h2 {
+    font-size: 32px;
+    font-weight: 800;
+    color: #0c1e3c;
+    margin-bottom: 8px;
+    position: relative;
+    display: inline-block;
+}
+.jobs-sc-heading h2::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 4px;
+    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    border-radius: 4px;
+    margin: 10px auto 0;
+}
+.jobs-sc-heading p {
+    font-size: 15px;
+    color: #64748b;
+    margin-bottom: 0;
+}
+@media(max-width: 767px) {
+    .jobs-sc-heading h2 { font-size: 24px; }
+    .jobs-sc-heading p { font-size: 14px; }
+}
+</style>
+
 <div class="section-full p-t120 p-b90 site-bg-white jobs-container">
     <div class="container">
+        <div class="jobs-sc-heading">
+            <h2>{{ __('Jobs') }}</h2>
+            <p>{{ __('Find the best teaching opportunities across India') }}</p>
+        </div>
         <div class="row">
             <div class="col-lg-4 col-md-12">
                 <div class="side-bar-filter">

@@ -6,7 +6,8 @@
     if (! in_array($layout, ['v1', 'v2'])) {
         $layout = 'v1';
     }
-    Theme::set('pageCoverImage', theme_option('background_breadcrumb_default'))
+    Theme::set('pageCoverImage', theme_option('background_breadcrumb_default'));
+    Theme::set('withPageHeader', false);
 @endphp
 
 @include(Theme::getThemeNamespace('views.job-board.job-' . $layout))

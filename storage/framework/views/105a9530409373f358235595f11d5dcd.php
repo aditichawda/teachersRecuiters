@@ -31,4 +31,4 @@
 
 <?php echo Theme::partial('footer'); ?>
 
-<?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/404.blade.php ENDPATH**/ ?>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/views/404.blade.php ENDPATH**/ ?>

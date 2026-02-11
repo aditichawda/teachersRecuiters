@@ -98,14 +98,19 @@
                     <ul class="nav navbar-nav">
                         <!-- How it Works -->
                         <li class="nav-item">
-                            <a class="nav-link" href="<?php echo e(url('/how-it-works')); ?>">
+                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/')); ?>">
+                                <span><?php echo e(__('Home')); ?></span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/how-it-works')); ?>">
                                 <span><?php echo e(__('How it Works')); ?></span>
                             </a>
                         </li>
 
                         <!-- Jobs Mega Menu Dropdown -->
                         <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
-                            <a class="nav-link dropdown-toggle" href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
+                            <a class="nav-link dropdown-toggle" style="color: black;" href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
                                 <span><?php echo e(__('Jobs')); ?></span>
                                 <i class="feather-chevron-down ms-1"></i>
                             </a>
@@ -222,7 +227,7 @@
 
                         <!-- For Schools / Start Hiring -->
                                      <li class="nav-item">
-                            <a class="nav-link" href="<?php echo e(url('/start-hiring')); ?>">
+                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/start-hiring')); ?>">
                                 <span><?php echo e(__('Start Hiring')); ?></span>
                             </a>
                         </li>

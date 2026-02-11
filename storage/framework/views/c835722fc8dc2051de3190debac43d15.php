@@ -11,4 +11,4 @@
 
 <?php echo Theme::partial('footer'); ?>
 
-<?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/layouts/static.blade.php ENDPATH**/ ?>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/layouts/static.blade.php ENDPATH**/ ?>
