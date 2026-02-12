@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'Редактиране на категорията обява',
     'edit_job_tag' => 'Редактиране на етикета обява',
 
-    // Companies
+    // companies
     'companies' => 'Компании',
     'edit_this_company' => 'Редактиране на тази компания',
     'create_a_company' => 'Създаване на компания',

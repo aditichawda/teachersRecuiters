@@ -275,7 +275,7 @@ return [
     'edit_job_category' => '求人カテゴリーを編集',
     'edit_job_tag' => '求人タグを編集',
 
-    // Companies
+    // companies
     'companies' => '会社',
     'edit_this_company' => 'この会社を編集',
     'create_a_company' => '会社を作成',

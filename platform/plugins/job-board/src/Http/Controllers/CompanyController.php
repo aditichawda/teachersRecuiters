@@ -153,7 +153,7 @@ class CompanyController extends BaseController
             ->setData(new CompanyResource($company));
     }
 
-    public function getAllCompanies()
+    public function getAllcompanies()
     {
         return Company::query()->pluck('name')->all();
     }

@@ -1,4 +1,8 @@
 @php
+    use Botble\Base\Enums\BaseStatusEnum;
+    use Botble\JobBoard\Facades\JobBoardHelper;
+    use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
+    
     $account = auth('account')->user();
     $company = $account->companies()->first();
     
@@ -21,6 +25,58 @@
     
     $currentUrl = url()->current();
     $menuItems = DashboardMenu::getAll('account');
+    
+    // Get featured categories with job counts
+    $featuredCategories = collect();
+    try {
+        if (is_plugin_active('job-board')) {
+            $featuredCategories = app(CategoryInterface::class)->getFeaturedCategories(6);
+        }
+    } catch (\Exception $e) {
+        $featuredCategories = collect();
+    }
+    
+    // Get locations (cities) with job counts
+    $topLocations = collect();
+    try {
+        if (is_plugin_active('location') && is_plugin_active('job-board')) {
+            $topLocations = \Botble\Location\Models\City::query()
+                ->where('status', BaseStatusEnum::PUBLISHED)
+                ->select('cities.*')
+                ->selectRaw('COUNT(DISTINCT jb_jobs.id) as jobs_count')
+                ->leftJoin('jb_jobs', function($join) {
+                    $join->on('jb_jobs.city_id', '=', 'cities.id')
+                        ->where('jb_jobs.status', \Botble\JobBoard\Enums\JobStatusEnum::PUBLISHED)
+                        ->where('jb_jobs.expire_date', '>=', now());
+                })
+                ->groupBy('cities.id')
+                ->having('jobs_count', '>', 0)
+                ->orderBy('jobs_count', 'desc')
+                ->limit(6)
+                ->get();
+        }
+    } catch (\Exception $e) {
+        $topLocations = collect();
+    }
+    
+    // Get institution types (categories with parent_id = 0 or specific parent)
+    $institutionTypes = collect();
+    try {
+        if (is_plugin_active('job-board')) {
+            $institutionTypes = app(CategoryInterface::class)->advancedGet([
+                'condition' => [
+                    'status' => BaseStatusEnum::PUBLISHED,
+                    'parent_id' => 0,
+                ],
+                'order_by' => ['order' => 'ASC', 'created_at' => 'DESC'],
+                'take' => 6,
+                'with' => ['slugable'],
+                'withCount' => ['activeJobs'],
+            ]);
+        }
+    } catch (\Exception $e) {
+        $institutionTypes = collect();
+    }
 @endphp
 
 <style>
@@ -39,7 +95,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 64px;
+    height: 82px;
 }
 .enl-header-logo img {
     max-height: 40px;
@@ -52,11 +108,22 @@
     margin: 0;
     padding: 0;
 }
-.enl-header-nav a {
+.enl-header-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.enl-header-nav li {
+    display: inline-block;
+}
+
+.enl-header-nav a,
+.enl-header-nav .nav-link {
     padding: 8px 14px;
     color: #555;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     border-radius: 6px;
     transition: all 0.2s;
@@ -64,8 +131,10 @@
     align-items: center;
     gap: 6px;
 }
-.enl-header-nav a:hover { background: #f0f7ff; color: #0073d1; }
-.enl-header-nav a.enl-h-active { color: #0073d1; background: #e8f4fc; }
+.enl-header-nav a:hover,
+.enl-header-nav .nav-link:hover { background: #f0f7ff; color: #0073d1; }
+.enl-header-nav a.enl-h-active,
+.enl-header-nav .nav-link.active { color: #0073d1; background: #e8f4fc; }
 
 .enl-header-right {
     display: flex;
@@ -118,6 +187,167 @@
 @media (max-width: 768px) {
     .enl-header-nav { display: none; }
     .enl-header-user-btn span { display: none; }
+}
+
+/* ===== MEGA MENU STYLES ===== */
+.mega-menu-dropdown {
+    position: static !important;
+}
+
+.mega-menu-dropdown .dropdown-menu {
+    position: absolute !important;
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 1050 !important;
+}
+
+.mega-menu {
+    width: 100%;
+    max-width: 900px;
+    left: 50% !important;
+    transform: translateX(-50%);
+    margin-top: 0;
+    padding: 0 !important;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    position: absolute !important;
+    top: 100% !important;
+    z-index: 1050 !important;
+    background: #fff !important;
+    overflow: hidden;
+    display: none;
+}
+
+.mega-menu.show {
+    display: block;
+}
+
+.mega-menu-wrapper {
+    padding: 0;
+}
+
+.mega-menu-tabs-wrapper {
+    display: flex;
+    gap: 10px;
+    padding: 15px 20px;
+    border-bottom: 1px solid #E8F4F8;
+    background: #F8F9FA;
+}
+
+.mega-menu-tab-btn {
+    background: transparent;
+    border: none;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.mega-menu-tab-btn:hover {
+    background: #E8F4F8;
+    color: #1967D2;
+}
+
+.mega-menu-tab-btn.active {
+    background: #1967D2;
+    color: #fff;
+}
+
+.mega-menu-content-wrapper {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.mega-menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.mega-menu-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mega-menu-grid-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #F8F9FA;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.mega-menu-grid-item:hover {
+    background: #E8F4F8;
+    border-color: #1967D2;
+    transform: translateX(3px);
+    text-decoration: none;
+}
+
+.mega-menu-grid-icon {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.mega-menu-grid-icon i {
+    font-size: 20px;
+    color: #FF6B35;
+}
+
+.mega-menu-grid-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.mega-menu-grid-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1A1A1A;
+    margin-bottom: 4px;
+}
+
+.mega-menu-grid-count {
+    font-size: 12px;
+    color: #666;
+    font-weight: 400;
+}
+
+.mega-menu-tab-content {
+    display: none;
+}
+
+.mega-menu-tab-content.active {
+    display: block;
+}
+
+.mega-menu-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 14px;
 }
 
 /* ===== NEW EMPLOYER DASHBOARD LAYOUT ===== */
@@ -357,26 +587,160 @@
 <div class="enl-header">
     <div class="enl-header-inner">
         <!-- Logo -->
-        <a href="{{ route('public.account.dashboard') }}" class="enl-header-logo">
-            @if ($logo = Theme::getLogo())
-                <img src="{{ RvMedia::getImageUrl($logo) }}" alt="{{ Theme::getSiteTitle() }}">
-            @else
-                <strong style="font-size:18px;color:#333;">{{ Theme::getSiteTitle() }}</strong>
-            @endif
-        </a>
+        @if (Theme::getLogo())
+                    <div class="logo-header">
+                        <div class="logo-header-inner logo-header-one">
+                            <a href="{{ BaseHelper::getHomepageUrl()  }}">
+                                @if (Theme::get('header_css_class') == 'header-style-light')
+                                    {!! Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo_light', 44) ?: Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo', 44) !!}
+                                    {!! Theme::getLogoImage(['class' => 'on-scroll-show'], 'logo_light', 44) !!}
+                                @else
+                                    {!! Theme::getLogoImage([], 'logo_light', 44) !!}
+                                @endif
+
+                            </a>
+                        </div>
+                    </div>
+                @endif
 
         <!-- Center Nav -->
         <ul class="enl-header-nav">
-            <li><a href="{{ route('public.account.dashboard') }}" @class(['enl-h-active' => $currentUrl == route('public.account.dashboard')])><i class="fa fa-home"></i> Dashboard</a></li>
-            <li><a href="{{ route('public.account.jobs.create') }}" @class(['enl-h-active' => $currentUrl == route('public.account.jobs.create')])><i class="fa fa-plus-circle"></i> Post Job</a></li>
-            <li><a href="{{ route('public.account.jobs.index') }}" @class(['enl-h-active' => str_contains($currentUrl, '/jobs') && !str_contains($currentUrl, '/create')])><i class="fa fa-briefcase"></i> Jobs</a></li>
-            <li><a href="{{ route('public.account.applicants.index') }}" @class(['enl-h-active' => str_contains($currentUrl, 'applicants')])><i class="fa fa-users"></i> Applicants</a></li>
+            
+        <li class="nav-item">
+                            <a class="nav-link" style="color: black;" href="{{ url('/') }}">
+                                <span>{{ __('Home') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" style="color: black;" href="{{ url('/how-it-works') }}">
+                                <span>{{ __('How it Works') }}</span>
+                            </a>
+                        </li>
+
+                        <!-- Jobs Mega Menu Dropdown -->
+                        <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
+                            <a class="nav-link dropdown-toggle" style="color: black;" href="{{ JobBoardHelper::getJobsPageURL() }}" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
+                                <span>{{ __('Jobs') }}</span>
+                            </a>
+                            <div class="dropdown-menu mega-menu" id="jobs-mega-menu" aria-labelledby="jobs-dropdown">
+                                <div class="mega-menu-wrapper">
+                                    <!-- Tabs Navigation -->
+                                    <div class="mega-menu-tabs-wrapper">
+                                        <button class="mega-menu-tab-btn active" onclick="switchMegaMenuTab('categories')" data-tab="categories">
+                                            {{ __('JOBS BY CATEGORIES') }}
+                                            <i class="feather-chevron-down"></i>
+                                        </button>
+                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('location')" data-tab="location">
+                                            {{ __('JOBS BY LOCATIONS') }}
+                                            <i class="feather-chevron-down"></i>
+                                        </button>
+                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('institution')" data-tab="institution">
+                                            {{ __('JOBS BY INSTITUTION TYPE') }}
+                                            <i class="feather-chevron-down"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Tab Content -->
+                                    <div class="mega-menu-content-wrapper">
+                                        <!-- Jobs by Categories Content -->
+                                        <div class="mega-menu-tab-content active" id="content-categories">
+                                            <div class="mega-menu-grid">
+                                                @php
+                                                    $categories = $featuredCategories->chunk(ceil($featuredCategories->count() / 2));
+                                                @endphp
+                                                @foreach($categories as $chunk)
+                                                    <div class="mega-menu-column">
+                                                        @foreach($chunk as $category)
+                                                            <a href="{{ $category->url }}" class="mega-menu-grid-item">
+                                                                <div class="mega-menu-grid-icon">
+                                                                    @if($category->icon)
+                                                                        <i class="{{ $category->icon }}"></i>
+                                                                    @else
+                                                                        <i class="feather-briefcase"></i>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="mega-menu-grid-text">
+                                                                    <span class="mega-menu-grid-name">{{ $category->name }}</span>
+                                                                    <span class="mega-menu-grid-count">{{ number_format($category->active_jobs_count ?? 0) }} Jobs</span>
+                                                                </div>
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
+                                                @endforeach
+                                                @if($featuredCategories->isEmpty())
+                                                    <div class="mega-menu-empty">No categories available</div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <!-- Jobs by Location Content -->
+                                        <div class="mega-menu-tab-content" id="content-location">
+                                            <div class="mega-menu-grid">
+                                                @php
+                                                    $locations = $topLocations->chunk(ceil($topLocations->count() / 2));
+                                                @endphp
+                                                @foreach($locations as $chunk)
+                                                    <div class="mega-menu-column">
+                                                        @foreach($chunk as $location)
+                                                            <a href="{{ route('public.jobs-by-city', $location->slug) }}" class="mega-menu-grid-item">
+                                                                <div class="mega-menu-grid-icon">
+                                                                    <i class="feather-map-pin"></i>
+                                                                </div>
+                                                                <div class="mega-menu-grid-text">
+                                                                    <span class="mega-menu-grid-name">Teacher jobs in {{ $location->name }}</span>
+                                                                </div>
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
+                                                @endforeach
+                                                @if($topLocations->isEmpty())
+                                                    <div class="mega-menu-empty">No locations available</div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <!-- Jobs by Institution Type Content -->
+                                        <div class="mega-menu-tab-content" id="content-institution">
+                                            <div class="mega-menu-grid">
+                                                @php
+                                                    $institutions = $institutionTypes->chunk(ceil($institutionTypes->count() / 2));
+                                                @endphp
+                                                @foreach($institutions as $chunk)
+                                                    <div class="mega-menu-column">
+                                                        @foreach($chunk as $institution)
+                                                            <a href="{{ $institution->url }}" class="mega-menu-grid-item">
+                                                                <div class="mega-menu-grid-icon">
+                                                                    <i class="feather-building"></i>
+                                                                </div>
+                                                                <div class="mega-menu-grid-text">
+                                                                    <span class="mega-menu-grid-name">{{ $institution->name }}</span>
+                                                                    <span class="mega-menu-grid-count">{{ number_format($institution->active_jobs_count ?? 0) }} Jobs</span>
+                                                                </div>
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
+                                                @endforeach
+                                                @if($institutionTypes->isEmpty())
+                                                    <div class="mega-menu-empty">No institution types available</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- For Schools / Start Hiring -->
+                                     <li class="nav-item">
+                            <a class="nav-link" style="color: black;" href="{{ url('/start-hiring') }}">
+                                <span>{{ __('Start Hiring') }}</span>
+                            </a>
+                        </li>
         </ul>
 
         <!-- Right -->
         <div class="enl-header-right">
-            <a href="{{ url('/') }}" class="enl-header-home" target="_blank"><i class="fa fa-globe"></i> Homepage</a>
-
+            
             <div class="enl-header-user">
                 <button class="enl-header-user-btn" onclick="document.getElementById('enlUserDropdown').classList.toggle('show')">
                     @if($company && $company->logo)
@@ -665,7 +1029,112 @@ function enlUploadAvatar() {
 </script>
 
 <script>
+// Mega Menu Dropdown Functions
+let megaMenuTimeout;
+
+function showMegaMenu() {
+    clearTimeout(megaMenuTimeout);
+    const menu = document.getElementById('jobs-mega-menu');
+    const dropdown = document.querySelector('.mega-menu-dropdown');
+    const toggle = document.getElementById('jobs-dropdown');
+    
+    if (menu && dropdown && toggle) {
+        menu.style.display = 'block';
+        menu.style.opacity = '1';
+        menu.style.visibility = 'visible';
+        dropdown.classList.add('show');
+        toggle.setAttribute('aria-expanded', 'true');
+    }
+}
+
+function hideMegaMenu() {
+    const menu = document.getElementById('jobs-mega-menu');
+    const dropdown = document.querySelector('.mega-menu-dropdown');
+    const toggle = document.getElementById('jobs-dropdown');
+    
+    if (menu && dropdown && toggle) {
+        megaMenuTimeout = setTimeout(() => {
+            menu.style.display = 'none';
+            menu.style.opacity = '0';
+            menu.style.visibility = 'hidden';
+            dropdown.classList.remove('show');
+            toggle.setAttribute('aria-expanded', 'false');
+        }, 200);
+    }
+}
+
+function toggleMegaMenu(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    const menu = document.getElementById('jobs-mega-menu');
+    const dropdown = document.querySelector('.mega-menu-dropdown');
+    const toggle = document.getElementById('jobs-dropdown');
+    const isExpanded = toggle && toggle.getAttribute('aria-expanded') === 'true';
+    
+    if (isExpanded) {
+        hideMegaMenu();
+    } else {
+        showMegaMenu();
+    }
+}
+
+// Tab Switching Function
+function switchMegaMenuTab(tabName) {
+    // Hide all tab content
+    const tabContents = document.querySelectorAll('.mega-menu-tab-content');
+    tabContents.forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all tab buttons
+    const tabButtons = document.querySelectorAll('.mega-menu-tab-btn');
+    tabButtons.forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    const selectedContent = document.getElementById('content-' + tabName);
+    const selectedButton = document.querySelector(`.mega-menu-tab-btn[data-tab="${tabName}"]`);
+    
+    if (selectedContent) {
+        selectedContent.classList.add('active');
+    }
+    
+    if (selectedButton) {
+        selectedButton.classList.add('active');
+    }
+}
+</script>
+
+<script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize mega menu
+    const dropdown = document.querySelector('.mega-menu-dropdown');
+    const menu = document.getElementById('jobs-mega-menu');
+    const toggle = document.getElementById('jobs-dropdown');
+    
+    if (dropdown && menu && toggle) {
+        // Set default tab to categories on load
+        const defaultTab = document.getElementById('content-categories');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+        }
+        const defaultBtn = document.querySelector('.mega-menu-tab-btn[data-tab="categories"]');
+        if (defaultBtn) {
+            defaultBtn.classList.add('active');
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!dropdown.contains(event.target)) {
+                hideMegaMenu();
+            }
+        });
+    }
+    
     // Profile modal
     var modal = document.getElementById('enlProfileModal');
     if (modal) {

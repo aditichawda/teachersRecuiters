@@ -1,4 +1,4 @@
-<!-- TOP COMPANIES START -->
+<!-- TOP companies START -->
 <div class="section-full p-t5 p-b6 site-bg-white twm-companies-wrap">
     <!-- TITLE START-->
     <div class="section-head center wt-small-separator-outer">
@@ -46,4 +46,4 @@
         @endif
     </div>
 </div>
-<!-- TOP COMPANIES END -->
+<!-- TOP companies END -->

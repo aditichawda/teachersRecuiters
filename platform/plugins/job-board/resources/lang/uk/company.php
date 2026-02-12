@@ -2,6 +2,6 @@
 
 return [
     'name' => 'Компанії / Заклади',
-    'companies' => 'Companies',
+    'companies' => 'companies',
     'create' => 'New company',
 ];

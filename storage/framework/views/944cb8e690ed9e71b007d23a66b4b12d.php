@@ -80,7 +80,7 @@
         </div>
 
         <div class="row">
-            <div class="companies-toolbar product-filter-wrap company-option-wrap">
+            <!-- <div class="companies-toolbar product-filter-wrap company-option-wrap">
                 <div>
                     <span class="woocommerce-result-count-left">
                         <?php echo e(__('Showing :from – :to of :total results', [
@@ -111,7 +111,7 @@
                         <option <?php if($layout == 'list'): echo 'selected'; endif; ?> value="list"><?php echo e(__('List')); ?></option>
                     </select>
                 </form>
-            </div>
+            </div> -->
 
             <div class="companies-wrap">
                 <div id="page-loading" style="display: none">

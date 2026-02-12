@@ -277,7 +277,7 @@ set ei leitud',
     'edit_job_category' => 'Muuda töö kategooriat',
     'edit_job_tag' => 'Muuda töö märgendit',
 
-    // Companies
+    // companies
     'companies' => 'Ettevõtted',
     'edit_this_company' => 'Muuda seda ettevõtet',
     'create_a_company' => 'Loo ettevõte',

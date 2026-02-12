@@ -1,4 +1,4 @@
-<!-- TOP COMPANIES START -->
+<!-- TOP companies START -->
 <div class="section-full p-t5 p-b6 site-bg-white twm-companies-wrap">
     <!-- TITLE START-->
     <div class="section-head center wt-small-separator-outer">
@@ -47,5 +47,5 @@
         <?php endif; ?>
     </div>
 </div>
-<!-- TOP COMPANIES END -->
+<!-- TOP companies END -->
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/shortcodes/featured-companies/style-2.blade.php ENDPATH**/ ?>

@@ -13,7 +13,7 @@ use Botble\Language\Facades\Language;
 use Illuminate\Http\Request;
 
 /**
- * @group Companies
+ * @group companies
  */
 class CompanyController extends BaseController
 {

@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'name' => 'Companies',
-    'companies' => 'Companies',
+    'name' => 'companies',
+    'companies' => 'companies',
     'create' => 'New company',
     'viewing' => 'Viewing company ":name"',
     'information' => 'Company Information',

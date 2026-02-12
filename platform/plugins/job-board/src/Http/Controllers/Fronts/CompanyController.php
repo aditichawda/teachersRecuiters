@@ -40,7 +40,7 @@ class CompanyController extends BaseController
              */
             $account = $request->user('account');
 
-            abort_if(! JobBoardHelper::employerCreateMultipleCompanies() && $account->companies()->exists(), 403);
+            abort_if(! JobBoardHelper::employerCreateMultiplecompanies() && $account->companies()->exists(), 403);
 
             return $next($request);
         })->only(['create', 'store']);

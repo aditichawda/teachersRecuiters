@@ -27,7 +27,7 @@ return [
     ],
     'jobs_page' => 'Вакансії',
     'categories_page' => 'Job Categories Page',
-    'companies_page' => 'Job Companies Page',
+    'companies_page' => 'Job companies Page',
     'candidates_page' => 'Job Candidates Page',
     'form' => [
         'unique_id' => 'Унікальний ID',

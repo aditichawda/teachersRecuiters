@@ -116,7 +116,7 @@ class CompanySeeder extends BaseSeeder
         $faker = $this->fake();
 
         // Define which companies should be verified (about 60% of them)
-        $verifiedCompanies = ['Pinterest', 'Linkedin', 'Uber', 'Apple', 'Adobe', 'WordPress', 'Envato', 'Magento', 'Woocommerce'];
+        $verifiedcompanies = ['Pinterest', 'Linkedin', 'Uber', 'Apple', 'Adobe', 'WordPress', 'Envato', 'Magento', 'Woocommerce'];
 
         foreach ($data as $index => $item) {
             $city = null;
@@ -126,7 +126,7 @@ class CompanySeeder extends BaseSeeder
             }
 
             // Determine if this company should be verified
-            $isVerified = in_array($item['name'], $verifiedCompanies);
+            $isVerified = in_array($item['name'], $verifiedcompanies);
 
             $data = [
                 'content' => $content,

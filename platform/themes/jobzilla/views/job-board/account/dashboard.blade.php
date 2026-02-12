@@ -75,9 +75,9 @@
     } catch (\Exception $e) {}
 
     // Get featured companies/schools
-    $featuredCompanies = [];
+    $featuredcompanies = [];
     try {
-        $featuredCompanies = \Botble\JobBoard\Models\Company::query()
+        $featuredcompanies = \Botble\JobBoard\Models\Company::query()
             ->where('status', 'approved')
             ->latest()
             ->limit(6)
@@ -972,9 +972,9 @@
                                 <h5><i class="fa fa-school me-2" style="color: #6f42c1;"></i>Featured Schools / Institutions</h5>
                             </div>
                             <div class="js-content-card-body">
-                                @if(count($featuredCompanies) > 0)
+                                @if(count($featuredcompanies) > 0)
                                     <div class="js-school-grid">
-                                        @foreach($featuredCompanies as $company)
+                                        @foreach($featuredcompanies as $company)
                                             <div class="js-school-card">
                                                 @if($company->logo)
                                                     <img src="{{ RvMedia::getImageUrl($company->logo, 'thumb') }}" alt="{{ $company->name }}">

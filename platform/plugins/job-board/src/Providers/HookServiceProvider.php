@@ -506,13 +506,13 @@ class HookServiceProvider extends ServiceProvider
                 'value' => $pendingApplications,
             ];
 
-            $pendingCompanies = Company::query()
+            $pendingcompanies = Company::query()
                 ->where('status', BaseStatusEnum::PENDING)
                 ->count();
 
             $data[] = [
                 'key' => 'pending-companies',
-                'value' => $pendingCompanies,
+                'value' => $pendingcompanies,
             ];
 
             $pendingJobs = Job::query()
@@ -535,7 +535,7 @@ class HookServiceProvider extends ServiceProvider
 
             $data[] = [
                 'key' => 'job-board-count',
-                'value' => $pendingApplications + $pendingCompanies + $pendingJobs + $pendingAccounts,
+                'value' => $pendingApplications + $pendingcompanies + $pendingJobs + $pendingAccounts,
             ];
         }
 

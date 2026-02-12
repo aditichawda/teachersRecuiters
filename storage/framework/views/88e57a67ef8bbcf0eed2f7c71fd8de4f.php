@@ -1,4 +1,4 @@
-<?php
+-size<?php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
@@ -109,7 +109,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="<?php echo e(JobBoardHelper::getJobCompaniesPageURL()); ?>">
+                                <a class="nav-link" style="color: black;" href="<?php echo e(JobBoardHelper::getJobcompaniesPageURL()); ?>">
                                     <span><?php echo e(__('Find Schools')); ?></span>
                                 </a>
                             </li>
@@ -124,8 +124,8 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.notifications')); ?>">
-                                    <span><?php echo e(__('Notifications')); ?></span>
+                                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
+                                    <i class="feather-bell"></i>
                                 </a>
                             </li>
                         <?php else: ?>
@@ -145,7 +145,6 @@
                         <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
                             <a class="nav-link dropdown-toggle" style="color: black;" href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
                                 <span><?php echo e(__('Jobs')); ?></span>
-                                <i class="feather-chevron-down ms-1"></i>
                             </a>
                             <div class="dropdown-menu mega-menu" id="jobs-mega-menu" aria-labelledby="jobs-dropdown">
                                 <div class="mega-menu-wrapper">
@@ -388,7 +387,8 @@
     position: relative;
     z-index: 999;
     width: 100%;
-    background: #fff;
+    background: #fff !important;
+    background-color: #fff !important;
     transition: transform 0.3s ease, opacity 0.3s ease;
 }
 /* Fixed navbar styling */
@@ -396,20 +396,41 @@
 .is-fixed .main-bar.color-fill,
 .header-fixed .main-bar,
 .sticky-wrapper.is-stuck .main-bar,
-.sticky-wrapper.is-stuck .sticky-header .main-bar {
+.sticky-wrapper.is-stuck .sticky-header .main-bar,
+.main-bar.color-fill,
+.main-bar[class*="bg-"],
+.main-bar[style*="background"] {
     position: fixed !important;
-    top: 40px !important;
+    /* top: 40px !important; */
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
     z-index: 9999 !important;
     background: #fff !important;
+    background-color: #fff !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
 }
 /* Ensure header-top doesn't interfere */
 .is-fixed ~ .page-content,
 .header-fixed ~ .page-content {
     margin-top: 0;
+}
+
+/* Force white background on navbar in all states */
+.main-bar,
+.sticky-header .main-bar,
+.site-header .main-bar {
+    background: #fff !important;
+    background-color: #fff !important;
+}
+
+/* Override any theme colors or gradients */
+.main-bar.color-fill,
+.main-bar[class*="bg-"],
+.main-bar[style*="background"] {
+    background: #fff !important;
+    background-color: #fff !important;
+    background-image: none !important;
 }
 /* Mega Menu Styles */
 .mega-menu-dropdown {
@@ -1084,20 +1105,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Make it fixed when scrolled
                 if (window.scrollY > 50) {
                     mainBar.style.position = 'fixed';
-                    mainBar.style.top = '40px';
+                    // mainBar.style.top = '40px';
                     mainBar.style.left = '0';
                     mainBar.style.right = '0';
                     mainBar.style.width = '100%';
                     mainBar.style.zIndex = '9999';
                     mainBar.style.background = '#fff';
+                    mainBar.style.backgroundColor = '#fff';
                     mainBar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
                 } else {
                     mainBar.style.position = 'relative';
-                    mainBar.style.top = 'auto';
+                    // mainBar.style.top = 'auto';
                     mainBar.style.left = 'auto';
                     mainBar.style.right = 'auto';
                     mainBar.style.width = '100%';
                     mainBar.style.zIndex = '999';
+                    mainBar.style.background = '#fff';
+                    mainBar.style.backgroundColor = '#fff';
                     mainBar.style.boxShadow = 'none';
                 }
             }
@@ -1105,18 +1129,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         function hideNavbar() {
             if (mainBar && window.scrollY > scrollThreshold) {
-                mainBar.style.transform = 'translateY(-100%)';
-                mainBar.style.opacity = '0';
-                mainBar.style.visibility = 'hidden';
+                // mainBar.style.transform = 'translateY(-100%)';
+                // mainBar.style.opacity = '0';
+                // mainBar.style.visibility = 'hidden';
                 mainBar.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
                 // Keep it fixed even when hidden
                 mainBar.style.position = 'fixed';
-                mainBar.style.top = '40px';
+                // mainBar.style.top = '40px';
                 mainBar.style.left = '0';
                 mainBar.style.right = '0';
                 mainBar.style.width = '100%';
                 mainBar.style.zIndex = '9999';
                 mainBar.style.background = '#fff';
+                mainBar.style.backgroundColor = '#fff';
             }
         }
         

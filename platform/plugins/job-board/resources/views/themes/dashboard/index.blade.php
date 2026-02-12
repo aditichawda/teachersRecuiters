@@ -11,7 +11,7 @@
 
         <x-core::stat-widget.item
             :label="trans('plugins/job-board::dashboard.companies_label')"
-            :value="$totalCompanies"
+            :value="$totalcompanies"
             icon="ti ti-building"
             color="success"
         />

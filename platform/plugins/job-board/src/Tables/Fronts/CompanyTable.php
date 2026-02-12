@@ -92,7 +92,7 @@ class CompanyTable extends TableAbstract
 
     public function buttons(): array
     {
-        if (! JobBoardHelper::employerCreateMultipleCompanies() && auth('account')->user()->companies()->exists()) {
+        if (! JobBoardHelper::employerCreateMultiplecompanies() && auth('account')->user()->companies()->exists()) {
             return parent::buttons();
         }
 

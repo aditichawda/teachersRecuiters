@@ -70,14 +70,14 @@
             <x-core::stat-widget class="mb-0">
                 <x-core::stat-widget.item
                     :label="trans('plugins/job-board::job-board.reports.total_companies')"
-                    :value="number_format($totalCompanies)"
+                    :value="number_format($totalcompanies)"
                     icon="ti ti-building"
                     color="primary"
                 />
 
                 <x-core::stat-widget.item
                     :label="trans('plugins/job-board::job-board.reports.featured_companies')"
-                    :value="number_format($featuredCompanies)"
+                    :value="number_format($featuredcompanies)"
                     icon="ti ti-star"
                     color="info"
                 />

@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'Chỉnh sửa danh mục việc làm này',
     'edit_job_tag' => 'Chỉnh sửa thẻ việc làm này',
 
-    // Companies
+    // companies
     'companies' => 'Công ty',
     'edit_this_company' => 'Chỉnh sửa công ty này',
     'create_a_company' => 'Tạo công ty',

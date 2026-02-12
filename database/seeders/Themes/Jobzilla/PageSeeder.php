@@ -31,7 +31,7 @@ class PageSeeder extends BaseSeeder
                 'content' =>
                     Html::tag(
                         'div',
-                        '[hero-banner title="We Have {{208,000+}} Live Jobs" subtitle="Your {{Dream Job}} in one place" description="Find jobs that match your interests with us. Jobzilla provides a place you to find your Job." popular_searches="Developer;Designer;Architect;Engineer" banner_1="themes/jobzilla/general/right-pic-1.jpg" banner_2="themes/jobzilla/general/right-pic-2.jpg" button_name="Get Started" button_url="/" bg_image_1="themes/jobzilla/general/bg2.jpg" style="style-2" quantity="3" title_1="Companies Jobs" count_1="12" extra_1="K+" image_1="themes/jobzilla/general/icon-4.png" title_2="Job For Countries" count_2="98" extra_2="+" image_2="themes/jobzilla/general/icon-5.png" title_3="Jobs Done" count_3="3" extra_3="+" image_3="themes/jobzilla/general/icon-3.png" ][/hero-banner]'
+                        '[hero-banner title="We Have {{208,000+}} Live Jobs" subtitle="Your {{Dream Job}} in one place" description="Find jobs that match your interests with us. Jobzilla provides a place you to find your Job." popular_searches="Developer;Designer;Architect;Engineer" banner_1="themes/jobzilla/general/right-pic-1.jpg" banner_2="themes/jobzilla/general/right-pic-2.jpg" button_name="Get Started" button_url="/" bg_image_1="themes/jobzilla/general/bg2.jpg" style="style-2" quantity="3" title_1="companies Jobs" count_1="12" extra_1="K+" image_1="themes/jobzilla/general/icon-4.png" title_2="Job For Countries" count_2="98" extra_2="+" image_2="themes/jobzilla/general/icon-5.png" title_3="Jobs Done" count_3="3" extra_3="+" image_3="themes/jobzilla/general/icon-3.png" ][/hero-banner]'
                     ) .
                     Html::tag(
                         'div',
@@ -39,7 +39,7 @@ class PageSeeder extends BaseSeeder
                     ) .
                     Html::tag(
                         'div',
-                        '[how-it-works title="How It Works" subtitle="Follow our steps we will help you." check_list="Trusted & Quality Job;International Job;No Extra Charge;Top Companies" style="style-2" quantity="4" title_1="Register Your Account" subtitle_1="You need to create an account to find the best and preferred job." image_1="themes/jobzilla/general/icon1.png" bg_color_1="#3898e2" title_2="Search Your Job" subtitle_2="You need to create an account to find the best and preferred job." image_2="themes/jobzilla/general/icon4.png" bg_color_2="#e2b438" title_3="Apply For Dream Job" subtitle_3="You need to create an account to find the best and preferred job." image_3="themes/jobzilla/general/icon2.png" bg_color_3="#bc84ca" title_4="Upload Your Resume" subtitle_4="You need to create an account to find the best and preferred job." image_4="themes/jobzilla/general/icon3.png" bg_color_4="#56d8b1" ][/how-it-works]'
+                        '[how-it-works title="How It Works" subtitle="Follow our steps we will help you." check_list="Trusted & Quality Job;International Job;No Extra Charge;Top companies" style="style-2" quantity="4" title_1="Register Your Account" subtitle_1="You need to create an account to find the best and preferred job." image_1="themes/jobzilla/general/icon1.png" bg_color_1="#3898e2" title_2="Search Your Job" subtitle_2="You need to create an account to find the best and preferred job." image_2="themes/jobzilla/general/icon4.png" bg_color_2="#e2b438" title_3="Apply For Dream Job" subtitle_3="You need to create an account to find the best and preferred job." image_3="themes/jobzilla/general/icon2.png" bg_color_3="#bc84ca" title_4="Upload Your Resume" subtitle_4="You need to create an account to find the best and preferred job." image_4="themes/jobzilla/general/icon3.png" bg_color_4="#56d8b1" ][/how-it-works]'
                     ) .
                     Html::tag(
                         'div',
@@ -72,11 +72,11 @@ class PageSeeder extends BaseSeeder
                 'content' =>
                     Html::tag(
                         'div',
-                        '[hero-banner title="FIND TOP IT JOBS" subtitle="For talent Developers" description="Type your keyword, then click search to find your perfect job." popular_searches="Developer;Designer;Architect;Engineer" bg_image_1="themes/jobzilla/general/banner1.jpg" gradient_text="7,000+ BROWSE JOBS" style="style-3" quantity="3" title_1="Companies Jobs" count_1="12" extra_1="K+" title_2="Job For Countries" count_2="98" extra_2="+" title_3="Jobs Done" count_3="3" extra_3="+" image_3="themes/jobzilla/general/icon-3.png" ][/hero-banner]'
+                        '[hero-banner title="FIND TOP IT JOBS" subtitle="For talent Developers" description="Type your keyword, then click search to find your perfect job." popular_searches="Developer;Designer;Architect;Engineer" bg_image_1="themes/jobzilla/general/banner1.jpg" gradient_text="7,000+ BROWSE JOBS" style="style-3" quantity="3" title_1="companies Jobs" count_1="12" extra_1="K+" title_2="Job For Countries" count_2="98" extra_2="+" title_3="Jobs Done" count_3="3" extra_3="+" image_3="themes/jobzilla/general/icon-3.png" ][/hero-banner]'
                     ) .
                     Html::tag(
                         'div',
-                        '[featured-companies title="Get hired in top companies" subtitle="Top Companies" style="style-2" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+" ][/featured-companies]'
+                        '[featured-companies title="Get hired in top companies" subtitle="Top companies" style="style-2" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+" ][/featured-companies]'
                     ) .
                     Html::tag(
                         'div',
@@ -106,7 +106,7 @@ class PageSeeder extends BaseSeeder
                 'content' =>
                     Html::tag(
                         'div',
-                        '[hero-banner title="We Have {{208,000+}} Live Jobs" subtitle="Find the {{job}} that fits your life" description="Type your keyword, then click search to find your perfect job." popular_searches="Developer;Designer;Architect;Engineer" banner_1="themes/jobzilla/general/r-img2.png" banner_2="themes/jobzilla/general/r-img1.png" bg_image_1="themes/jobzilla/general/bg1.jpg" gradient_text="Jobs" style="style-1" quantity="3" title_1="Companies Jobs" count_1="12" extra_1="K+" image_1="themes/jobzilla/general/icon-2.png" title_2="Job For Countries" count_2="98" extra_2="+" image_2="themes/jobzilla/general/icon-1.png" title_3="Jobs Done" count_3="3" extra_3="+" image_3="themes/jobzilla/general/icon-3.png" ][/hero-banner]'
+                        '[hero-banner title="We Have {{208,000+}} Live Jobs" subtitle="Find the {{job}} that fits your life" description="Type your keyword, then click search to find your perfect job." popular_searches="Developer;Designer;Architect;Engineer" banner_1="themes/jobzilla/general/r-img2.png" banner_2="themes/jobzilla/general/r-img1.png" bg_image_1="themes/jobzilla/general/bg1.jpg" gradient_text="Jobs" style="style-1" quantity="3" title_1="companies Jobs" count_1="12" extra_1="K+" image_1="themes/jobzilla/general/icon-2.png" title_2="Job For Countries" count_2="98" extra_2="+" image_2="themes/jobzilla/general/icon-1.png" title_3="Jobs Done" count_3="3" extra_3="+" image_3="themes/jobzilla/general/icon-3.png" ][/hero-banner]'
                     ) .
                     Html::tag(
                         'div',
@@ -122,7 +122,7 @@ class PageSeeder extends BaseSeeder
                     ) .
                     Html::tag(
                         'div',
-                        '[featured-companies title="Get hired in top companies" subtitle="Top Companies" style="style-1" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+" ][/featured-companies]'
+                        '[featured-companies title="Get hired in top companies" subtitle="Top companies" style="style-1" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+" ][/featured-companies]'
                     ) .
                     Html::tag(
                         'div',
@@ -151,11 +151,11 @@ class PageSeeder extends BaseSeeder
                     ) .
                     Html::tag(
                         'div',
-                        '[how-it-works title="How It Works" subtitle="Follow our steps we will help you." check_list="Trusted & Quality Job;International Job;No Extra Charge;Top Companies" image="themes/jobzilla/general/main-bg.png" style="style-4" quantity="4" title_1="Register Your Account" subtitle_1="You need to create an account to find the best and preferred job." image_1="themes/jobzilla/general/icon1.png" bg_color_1="#3898e2" title_2="Search Your Job" subtitle_2="You need to create an account to find the best and preferred job." image_2="themes/jobzilla/general/icon4.png" bg_color_2="#e2b438" title_3="Apply For Dream Job" subtitle_3="You need to create an account to find the best and preferred job." image_3="themes/jobzilla/general/icon2.png" bg_color_3="#bc84ca" title_4="Upload Your Resume" subtitle_4="You need to create an account to find the best and preferred job." image_4="themes/jobzilla/general/icon3.png" bg_color_4="#56d8b1" ][/how-it-works]'
+                        '[how-it-works title="How It Works" subtitle="Follow our steps we will help you." check_list="Trusted & Quality Job;International Job;No Extra Charge;Top companies" image="themes/jobzilla/general/main-bg.png" style="style-4" quantity="4" title_1="Register Your Account" subtitle_1="You need to create an account to find the best and preferred job." image_1="themes/jobzilla/general/icon1.png" bg_color_1="#3898e2" title_2="Search Your Job" subtitle_2="You need to create an account to find the best and preferred job." image_2="themes/jobzilla/general/icon4.png" bg_color_2="#e2b438" title_3="Apply For Dream Job" subtitle_3="You need to create an account to find the best and preferred job." image_3="themes/jobzilla/general/icon2.png" bg_color_3="#bc84ca" title_4="Upload Your Resume" subtitle_4="You need to create an account to find the best and preferred job." image_4="themes/jobzilla/general/icon3.png" bg_color_4="#56d8b1" ][/how-it-works]'
                     ) .
                     Html::tag(
                         'div',
-                        '[featured-companies title="Get hired in top companies" subtitle="Top Companies" style="style-3" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+" ][/featured-companies]'
+                        '[featured-companies title="Get hired in top companies" subtitle="Top companies" style="style-3" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+" ][/featured-companies]'
                     ) .
                     Html::tag(
                         'div',
@@ -225,7 +225,7 @@ class PageSeeder extends BaseSeeder
                     ) .
                     Html::tag(
                         'div',
-                        '[how-it-works title="How It Works" subtitle="Follow our steps we will help you." check_list="Trusted & Quality Job;International Job;No Extra Charge;Top Companies" style="style-2" quantity="4" title_1="Register Your Account" subtitle_1="You need to create an account to find the best and preferred job." image_1="themes/jobzilla/general/icon1.png" bg_color_1="#3898e2" title_2="Search Your Job" subtitle_2="You need to create an account to find the best and preferred job." image_2="themes/jobzilla/general/icon4.png" bg_color_2="#e2b438" title_3="Apply For Dream Job" subtitle_3="You need to create an account to find the best and preferred job." image_3="themes/jobzilla/general/icon2.png" bg_color_3="#bc84ca" title_4="Upload Your Resume" subtitle_4="You need to create an account to find the best and preferred job." image_4="themes/jobzilla/general/icon3.png" bg_color_4="#56d8b1" ][/how-it-works]'
+                        '[how-it-works title="How It Works" subtitle="Follow our steps we will help you." check_list="Trusted & Quality Job;International Job;No Extra Charge;Top companies" style="style-2" quantity="4" title_1="Register Your Account" subtitle_1="You need to create an account to find the best and preferred job." image_1="themes/jobzilla/general/icon1.png" bg_color_1="#3898e2" title_2="Search Your Job" subtitle_2="You need to create an account to find the best and preferred job." image_2="themes/jobzilla/general/icon4.png" bg_color_2="#e2b438" title_3="Apply For Dream Job" subtitle_3="You need to create an account to find the best and preferred job." image_3="themes/jobzilla/general/icon2.png" bg_color_3="#bc84ca" title_4="Upload Your Resume" subtitle_4="You need to create an account to find the best and preferred job." image_4="themes/jobzilla/general/icon3.png" bg_color_4="#56d8b1" ][/how-it-works]'
                     ) .
                     Html::tag(
                         'div',
@@ -233,7 +233,7 @@ class PageSeeder extends BaseSeeder
                     ) .
                     Html::tag(
                         'div',
-                        '[featured-companies title="Get hired in top companies" subtitle="Top Companies" type="default" style="style-1" quantity="6" ][/featured-companies]'
+                        '[featured-companies title="Get hired in top companies" subtitle="Top companies" type="default" style="style-1" quantity="6" ][/featured-companies]'
                     ),
                 'template' => 'static',
             ],
@@ -255,7 +255,7 @@ class PageSeeder extends BaseSeeder
                 'template' => 'static',
             ],
             [
-                'name' => 'Companies',
+                'name' => 'companies',
                 'content' =>
                     Html::tag('div', '[job-companies style="grid"][/job-companies]'),
                 'template' => 'static',
@@ -308,11 +308,11 @@ class PageSeeder extends BaseSeeder
                     ) .
                     Html::tag(
                         'div',
-                        '[how-it-works title="How It Works" subtitle="Follow our steps we will help you." check_list="Trusted & Quality Job;International Job;No Extra Charge;Top Companies" image="themes/jobzilla/general/main-bg.png" style="style-4" quantity="4" title_1="Register Your Account" subtitle_1="You need to create an account to find the best and preferred job." image_1="themes/jobzilla/general/icon1.png" bg_color_1="#3898e2" title_2="Search Your Job" subtitle_2="You need to create an account to find the best and preferred job." image_2="themes/jobzilla/general/icon4.png" bg_color_2="#e2b438" title_3="Apply For Dream Job" subtitle_3="You need to create an account to find the best and preferred job." image_3="themes/jobzilla/general/icon2.png" bg_color_3="#bc84ca" title_4="Upload Your Resume" subtitle_4="You need to create an account to find the best and preferred job." image_4="themes/jobzilla/general/icon3.png" bg_color_4="#56d8b1" ][/how-it-works]'
+                        '[how-it-works title="How It Works" subtitle="Follow our steps we will help you." check_list="Trusted & Quality Job;International Job;No Extra Charge;Top companies" image="themes/jobzilla/general/main-bg.png" style="style-4" quantity="4" title_1="Register Your Account" subtitle_1="You need to create an account to find the best and preferred job." image_1="themes/jobzilla/general/icon1.png" bg_color_1="#3898e2" title_2="Search Your Job" subtitle_2="You need to create an account to find the best and preferred job." image_2="themes/jobzilla/general/icon4.png" bg_color_2="#e2b438" title_3="Apply For Dream Job" subtitle_3="You need to create an account to find the best and preferred job." image_3="themes/jobzilla/general/icon2.png" bg_color_3="#bc84ca" title_4="Upload Your Resume" subtitle_4="You need to create an account to find the best and preferred job." image_4="themes/jobzilla/general/icon3.png" bg_color_4="#56d8b1" ][/how-it-works]'
                     ) .
                     Html::tag(
                         'div',
-                        '[featured-companies title="Get hired in top companies" subtitle="Top Companies" style="style-3" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+" ][/featured-companies]'
+                        '[featured-companies title="Get hired in top companies" subtitle="Top companies" style="style-3" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+" ][/featured-companies]'
                     ) .
                     Html::tag(
                         'div',
@@ -432,7 +432,7 @@ class PageSeeder extends BaseSeeder
                     ) .
                     Html::tag(
                         'div',
-                        '[featured-companies title="Top Companies" subtitle="Get hired in top companies" type="featured" style="style-7" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+"][/featured-companies]'
+                        '[featured-companies title="Top companies" subtitle="Get hired in top companies" type="featured" style="style-7" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+"][/featured-companies]'
                     ) .
                     Html::tag(
                         'div',
@@ -462,7 +462,7 @@ class PageSeeder extends BaseSeeder
                     ) .
                     Html::tag(
                         'div',
-                        '[featured-companies title="Get hired in top companies" subtitle="Top Companies" type="featured" style="style-8" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+"][/featured-companies]'
+                        '[featured-companies title="Get hired in top companies" subtitle="Top companies" type="featured" style="style-8" quantity="3" title_1="Million daily active users" count_1="5" extra_1="M+" title_2="Open job positions" count_2="9" extra_2="K+" title_3="Million stories shared" count_3="2" extra_3="M+"][/featured-companies]'
                     ) .
                     Html::tag(
                         'div',

@@ -71,9 +71,9 @@ To authenticate API requests:
 - **Parameters**:
   - `limit` (integer): Number of jobs (max 50, default 10)
 
-## Companies API
+## companies API
 
-### List Companies
+### List companies
 - **GET** `/api/v1/companies`
 - **Parameters**:
   - `keyword` (string): Search keyword
@@ -91,12 +91,12 @@ To authenticate API requests:
   - `per_page` (integer): Items per page (max 50, default 12)
   - `page` (integer): Page number
 
-### Get Featured Companies
+### Get Featured companies
 - **GET** `/api/v1/companies/featured`
 - **Parameters**:
   - `limit` (integer): Number of companies (max 50, default 10)
 
-### Search Companies
+### Search companies
 - **GET** `/api/v1/companies/search`
 - **Parameters**:
   - `q` (string): Search query
@@ -331,7 +331,7 @@ To authenticate API requests:
 - **DELETE** `/api/v1/account/saved-jobs/{jobId}`
 - **Authentication**: Required (Sanctum token)
 
-### Get Companies (Employers Only)
+### Get companies (Employers Only)
 - **GET** `/api/v1/account/companies`
 - **Authentication**: Required (Sanctum token)
 - **Description**: Get employer's companies

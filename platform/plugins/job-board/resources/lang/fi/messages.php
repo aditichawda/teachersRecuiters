@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'Muokkaa työkategoriaa',
     'edit_job_tag' => 'Muokkaa työtunnistetta',
 
-    // Companies
+    // companies
     'companies' => 'Yritykset',
     'edit_this_company' => 'Muokkaa tätä yritystä',
     'create_a_company' => 'Luo yritys',

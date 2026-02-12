@@ -214,7 +214,7 @@ AdminHelper::registerRoutes(function (): void {
 
             Route::get('all', [
                 'as' => 'all',
-                'uses' => 'CompanyController@getAllCompanies',
+                'uses' => 'CompanyController@getAllcompanies',
                 'permission' => 'companies.index',
             ]);
 

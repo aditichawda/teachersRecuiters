@@ -1,4 +1,4 @@
-<!-- TOP COMPANIES START -->
+<!-- TOP companies START -->
 <div class="section-full p-t120  site-bg-white twm-companies-wrap">
     <div class="section-head center wt-small-separator-outer">
         <div class="wt-small-separator site-text-primary">

@@ -281,7 +281,7 @@ class GeneralSettingForm extends SettingForm
                 OnOffCheckboxField::class,
                 OnOffFieldOption::make()
                     ->label(trans('plugins/job-board::settings.general.allow_employer_multiple_companies'))
-                    ->value(JobBoardHelper::employerCreateMultipleCompanies())
+                    ->value(JobBoardHelper::employerCreateMultiplecompanies())
                     ->helperText(trans('plugins/job-board::settings.general.allow_employer_multiple_companies_helper'))
             )
             ->add(

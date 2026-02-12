@@ -948,7 +948,7 @@ app()->booted(function (): void {
     }
 
     if (is_plugin_active('job-board')) {
-        add_shortcode('featured-companies', __('Featured Companies'), __('Featured Companies'), function ($shortcode) {
+        add_shortcode('featured-companies', __('Featured companies'), __('Featured companies'), function ($shortcode) {
             $limit = (int) $shortcode->limit ?: 12;
             $with = ['slugable'];
             if (is_plugin_active('location')) {
@@ -1544,7 +1544,7 @@ app()->booted(function (): void {
             return $form;
         });
 
-        add_shortcode('job-companies', __('Job Companies'), __('Job Companies'), function ($shortcode) {
+        add_shortcode('job-companies', __('Job companies'), __('Job companies'), function ($shortcode) {
             $companies = Company::query()
                 ->wherePublished()
                 ->withCount(['jobs', 'reviews'])

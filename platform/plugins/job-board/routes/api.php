@@ -22,7 +22,7 @@ Route::group([
         Route::post('/{id}/apply', 'JobController@apply')->wherePrimaryKey();
     });
 
-    // Public Companies API
+    // Public companies API
     Route::group(['prefix' => 'companies'], function (): void {
         Route::get('/', 'CompanyController@index');
         Route::get('/{id}', 'CompanyController@show')->wherePrimaryKey();

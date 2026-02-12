@@ -37,7 +37,7 @@ return [
     'update_existing_jobs' => 'Update existing jobs',
     'update_existing_jobs_description' => 'If checked, existing jobs with the same ID or unique ID will be updated instead of creating new ones.',
     'company' => [
-        'name' => 'Import Companies',
+        'name' => 'Import companies',
         'description' => 'Import companies from a CSV/Excel file.',
         'done_message' => ':created companies created and :updated companies updated.',
         'rules' => [

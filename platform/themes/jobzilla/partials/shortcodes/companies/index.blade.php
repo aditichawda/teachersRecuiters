@@ -79,7 +79,7 @@
         </div>
 
         <div class="row">
-            <div class="companies-toolbar product-filter-wrap company-option-wrap">
+            <!-- <div class="companies-toolbar product-filter-wrap company-option-wrap">
                 <div>
                     <span class="woocommerce-result-count-left">
                         {{ __('Showing :from – :to of :total results', [
@@ -108,7 +108,7 @@
                         <option @selected($layout == 'list') value="list">{{ __('List') }}</option>
                     </select>
                 </form>
-            </div>
+            </div> -->
 
             <div class="companies-wrap">
                 <div id="page-loading" style="display: none">

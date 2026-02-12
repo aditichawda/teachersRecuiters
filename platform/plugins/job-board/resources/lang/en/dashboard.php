@@ -139,7 +139,7 @@ return [
     'hello' => 'Hello',
     'id_label' => 'ID: :id',
     'jobs_label' => 'Jobs',
-    'companies_label' => 'Companies',
+    'companies_label' => 'companies',
     'applicants_label' => 'Applicants',
     'new_applicants' => 'New Applicants',
     'view_label' => 'View',
