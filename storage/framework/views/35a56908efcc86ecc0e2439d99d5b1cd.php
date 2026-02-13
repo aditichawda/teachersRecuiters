@@ -133,7 +133,19 @@
     </li>
 </ul>
 
+<<<<<<< HEAD
 <?php if (! $__env->hasRenderedOnce('fe7f4c4b-07a0-4d30-8b2b-cba5d56c0755')): $__env->markAsRenderedOnce('fe7f4c4b-07a0-4d30-8b2b-cba5d56c0755'); ?>
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD:storage/framework/views/35a56908efcc86ecc0e2439d99d5b1cd.php
+<?php if (! $__env->hasRenderedOnce('fe7f4c4b-07a0-4d30-8b2b-cba5d56c0755')): $__env->markAsRenderedOnce('fe7f4c4b-07a0-4d30-8b2b-cba5d56c0755'); ?>
+=======
+<?php if (! $__env->hasRenderedOnce('0a0e311a-1780-4e64-bee1-4a5deb5906ba')): $__env->markAsRenderedOnce('0a0e311a-1780-4e64-bee1-4a5deb5906ba'); ?>
+>>>>>>> main:storage/framework/views/3ad0fcdded257800ca2d24ae6b59ec94.php
+=======
+<?php if (! $__env->hasRenderedOnce('fe7f4c4b-07a0-4d30-8b2b-cba5d56c0755')): $__env->markAsRenderedOnce('fe7f4c4b-07a0-4d30-8b2b-cba5d56c0755'); ?>
+>>>>>>> 2ac84dbe (13 feb comment aditi)
+>>>>>>> f922c25b (13 feb comment aditi)
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             function toggleClipboardActionIcon(element) {
