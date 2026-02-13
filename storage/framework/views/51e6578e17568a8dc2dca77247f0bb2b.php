@@ -1,7 +1,7 @@
-@php
+<?php
     Theme::layout('without-navbar');
     Theme::asset()->add('auth-overrides', Theme::asset()->url('css/front-auth-overrides.css'), ['auth-css']);
-@endphp
+?>
 
 <style>
     .login-wrapper {
@@ -370,19 +370,22 @@
             <!-- Alert Messages -->
             <div id="login-alert" style="display: none;"></div>
 
-            @if (session()->has('status'))
+            <?php if(session()->has('status')): ?>
                 <div role="alert" class="alert alert-success">
-                    {{ session('status') }}
+                    <?php echo e(session('status')); ?>
+
                 </div>
-            @elseif (session()->has('auth_error_message'))
+            <?php elseif(session()->has('auth_error_message')): ?>
                 <div role="alert" class="alert alert-danger">
-                    {{ session('auth_error_message') }}
+                    <?php echo e(session('auth_error_message')); ?>
+
                 </div>
-            @elseif (session()->has('auth_success_message'))
+            <?php elseif(session()->has('auth_success_message')): ?>
                 <div role="alert" class="alert alert-success">
-                    {{ session('auth_success_message') }}
+                    <?php echo e(session('auth_success_message')); ?>
+
                 </div>
-            @endif
+            <?php endif; ?>
 
             <!-- Login Method Tabs -->
             <div class="login-methods" id="login-tabs">
@@ -399,16 +402,15 @@
 
             <!-- Password Login Form -->
             <div class="login-form-section active" id="password-login">
-                {!!
-                    $form
+                <?php echo $form
                        ->modify('submit', 'submit', [
                             'label' => __('Sign In'),
                             'attr' => [
                                 'class' => 'btn-login',
                             ],
                         ], true)
-                       ->renderForm()
-                 !!}
+                       ->renderForm(); ?>
+
             </div>
 
             <!-- Email OTP Login Form -->
@@ -501,26 +503,26 @@
             </div>
 
             <div class="social-login-buttons">
-                {{-- Google Login --}}
-                @if(defined('SOCIAL_LOGIN_MODULE_SCREEN_NAME') && app(\Botble\SocialLogin\Supports\SocialService::class)->getProviderEnabled('google'))
-                    <a href="{{ route('auth.social', ['provider' => 'google', 'guard' => 'account', 'model' => \Botble\JobBoard\Models\Account::class]) }}" class="btn-social btn-google">
+                
+                <?php if(defined('SOCIAL_LOGIN_MODULE_SCREEN_NAME') && app(\Botble\SocialLogin\Supports\SocialService::class)->getProviderEnabled('google')): ?>
+                    <a href="<?php echo e(route('auth.social', ['provider' => 'google', 'guard' => 'account', 'model' => \Botble\JobBoard\Models\Account::class])); ?>" class="btn-social btn-google">
                         <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
                         Sign in with Google
                     </a>
-                @else
-                    <a href="{{ route('auth.social', ['provider' => 'google']) }}" class="btn-social btn-google">
+                <?php else: ?>
+                    <a href="<?php echo e(route('auth.social', ['provider' => 'google'])); ?>" class="btn-social btn-google">
                         <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
                         Sign in with Google
                     </a>
-                @endif
+                <?php endif; ?>
 
-                {{-- Facebook Login (only if enabled) --}}
-                @if(defined('SOCIAL_LOGIN_MODULE_SCREEN_NAME') && app(\Botble\SocialLogin\Supports\SocialService::class)->getProviderEnabled('facebook'))
-                    <a href="{{ route('auth.social', ['provider' => 'facebook', 'guard' => 'account', 'model' => \Botble\JobBoard\Models\Account::class]) }}" class="btn-social btn-facebook" style="background: #1877f2; color: #fff; border: none;">
+                
+                <?php if(defined('SOCIAL_LOGIN_MODULE_SCREEN_NAME') && app(\Botble\SocialLogin\Supports\SocialService::class)->getProviderEnabled('facebook')): ?>
+                    <a href="<?php echo e(route('auth.social', ['provider' => 'facebook', 'guard' => 'account', 'model' => \Botble\JobBoard\Models\Account::class])); ?>" class="btn-social btn-facebook" style="background: #1877f2; color: #fff; border: none;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                         Sign in with Facebook
                     </a>
-                @endif
+                <?php endif; ?>
             </div>
 
         </div>
@@ -529,7 +531,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const csrfToken = '{{ csrf_token() }}';
+    const csrfToken = '<?php echo e(csrf_token()); ?>';
     
     // Tab switching
     const tabs = document.querySelectorAll('.login-method-btn');
@@ -635,7 +637,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.innerHTML = '<i class="ti ti-loader me-2"></i>Sending...';
 
         try {
-            const response = await fetch('{{ route("public.account.login.sendEmailOtp") }}', {
+            const response = await fetch('<?php echo e(route("public.account.login.sendEmailOtp")); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -675,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.innerHTML = '<i class="ti ti-loader me-2"></i>Sending...';
 
         try {
-            const response = await fetch('{{ route("public.account.login.sendWhatsAppOtp") }}', {
+            const response = await fetch('<?php echo e(route("public.account.login.sendWhatsAppOtp")); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -720,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.innerHTML = '<i class="ti ti-loader me-2"></i>Verifying...';
 
         try {
-            const response = await fetch('{{ route("public.account.login.verifyOtp") }}', {
+            const response = await fetch('<?php echo e(route("public.account.login.verifyOtp")); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -763,7 +765,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.innerHTML = '<i class="ti ti-loader me-2"></i>Verifying...';
 
         try {
-            const response = await fetch('{{ route("public.account.login.verifyOtp") }}', {
+            const response = await fetch('<?php echo e(route("public.account.login.verifyOtp")); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -798,7 +800,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.innerHTML = 'Sending...';
 
         try {
-            const response = await fetch('{{ route("public.account.login.resendOtp") }}', {
+            const response = await fetch('<?php echo e(route("public.account.login.resendOtp")); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -826,7 +828,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.innerHTML = 'Sending...';
 
         try {
-            const response = await fetch('{{ route("public.account.login.resendOtp") }}', {
+            const response = await fetch('<?php echo e(route("public.account.login.resendOtp")); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -862,3 +864,4 @@ function showWhatsAppStep1() {
     document.querySelectorAll('#whatsapp-otp-inputs .otp-input').forEach(i => i.value = '');
 }
 </script>
+<?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/auth/login.blade.php ENDPATH**/ ?>

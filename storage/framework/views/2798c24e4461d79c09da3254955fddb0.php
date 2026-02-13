@@ -1,11 +1,11 @@
-@php
+<?php
     $layout = 'plugins/job-board::themes.dashboard.layouts.master';
     Theme::set('pageTitle', __('Post a Job'));
-@endphp
+?>
 
-@extends($layout)
 
-@section('content')
+
+<?php $__env->startSection('content'); ?>
 <style>
     .jp-card {
         background: #fff;
@@ -193,43 +193,43 @@
 
 <!-- Page Header -->
 <div class="jp-page-header">
-    <h2><i class="fa fa-plus-circle" style="color: #0073d1; margin-right: 8px;"></i>{{ __('Post a New Job') }}</h2>
-    <a href="{{ route('public.account.jobs.index') }}"><i class="fa fa-list me-1"></i>{{ __('View All Jobs') }}</a>
+    <h2><i class="fa fa-plus-circle" style="color: #0073d1; margin-right: 8px;"></i><?php echo e(__('Post a New Job')); ?></h2>
+    <a href="<?php echo e(route('public.account.jobs.index')); ?>"><i class="fa fa-list me-1"></i><?php echo e(__('View All Jobs')); ?></a>
 </div>
 
-@if($errors->any())
+<?php if($errors->any()): ?>
     <div class="alert alert-danger mb-4" style="border-radius: 10px;">
-        <strong><i class="fa fa-exclamation-triangle me-2"></i>{{ __('Please fix the following errors:') }}</strong>
+        <strong><i class="fa fa-exclamation-triangle me-2"></i><?php echo e(__('Please fix the following errors:')); ?></strong>
         <ul class="mb-0 mt-2">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
+            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <li><?php echo e($error); ?></li>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </ul>
     </div>
-@endif
+<?php endif; ?>
 
-<form id="jobPostForm" method="POST" action="{{ route('public.account.jobs.store') }}" enctype="multipart/form-data">
-    @csrf
+<form id="jobPostForm" method="POST" action="<?php echo e(route('public.account.jobs.store')); ?>" enctype="multipart/form-data">
+    <?php echo csrf_field(); ?>
 
-    {{-- ====== SECTION 1: Company & Job Title ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="1">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-building"></i> Company & Job Details</div>
         </div>
         <div class="jp-card-body" style="padding-top: 20px;">
-        {{-- Company & Institution Type - one row, col-6 col-6 --}}
+        
         <div class="jp-row">
             <div class="jp-col-6">
                 <div class="jp-group">
                     <label class="jp-label">Are you hiring for which school / institution? <span class="required">*</span></label>
                     <select name="company_id" id="company_id" class="jp-select" required>
                         <option value="">-- Select Company --</option>
-                        @foreach ($companies as $id => $name)
-                            <option value="{{ $id }}" data-institution-type="{{ $companyInstitutionTypes[$id] ?? '' }}">{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $companies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>" data-institution-type="<?php echo e($companyInstitutionTypes[$id] ?? ''); ?>"><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                     <small class="text-muted">Select company if already created.</small>
-                    <a href="{{ route('public.account.companies.create') }}" class="jp-create-link d-block mt-1">
+                    <a href="<?php echo e(route('public.account.companies.create')); ?>" class="jp-create-link d-block mt-1">
                         <i class="fa fa-plus"></i> Click here to create company / school
                     </a>
                     <div class="jp-error" id="err-company">Please select a company.</div>
@@ -245,7 +245,7 @@
             </div>
         </div>
 
-        {{-- Job Title & Required Skills - one row, col-6 col-6 --}}
+        
         <div class="jp-row">
             <div class="jp-col-6">
                 <div class="jp-group">
@@ -270,7 +270,7 @@
             </div>
         </div>
 
-        {{-- Detailed Job Description --}}
+        
         <div class="jp-group">
             <label class="jp-label">
                 Detailed Job Description <span class="required">*</span>
@@ -282,7 +282,7 @@
             <div class="jp-error" id="err-description">Job description is required.</div>
         </div>
 
-        {{-- Job Type Category --}}
+        
         <div class="jp-group">
             <label class="jp-label">Job Type <span class="required">*</span></label>
             <div class="jp-option-cards">
@@ -300,21 +300,21 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 2: Salary ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="2">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-rupee-sign"></i> Salary Details</div>
         </div>
         <div class="jp-card-body" style="padding-top: 20px;">
-        {{-- Salary Period & Salary Type - one row, col-6 col-6 --}}
+        
         <div class="jp-row">
             <div class="jp-col-9">
                 <div class="jp-group">
                     <label class="jp-label">Salary Period <span class="required">*</span></label>
                     <div class="jp-salary-type-tabs" id="salary-period-tabs">
-                        @foreach ($salaryRanges as $key => $label)
-                            <div class="jp-salary-tab {{ $key === 'monthly' ? 'active' : '' }}" data-value="{{ $key }}" onclick="selectSalaryPeriod(this)">{{ $label }}</div>
-                        @endforeach
+                        <?php $__currentLoopData = $salaryRanges; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <div class="jp-salary-tab <?php echo e($key === 'monthly' ? 'active' : ''); ?>" data-value="<?php echo e($key); ?>" onclick="selectSalaryPeriod(this)"><?php echo e($label); ?></div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         <div class="jp-salary-tab" data-value="negotiable" onclick="selectSalaryPeriod(this)">Negotiable</div>
                     </div>
                     <input type="hidden" name="salary_range" id="salary_range" value="monthly">
@@ -350,11 +350,11 @@
                     </div>
                 </div>
             </div>
-            @php
+            <?php
                 $inrCurrencyId = collect($currencies)->search(fn($t) => stripos($t, 'INR') !== false || stripos($t, '₹') !== false || stripos($t, 'Rupee') !== false);
                 if ($inrCurrencyId === false) { $inrCurrencyId = get_application_currency_id() ?? array_key_first($currencies); }
-            @endphp
-            <input type="hidden" name="currency_id" value="{{ $inrCurrencyId }}">
+            ?>
+            <input type="hidden" name="currency_id" value="<?php echo e($inrCurrencyId); ?>">
             <div class="jp-group">
                 <div class="jp-check-wrap">
                     <input type="checkbox" name="hide_salary" id="hide_salary" value="1">
@@ -366,7 +366,7 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 3: Requirements ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="3">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-certificate"></i> Requirements</div>
@@ -378,9 +378,9 @@
                     <label class="jp-label">Required Qualification Level <span class="required">*</span></label>
                     <select name="degree_level_id" id="degree_level_id" class="jp-select" required>
                         <option value="">-- Select --</option>
-                        @foreach ($degreeLevels as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $degreeLevels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>"><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
@@ -389,15 +389,15 @@
                     <label class="jp-label">Experience Required <span class="required">*</span></label>
                     <select name="job_experience_id" id="job_experience_id" class="jp-select" required>
                         <option value="">-- Select --</option>
-                        @foreach ($jobExperiences as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $jobExperiences; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>"><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
         </div>
 
-        {{-- Certifications & Language - one row, col-6 col-6 --}}
+        
         <div class="jp-row">
             <div class="jp-col-6">
                 <div class="jp-group">
@@ -425,7 +425,7 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 4: Job Preferences ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="4">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-sliders-h"></i> Job Preferences</div>
@@ -467,9 +467,9 @@
                     <label class="jp-label">Job Shift</label>
                     <select name="job_shift_id" class="jp-select">
                         <option value="">-- Select --</option>
-                        @foreach ($jobShifts as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $jobShifts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>"><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
@@ -478,9 +478,9 @@
                     <label class="jp-label">Employment Type</label>
                     <select name="jobTypes[]" id="employment_type" class="jp-select">
                         <option value="">-- Select --</option>
-                        @foreach ($jobTypes as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $jobTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>"><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
@@ -496,7 +496,7 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 5: Application Location ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="5">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-map-marker-alt"></i> Application & Location</div>
@@ -516,7 +516,7 @@
             </div>
         </div>
 
-        {{-- Specific Locations --}}
+        
         <div class="jp-group" id="specific-locations-wrap" style="display: none;">
             <label class="jp-label">Choose Locations <span class="hint">(up to 3)</span></label>
             <div class="jp-row">
@@ -542,7 +542,7 @@
             <input type="hidden" name="application_locations" id="application_locations" value="">
         </div>
 
-        {{-- Job Location --}}
+        
         <div class="jp-group">
             <label class="jp-label">Job Location / Address <span class="hint">(Auto-defined from company, editable)</span></label>
             <div class="jp-row">
@@ -574,7 +574,7 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 6: Application Settings ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="6">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-paper-plane"></i> Application Settings</div>
@@ -602,16 +602,16 @@
         <div class="jp-group" id="internal-emails-wrap">
             <label class="jp-label">Additional internal/registered emails <span class="hint">(optional, up to 3)</span></label>
             <div id="internal-emails-list">
-                @php
+                <?php
                     $internalEmails = old('apply_internal_emails', []);
                     if (!is_array($internalEmails)) $internalEmails = $internalEmails ? [$internalEmails] : [];
-                @endphp
-                @foreach(array_slice($internalEmails, 0, 3) as $idx => $email)
+                ?>
+                <?php $__currentLoopData = array_slice($internalEmails, 0, 3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $email): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="jp-internal-email-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
-                    <input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" value="{{ is_string($email) ? $email : '' }}" style="flex:1;">
+                    <input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" value="<?php echo e(is_string($email) ? $email : ''); ?>" style="flex:1;">
                     <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
             <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-email-btn" style="border-radius:8px;">
                 <i class="fa fa-plus"></i> Add email
@@ -622,7 +622,7 @@
             <div class="jp-col-6">
                 <div class="jp-group">
                     <label class="jp-label">Application Deadline</label>
-                    <input type="date" name="application_closing_date" class="jp-input" min="{{ date('Y-m-d') }}">
+                    <input type="date" name="application_closing_date" class="jp-input" min="<?php echo e(date('Y-m-d')); ?>">
                 </div>
             </div>
             <div class="jp-col-6">
@@ -646,7 +646,7 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 7: Screening Questions ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="7">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-clipboard-list"></i> Screening Questions <span class="hint" style="font-weight:400;font-size:13px;">(Optional)</span></div>
@@ -660,12 +660,12 @@
         </div>
     </div>
 
-    {{-- ====== SUBMIT ====== --}}
+    
     <div class="jp-card" style="text-align: center;">
         <button type="submit" class="jp-submit-btn" id="submitJobBtn">
             <i class="fa fa-check"></i> Post Job
         </button>
-        <a href="{{ route('public.account.jobs.index') }}" class="btn btn-outline-secondary ms-3" style="border-radius:8px; padding:12px 30px;">
+        <a href="<?php echo e(route('public.account.jobs.index')); ?>" class="btn btn-outline-secondary ms-3" style="border-radius:8px; padding:12px 30px;">
             Cancel
         </a>
     </div>
@@ -711,10 +711,10 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
 
     // ===== SKILLS (from DB) =====
-    const allSkills = @json($skills);
+    const allSkills = <?php echo json_encode($skills, 15, 512) ?>;
 
     // ===== COMPANY DATA =====
-    const companyData = @json($companyDetails);
+    const companyData = <?php echo json_encode($companyDetails, 15, 512) ?>;
 
     // ===== AUTO-SUGGEST HELPER =====
     function setupAutoSuggest(inputEl, listEl, items, onSelect, isObject, clearInputOnSelect) {
@@ -969,7 +969,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (val.length < 2) { cityList2.classList.remove('show'); return; }
 
         cityTimeout = setTimeout(function() {
-            fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+            fetch('<?php echo e(route("ajax.search-cities")); ?>?keyword=' + encodeURIComponent(val))
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     cityList2.innerHTML = '';
@@ -1009,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (val.length < 2) { suggest.classList.remove('show'); return; }
 
             timer = setTimeout(function() {
-                fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+                fetch('<?php echo e(route("ajax.search-cities")); ?>?keyword=' + encodeURIComponent(val))
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         suggest.innerHTML = '';
@@ -1176,4 +1176,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make($layout, array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/dashboard/jobs/create.blade.php ENDPATH**/ ?>

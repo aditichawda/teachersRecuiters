@@ -19,6 +19,7 @@ class JobApplication extends BaseModel
         'resume',
         'cover_letter',
         'message',
+        'screening_answers',
         'job_id',
         'account_id',
         'status',
@@ -29,6 +30,7 @@ class JobApplication extends BaseModel
         'first_name' => SafeContent::class,
         'last_name' => SafeContent::class,
         'message' => SafeContent::class,
+        'screening_answers' => 'array',
     ];
 
     public function job(): BelongsTo

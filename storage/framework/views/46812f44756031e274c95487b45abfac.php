@@ -1,7 +1,7 @@
-@php
+<?php
     Theme::layout('without-navbar');
     Theme::asset()->add('auth-overrides', Theme::asset()->url('css/front-auth-overrides.css'), ['auth-css']);
-@endphp
+?>
 
 <style>
     .jobseeker-register-wrapper {
@@ -343,25 +343,30 @@
             <!-- Welcome Text -->
             <div class="welcome-text">
             </div>
-             @if (session()->has('status'))
+             <?php if(session()->has('status')): ?>
                 <div role="alert" class="alert alert-success" style="padding:10px;font-size:13px;border-radius:8px;margin-bottom:15px;">
-                                {{ session('status') }}
-                            </div>
-                        @elseif (session()->has('auth_error_message'))
-                <div role="alert" class="alert alert-danger" style="padding:10px;font-size:13px;border-radius:8px;margin-bottom:15px;">
-                                {{ session('auth_error_message') }}
-                            </div>
-                        @elseif (session()->has('auth_success_message'))
-                <div role="alert" class="alert alert-success" style="padding:10px;font-size:13px;border-radius:8px;margin-bottom:15px;">
-                                {{ session('auth_success_message') }}
-                            </div>
-                        @elseif (session()->has('auth_warning_message'))
-                <div role="alert" class="alert alert-warning" style="padding:10px;font-size:13px;border-radius:8px;margin-bottom:15px;">
-                                {{ session('auth_warning_message') }}
-                            </div>
-                        @endif
+                                <?php echo e(session('status')); ?>
 
-            {!! $form->renderForm() !!}
+                            </div>
+                        <?php elseif(session()->has('auth_error_message')): ?>
+                <div role="alert" class="alert alert-danger" style="padding:10px;font-size:13px;border-radius:8px;margin-bottom:15px;">
+                                <?php echo e(session('auth_error_message')); ?>
+
+                            </div>
+                        <?php elseif(session()->has('auth_success_message')): ?>
+                <div role="alert" class="alert alert-success" style="padding:10px;font-size:13px;border-radius:8px;margin-bottom:15px;">
+                                <?php echo e(session('auth_success_message')); ?>
+
+                            </div>
+                        <?php elseif(session()->has('auth_warning_message')): ?>
+                <div role="alert" class="alert alert-warning" style="padding:10px;font-size:13px;border-radius:8px;margin-bottom:15px;">
+                                <?php echo e(session('auth_warning_message')); ?>
+
+                            </div>
+                        <?php endif; ?>
+
+            <?php echo $form->renderForm(); ?>
+
 
             <!-- Communication Checkbox (will be moved inside form via JS) -->
             <div class="checkbox-wrapper" id="checkbox-wrapper">
@@ -375,7 +380,7 @@
                             
             <!-- Terms Text (will be moved inside form via JS) -->
             <div class="terms-text" id="terms-text">
-                By clicking Next button you agree to the <a href="{{ url('terms-conditions') }}">Terms and Conditions</a> & <a href="{{ url('privacy-policy') }}">Privacy Policy</a> of Teachers Recruiter.
+                By clicking Next button you agree to the <a href="<?php echo e(url('terms-conditions')); ?>">Terms and Conditions</a> & <a href="<?php echo e(url('privacy-policy')); ?>">Privacy Policy</a> of Teachers Recruiter.
                             </div>
 
             
@@ -442,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(data => {
                 if (data.error === false || data.error === 0) {
                     // Success - redirect to verification page
-                    window.location.href = '{{ route("public.account.register.verifyEmailPage") }}';
+                    window.location.href = '<?php echo e(route("public.account.register.verifyEmailPage")); ?>';
                             } else {
                     // Error - show message
                     alert(data.message || 'An error occurred. Please try again.');
@@ -469,3 +474,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
     </script>
+<?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/auth/register.blade.php ENDPATH**/ ?>

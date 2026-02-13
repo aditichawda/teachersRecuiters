@@ -966,13 +966,9 @@ class RegisterController extends BaseController
                 'institution_type' => $institutionType,
             ];
             
-            // Save multiple institution types as JSON (for job seekers)
+            // Save multiple institution types (Account model casts to array → JSON)
             if (!empty($institutionTypes) && is_array($institutionTypes)) {
-                $updateData['institution_types'] = json_encode($institutionTypes);
-                \Log::info('Saving institution_types as JSON:', [
-                    'institution_types' => $institutionTypes,
-                    'json' => json_encode($institutionTypes)
-                ]);
+                $updateData['institution_types'] = $institutionTypes;
             }
             
             // Save institution_name to institution_name column (for employer)

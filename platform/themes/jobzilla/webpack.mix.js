@@ -17,15 +17,18 @@ mix
     .js(source + '/assets/js/tagify-select.js', dist + '/js')
     .js(source + '/assets/js/jobs.js', dist + '/js');
 
+// Copy compiled assets to theme public folder (so changes reflect in both dev & prod)
+mix
+    .copy(dist + '/css/main.css', source + '/public/css')
+    .copy(dist + '/css/style.css', source + '/public/css')
+    .copy(dist + '/js/main.js', source + '/public/js')
+    .copy(dist + '/js/jobs.js', source + '/public/js')
+    .copy(dist + '/js/script.js', source + '/public/js')
+    .copy(dist + '/js/coming-soon.js', source + '/public/js')
+    .copy(dist + '/js/company.js', source + '/public/js')
+    .copy(dist + '/js/candidate.js', source + '/public/js')
+    .copy(dist + '/js/tagify-select.js', source + '/public/js');
+
 if (mix.inProduction()) {
-    mix
-        .copy(dist + '/css/main.css', source + '/public/css')
-        .copy(dist + '/css/style.css', source + '/public/css')
-        .copy(dist + '/js/main.js', source + '/public/js')
-        .copy(dist + '/js/jobs.js', source + '/public/js')
-        .copy(dist + '/js/script.js', source + '/public/js')
-        .copy(dist + '/js/coming-soon.js', source + '/public/js')
-        .copy(dist + '/js/company.js', source + '/public/js')
-        .copy(dist + '/js/candidate.js', source + '/public/js')
-        .copy(dist + '/js/tagify-select.js', source + '/public/js');
+    // Production-only optimizations can go here
 }

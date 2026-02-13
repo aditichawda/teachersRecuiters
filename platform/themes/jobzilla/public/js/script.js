@@ -1,1 +1,209 @@
-!function(e){"use strict";e.ajaxSetup({headers:{"X-CSRF-TOKEN":e('meta[name="csrf-token"]').attr("content")}});var t=function(e){window.showAlert("text-danger",e)},o=function(e){window.showAlert("text-success",e)},a=function(o){void 0!==o.errors&&o.errors.length?n(o.errors):void 0!==o.responseJSON?void 0!==o.responseJSON.errors?422===o.status&&n(o.responseJSON.errors):void 0!==o.responseJSON.message?t(o.responseJSON.message):e.each(o.responseJSON,function(o,a){e.each(a,function(e,o){t(o)})}):t(o.statusText)},n=function(o){var a="";e.each(o,function(e,t){""!==a&&(a+="<br />"),a+=t}),t(a)};function r(t){var o=e("input[name=company_id]").val();e(".half-circle-spinner").toggle(),e(".spinner-overflow").toggle(),e.ajax({url:window.siteUrl+"/review/load-more?page=".concat(t,"&company_id=").concat(o),success:function(t){e(".review-list").html(t),e(".half-circle-spinner").toggle(),e(".spinner-overflow").toggle()}})}window.showAlert=function(t,o){if(t&&""!==o){var a="toast-"+Math.floor(1e3*Math.random()),n='<div class="toast align-items-center '.concat(t,'" id="').concat(a,'" role="alert" aria-live="assertive" aria-atomic="true">\n                <div class="d-flex">\n                    <div class="toast-body">\n                        <i class="').concat("text-success"===t?"feather-check-circle":"feather-alert-triangle",' message-icon"></i>\n                        <span>').concat(o,'</span>\n                    </div>\n                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>\n                </div>\n            </div>');e("#alert-container").append(n);var r=document.getElementById(a);new bootstrap.Toast(r).show(),r.addEventListener("hidden.bs.toast",function(){r.remove()})}},e(document).on("click",".job-bookmark-action",function(n){n.preventDefault();var r=e(n.currentTarget);e.ajax({type:r.prop("method")||"POST",url:r.prop("href"),data:{job_id:r.data("job-id")},beforeSend:function(){r.addClass("button-loading")},success:function(e){if(e.error)return t(e.message),!1;o(e.message),e.data.is_saved?r.closest(".favorite-icon").addClass("bookmark-post"):r.closest(".favorite-icon").removeClass("bookmark-post")},error:function(e){a(e)},complete:function(){r.removeClass("button-loading")}})}),e(document).on("submit",".newsletter-form",function(n){n.preventDefault(),n.stopPropagation();var r=e(this),s=r.find("button[type=submit]");e.ajax({type:"POST",cache:!1,url:r.prop("action"),data:new FormData(r[0]),contentType:!1,processData:!1,beforeSend:function(){s.addClass("button-loading")},success:function(e){e.error?t(e.message):(r.find("input[type=email]").val(""),o(e.message))},error:function(e){a(e)},complete:function(){"undefined"!=typeof refreshRecaptcha&&refreshRecaptcha(),s.removeClass("button-loading")}})}),e(document).on("submit",".company-review-form",function(n){n.preventDefault(),n.stopPropagation();var s=e(this),i=s.find("button[type=submit]");e.ajax({type:"POST",cache:!1,url:s.prop("action"),data:new FormData(s[0]),contentType:!1,processData:!1,beforeSend:function(){i.addClass("button-loading")},success:function(a){a.error?t(a.message):(s.find("textarea").val(""),o(a.message),r(e(".review-pagination").data("review-last-page")))},error:function(e){a(e)},complete:function(){"undefined"!=typeof refreshRecaptcha&&refreshRecaptcha(),i.removeClass("button-loading")}})});var s=e("#applyNow");s.on("show.bs.modal",function(t){var o=e(t.relatedTarget),a=o.data("job-name"),n=o.data("job-id");s.find(".modal-job-name").text(a),s.find(".modal-job-id").val(n)}),s.on("hide.bs.modal",function(){s.find(".modal-job-name").text(""),s.find(".modal-job-id").val("")});var i=e("#applyExternalJob");i.on("show.bs.modal",function(t){var o=e(t.relatedTarget),a=o.data("job-name"),n=o.data("job-id");i.find(".modal-job-name").text(a),i.find(".modal-job-id").val(n)}),i.on("hide.bs.modal",function(){i.find(".modal-job-name").text(""),i.find(".modal-job-id").val("")}),e(document).on("click",".review-pagination a",function(t){t.preventDefault(),r(e(this).attr("href").split("page=")[1])})}(jQuery);
+/******/ (() => { // webpackBootstrap
+/*!******************************************************!*\
+  !*** ./platform/themes/jobzilla/assets/js/script.js ***!
+  \******************************************************/
+(function ($) {
+  'use strict';
+
+  $.ajaxSetup({
+    headers: {
+      'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    }
+  });
+  var showError = function showError(message) {
+    window.showAlert('text-danger', message);
+  };
+  var showSuccess = function showSuccess(message) {
+    window.showAlert('text-success', message);
+  };
+  var handleError = function handleError(data) {
+    if (typeof data.errors !== 'undefined' && data.errors.length) {
+      handleValidationError(data.errors);
+    } else if (typeof data.responseJSON !== 'undefined') {
+      if (typeof data.responseJSON.errors !== 'undefined') {
+        if (data.status === 422) {
+          handleValidationError(data.responseJSON.errors);
+        }
+      } else if (typeof data.responseJSON.message !== 'undefined') {
+        showError(data.responseJSON.message);
+      } else {
+        $.each(data.responseJSON, function (index, el) {
+          $.each(el, function (key, item) {
+            showError(item);
+          });
+        });
+      }
+    } else {
+      showError(data.statusText);
+    }
+  };
+  var handleValidationError = function handleValidationError(errors) {
+    var message = '';
+    $.each(errors, function (index, item) {
+      if (message !== '') {
+        message += '<br />';
+      }
+      message += item;
+    });
+    showError(message);
+  };
+  window.showAlert = function (messageType, message) {
+    if (messageType && message !== '') {
+      var alertId = 'toast-' + Math.floor(Math.random() * 1000);
+      var html = "<div class=\"toast align-items-center ".concat(messageType, "\" id=\"").concat(alertId, "\" role=\"alert\" aria-live=\"assertive\" aria-atomic=\"true\">\n                <div class=\"d-flex\">\n                    <div class=\"toast-body\">\n                        <i class=\"").concat(messageType === 'text-success' ? 'feather-check-circle' : 'feather-alert-triangle', " message-icon\"></i>\n                        <span>").concat(message, "</span>\n                    </div>\n                    <button type=\"button\" class=\"btn-close me-2 m-auto\" data-bs-dismiss=\"toast\" aria-label=\"Close\"></button>\n                </div>\n            </div>");
+      $('#alert-container').append(html);
+      var toastLive = document.getElementById(alertId);
+      var toast = new bootstrap.Toast(toastLive);
+      toast.show();
+      toastLive.addEventListener('hidden.bs.toast', function () {
+        toastLive.remove();
+      });
+    }
+  };
+  $(document).on('click', '.job-bookmark-action', function (e) {
+    e.preventDefault();
+    var $this = $(e.currentTarget);
+    $.ajax({
+      type: $this.prop('method') || 'POST',
+      url: $this.prop('href'),
+      data: {
+        job_id: $this.data('job-id')
+      },
+      beforeSend: function beforeSend() {
+        $this.addClass('button-loading');
+      },
+      success: function success(res) {
+        if (res.error) {
+          showError(res.message);
+          return false;
+        }
+        showSuccess(res.message);
+        if (res.data.is_saved) {
+          $this.closest('.favorite-icon').addClass('bookmark-post');
+        } else {
+          $this.closest('.favorite-icon').removeClass('bookmark-post');
+        }
+      },
+      error: function error(res) {
+        handleError(res);
+      },
+      complete: function complete() {
+        $this.removeClass('button-loading');
+      }
+    });
+  });
+  $(document).on('submit', '.newsletter-form', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    var $form = $(this);
+    var $button = $form.find('button[type=submit]');
+    $.ajax({
+      type: 'POST',
+      cache: false,
+      url: $form.prop('action'),
+      data: new FormData($form[0]),
+      contentType: false,
+      processData: false,
+      beforeSend: function beforeSend() {
+        $button.addClass('button-loading');
+      },
+      success: function success(res) {
+        if (!res.error) {
+          $form.find('input[type=email]').val('');
+          showSuccess(res.message);
+        } else {
+          showError(res.message);
+        }
+      },
+      error: function error(res) {
+        handleError(res);
+      },
+      complete: function complete() {
+        if (typeof refreshRecaptcha !== 'undefined') {
+          refreshRecaptcha();
+        }
+        $button.removeClass('button-loading');
+      }
+    });
+  });
+  function reloadReviewList(page) {
+    var companyId = $('input[name=company_id]').val();
+    $('.half-circle-spinner').toggle();
+    $('.spinner-overflow').toggle();
+    $.ajax({
+      url: window.siteUrl + "/review/load-more?page=".concat(page, "&company_id=").concat(companyId),
+      success: function success(data) {
+        $('.review-list').html(data);
+        $('.half-circle-spinner').toggle();
+        $('.spinner-overflow').toggle();
+      }
+    });
+  }
+  $(document).on('submit', '.company-review-form', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    var $form = $(this);
+    var $button = $form.find('button[type=submit]');
+    $.ajax({
+      type: 'POST',
+      cache: false,
+      url: $form.prop('action'),
+      data: new FormData($form[0]),
+      contentType: false,
+      processData: false,
+      beforeSend: function beforeSend() {
+        $button.addClass('button-loading');
+      },
+      success: function success(res) {
+        if (!res.error) {
+          $form.find('textarea').val('');
+          showSuccess(res.message);
+          var page = $('.review-pagination').data('review-last-page');
+          reloadReviewList(page);
+        } else {
+          showError(res.message);
+        }
+      },
+      error: function error(res) {
+        handleError(res);
+      },
+      complete: function complete() {
+        if (typeof refreshRecaptcha !== 'undefined') {
+          refreshRecaptcha();
+        }
+        $button.removeClass('button-loading');
+      }
+    });
+  });
+  var $applyNow = $('#applyNow');
+  $applyNow.on('show.bs.modal', function (e) {
+    var button = $(e.relatedTarget);
+    var jobName = button.data('job-name');
+    var jobId = button.data('job-id');
+    $applyNow.find('.modal-job-name').text(jobName);
+    $applyNow.find('.modal-job-id').val(jobId);
+  });
+  $applyNow.on('hide.bs.modal', function () {
+    $applyNow.find('.modal-job-name').text('');
+    $applyNow.find('.modal-job-id').val('');
+  });
+  var $applyExternalJob = $('#applyExternalJob');
+  $applyExternalJob.on('show.bs.modal', function (e) {
+    var button = $(e.relatedTarget);
+    var jobName = button.data('job-name');
+    var jobId = button.data('job-id');
+    $applyExternalJob.find('.modal-job-name').text(jobName);
+    $applyExternalJob.find('.modal-job-id').val(jobId);
+  });
+  $applyExternalJob.on('hide.bs.modal', function () {
+    $applyExternalJob.find('.modal-job-name').text('');
+    $applyExternalJob.find('.modal-job-id').val('');
+  });
+  $(document).on('click', '.review-pagination a', function (e) {
+    e.preventDefault();
+    var page = $(this).attr('href').split('page=')[1];
+    reloadReviewList(page);
+  });
+})(jQuery);
+/******/ })()
+;

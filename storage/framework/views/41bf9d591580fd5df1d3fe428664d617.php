@@ -1,7 +1,6 @@
-@php
+<?php
     Theme::layout('without-navbar');
-    Theme::asset()->add('auth-overrides', Theme::asset()->url('css/front-auth-overrides.css'), ['auth-css']);
-@endphp
+?>
 
 <style>
     .employer-register-wrapper {
@@ -249,30 +248,34 @@
 
             <!-- Logo -->
             <!-- <div class="employer-logo">
-                @if (Theme::getLogo())
-                    <a href="{{ route('public.index') }}">
-                        {!! Theme::getLogoImage(['class' => 'site-logo', 'style' => 'max-width: 160px;'], 'logo', 150) !!}
+                <?php if(Theme::getLogo()): ?>
+                    <a href="<?php echo e(route('public.index')); ?>">
+                        <?php echo Theme::getLogoImage(['class' => 'site-logo', 'style' => 'max-width: 160px;'], 'logo', 150); ?>
+
                     </a>
-                @else
-                    <a href="{{ route('public.index') }}">
+                <?php else: ?>
+                    <a href="<?php echo e(route('public.index')); ?>">
                         <span>Teachers</span>Recruiter
                     </a>
-                @endif
+                <?php endif; ?>
             </div> -->
 
-            @if (session('error'))
+            <?php if(session('error')): ?>
                 <div class="alert alert-danger">
-                    {{ session('error') }}
-                </div>
-            @endif
+                    <?php echo e(session('error')); ?>
 
-            @if (session('success'))
+                </div>
+            <?php endif; ?>
+
+            <?php if(session('success')): ?>
                 <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
+                    <?php echo e(session('success')); ?>
 
-            {!! $form->renderForm() !!}
+                </div>
+            <?php endif; ?>
+
+            <?php echo $form->renderForm(); ?>
+
         </div>
     </div>
 </div>
@@ -291,3 +294,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/auth/employer-register.blade.php ENDPATH**/ ?>

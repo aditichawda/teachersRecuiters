@@ -37,7 +37,7 @@ class EmployerRegisterForm extends AuthForm
             
             // Row 1: Full Name (full width)
             ->add('col_full_name_open', HtmlField::class, [
-                'html' => '<div class="col-md-12">',
+                'html' => '<div class="col-md-6">',
             ])
             ->add(
                 'full_name',
@@ -83,23 +83,6 @@ class EmployerRegisterForm extends AuthForm
             ->add('col_phone_close', HtmlField::class, [
                 'html' => '</div>',
             ])
-            
-            // WhatsApp toggle
-            ->add('col_whatsapp_open', HtmlField::class, [
-                'html' => '<div class="col-md-12">',
-            ])
-            ->add(
-                'is_whatsapp_available',
-                OnOffField::class,
-                OnOffFieldOption::make()
-                    ->label('Is this number available on WhatsApp?')
-                    ->defaultValue(false)
-            )
-            ->add('col_whatsapp_close', HtmlField::class, [
-                'html' => '</div>',
-            ])
-
-            // Row 3: Password
             ->add('col_password_open', HtmlField::class, [
                 'html' => '<div class="col-md-6">',
             ])
@@ -113,6 +96,21 @@ class EmployerRegisterForm extends AuthForm
                     ->required()
             )
             ->add('col_password_close', HtmlField::class, [
+                'html' => '</div>',
+            ])
+            
+            // WhatsApp toggle
+            ->add('col_whatsapp_open', HtmlField::class, [
+                'html' => '<div class="col-md-12">',
+            ])
+            ->add(
+                'is_whatsapp_available',
+                OnOffField::class,
+                OnOffFieldOption::make()
+                    ->label('&nbsp;Is this number available on WhatsApp?')
+                    ->defaultValue(false)
+            )
+            ->add('col_whatsapp_close', HtmlField::class, [
                 'html' => '</div>',
             ])
 

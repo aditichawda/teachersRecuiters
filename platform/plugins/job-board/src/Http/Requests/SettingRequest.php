@@ -78,8 +78,7 @@ class SettingRequest extends Request
                 'resume' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx|max:2048',
                 'resume_parsing_allowed' => Rule::in([0, 1]),
                 'cover_letter' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx|max:2048',
-                'introductory_audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:10240',
-                'introductory_video_url' => 'nullable|url|max:500',
+                'introductory_audio' => 'nullable|file|mimes:mp4,wav,ogg,m4a|max:1536',
                 
                 // Qualifications & Experience
                 'qualifications' => 'nullable|array',

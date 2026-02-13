@@ -37,7 +37,8 @@
     .form-control, .form-select {
         border: 1.5px solid #e2e8f0;
         border-radius: 8px;
-        padding: 10px 14px;
+        padding: 8px 14px;
+        height: 40px;
         font-size: 14px;
     }
     .form-control:focus, .form-select:focus {
@@ -78,7 +79,7 @@
     .removable-item {
         position: relative;
         background: #f8fafc;
-        padding: 15px;
+        padding: 7px 10px 0px 10px;
         border-radius: 8px;
         margin-bottom: 10px;
     }
@@ -104,12 +105,6 @@
         font-weight: 600;
     }
     .city-suggestion-item:hover { background: #f0f7ff; }
-    .password-toggle-section {
-        background: #f8fafc;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-    }
 
     /* TomSelect Custom Styles */
     .ts-wrapper {
@@ -445,42 +440,32 @@
                 </div>
 
                 <!-- 3. Mobile Number -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('Mobile Number') }} <span class="required">*</span></label>
                     <input type="tel" class="form-control" name="phone" value="{{ old('phone', $account->phone) }}" placeholder="{{ __('Enter mobile number with country code') }}">
                     <div class="form-check mt-2">
                         <input type="hidden" name="is_whatsapp_available" value="0">
                         <input type="checkbox" class="form-check-input" name="is_whatsapp_available" value="1" id="is_whatsapp_available" @checked(old('is_whatsapp_available', $account->is_whatsapp_available))>
-                        <label class="form-check-label" for="is_whatsapp_available">{{ __('This number is available on WhatsApp') }}</label>
-                    </div>
-                </div>
-
-                <!-- Password Change Toggle -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Password') }}</label>
-                    <div class="password-toggle-section">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="change_password_toggle">
-                            <label class="form-check-label" for="change_password_toggle">{{ __('Click to change password') }}</label>
-                        </div>
-                        <div id="password_fields" style="display: none;" class="mt-3">
-                            <input type="password" class="form-control mb-2" name="new_password" placeholder="{{ __('New Password') }}">
-                            <input type="password" class="form-control" name="new_password_confirmation" placeholder="{{ __('Confirm New Password') }}">
-                        </div>
+                        <label class="form-check-label" style="font-size: 12px;" for="is_whatsapp_available">{{ __('This number is available on WhatsApp') }}</label>
                     </div>
                 </div>
 
                 <!-- 4. Alternate Contact -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('Alternate Contact') }}</label>
                     <input type="tel" class="form-control" name="alternate_phone" value="{{ old('alternate_phone', $account->alternate_phone ?? '') }}" placeholder="{{ __('Alternate phone number') }}">
                     <div class="form-check mt-2">
                         <input type="hidden" name="is_alternate_whatsapp_available" value="0">
                         <input type="checkbox" class="form-check-input" name="is_alternate_whatsapp_available" value="1" id="is_alternate_whatsapp_available" @checked(old('is_alternate_whatsapp_available', $account->is_alternate_whatsapp_available ?? false))>
-                        <label class="form-check-label" for="is_alternate_whatsapp_available">{{ __('This number is available on WhatsApp') }}</label>
+                        <label class="form-check-label" style="font-size: 12px;" for="is_alternate_whatsapp_available">{{ __('This number is available on WhatsApp') }}</label>
                     </div>
                 </div>
-
+                <!-- 7. DOB -->
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ __('Date of Birth') }} <span class="required">*</span></label>
+                    <input type="date" class="form-control" name="dob" value="{{ old('dob', $account->dob ? $account->dob->format('Y-m-d') : '') }}" max="{{ now()->subYears(16)->format('Y-m-d') }}">
+                </div>
+                
                 <!-- 5. Gender -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Gender') }} <span class="required">*</span></label>
@@ -509,11 +494,7 @@
                     </div>
                 </div>
 
-                <!-- 7. DOB -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Date of Birth') }} <span class="required">*</span></label>
-                    <input type="date" class="form-control" name="dob" value="{{ old('dob', $account->dob ? $account->dob->format('Y-m-d') : '') }}" max="{{ now()->subYears(16)->format('Y-m-d') }}">
-                </div>
+               
             </div>
         </div>
     </div>
@@ -553,9 +534,14 @@
                     <label class="form-label">{{ __('Current Work Status') }} <span class="required">*</span></label>
                     <select class="form-select" name="current_work_status" id="current_work_status">
                         <option value="">{{ __('-- Select --') }}</option>
-                        <option value="not_working" @selected(old('current_work_status', $account->current_work_status ?? '') == 'not_working')>{{ __('Not Working Now - Immediate Joiner') }}</option>
+                        <option value="not_working" @selected(old('current_work_status', $account->current_work_status ?? '') == 'not_working')>{{ __('Not Working Now') }}</option>
                         <option value="working" @selected(old('current_work_status', $account->current_work_status ?? '') == 'working')>{{ __('Working Now') }}</option>
                     </select>
+                    <div class="form-check mt-1">
+                        <input type="hidden" name="available_for_immediate_joining" value="0">
+                        <input type="checkbox" class="form-check-input" name="available_for_immediate_joining" value="1" id="available_for_immediate_joining" @checked(old('available_for_immediate_joining', $account->available_for_immediate_joining ?? false))>
+                        <label class="form-check-label" for="available_for_immediate_joining">{{ __('Available for Immediate Joining') }}</label>
+                    </div>
                 </div>
 
                 <!-- 11. Notice Period (shown if working) -->
@@ -572,11 +558,7 @@
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <div class="form-check mt-4">
-                        <input type="hidden" name="available_for_immediate_joining" value="0">
-                        <input type="checkbox" class="form-check-input" name="available_for_immediate_joining" value="1" id="available_for_immediate_joining" @checked(old('available_for_immediate_joining', $account->available_for_immediate_joining ?? false))>
-                        <label class="form-check-label" for="available_for_immediate_joining">{{ __('Available for Immediate Joining') }}</label>
-                    </div>
+                   
                 </div>
             </div>
         </div>
@@ -592,12 +574,7 @@
                 <!-- 12. Bio -->
                 <div class="col-12 mb-3">
                     <label class="form-label">{{ __('About / Bio / Career Aspiration') }}</label>
-                    <div class="mb-2">
-                        <button type="button" class="speech-to-text-btn" id="bio-speech-btn" onclick="toggleSpeechToText()">
-                            <i class="fa fa-microphone"></i> <span id="speech-btn-text">{{ __('Speech to Text') }}</span>
-                        </button>
-                        <span class="speech-status" id="speech-status">🔴 {{ __('Listening...') }}</span>
-                    </div>
+                    
                     {!! Form::customEditor('bio', old('bio', $account->bio)) !!}
                     <small class="form-text">{{ __('Tell schools about yourself, your teaching philosophy, and career goals') }}</small>
                 </div>
@@ -617,7 +594,14 @@
                         <select id="ts-institution-types" name="institution_types[]" multiple placeholder="{{ __('Search & select up to 3...') }}">
                             @php
                                 $instTypes = old('institution_types', $account->institution_types ?? []);
-                                $instTypes = is_array($instTypes) ? $instTypes : (is_string($instTypes) ? (json_decode($instTypes, true) ?? (array)$instTypes) : (array)$instTypes);
+                                $instTypes = is_array($instTypes) ? $instTypes : (is_string($instTypes) ? (json_decode($instTypes, true) ?? []) : []);
+                                if (is_object($instTypes)) {
+                                    $instTypes = method_exists($instTypes, 'toArray') ? $instTypes->toArray() : (array)$instTypes;
+                                }
+                                if (empty($instTypes) && !empty($account->institution_type)) {
+                                    $instTypes = [$account->institution_type];
+                                }
+                                $instTypes = array_values(array_filter((array)$instTypes));
                             @endphp
                             <optgroup label="School">
                                 @foreach(['cbse_school' => 'CBSE School', 'icse_school' => 'ICSE School', 'cambridge_school' => 'Cambridge School', 'ib_school' => 'IB School', 'state_board_school' => 'State Board School', 'play_school' => 'Play School'] as $val => $lbl)
@@ -654,7 +638,7 @@
                     </div>
 
                     <!-- 25. Teaching Subjects (shown when Teaching is selected) -->
-                    <div class="col-md-12 mb-3" id="teaching_subjects_wrapper">
+                    <div class="col-md-6 mb-3" id="teaching_subjects_wrapper">
                         <label class="form-label">{{ __('Teaching Subjects / Post') }} ({{ __('Select up to 3') }}) <span class="required">*</span></label>
                         <select id="ts-teaching-subjects" name="teaching_subjects[]" multiple placeholder="{{ __('Search & select up to 3 subjects...') }}">
                             @php $teachingSubjects = old('teaching_subjects', $account->teaching_subjects ?? []); @endphp
@@ -720,7 +704,7 @@
                     </div>
 
                     <!-- Non-Teaching Positions (shown when Non-Teaching is selected) -->
-                    <div class="col-md-12 mb-3" id="non_teaching_positions_wrapper" style="display: none;">
+                    <div class="col-md-6 mb-3" id="non_teaching_positions_wrapper" style="display: none;">
                         <label class="form-label">{{ __('Non-Teaching Positions') }} ({{ __('Select up to 3') }}) <span class="required">*</span></label>
                         <select id="ts-non-teaching" name="non_teaching_positions[]" multiple placeholder="{{ __('Search & select up to 3 positions...') }}">
                             @php $nonTeachingPositions = old('non_teaching_positions', $account->non_teaching_positions ?? []); @endphp
@@ -877,7 +861,7 @@
             <div class="row mb-4">
                 @if($useLocationDropdowns)
                 {{-- City first: type to search city then State & Country auto-fill (no required) --}}
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('City') }}</label>
                     <div class="city-search-wrapper" style="position:relative;">
                         <input type="text" id="js-current-city-search" class="form-control" value="{{ $currentCityName }}" placeholder="{{ __('Type city name to search...') }}" autocomplete="off">
@@ -886,47 +870,47 @@
                     <small class="text-muted">{{ __('Type and select city; State and Country will auto-fill.') }}</small>
                     <input type="hidden" name="city_id" id="js-current-city-id" value="{{ old('city_id', $account->city_id) }}">
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('State') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label">{{ __('State') }} </label>
                     <input type="text" id="js-current-state-display" class="form-control" readonly placeholder="{{ __('Select city first') }}" value="{{ $currentStateName }}" style="background:#f8f9fa;">
                     <input type="hidden" name="state_id" id="js-current-state-id" value="{{ old('state_id', $account->state_id) }}">
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Country') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label">{{ __('Country') }}</label>
                     <input type="text" id="js-current-country-display" class="form-control" readonly placeholder="{{ __('Select city first') }}" value="{{ $currentCountryName }}" style="background:#f8f9fa;">
                     <input type="hidden" name="country_id" id="js-current-country-id" value="{{ old('country_id', $account->country_id) }}">
                 </div>
                 @else
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('Country') }}</label>
                     <input type="text" class="form-control" name="country_name" value="{{ $currentCountryName }}" placeholder="{{ __('Country') }}">
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('State') }}</label>
                     <input type="text" class="form-control" name="state_name" value="{{ $currentStateName }}" placeholder="{{ __('State') }}">
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('City') }}</label>
                     <input type="text" class="form-control" name="city_name" value="{{ $currentCityName }}" placeholder="{{ __('City') }}">
                 </div>
                 @endif
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('Locality') }}</label>
                     <input type="text" class="form-control" name="locality" value="{{ old('locality', $account->locality ?? '') }}" placeholder="{{ __('Locality / Area') }}">
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('Address') }}</label>
                     <input type="text" class="form-control" name="address" value="{{ old('address', $account->address) }}" placeholder="{{ __('Enter your address') }}">
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('Pin Code') }}</label>
                     <input type="text" class="form-control" name="pin_code" value="{{ old('pin_code', $account->pin_code ?? '') }}" placeholder="{{ __('e.g. 110001') }}" maxlength="20">
                 </div>
             </div>
 
             {{-- Native Location --}}
-            <h6 class="mb-3 text-dark">{{ __('Native Location') }}</h6>
-            <div class="row mb-3">
+            <h6 class="mb-1 text-dark">{{ __('Native Location') }}</h6>
+            <div class="row mb-1">
                 <div class="col-12 mb-3">
                     <div class="form-check">
                         <input type="hidden" name="native_same_as_current" value="0">
@@ -946,13 +930,13 @@
                     <input type="hidden" name="native_city_id" id="js-native-city-id" value="{{ old('native_city_id', $account->native_city_id) }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('State') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
-                    <input type="text" id="js-native-state-display" class="form-control" readonly value="{{ $nativeStateName }}" style="background:#f8f9fa;">
+                    <label class="form-label">{{ __('State') }}</label>
+                    <input type="text" id="js-native-state-display" class="form-control" placeholder="{{ __('Select city first') }}" readonly value="{{ $nativeStateName }}" style="background:#f8f9fa;">
                     <input type="hidden" name="native_state_id" id="js-native-state-id" value="{{ old('native_state_id', $account->native_state_id) }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Country') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
-                    <input type="text" id="js-native-country-display" class="form-control" readonly value="{{ $nativeCountryName }}" style="background:#f8f9fa;">
+                    <label class="form-label">{{ __('Country') }}</label>
+                    <input type="text" id="js-native-country-display" class="form-control"placeholder="{{ __('Select city first') }}" readonly value="{{ $nativeCountryName }}" style="background:#f8f9fa;">
                     <input type="hidden" name="native_country_id" id="js-native-country-id" value="{{ old('native_country_id', $account->native_country_id) }}">
                 </div>
                 @else
@@ -966,7 +950,7 @@
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('City') }}</label>
-                    <input type="text" class="form-control" name="native_city_name" value="{{ $nativeCityName }}" placeholder="{{ __('City') }}">
+                    <input type="text" class="form-control" name="native_city_name"  value="{{ $nativeCityName }}" placeholder="{{ __('City') }}">
                 </div>
                 @endif
                 <div class="col-md-4 mb-3">
@@ -1011,11 +995,11 @@
                     <div class="removable-item work-location-item" data-state-id="{{ $loc['state_id'] ?? '' }}" data-city-id="{{ $loc['city_id'] ?? '' }}">
                         @if($index > 0)<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>@endif
                         <div class="row align-items-end">
-                            <div class="col-md-1 d-flex align-items-center mb-2">
+                            <!-- <div class="col-md-1 d-flex align-items-center mb-2">
                                 <span class="priority-badge">{{ $index + 1 }}</span>
-                            </div>
+                            </div> -->
                             @if($useLocationDropdowns)
-                            <div class="col-md-2 mb-2">
+                            <div class="col-md-3 mb-2">
                                 <label class="form-label small">{{ __('Country') }}</label>
                                 <select class="form-select form-select-sm work-pref-country" name="work_location_preferences[{{ $index }}][country_id]" data-index="{{ $index }}">
                                     <option value="">{{ __('Select') }}</option>
@@ -1024,28 +1008,28 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2 mb-2">
+                            <div class="col-md-3 mb-2">
                                 <label class="form-label small">{{ __('State') }}</label>
                                 <select class="form-select form-select-sm work-pref-state" name="work_location_preferences[{{ $index }}][state_id]" data-index="{{ $index }}">
                                     <option value="">{{ __('Select') }}</option>
                                 </select>
                             </div>
-                            <div class="col-md-2 mb-2">
+                            <div class="col-md-3 mb-2">
                                 <label class="form-label small">{{ __('City') }}</label>
                                 <select class="form-select form-select-sm work-pref-city" name="work_location_preferences[{{ $index }}][city_id]" data-index="{{ $index }}">
                                     <option value="">{{ __('Select') }}</option>
                                 </select>
                             </div>
                             @else
-                            <div class="col-md-2 mb-2">
+                            <div class="col-md-3 mb-2">
                                 <label class="form-label small">{{ __('Country') }}</label>
                                 <input type="text" class="form-control form-control-sm" name="work_location_preferences[{{ $index }}][country_name]" value="{{ $loc['country_name'] ?? '' }}" placeholder="{{ __('Country') }}">
                             </div>
-                            <div class="col-md-2 mb-2">
+                            <div class="col-md-3 mb-2">
                                 <label class="form-label small">{{ __('State') }}</label>
                                 <input type="text" class="form-control form-control-sm" name="work_location_preferences[{{ $index }}][state_name]" value="{{ $loc['state_name'] ?? '' }}" placeholder="{{ __('State') }}">
                             </div>
-                            <div class="col-md-2 mb-2">
+                            <div class="col-md-3 mb-2">
                                 <label class="form-label small">{{ __('City') }}</label>
                                 <input type="text" class="form-control form-control-sm" name="work_location_preferences[{{ $index }}][city_name]" value="{{ $loc['city_name'] ?? '' }}" placeholder="{{ __('City') }}">
                             </div>
@@ -1174,7 +1158,7 @@
                 @if ($account->isJobSeeker() && (count($jobSkills ?? []) || count($selectedJobSkills ?? [])))
                 <div class="col-12 mb-3">
                     <label class="form-label">{{ __('Skills') }}</label>
-                    <input type="text" class="tags form-control list-tagify" id="favorite_skills" name="favorite_skills" value="{{ implode(',', $selectedJobSkills ?? []) }}" data-keep-invalid-tags="false" data-list="{{ $jobSkills ?? '' }}" data-user-input="false" placeholder="{{ __('Select from the list') }}"/>
+                    <input type="text" class="tags form-control list-tagify" style="padding:0px;" id="favorite_skills" name="favorite_skills" value="{{ implode(',', $selectedJobSkills ?? []) }}" data-keep-invalid-tags="false" data-list="{{ $jobSkills ?? '' }}" data-user-input="false" placeholder="{{ __('Select from the list') }}"/>
                 </div>
                 @endif
             </div>
@@ -1223,15 +1207,10 @@
                 <!-- 13. Introductory Audio -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Introductory Audio') }}</label>
-                    <input type="file" class="form-control" name="introductory_audio" id="introductory_audio_file" accept="audio/*">
-                    <small class="form-text">{{ __('Upload an audio file (max 2 minutes). Include: qualifications, experience, teaching style.') }}</small>
+                    <input type="file" class="form-control" name="introductory_audio" id="introductory_audio_file" accept="audio/*,.mp4,video/mp4">
+                    <small class="form-text" id="intro_audio_hint">{{ __('Upload an audio file (max 1.5 MB). Include: qualifications, experience, teaching style.') }}</small>
                 </div>
 
-                <!-- 30. Introductory Video Link -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Introductory YouTube Video Link') }}</label>
-                    <input type="url" class="form-control" name="introductory_video_url" value="{{ old('introductory_video_url', $account->introductory_video_url ?? '') }}" placeholder="https://youtube.com/watch?v=...">
-                </div>
             </div>
         </div>
     </div>
@@ -1252,18 +1231,7 @@
                     <label class="form-label"><i class="fab fa-facebook text-primary me-2"></i>{{ __('Facebook') }}</label>
                     <input type="url" class="form-control" name="social_links[facebook]" value="{{ $social['facebook'] ?? '' }}" placeholder="https://facebook.com/...">
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="fab fa-twitter text-info me-2"></i>{{ __('Twitter') }}</label>
-                    <input type="url" class="form-control" name="social_links[twitter]" value="{{ $social['twitter'] ?? '' }}" placeholder="https://twitter.com/...">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="fab fa-instagram text-danger me-2"></i>{{ __('Instagram') }}</label>
-                    <input type="url" class="form-control" name="social_links[instagram]" value="{{ $social['instagram'] ?? '' }}" placeholder="https://instagram.com/...">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="fab fa-youtube text-danger me-2"></i>{{ __('YouTube') }}</label>
-                    <input type="url" class="form-control" name="social_links[youtube]" value="{{ $social['youtube'] ?? '' }}" placeholder="https://youtube.com/@...">
-                </div>
+               
             </div>
         </div>
     </div>
@@ -1367,13 +1335,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ==========================================
+    // Introductory Audio - 1.5 MB validation
+    // ==========================================
+    const introAudioInput = document.getElementById('introductory_audio_file');
+    const introAudioHint = document.getElementById('intro_audio_hint');
+    const maxAudioSize = 1.5 * 1024 * 1024; // 1.5 MB
+    const hintText = '{{ __("Upload an audio file (max 1.5 MB). Include: qualifications, experience, teaching style.") }}';
+    const errorText = '{{ __("Audio file must be 1.5 MB or less.") }}';
+
+    if (introAudioInput && introAudioHint) {
+        introAudioInput.addEventListener('change', function() {
+            introAudioHint.textContent = hintText;
+            introAudioHint.classList.remove('text-danger');
+            var file = this.files[0];
+            if (file && file.size > maxAudioSize) {
+                introAudioHint.textContent = errorText;
+                introAudioHint.classList.add('text-danger');
+                this.value = '';
+            }
+        });
+    }
+
+    var profileForm = document.getElementById('profile-form');
+    if (profileForm && introAudioHint) {
+        profileForm.addEventListener('submit', function(e) {
+            var audioInput = document.getElementById('introductory_audio_file');
+            if (audioInput && audioInput.files.length > 0 && audioInput.files[0].size > maxAudioSize) {
+                e.preventDefault();
+                introAudioHint.textContent = errorText;
+                introAudioHint.classList.add('text-danger');
+                return false;
+            }
+        });
+    }
+
+    // ==========================================
     // Toggle Logic
     // ==========================================
-
-    // Password toggle
-    document.getElementById('change_password_toggle').addEventListener('change', function() {
-        document.getElementById('password_fields').style.display = this.checked ? 'block' : 'none';
-    });
 
     // Work status toggle for notice period
     const workStatus = document.getElementById('current_work_status');
@@ -1666,7 +1664,7 @@ function addWorkLocation() {
         alert('{{ __("Maximum 3 location preferences allowed") }}');
         return;
     }
-    var idx = workLocationIndex;
+    var idx = document.querySelectorAll('.work-location-item').length;
     var html;
     if (useLocationDropdowns) {
         var countryOptionsHtml = '<option value="">{{ __("Select") }}</option>';
@@ -1678,12 +1676,11 @@ function addWorkLocation() {
         html = '<div class="removable-item work-location-item">' +
             '<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>' +
             '<div class="row align-items-end">' +
-            '<div class="col-md-1 d-flex align-items-center mb-2"><span class="priority-badge">' + (idx + 1) + '</span></div>' +
-            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("Country") }}</label>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("Country") }}</label>' +
             '<select class="form-select form-select-sm work-pref-country" name="work_location_preferences[' + idx + '][country_id]" data-index="' + idx + '">' + countryOptionsHtml + '</select></div>' +
-            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("State") }}</label>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("State") }}</label>' +
             '<select class="form-select form-select-sm work-pref-state" name="work_location_preferences[' + idx + '][state_id]" data-index="' + idx + '"><option value="">{{ __("Select") }}</option></select></div>' +
-            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("City") }}</label>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("City") }}</label>' +
             '<select class="form-select form-select-sm work-pref-city" name="work_location_preferences[' + idx + '][city_id]" data-index="' + idx + '"><option value="">{{ __("Select") }}</option></select></div>' +
             '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("Locality") }}</label>' +
             '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][locality]" placeholder="{{ __("Locality") }}"></div>' +
@@ -1706,19 +1703,17 @@ function addWorkLocation() {
         html = '<div class="removable-item work-location-item">' +
             '<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>' +
             '<div class="row align-items-end">' +
-            '<div class="col-md-1 d-flex align-items-center mb-2"><span class="priority-badge">' + (idx + 1) + '</span></div>' +
-            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("Country") }}</label>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("Country") }}</label>' +
             '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][country_name]" placeholder="{{ __("Country") }}"></div>' +
-            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("State") }}</label>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("State") }}</label>' +
             '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][state_name]" placeholder="{{ __("State") }}"></div>' +
-            '<div class="col-md-2 mb-2"><label class="form-label small">{{ __("City") }}</label>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("City") }}</label>' +
             '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][city_name]" placeholder="{{ __("City") }}"></div>' +
             '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("Locality") }}</label>' +
             '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][locality]" placeholder="{{ __("Locality") }}"></div>' +
             '</div></div>';
         document.getElementById('work-locations-container').insertAdjacentHTML('beforeend', html);
     }
-    workLocationIndex++;
 }
 
 // Remove Avatar

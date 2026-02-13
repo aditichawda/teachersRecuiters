@@ -519,10 +519,6 @@
                     <input type="radio" name="apply_type" value="external">
                     <i class="ti ti-external-link"></i> External Link
                 </label>
-                <label class="jp-option-card" onclick="selectOption(this, 'apply_type')">
-                    <input type="radio" name="apply_type" value="other_email">
-                    <i class="ti ti-mail"></i> Other Email
-                </label>
             </div>
         </div>
 
@@ -532,10 +528,24 @@
             <input type="url" name="apply_url" id="apply_url" class="jp-input" placeholder="https://example.com/apply">
         </div>
 
-        {{-- Other Email (show when other_email) --}}
-        <div class="jp-group" id="other-email-wrap" style="display: none;">
-            <label class="jp-label">Other Email for Applications</label>
-            <input type="email" name="apply_other_email" id="apply_other_email" class="jp-input" placeholder="hiring@example.com">
+        {{-- Internal emails (show when internal, up to 3) --}}
+        <div class="jp-group" id="internal-emails-wrap">
+            <label class="jp-label">Additional internal/registered emails <span class="hint">(optional, up to 3)</span></label>
+            <div id="internal-emails-list">
+                @php
+                    $internalEmails = old('apply_internal_emails', []);
+                    if (!is_array($internalEmails)) $internalEmails = $internalEmails ? [$internalEmails] : [];
+                @endphp
+                @foreach(array_slice($internalEmails, 0, 3) as $idx => $email)
+                <div class="jp-internal-email-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                    <input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" value="{{ is_string($email) ? $email : '' }}" style="flex:1;">
+                    <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="ti ti-x"></i></button>
+                </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-email-btn" style="border-radius:8px;">
+                <i class="ti ti-plus"></i> Add email
+            </button>
         </div>
 
         <div class="jp-row">
@@ -854,9 +864,26 @@ document.addEventListener('DOMContentLoaded', function() {
         if (name === 'apply_type') {
             const val = el.querySelector('input').value;
             document.getElementById('external-url-wrap').style.display = val === 'external' ? 'block' : 'none';
-            document.getElementById('other-email-wrap').style.display = val === 'other_email' ? 'block' : 'none';
+            document.getElementById('internal-emails-wrap').style.display = val === 'internal' ? 'block' : 'none';
         }
     };
+
+    // ===== INTERNAL EMAILS (up to 3) =====
+    document.getElementById('add-internal-email-btn').addEventListener('click', function() {
+        const list = document.getElementById('internal-emails-list');
+        const rows = list.querySelectorAll('.jp-internal-email-row');
+        if (rows.length >= 3) return;
+        const row = document.createElement('div');
+        row.className = 'jp-internal-email-row';
+        row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+        row.innerHTML = '<input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" style="flex:1;">' +
+            '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="ti ti-x"></i></button>';
+        list.appendChild(row);
+        row.querySelector('.jp-remove-internal-email').addEventListener('click', function() { row.remove(); });
+    });
+    document.getElementById('internal-emails-list').addEventListener('click', function(e) {
+        if (e.target.closest('.jp-remove-internal-email')) e.target.closest('.jp-internal-email-row').remove();
+    });
 
     // ===== CITY SEARCH FOR JOB LOCATION =====
     const cityInput = document.getElementById('job_city_search');

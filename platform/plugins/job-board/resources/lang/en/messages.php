@@ -149,11 +149,14 @@ return [
 
     // Form labels
     'first_name_label' => 'First Name',
+    'full_name_label' => 'Full Name',
+    'enter_full_name' => 'Enter your full name',
     'last_name_label' => 'Last Name',
     'email_label' => 'Email',
     'email_address' => 'Email Address',
     'phone_label' => 'Phone',
     'message_label' => 'Message',
+    'job_screening_questions' => 'Job Screening Questions',
     'resume_label' => 'Resume',
     'cover_letter_label' => 'Cover letter',
     'icon_image' => 'Icon image',
