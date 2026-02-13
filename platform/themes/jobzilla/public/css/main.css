@@ -7860,9 +7860,7 @@ ol.comment-list li.comment .comment-respond .comment-form p {
   overflow: visible;
   display: block;
 }
-.twm-testimonial-2-carousel {
-  /* Owl carousel equal height for testimonials */
-}
+
 .twm-testimonial-2-carousel .owl-stage {
   display: flex !important;
   align-items: stretch !important;
