@@ -6,7 +6,7 @@
   var companies = $('.companies');
   var Loading = $('#company-loading');
   var filterAjax = null;
-  function getcompanies() {
+  function getCompanies() {
     var form = $('form#company-filter-form');
     var formData = form.serialize();
     var action = form.attr('action');
@@ -38,22 +38,22 @@
     e.preventDefault();
     companies.find('input[name="per_page"]').val($(this).val());
     setCurrentPage(1);
-    getcompanies();
+    getCompanies();
   });
   companies.on('change', '.select-sort-by', function (e) {
     e.preventDefault();
     companies.find('input[name="sort_by"]').val($(this).val());
-    getcompanies();
+    getCompanies();
   });
   companies.on('change', '.select-layout', function (e) {
     e.preventDefault();
     companies.find('input[name="layout"]').val($(this).val());
-    getcompanies();
+    getCompanies();
   });
   companies.on('click', 'a.pagination-button', function (e) {
     e.preventDefault();
     setCurrentPage($(this).data('page'));
-    getcompanies();
+    getCompanies();
   });
   companies.on('click', '.btn-open-sidebar', function () {
     $('#mySidebar').css('width', '300px');

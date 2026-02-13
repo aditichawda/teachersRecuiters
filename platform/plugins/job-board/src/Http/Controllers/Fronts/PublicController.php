@@ -49,6 +49,28 @@ class PublicController extends BaseController
     ) {
     }
 
+    /**
+     * Get screening questions for a job (for apply form).
+     */
+    public function getJobScreeningQuestions(int $id)
+    {
+        $job = JobModel::with('screeningQuestions')->find($id);
+        if (! $job) {
+            return response()->json(['questions' => []], 200);
+        }
+        $questions = $job->screeningQuestions->sortBy('order')->values()->map(function ($q) {
+            return [
+                'id' => $q->id,
+                'question' => $q->question,
+                'question_type' => $q->question_type,
+                'options' => $q->options_array,
+                'is_required' => (bool) $q->is_required,
+                'file_types' => $q->file_types,
+            ];
+        });
+        return response()->json(['questions' => $questions]);
+    }
+
     public function getJob(string $slug)
     {
         $slug = SlugHelper::getSlug($slug, SlugHelper::getPrefix(JobModel::class));
@@ -426,6 +448,20 @@ class PublicController extends BaseController
 
             $request->merge(['job_id' => $job->id]);
 
+            // Full name → first_name + last_name
+            $fullName = $request->input('full_name');
+            if (is_string($fullName) && $fullName !== '') {
+                $parts = preg_split('/\s+/', trim($fullName), 2, PREG_SPLIT_NO_EMPTY);
+                $request->merge([
+                    'first_name' => $parts[0] ?? '',
+                    'last_name' => $parts[1] ?? '',
+                ]);
+            }
+            // Email: ensure sent (hidden in form; use account email when logged in)
+            if ($account && ! $request->filled('email')) {
+                $request->merge(['email' => $account->email]);
+            }
+
             if (! $job->apply_url) {
                 if ($request->hasFile('resume')) {
                     $result = RvMedia::handleUpload($request->file('resume'), 0, 'job-applications');
@@ -457,7 +493,33 @@ class PublicController extends BaseController
                 $jobApplication->is_external_apply = true;
             }
 
-            $jobApplication->fill($request->input());
+            $input = $request->input();
+            $screeningAnswers = $request->input('screening_answers', []);
+            if (! is_array($screeningAnswers)) {
+                $screeningAnswers = [];
+            }
+            // Flatten screening_answers: arrays (e.g. from checkboxes) as JSON string
+            foreach ($screeningAnswers as $qId => $val) {
+                if (is_array($val)) {
+                    $screeningAnswers[$qId] = json_encode(array_values($val));
+                }
+            }
+            // Screening file uploads: upload and store URL in screening_answers
+            $screeningFiles = $request->file('screening_answers_file', []);
+            if (is_array($screeningFiles)) {
+                foreach ($screeningFiles as $qId => $file) {
+                    if ($file && $file->isValid()) {
+                        $result = RvMedia::handleUpload($file, 0, 'job-applications');
+                        if (! $result['error'] && isset($result['data'])) {
+                            $screeningAnswers[$qId] = $result['data']->url;
+                        }
+                    }
+                }
+            }
+            $input['screening_answers'] = array_filter($screeningAnswers, function ($v) {
+                return $v !== null && $v !== '';
+            });
+            $jobApplication->fill($input);
             $jobApplication->save();
 
             $job::withoutEvents(fn () => $job::withoutTimestamps(fn () => $job->increment('number_of_applied')));

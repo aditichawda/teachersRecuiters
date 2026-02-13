@@ -22,7 +22,12 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
         'uses' => 'PublicController@changeCurrency',
     ]);
 
-    Theme::registerRoutes(function (): void {
+        Theme::registerRoutes(function (): void {
+        Route::get('ajax/jobs/screening-questions/{id}', [
+            'as' => 'public.ajax.job.screening-questions',
+            'uses' => 'PublicController@getJobScreeningQuestions',
+        ]);
+
         Route::get('ajax/jobs', [
             'as' => 'public.ajax.jobs',
             'uses' => 'PublicController@getJobs',
