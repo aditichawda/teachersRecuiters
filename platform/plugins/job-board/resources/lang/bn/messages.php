@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'চাকরির বিভাগ সম্পাদনা করুন',
     'edit_job_tag' => 'চাকরির ট্যাগ সম্পাদনা করুন',
 
-    // Companies
+    // companies
     'companies' => 'কোম্পানি',
     'edit_this_company' => 'এই কোম্পানি সম্পাদনা করুন',
     'create_a_company' => 'একটি কোম্পানি তৈরি করুন',

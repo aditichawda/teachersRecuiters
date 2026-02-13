@@ -80,7 +80,7 @@
                             <div class="tw-count-number text-clr-sky">
                                 <span class="counter">12</span>K+
                             </div>
-                            <p class="icon-content-info">Companies Jobs</p>
+                            <p class="icon-content-info">companies Jobs</p>
                         </div>
                     </div>
                 </div>

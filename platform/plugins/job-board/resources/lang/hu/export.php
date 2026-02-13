@@ -69,15 +69,15 @@ return  [
   ],
   'companies' =>
    [
-    'name' => 'Export Companies',
+    'name' => 'Export companies',
     'description' => 'Export companies to CSV/Excel file.',
-    'total' => 'Total Companies',
+    'total' => 'Total companies',
     'limit' => 'Limit',
     'limit_placeholder' => 'Leave empty to export all',
     'all_status' => 'All Status',
     'all_featured' => 'All',
     'all_verified' => 'All',
-    'total_companies' => 'Total Companies',
+    'total_companies' => 'Total companies',
   ],
   'start_export' => 'Start Export',
   'exporting' => 'Exporting...',

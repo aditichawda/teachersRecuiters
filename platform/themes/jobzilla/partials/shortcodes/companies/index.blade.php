@@ -74,12 +74,12 @@
 <div class="section-full p-t120 p-b90 site-bg-white">
     <div class="container companies">
         <div class="companies-heading">
-            <h2>{{ __('Companies') }}</h2>
+            <h2>{{ __('Institutions') }}</h2>
             <p>{{ __('Explore top schools and institutions hiring teachers') }}</p>
         </div>
 
         <div class="row">
-            <div class="companies-toolbar product-filter-wrap company-option-wrap">
+            <!-- <div class="companies-toolbar product-filter-wrap company-option-wrap">
                 <div>
                     <span class="woocommerce-result-count-left">
                         {{ __('Showing :from – :to of :total results', [
@@ -108,7 +108,7 @@
                         <option @selected($layout == 'list') value="list">{{ __('List') }}</option>
                     </select>
                 </form>
-            </div>
+            </div> -->
 
             <div class="companies-wrap">
                 <div id="page-loading" style="display: none">

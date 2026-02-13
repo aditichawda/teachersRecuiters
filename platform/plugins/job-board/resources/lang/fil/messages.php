@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'I-edit ang kategorya ng trabaho',
     'edit_job_tag' => 'I-edit ang tag ng trabaho',
 
-    // Companies
+    // companies
     'companies' => 'Mga Kumpanya',
     'edit_this_company' => 'I-edit ang kumpanyang ito',
     'create_a_company' => 'Lumikha ng kumpanya',

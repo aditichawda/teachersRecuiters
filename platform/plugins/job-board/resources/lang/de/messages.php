@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'Job-Kategorie bearbeiten',
     'edit_job_tag' => 'Job-Tag bearbeiten',
 
-    // Companies
+    // companies
     'companies' => 'Unternehmen',
     'edit_this_company' => 'Dieses Unternehmen bearbeiten',
     'create_a_company' => 'Ein Unternehmen erstellen',

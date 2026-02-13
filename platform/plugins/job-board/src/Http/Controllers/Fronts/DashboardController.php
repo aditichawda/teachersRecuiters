@@ -45,7 +45,7 @@ class DashboardController extends BaseController
         Theme::breadcrumb()
             ->add(trans('plugins/job-board::messages.dashboard'));
 
-        $totalCompanies = $account->companies()->count();
+        $totalcompanies = $account->companies()->count();
 
         // @phpstan-ignore-next-line
         $totalJobs = Job::query()
@@ -107,7 +107,7 @@ class DashboardController extends BaseController
             ->latest('created_at')
             ->paginate(10);
 
-        $data = compact('totalJobs', 'totalCompanies', 'totalApplicants', 'expiredJobs', 'newApplicants', 'activities');
+        $data = compact('totalJobs', 'totalcompanies', 'totalApplicants', 'expiredJobs', 'newApplicants', 'activities');
 
         return JobBoardHelper::view('dashboard.index', $data);
     }

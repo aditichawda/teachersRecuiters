@@ -214,7 +214,7 @@ return  [
   'categories' => 'Categories',
   'edit_job_category' => 'Edit this job category',
   'edit_job_tag' => 'Edit this job tag',
-  'companies' => 'Companies',
+  'companies' => 'companies',
   'edit_this_company' => 'Edit this company',
   'create_a_company' => 'Create a company',
   'edit_company' => 'Edit company ":name"',

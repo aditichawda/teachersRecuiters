@@ -44,7 +44,9 @@ class JobBoardHelper
 
     protected ?string $jobCandidatesPageURL = null;
 
-    protected ?string $jobCompaniesPageURL = null;
+    protected ?string $jobcompaniesPageURL = null;
+
+    protected ?string $jobInstitutesPageURL = null;
 
     public function isGuestApplyEnabled(): bool
     {
@@ -193,17 +195,30 @@ class JobBoardHelper
         return $this->jobCategoriesPageURL;
     }
 
-    public function getJobCompaniesPageURL(): ?string
+    public function getJobcompaniesPageURL(): ?string
     {
-        if ($this->jobCompaniesPageURL) {
-            return $this->jobCompaniesPageURL;
+        if ($this->jobcompaniesPageURL) {
+            return $this->jobcompaniesPageURL;
         }
 
         $page = $this->getPage(theme_option('job_companies_page_id'));
 
-        $this->jobCompaniesPageURL = $page?->url;
+        $this->jobcompaniesPageURL = $page?->url;
 
-        return $this->jobCompaniesPageURL;
+        return $this->jobcompaniesPageURL;
+    }
+
+    public function getJobInstitutesPageURL(): ?string
+    {
+        if (isset($this->jobInstitutesPageURL) && $this->jobInstitutesPageURL) {
+            return $this->jobInstitutesPageURL;
+        }
+
+        $page = $this->getPage(theme_option('job_institutes_page_id'));
+
+        $this->jobInstitutesPageURL = $page?->url;
+
+        return $this->jobInstitutesPageURL;
     }
 
     public function getJobCandidatesPageURL(): ?string
@@ -626,7 +641,7 @@ class JobBoardHelper
         return (bool) setting('job_board_enabled_custom_fields_feature', true);
     }
 
-    public function employerCreateMultipleCompanies(): bool
+    public function employerCreateMultiplecompanies(): bool
     {
         return (bool) setting('job_board_allow_employer_create_multiple_companies', true);
     }
@@ -799,7 +814,7 @@ class JobBoardHelper
         return setting('job_board_enable_pin_featured_jobs_to_the_top', true);
     }
 
-    public function isPinFeaturedCompaniesInTheTop(): bool
+    public function isPinFeaturedcompaniesInTheTop(): bool
     {
         return setting('job_board_enable_pin_featured_companies_to_the_top', true);
     }

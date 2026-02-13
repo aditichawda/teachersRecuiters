@@ -46,8 +46,8 @@ class ReportController extends BaseController
             ->toArray();
 
         // Company statistics
-        $totalCompanies = Company::query()->count();
-        $featuredCompanies = Company::query()->where('is_featured', true)->count();
+        $totalcompanies = Company::query()->count();
+        $featuredcompanies = Company::query()->where('is_featured', true)->count();
 
         // Job views statistics
         $mostViewedJobs = Job::query()->latest('views')
@@ -73,8 +73,8 @@ class ReportController extends BaseController
             'featuredJobs',
             'totalApplications',
             'applicationsByStatus',
-            'totalCompanies',
-            'featuredCompanies',
+            'totalcompanies',
+            'featuredcompanies',
             'mostViewedJobs',
             'applicationTrends',
             'jobsByCategory',

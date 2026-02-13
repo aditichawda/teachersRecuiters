@@ -168,8 +168,11 @@
 
     <!-- FOOTER START -->
     <footer class="footer-dark footer-screenshot-style"
-        @if (theme_option('footer_background')) style="background-image: url({{ RvMedia::getImageUrl(theme_option('footer_background')) }});"
-        @else style="background-color: #1a1d21;" @endif>
+        @if (theme_option('footer_background'))
+            style="background-image: url({{ RvMedia::getImageUrl(theme_option('footer_background')) }});"
+        @else
+            style="background-color: #1a1d21;"
+        @endif>
         <div class="container">
             <!-- Section 1: Top – 5 columns -->
             <div class="footer-top">

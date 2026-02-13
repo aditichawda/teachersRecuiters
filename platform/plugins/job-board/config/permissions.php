@@ -103,7 +103,7 @@ return [
     ],
 
     [
-        'name' => 'Companies',
+        'name' => 'companies',
         'flag' => 'companies.index',
         'parent_flag' => 'plugins.job-board',
     ],
@@ -123,12 +123,12 @@ return [
         'parent_flag' => 'companies.index',
     ],
     [
-        'name' => 'Export Companies',
+        'name' => 'Export companies',
         'flag' => 'companies.export',
         'parent_flag' => 'companies.index',
     ],
     [
-        'name' => 'Import Companies',
+        'name' => 'Import companies',
         'flag' => 'companies.import',
         'parent_flag' => 'companies.index',
     ],

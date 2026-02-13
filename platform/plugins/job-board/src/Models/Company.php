@@ -143,7 +143,7 @@ class Company extends BaseModel
 
     public function scopePinFeatured(Builder $query): Builder
     {
-        if (JobBoardHelper::isPinFeaturedCompaniesInTheTop()) {
+        if (JobBoardHelper::isPinFeaturedcompaniesInTheTop()) {
             return $query->latest('is_featured');
         }
 

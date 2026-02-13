@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'Επεξεργασία κατηγορίας εργασίας',
     'edit_job_tag' => 'Επεξεργασία ετικέτας εργασίας',
 
-    // Companies
+    // companies
     'companies' => 'Εταιρείες',
     'edit_this_company' => 'Επεξεργασία αυτής της εταιρείας',
     'create_a_company' => 'Δημιουργία εταιρείας',

@@ -168,8 +168,11 @@
 
     <!-- FOOTER START -->
     <footer class="footer-dark footer-screenshot-style"
-        <?php if(theme_option('footer_background')): ?> style="background-image: url(<?php echo e(RvMedia::getImageUrl(theme_option('footer_background'))); ?>);"
-        <?php else: ?> style="background-color: #1a1d21;" <?php endif; ?>>
+        <?php if(theme_option('footer_background')): ?>
+            style="background-image: url(<?php echo e(RvMedia::getImageUrl(theme_option('footer_background'))); ?>);"
+        <?php else: ?>
+            style="background-color: #1a1d21;"
+        <?php endif; ?>>
         <div class="container">
             <!-- Section 1: Top – 5 columns -->
             <div class="footer-top">

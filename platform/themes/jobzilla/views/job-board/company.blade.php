@@ -253,7 +253,7 @@
         <div class="cd-breadcrumb">
             <a href="/">{{ __('Home') }}</a>
             <span>→</span>
-            <a href="{{ route('public.companies') }}">{{ __('Companies') }}</a>
+            <a href="{{ JobBoardHelper::getJobcompaniesPageURL() }}">{{ __('companies') }}</a>
             <span>→</span>
             <span style="color: #475569;">{{ Str::limit($company->name, 40) }}</span>
         </div>
@@ -283,7 +283,7 @@
 {{-- Main Content --}}
 <div class="cd-main">
     <div class="container">
-        <a href="{{ route('public.companies') }}" class="cd-back-btn">← {{ __('Back to Companies') }}</a>
+        <a href="{{ JobBoardHelper::getJobcompaniesPageURL() }}" class="cd-back-btn">← {{ __('Back to companies') }}</a>
 
         <div class="row">
             {{-- Left Content --}}

@@ -75,9 +75,9 @@
     } catch (\Exception $e) {}
 
     // Get featured companies/schools
-    $featuredCompanies = [];
+    $featuredcompanies = [];
     try {
-        $featuredCompanies = \Botble\JobBoard\Models\Company::query()
+        $featuredcompanies = \Botble\JobBoard\Models\Company::query()
             ->where('status', 'approved')
             ->latest()
             ->limit(6)
@@ -472,6 +472,13 @@
     margin-bottom: 15px;
     width: 100%;
     justify-content: center;
+    transition: all 0.2s;
+}
+
+.js-wallet-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
 }
 
 .js-wallet-badge i {
@@ -754,13 +761,13 @@
                                 ->where('reference_id', $account->id)
                                 ->value('key');
                         @endphp
-                        <button type="button" class="js-view-profile-btn" onclick="document.getElementById('profileModal').style.display='flex'">
+                        <button type="button" class="js-view-profile-btn" onclick="document.getElementById('profileModal').style.display='flex'" style="display: none;">
                             <i class="fa fa-eye"></i> {{ __('View Profile') }}
                         </button>
                     </div>
                     
                     <!-- Wallet -->
-                    <div class="js-wallet-badge">
+                    <div class="js-wallet-badge" onclick="document.getElementById('profileModal').style.display='flex'" style="cursor: pointer;">
                         <i class="fa fa-wallet"></i>
                         <span>Reward Points:</span>
                         <span class="js-wallet-points">{{ $walletPoints }}</span>
@@ -965,9 +972,9 @@
                                 <h5><i class="fa fa-school me-2" style="color: #6f42c1;"></i>Featured Schools / Institutions</h5>
                             </div>
                             <div class="js-content-card-body">
-                                @if(count($featuredCompanies) > 0)
+                                @if(count($featuredcompanies) > 0)
                                     <div class="js-school-grid">
-                                        @foreach($featuredCompanies as $company)
+                                        @foreach($featuredcompanies as $company)
                                             <div class="js-school-card">
                                                 @if($company->logo)
                                                     <img src="{{ RvMedia::getImageUrl($company->logo, 'thumb') }}" alt="{{ $company->name }}">

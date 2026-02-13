@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'تحرير فئة الوظيفة',
     'edit_job_tag' => 'تحرير وسم الوظيفة',
 
-    // Companies
+    // companies
     'companies' => 'الشركات',
     'edit_this_company' => 'تحرير هذه الشركة',
     'create_a_company' => 'إنشاء شركة',

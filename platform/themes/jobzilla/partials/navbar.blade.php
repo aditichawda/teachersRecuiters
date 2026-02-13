@@ -1,4 +1,4 @@
-@php
+-size@php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
@@ -70,9 +70,9 @@
                             <a href="{{ BaseHelper::getHomepageUrl()  }}">
                                 @if (Theme::get('header_css_class') == 'header-style-light')
                                     {!! Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo_light', 44) ?: Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo', 44) !!}
-                                    {!! Theme::getLogoImage(['class' => 'on-scroll-show'], 'logo', 44) !!}
+                                    {!! Theme::getLogoImage(['class' => 'on-scroll-show'], 'logo_light', 44) !!}
                                 @else
-                                    {!! Theme::getLogoImage([], 'logo', 44) !!}
+                                    {!! Theme::getLogoImage([], 'logo_light', 44) !!}
                                 @endif
 
                             </a>
@@ -105,7 +105,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ JobBoardHelper::getJobCompaniesPageURL() }}">
+                                <a class="nav-link" style="color: black;" href="{{ JobBoardHelper::getJobcompaniesPageURL() }}">
                                     <span>{{ __('Find Schools') }}</span>
                                 </a>
                             </li>
@@ -120,143 +120,142 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ route('public.notifications') }}">
-                                    <span>{{ __('Notifications') }}</span>
+                                <a class="nav-link" style="color: black;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                                    <i class="feather-bell"></i>
                                 </a>
                             </li>
                         @else
                             <!-- Default Menu for Employer and Non-logged-in Users -->
-                            <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ url('/') }}">
-                                    <span>{{ __('Home') }}</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ url('/how-it-works') }}">
-                                    <span>{{ __('How it Works') }}</span>
-                                </a>
-                            </li>
+                        <li class="nav-item">
+                            <a class="nav-link" style="color: black;" href="{{ url('/') }}">
+                                <span>{{ __('Home') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" style="color: black;" href="{{ url('/how-it-works') }}">
+                                <span>{{ __('How it Works') }}</span>
+                            </a>
+                        </li>
 
-                            <!-- Jobs Mega Menu Dropdown -->
-                            <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
-                                <a class="nav-link dropdown-toggle" style="color: black;" href="{{ JobBoardHelper::getJobsPageURL() }}" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
-                                    <span>{{ __('Jobs') }}</span>
-                                    <i class="feather-chevron-down ms-1"></i>
-                                </a>
-                                <div class="dropdown-menu mega-menu" id="jobs-mega-menu" aria-labelledby="jobs-dropdown">
-                                    <div class="mega-menu-wrapper">
-                                        <!-- Tabs Navigation -->
-                                        <div class="mega-menu-tabs-wrapper">
-                                            <button class="mega-menu-tab-btn active" onclick="switchMegaMenuTab('categories')" data-tab="categories">
-                                                {{ __('JOBS BY CATEGORIES') }}
-                                                <i class="feather-chevron-down"></i>
-                                            </button>
-                                            <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('location')" data-tab="location">
-                                                {{ __('JOBS BY LOCATIONS') }}
-                                                <i class="feather-chevron-down"></i>
-                                            </button>
-                                            <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('institution')" data-tab="institution">
-                                                {{ __('JOBS BY INSTITUTION TYPE') }}
-                                                <i class="feather-chevron-down"></i>
-                                            </button>
+                        <!-- Jobs Mega Menu Dropdown -->
+                        <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
+                            <a class="nav-link dropdown-toggle" style="color: black;" href="{{ JobBoardHelper::getJobsPageURL() }}" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
+                                <span>{{ __('Jobs') }}</span>
+                            </a>
+                            <div class="dropdown-menu mega-menu" id="jobs-mega-menu" aria-labelledby="jobs-dropdown">
+                                <div class="mega-menu-wrapper">
+                                    <!-- Tabs Navigation -->
+                                    <div class="mega-menu-tabs-wrapper">
+                                        <button class="mega-menu-tab-btn active" onclick="switchMegaMenuTab('categories')" data-tab="categories">
+                                            {{ __('JOBS BY CATEGORIES') }}
+                                            <i class="feather-chevron-down"></i>
+                                        </button>
+                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('location')" data-tab="location">
+                                            {{ __('JOBS BY LOCATIONS') }}
+                                            <i class="feather-chevron-down"></i>
+                                        </button>
+                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('institution')" data-tab="institution">
+                                            {{ __('JOBS BY INSTITUTION TYPE') }}
+                                            <i class="feather-chevron-down"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Tab Content -->
+                                    <div class="mega-menu-content-wrapper">
+                                        <!-- Jobs by Categories Content -->
+                                        <div class="mega-menu-tab-content active" id="content-categories">
+                                            <div class="mega-menu-grid">
+                                                @php
+                                                    $categories = $featuredCategories->chunk(ceil($featuredCategories->count() / 2));
+                                                @endphp
+                                                @foreach($categories as $chunk)
+                                                    <div class="mega-menu-column">
+                                                        @foreach($chunk as $category)
+                                                            <a href="{{ $category->url }}" class="mega-menu-grid-item">
+                                                                <div class="mega-menu-grid-icon">
+                                                                    @if($category->icon)
+                                                                        <i class="{{ $category->icon }}"></i>
+                                                                    @else
+                                                                        <i class="feather-briefcase"></i>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="mega-menu-grid-text">
+                                                                    <span class="mega-menu-grid-name">{{ $category->name }}</span>
+                                                                    <span class="mega-menu-grid-count">{{ number_format($category->active_jobs_count ?? 0) }} Jobs</span>
+                                                                </div>
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
+                                                @endforeach
+                                                @if($featuredCategories->isEmpty())
+                                                    <div class="mega-menu-empty">No categories available</div>
+                                                @endif
+                                            </div>
                                         </div>
 
-                                        <!-- Tab Content -->
-                                        <div class="mega-menu-content-wrapper">
-                                            <!-- Jobs by Categories Content -->
-                                            <div class="mega-menu-tab-content active" id="content-categories">
-                                                <div class="mega-menu-grid">
-                                                    @php
-                                                        $categories = $featuredCategories->chunk(ceil($featuredCategories->count() / 2));
-                                                    @endphp
-                                                    @foreach($categories as $chunk)
-                                                        <div class="mega-menu-column">
-                                                            @foreach($chunk as $category)
-                                                                <a href="{{ $category->url }}" class="mega-menu-grid-item">
-                                                                    <div class="mega-menu-grid-icon">
-                                                                        @if($category->icon)
-                                                                            <i class="{{ $category->icon }}"></i>
-                                                                        @else
-                                                                            <i class="feather-briefcase"></i>
-                                                                        @endif
-                                                                    </div>
-                                                                    <div class="mega-menu-grid-text">
-                                                                        <span class="mega-menu-grid-name">{{ $category->name }}</span>
-                                                                        <span class="mega-menu-grid-count">{{ number_format($category->active_jobs_count ?? 0) }} Jobs</span>
-                                                                    </div>
-                                                                </a>
-                                                            @endforeach
-                                                        </div>
-                                                    @endforeach
-                                                    @if($featuredCategories->isEmpty())
-                                                        <div class="mega-menu-empty">No categories available</div>
-                                                    @endif
-                                                </div>
+                                        <!-- Jobs by Location Content -->
+                                        <div class="mega-menu-tab-content" id="content-location">
+                                            <div class="mega-menu-grid">
+                                                @php
+                                                    $locations = $topLocations->chunk(ceil($topLocations->count() / 2));
+                                                @endphp
+                                                @foreach($locations as $chunk)
+                                                    <div class="mega-menu-column">
+                                                        @foreach($chunk as $location)
+                                                            <a href="{{ route('public.jobs-by-city', $location->slug) }}" class="mega-menu-grid-item">
+                                                                <div class="mega-menu-grid-icon">
+                                                                    <i class="feather-map-pin"></i>
+                                                                </div>
+                                                                <div class="mega-menu-grid-text">
+                                                                    <span class="mega-menu-grid-name">Teacher jobs in {{ $location->name }}</span>
+                                                                </div>
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
+                                                @endforeach
+                                                @if($topLocations->isEmpty())
+                                                    <div class="mega-menu-empty">No locations available</div>
+                                                @endif
                                             </div>
+                                        </div>
 
-                                            <!-- Jobs by Location Content -->
-                                            <div class="mega-menu-tab-content" id="content-location">
-                                                <div class="mega-menu-grid">
-                                                    @php
-                                                        $locations = $topLocations->chunk(ceil($topLocations->count() / 2));
-                                                    @endphp
-                                                    @foreach($locations as $chunk)
-                                                        <div class="mega-menu-column">
-                                                            @foreach($chunk as $location)
-                                                                <a href="{{ route('public.jobs-by-city', $location->slug) }}" class="mega-menu-grid-item">
-                                                                    <div class="mega-menu-grid-icon">
-                                                                        <i class="feather-map-pin"></i>
-                                                                    </div>
-                                                                    <div class="mega-menu-grid-text">
-                                                                        <span class="mega-menu-grid-name">Teacher jobs in {{ $location->name }}</span>
-                                                                    </div>
-                                                                </a>
-                                                            @endforeach
-                                                        </div>
-                                                    @endforeach
-                                                    @if($topLocations->isEmpty())
-                                                        <div class="mega-menu-empty">No locations available</div>
-                                                    @endif
-                                                </div>
-                                            </div>
-
-                                            <!-- Jobs by Institution Type Content -->
-                                            <div class="mega-menu-tab-content" id="content-institution">
-                                                <div class="mega-menu-grid">
-                                                    @php
-                                                        $institutions = $institutionTypes->chunk(ceil($institutionTypes->count() / 2));
-                                                    @endphp
-                                                    @foreach($institutions as $chunk)
-                                                        <div class="mega-menu-column">
-                                                            @foreach($chunk as $institution)
-                                                                <a href="{{ $institution->url }}" class="mega-menu-grid-item">
-                                                                    <div class="mega-menu-grid-icon">
-                                                                        <i class="feather-building"></i>
-                                                                    </div>
-                                                                    <div class="mega-menu-grid-text">
-                                                                        <span class="mega-menu-grid-name">{{ $institution->name }}</span>
-                                                                        <span class="mega-menu-grid-count">{{ number_format($institution->active_jobs_count ?? 0) }} Jobs</span>
-                                                                    </div>
-                                                                </a>
-                                                            @endforeach
-                                                        </div>
-                                                    @endforeach
-                                                    @if($institutionTypes->isEmpty())
-                                                        <div class="mega-menu-empty">No institution types available</div>
-                                                    @endif
-                                                </div>
+                                        <!-- Jobs by Institution Type Content -->
+                                        <div class="mega-menu-tab-content" id="content-institution">
+                                            <div class="mega-menu-grid">
+                                                @php
+                                                    $institutions = $institutionTypes->chunk(ceil($institutionTypes->count() / 2));
+                                                @endphp
+                                                @foreach($institutions as $chunk)
+                                                    <div class="mega-menu-column">
+                                                        @foreach($chunk as $institution)
+                                                            <a href="{{ $institution->url }}" class="mega-menu-grid-item">
+                                                                <div class="mega-menu-grid-icon">
+                                                                    <i class="feather-building"></i>
+                                                                </div>
+                                                                <div class="mega-menu-grid-text">
+                                                                    <span class="mega-menu-grid-name">{{ $institution->name }}</span>
+                                                                    <span class="mega-menu-grid-count">{{ number_format($institution->active_jobs_count ?? 0) }} Jobs</span>
+                                                                </div>
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
+                                                @endforeach
+                                                @if($institutionTypes->isEmpty())
+                                                    <div class="mega-menu-empty">No institution types available</div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </li>
+                            </div>
+                        </li>
 
-                            <!-- For Schools / Start Hiring -->
-                            <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ url('/start-hiring') }}">
-                                    <span>{{ __('Start Hiring') }}</span>
-                                </a>
-                            </li>
+                        <!-- For Schools / Start Hiring -->
+                                     <li class="nav-item">
+                            <a class="nav-link" style="color: black;" href="{{ url('/start-hiring') }}">
+                                <span>{{ __('Start Hiring') }}</span>
+                            </a>
+                        </li>
                         @endif
                     </ul>
                 </div>
@@ -368,6 +367,66 @@
 </header>
 
 <style>
+/* Navbar Fixed Position Fix - Hide on Scroll Up, Show on Scroll Down */
+.site-header {
+    position: relative;
+    z-index: 999;
+    width: 100%;
+}
+.sticky-header {
+    position: relative;
+    z-index: 999;
+    width: 100%;
+}
+.main-bar {
+    position: relative;
+    z-index: 999;
+    width: 100%;
+    background: #fff !important;
+    background-color: #fff !important;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+/* Fixed navbar styling */
+.is-fixed .main-bar,
+.is-fixed .main-bar.color-fill,
+.header-fixed .main-bar,
+.sticky-wrapper.is-stuck .main-bar,
+.sticky-wrapper.is-stuck .sticky-header .main-bar,
+.main-bar.color-fill,
+.main-bar[class*="bg-"],
+.main-bar[style*="background"] {
+    position: fixed !important;
+    /* top: 40px !important; */
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 9999 !important;
+    background: #fff !important;
+    background-color: #fff !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+}
+/* Ensure header-top doesn't interfere */
+.is-fixed ~ .page-content,
+.header-fixed ~ .page-content {
+    margin-top: 0;
+}
+
+/* Force white background on navbar in all states */
+.main-bar,
+.sticky-header .main-bar,
+.site-header .main-bar {
+    background: #fff !important;
+    background-color: #fff !important;
+}
+
+/* Override any theme colors or gradients */
+.main-bar.color-fill,
+.main-bar[class*="bg-"],
+.main-bar[style*="background"] {
+    background: #fff !important;
+    background-color: #fff !important;
+    background-image: none !important;
+}
 /* Mega Menu Styles */
 .mega-menu-dropdown {
     position: static !important;
@@ -739,6 +798,84 @@
     display: none;
 }
 
+/* Owl Stage Padding and Styling */
+.owl-stage {
+    padding: 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Home Client Carousel 3 Improvements */
+.home-client-carousel3 {
+    padding: 15px 0 !important;
+}
+
+.home-client-carousel3 .owl-stage-outer {
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.home-client-carousel3 .ow-client-logo {
+    height: auto !important;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.home-client-carousel3 .ow-client-logo:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-3px);
+}
+
+.home-client-carousel3 .client-logo {
+    max-width: 100% !important;
+    width: 100%;
+}
+
+.home-client-carousel3 .client-logo a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 8px;
+}
+
+.home-client-carousel3 .client-logo a img {
+    max-width: 100%;
+    max-height: 70px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Reduce Section Background Height */
+.section-full.site-bg-gray {
+    padding-top: 60px !important;
+    padding-bottom: 50px !important;
+}
+
+.section-full.p-t120.p-b90 {
+    padding-top: 60px !important;
+    padding-bottom: 50px !important;
+}
+
+/* Section Content Spacing */
+.section-content {
+    padding: 0 15px;
+}
+
+/* Top Schools Section Specific */
+.twm-companies-wrap {
+    padding-top: 50px !important;
+    padding-bottom: 40px !important;
+}
+
 .mega-menu-dropdown.show .dropdown-menu,
 .mega-menu-dropdown[aria-expanded="true"] .dropdown-menu,
 #jobs-mega-menu[style*="display: block"] {
@@ -885,4 +1022,150 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Navbar Hide/Show on Scroll - Hide on scroll up, Show on scroll down
+(function() {
+    'use strict';
+    
+    // Wait for DOM and ensure it runs after Waypoint
+    function initNavbarScroll() {
+        const mainBar = document.querySelector('.main-bar');
+        const stickyHeader = document.querySelector('.sticky-header');
+        
+        if (!mainBar) return;
+        
+        let lastScrollTop = 0;
+        let isNavbarVisible = true;
+        const scrollThreshold = 50; // Minimum scroll before hiding
+        
+        // Disable Waypoint.Sticky if it exists
+        if (typeof Waypoint !== 'undefined' && stickyHeader) {
+            try {
+                const waypointInstance = Waypoint.all('sticky-header');
+                if (waypointInstance && waypointInstance.length > 0) {
+                    waypointInstance.forEach(function(wp) {
+                        wp.destroy();
+                    });
+                }
+            } catch(e) {
+                console.log('Waypoint cleanup:', e);
+            }
+        }
+        
+        function handleScroll() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
+            
+            // At the very top, always show navbar
+            if (scrollTop < 10) {
+                if (!isNavbarVisible) {
+                    showNavbar();
+                    isNavbarVisible = true;
+                }
+                lastScrollTop = scrollTop;
+                return;
+            }
+            
+            // Determine scroll direction
+            const scrollDifference = scrollTop - lastScrollTop;
+            
+            if (scrollDifference > 0) {
+                // Scrolling DOWN - Hide navbar
+                if (scrollTop > scrollThreshold && isNavbarVisible) {
+                    hideNavbar();
+                    isNavbarVisible = false;
+                }
+            } else if (scrollDifference < 0) {
+                // Scrolling UP - Show navbar
+                if (!isNavbarVisible) {
+                    showNavbar();
+                    isNavbarVisible = true;
+                }
+            }
+            
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        }
+        
+        function showNavbar() {
+            if (mainBar) {
+                // Remove any classes that might interfere
+                mainBar.classList.remove('is-fixed');
+                stickyHeader.classList.remove('is-fixed', 'header-fixed');
+                
+                // Apply styles
+                mainBar.style.transform = 'translateY(0)';
+                mainBar.style.opacity = '1';
+                mainBar.style.visibility = 'visible';
+                mainBar.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                
+                // Make it fixed when scrolled
+                if (window.scrollY > 50) {
+                    mainBar.style.position = 'fixed';
+                    // mainBar.style.top = '40px';
+                    mainBar.style.left = '0';
+                    mainBar.style.right = '0';
+                    mainBar.style.width = '100%';
+                    mainBar.style.zIndex = '9999';
+                    mainBar.style.background = '#fff';
+                    mainBar.style.backgroundColor = '#fff';
+                    mainBar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+                } else {
+                    mainBar.style.position = 'relative';
+                    // mainBar.style.top = 'auto';
+                    mainBar.style.left = 'auto';
+                    mainBar.style.right = 'auto';
+                    mainBar.style.width = '100%';
+                    mainBar.style.zIndex = '999';
+                    mainBar.style.background = '#fff';
+                    mainBar.style.backgroundColor = '#fff';
+                    mainBar.style.boxShadow = 'none';
+                }
+            }
+        }
+        
+        function hideNavbar() {
+            if (mainBar && window.scrollY > scrollThreshold) {
+                // mainBar.style.transform = 'translateY(-100%)';
+                // mainBar.style.opacity = '0';
+                // mainBar.style.visibility = 'hidden';
+                mainBar.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                // Keep it fixed even when hidden
+                mainBar.style.position = 'fixed';
+                // mainBar.style.top = '40px';
+                mainBar.style.left = '0';
+                mainBar.style.right = '0';
+                mainBar.style.width = '100%';
+                mainBar.style.zIndex = '9999';
+                mainBar.style.background = '#fff';
+                mainBar.style.backgroundColor = '#fff';
+            }
+        }
+        
+        // Throttle scroll events for better performance
+        let ticking = false;
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    handleScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+        
+        // Initial state - show navbar at top
+        showNavbar();
+        isNavbarVisible = true;
+    }
+    
+    // Run after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNavbarScroll);
+    } else {
+        // DOM already loaded
+        setTimeout(initNavbarScroll, 100);
+    }
+    
+    // Also run after a short delay to ensure Waypoint has initialized
+    setTimeout(initNavbarScroll, 500);
+})();
 </script>

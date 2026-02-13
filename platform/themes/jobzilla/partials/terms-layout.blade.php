@@ -19,7 +19,7 @@
     color: #94a3b8;
 }
 .tc-content {
-    max-width: 800px;
+    /* max-width: 800px; */
     margin: 0 auto;
 }
 .tc-content h2 {

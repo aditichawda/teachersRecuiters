@@ -138,7 +138,6 @@
 .js-profile-completion {
     margin-bottom: 25px;
 }
-
 .js-profile-completion h6 {
     font-size: 13px;
     font-weight: 500;

@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'Rediger jobkategori',
     'edit_job_tag' => 'Rediger jobtag',
 
-    // Companies
+    // companies
     'companies' => 'Virksomheder',
     'edit_this_company' => 'Rediger denne virksomhed',
     'create_a_company' => 'Opret en virksomhed',

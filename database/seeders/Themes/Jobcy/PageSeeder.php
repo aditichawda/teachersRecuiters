@@ -124,7 +124,7 @@ class PageSeeder extends BaseSeeder
                     ),
             ],
             11 => [
-                'name' => 'Companies',
+                'name' => 'companies',
                 'content' => Html::tag('div', '[job-companies number_per_page="9"][/job-companies]'),
             ],
             12 => [

@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'Upravit kategorii práce',
     'edit_job_tag' => 'Upravit štítek práce',
 
-    // Companies
+    // companies
     'companies' => 'Společnosti',
     'edit_this_company' => 'Upravit tuto společnost',
     'create_a_company' => 'Vytvořit společnost',

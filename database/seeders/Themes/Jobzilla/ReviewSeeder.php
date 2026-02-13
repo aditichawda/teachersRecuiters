@@ -15,7 +15,7 @@ class ReviewSeeder extends BaseSeeder
     {
         Review::query()->truncate();
 
-        $totalCompanies = Company::query()->count();
+        $totalcompanies = Company::query()->count();
         $totalAccounts = Account::query()->count();
 
         $reviews = [
@@ -54,9 +54,9 @@ class ReviewSeeder extends BaseSeeder
 
             Review::query()->insertOrIgnore([
                 'reviewable_type' => $reviewable,
-                'reviewable_id' => $reviewable === Company::class ? rand(1, $totalCompanies) : rand(1, $totalAccounts),
+                'reviewable_id' => $reviewable === Company::class ? rand(1, $totalcompanies) : rand(1, $totalAccounts),
                 'created_by_type' => $reviewable === Company::class ? Account::class : Company::class,
-                'created_by_id' => $reviewable === Company::class ? rand(1, $totalAccounts) : rand(1, $totalCompanies),
+                'created_by_id' => $reviewable === Company::class ? rand(1, $totalAccounts) : rand(1, $totalcompanies),
                 'star' => rand(1, 5),
                 'review' => $reviews[rand(0, count($reviews) - 1)],
                 'status' => BaseStatusEnum::PUBLISHED,

@@ -147,8 +147,8 @@ class MenuSeeder extends BaseSeeder
                         'url' => JobBoardHelper::getJobsPageURL(),
                     ],
                     [
-                        'title' => 'Companies',
-                        'url' => JobBoardHelper::getJobCompaniesPageURL(),
+                        'title' => 'companies',
+                        'url' => JobBoardHelper::getJobcompaniesPageURL(),
                     ],
                 ],
             ],

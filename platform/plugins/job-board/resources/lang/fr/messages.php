@@ -275,7 +275,7 @@ return [
     'edit_job_category' => 'Modifier la catégorie d\'emploi',
     'edit_job_tag' => 'Modifier l\'étiquette d\'emploi',
 
-    // Companies
+    // companies
     'companies' => 'Entreprises',
     'edit_this_company' => 'Modifier cette entreprise',
     'create_a_company' => 'Créer une entreprise',

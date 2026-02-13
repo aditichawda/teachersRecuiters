@@ -114,7 +114,7 @@ class CompanySeeder extends BaseSeeder
         $employerIds = [1, 4];
 
         // Define which companies should be verified (about 60% of them)
-        $verifiedCompanies = ['Pinterest', 'Linkedin', 'Uber', 'Apple', 'Adobe', 'WordPress', 'Envato', 'Magento', 'Woocommerce'];
+        $verifiedcompanies = ['Pinterest', 'Linkedin', 'Uber', 'Apple', 'Adobe', 'WordPress', 'Envato', 'Magento', 'Woocommerce'];
 
         foreach ($data as $index => $item) {
             $item['latitude'] = $faker->latitude(42.4772, 44.0153);
@@ -123,7 +123,7 @@ class CompanySeeder extends BaseSeeder
             $city = $cities->random();
 
             // Determine if this company should be verified
-            $isVerified = in_array($item['name'], $verifiedCompanies);
+            $isVerified = in_array($item['name'], $verifiedcompanies);
 
             $data = [
                 'content' => $content,

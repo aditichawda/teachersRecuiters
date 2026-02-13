@@ -268,7 +268,7 @@
     </div>
     <div class="emp-stat-card green">
         <h6>{{ __('Institution') }}</h6>
-        <h2>{{ $totalCompanies ?? 0 }}</h2>
+        <h2>{{ $totalcompanies ?? 0 }}</h2>
         <i class="fa fa-university stat-icon"></i>
     </div>
     <div class="emp-stat-card red">

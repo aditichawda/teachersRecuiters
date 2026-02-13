@@ -69,8 +69,8 @@
                         <a href="{{ JobBoardHelper::getJobsPageURL() }}" class="btn btn-outline-secondary btn-sm">
                             <i class="fas fa-briefcase me-1"></i> {{ __('All Jobs') }}
                         </a>
-                        <a href="{{ JobBoardHelper::getJobCompaniesPageURL() }}" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-building me-1"></i> {{ __('Companies') }}
+                        <a href="{{ JobBoardHelper::getJobcompaniesPageURL() }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-building me-1"></i> {{ __('companies') }}
                         </a>
                     </div>
                 </div>

@@ -115,7 +115,7 @@ class BlogSeeder extends BaseSeeder
                 'description' => 'Green technology innovations focus on sustainable solutions, ranging from renewable energy sources to eco-friendly manufacturing practices, contributing to a greener future.',
             ],
             [
-                'name' => 'Space Tourism Soars: Commercial Companies Make Strides in Space Travel',
+                'name' => 'Space Tourism Soars: Commercial companies Make Strides in Space Travel',
                 'description' => 'Commercial space travel gains momentum as private companies make significant strides in offering space tourism experiences, opening up new frontiers for adventurous individuals.',
             ],
             [
