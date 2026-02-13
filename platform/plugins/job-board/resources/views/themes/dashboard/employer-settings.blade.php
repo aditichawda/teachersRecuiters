@@ -134,7 +134,7 @@
     
     /* TomSelect overrides - white background for dropdown */
     .ts-wrapper { margin-bottom: 0 !important; }
-    .ts-control { border: 1.5px solid #e2e8f0 !important; border-radius: 8px !important; padding: 6px 10px !important; min-height: 42px !important; background-color: #fff !important; }
+    .ts-control { border: 1.5px solid #e2e8f0 !important; border-radius: 8px !important; padding: 6px 10px !important; min-height: 42px !important; background-color: #fff !important; padding-right: 2.5rem !important; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important; background-repeat: no-repeat !important; background-position: right 0.75rem center !important; background-size: 16px 12px !important; }
     .ts-control:focus, .ts-wrapper.focus .ts-control { border-color: #0073d1 !important; box-shadow: 0 0 0 3px rgba(0,115,209,0.1) !important; }
     .ts-dropdown { background-color: #fff !important; }
     .ts-dropdown .option { background-color: #fff !important; }
@@ -198,20 +198,20 @@
         <div class="emp-section-body">
             <div class="row">
                 <!-- Full Name -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-lg-0 mb-sm-3">
                     <label class="form-label">{{ __('Full Name') }} <span class="required">*</span></label>
                     <input type="text" name="full_name" class="form-control" value="{{ old('full_name', $account->full_name ?? ($account->first_name . ' ' . $account->last_name)) }}" required placeholder="{{ __('Enter your full name') }}">
                 </div>
                 
                 <!-- Account Email (read-only) -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-lg-0 mb-sm-3">
                     <label class="form-label">{{ __('Login Email') }}</label>
                     <input type="email" class="form-control" value="{{ $account->email }}" readonly disabled style="background: #f1f5f9;">
                     <small class="form-text text-muted">{{ __('This is your login email and cannot be changed here') }}</small>
                 </div>
                 
                 <!-- Personal Mobile -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-lg-0 mb-sm-3">
                     <label class="form-label">{{ __('Mobile Number') }} <span class="required">*</span></label>
                     <input type="tel" name="account_phone" class="form-control" value="{{ old('account_phone', $account->phone ?? '') }}" required placeholder="{{ __('Enter your mobile number') }}">
                 </div>
@@ -406,12 +406,12 @@
                     <input type="hidden" name="city_id" id="emp-city-id" value="{{ old('city_id', $company->city_id ?? '') }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('State') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                    <label class="form-label">{{ __('State') }}</label>
                     <input type="text" id="emp-state-display" class="form-control" readonly value="{{ $empStateName }}" style="background:#f8f9fa;" placeholder="{{ __('Select city first') }}">
                     <input type="hidden" name="state_id" id="emp-state-id" value="{{ old('state_id', $company->state_id ?? '') }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Country') }} <span class="text-muted">({{ __('Auto-filled') }})</span></label>
+                    <label class="form-label">{{ __('Country') }}</label>
                     <input type="text" id="emp-country-display" class="form-control" readonly value="{{ $empCountryName }}" style="background:#f8f9fa;" placeholder="{{ __('Select city first') }}">
                     <input type="hidden" name="country_id" id="emp-country-id" value="{{ old('country_id', $company->country_id ?? '') }}">
                 </div>
@@ -454,18 +454,6 @@
                     <label class="form-label"><i class="fab fa-youtube text-danger"></i> {{ __('YouTube') }}</label>
                     <input type="url" name="youtube_video" class="form-control" value="{{ old('youtube_video', $company->youtube_video ?? '') }}" placeholder="https://youtube.com/...">
                     <small class="form-text text-muted">{{ __('Add a YouTube video preview link for your institution') }}</small>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="fab fa-google text-warning"></i> {{ __('Google') }}</label>
-                    <input type="url" name="google" class="form-control" value="{{ old('google', $company->google ?? '') }}" placeholder="https://g.page/...">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="fab fa-twitter text-info"></i> {{ __('Twitter') }}</label>
-                    <input type="url" name="twitter" class="form-control" value="{{ old('twitter', $company->twitter ?? '') }}" placeholder="https://twitter.com/...">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="fab fa-instagram text-danger"></i> {{ __('Instagram') }}</label>
-                    <input type="url" name="instagram" class="form-control" value="{{ old('instagram', $company->instagram ?? '') }}" placeholder="https://instagram.com/...">
                 </div>
             </div>
         </div>

@@ -274,7 +274,8 @@
 .js-content-card .form-control {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    padding: 10px 15px;
+    padding: 8px 14px;
+    height: 40px;
     font-size: 14px;
 }
 
@@ -402,13 +403,13 @@
                                 ->where('reference_id', $account->id)
                                 ->value('key');
                         @endphp
-                        <button type="button" class="js-view-profile-btn" onclick="document.getElementById('profileModal').style.display='flex'">
+                        <!-- <button type="button" class="js-view-profile-btn" onclick="document.getElementById('profileModal').style.display='flex'">
                             <i class="fa fa-eye"></i> {{ __('View Profile') }}
-                        </button>
+                        </button> -->
                     </div>
                     
                     <!-- Wallet -->
-                    <div class="js-wallet-badge">
+                    <div class="js-wallet-badge" onclick="document.getElementById('profileModal').style.display='flex'">
                         <i class="fa fa-wallet"></i>
                         <span>Reward Points:</span>
                         <span class="js-wallet-points">{{ $walletPoints }}</span>

@@ -1,5 +1,6 @@
 @php
     Theme::layout('without-navbar');
+    Theme::asset()->add('auth-overrides', Theme::asset()->url('css/front-auth-overrides.css'), ['auth-css']);
 @endphp
 
 <style>
@@ -112,6 +113,7 @@
         border: 1.5px solid #e0e0e0;
         border-radius: 8px;
         padding: 12px 14px;
+        height: 40px;
         font-size: 14px;
         transition: all 0.3s ease;
         color: #434343;

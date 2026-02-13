@@ -138,7 +138,8 @@
 }
 .jobs-sidebar-modern .input-group .form-control {
     border: none;
-    padding: 10px 14px;
+    padding: 8px 14px;
+    height: 40px;
     font-size: 14px;
     background: #fff;
 }

@@ -161,8 +161,6 @@ class EmployerSettingController extends BaseController
             'facebook' => 'nullable|url|max:255',
             'linkedin' => 'nullable|url|max:255',
             'youtube_video' => 'nullable|url|max:500',
-            'google' => 'nullable|url|max:255',
-            'twitter' => 'nullable|url|max:255',
             'instagram' => 'nullable|url|max:255',
             'awards' => 'nullable|array|max:5',
             'awards.*.title' => 'nullable|string|max:255',
@@ -203,7 +201,7 @@ class EmployerSettingController extends BaseController
             'website', 'year_founded', 'principal_name', 'total_staff',
             'campus_type', 'standard_level', 'staff_facilities',
             'country_id', 'state_id', 'city_id', 'address', 'postal_code',
-            'facebook', 'linkedin', 'youtube_video', 'google', 'twitter', 'instagram',
+            'facebook', 'linkedin', 'youtube_video', 'instagram',
         ]);
 
         // Institution logo (right side): store in jb_companies.logo only. Left profile logo = account avatar, unchanged.

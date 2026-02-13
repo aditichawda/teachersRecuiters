@@ -19,9 +19,11 @@ class ApplyJobRequest extends Request
 
         if ($this->input('job_type') === 'internal') {
             $internalRules = [
-                'first_name' => 'required|max:120|min:2',
-                'last_name' => 'required|max:120|min:2',
+                'full_name' => 'required|max:240|min:2',
+                'email' => 'required|email',
                 'phone' => 'nullable|' . BaseHelper::getPhoneValidationRule(),
+                'screening_answers' => 'nullable|array',
+                'screening_answers.*' => 'nullable|max:2000',
             ];
 
             // Message field - check if required
@@ -63,8 +65,7 @@ class ApplyJobRequest extends Request
     public function attributes(): array
     {
         return [
-            'first_name' => trans('plugins/job-board::messages.first_name_label'),
-            'last_name' => trans('plugins/job-board::messages.last_name_label'),
+            'full_name' => trans('plugins/job-board::messages.full_name_label'),
             'email' => trans('plugins/job-board::messages.email_label'),
             'phone' => trans('plugins/job-board::messages.phone_attr'),
             'message' => trans('plugins/job-board::messages.message_label'),

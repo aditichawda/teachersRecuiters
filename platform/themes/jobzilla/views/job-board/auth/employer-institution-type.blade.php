@@ -57,7 +57,8 @@
     .form-control, .form-select {
         border: 1.5px solid #e0e0e0;
         border-radius: 8px;
-        padding: 10px 12px;
+        padding: 8px 12px;
+        height: 40px;
         font-size: 14px;
         transition: all 0.3s ease;
         color: #434343;

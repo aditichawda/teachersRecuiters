@@ -1,0 +1,4 @@
+/* Auth form overrides – edit this file; it loads after plugin front-auth.css */
+form.auth-form .form-check .form-check-input {
+    margin-left: -1.5em;
+}

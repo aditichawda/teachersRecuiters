@@ -1,5 +1,6 @@
 @php
     Theme::layout('without-navbar');
+    Theme::asset()->add('auth-overrides', Theme::asset()->url('css/front-auth-overrides.css'), ['auth-css']);
 @endphp
 
 <style>
@@ -112,7 +113,8 @@
     .employer-register-body .form-select {
         border: 1.5px solid #e0e0e0;
         border-radius: 8px;
-        padding: 10px 12px;
+        padding: 8px 12px;
+        height: 40px;
         font-size: 14px;
         transition: all 0.3s ease;
         color: #434343;
@@ -130,7 +132,8 @@
         background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%) !important;
         border: none !important;
         border-radius: 8px !important;
-        padding: 12px 25px !important;
+        padding: 8px 14px !important;
+        height: 40px !important;
         font-size: 14px !important;
         font-weight: 600 !important;
         width: 100% !important;
