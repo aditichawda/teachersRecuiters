@@ -52,6 +52,23 @@
     @media (max-width: 768px) {
         .jp-col-6, .jp-col-4, .jp-col-3 { flex: 0 0 100%; max-width: 100%; }
         .jp-card { padding: 18px; }
+        .jp-salary-type-tabs { flex-wrap: wrap; }
+        .jp-salary-tab { flex: 1 1 auto; min-width: 80px; border-radius: 8px !important; margin: 2px; }
+        .jp-option-cards { flex-direction: column; }
+        .jp-option-card { width: 100%; }
+        .jp-page-header { flex-direction: column; gap: 12px; align-items: flex-start; text-align: left; }
+        .jp-page-header h2 { font-size: 18px; }
+        .jp-row { gap: 12px; }
+        .jp-group { margin-bottom: 16px; }
+    }
+
+    /* Down arrow for suggest/search dropdown inputs (Skills, Certifications, Language) */
+    .jp-suggest-wrap .jp-input {
+        padding-right: 2.25rem;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
     }
 
     /* Auto-suggest dropdown */
@@ -163,6 +180,15 @@
         font-size: 13px;
         font-weight: 500;
     }
+
+    /* Section headers - all sections visible by default */
+    .jp-card-collapsible .jp-card-header {
+        margin-bottom: 0;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    .jp-card-collapsible .jp-card-header .jp-card-title { margin-bottom: 0; padding-bottom: 0; border: none; }
+    .jp-card-collapsible .jp-card-body { overflow: visible; }
 </style>
 
 <!-- Page Header -->
@@ -186,41 +212,62 @@
     @csrf
 
     {{-- ====== SECTION 1: Company & Job Title ====== --}}
-    <div class="jp-card">
-        <div class="jp-card-title"><i class="fa fa-building"></i> Company & Job Details</div>
-
-        {{-- Company Selection --}}
-        <div class="jp-group">
-            <label class="jp-label">Are you hiring for which school / institution? <span class="required">*</span></label>
-            <select name="company_id" id="company_id" class="jp-select" required>
-                <option value="">-- Select Company --</option>
-                @foreach ($companies as $id => $name)
-                    <option value="{{ $id }}" data-institution-type="{{ $companyInstitutionTypes[$id] ?? '' }}">{{ $name }}</option>
-                @endforeach
-            </select>
-            <small class="text-muted">Select company if already created.</small>
-            <a href="{{ route('public.account.companies.create') }}" class="jp-create-link d-block mt-1">
-                <i class="fa fa-plus"></i> Click here to create company / school
-            </a>
-            <div class="jp-error" id="err-company">Please select a company.</div>
+    <div class="jp-card jp-card-collapsible" data-section="1">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-building"></i> Company & Job Details</div>
         </div>
-
-        {{-- Institution Type (Auto from company) --}}
-        <div class="jp-group">
-            <label class="jp-label">Institution Type <span class="hint">(Auto-filled from company)</span></label>
-            <div id="institution_type_display">
-                <span class="jp-institution-type-badge" id="inst-type-badge">Select a company first</span>
+        <div class="jp-card-body" style="padding-top: 20px;">
+        {{-- Company & Institution Type - one row, col-6 col-6 --}}
+        <div class="jp-row">
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Are you hiring for which school / institution? <span class="required">*</span></label>
+                    <select name="company_id" id="company_id" class="jp-select" required>
+                        <option value="">-- Select Company --</option>
+                        @foreach ($companies as $id => $name)
+                            <option value="{{ $id }}" data-institution-type="{{ $companyInstitutionTypes[$id] ?? '' }}">{{ $name }}</option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">Select company if already created.</small>
+                    <a href="{{ route('public.account.companies.create') }}" class="jp-create-link d-block mt-1">
+                        <i class="fa fa-plus"></i> Click here to create company / school
+                    </a>
+                    <div class="jp-error" id="err-company">Please select a company.</div>
+                </div>
+            </div>
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Institution Type <span class="hint">(Auto-filled from company)</span></label>
+                    <div id="institution_type_display">
+                        <span class="jp-institution-type-badge" id="inst-type-badge">Select a company first</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        {{-- Job Title (Auto-suggest) --}}
-        <div class="jp-group">
-            <label class="jp-label">Job Title <span class="required">*</span> <span class="hint">(Start typing to search)</span></label>
-            <div class="jp-suggest-wrap">
-                <input type="text" name="name" id="job_title" class="jp-input" placeholder="e.g. Primary English Teacher" required autocomplete="off">
-                <div class="jp-suggest-list" id="job-title-suggestions"></div>
+        {{-- Job Title & Required Skills - one row, col-6 col-6 --}}
+        <div class="jp-row">
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Job Title <span class="required">*</span> <span class="hint">(Start typing to search)</span></label>
+                    <div class="jp-suggest-wrap">
+                        <input type="text" name="name" id="job_title" class="jp-input" placeholder="e.g. Primary English Teacher" required autocomplete="off">
+                        <div class="jp-suggest-list" id="job-title-suggestions"></div>
+                    </div>
+                    <div class="jp-error" id="err-title">Job title is required.</div>
+                </div>
             </div>
-            <div class="jp-error" id="err-title">Job title is required.</div>
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Required Skills <span class="hint">(Select multiple)</span></label>
+                    <div class="jp-suggest-wrap">
+                        <input type="text" id="skills_search" class="jp-input" placeholder="Search & add skills..." autocomplete="off">
+                        <div class="jp-suggest-list" id="skills-suggestions"></div>
+                    </div>
+                    <div class="jp-tags-wrap" id="selected-skills"></div>
+                    <div id="skills-hidden-inputs"></div>
+                </div>
+            </div>
         </div>
 
         {{-- Detailed Job Description --}}
@@ -233,17 +280,6 @@
             </label>
             <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required></textarea>
             <div class="jp-error" id="err-description">Job description is required.</div>
-        </div>
-
-        {{-- Required Skills --}}
-        <div class="jp-group">
-            <label class="jp-label">Required Skills <span class="hint">(Select multiple)</span></label>
-            <div class="jp-suggest-wrap">
-                <input type="text" id="skills_search" class="jp-input" placeholder="Search & add skills..." autocomplete="off">
-                <div class="jp-suggest-list" id="skills-suggestions"></div>
-            </div>
-            <div class="jp-tags-wrap" id="selected-skills"></div>
-            <div id="skills-hidden-inputs"></div>
         </div>
 
         {{-- Job Type Category --}}
@@ -261,77 +297,81 @@
             </div>
             <div class="jp-error" id="err-job-type">Please select job type.</div>
         </div>
+        </div>
     </div>
 
     {{-- ====== SECTION 2: Salary ====== --}}
-    <div class="jp-card">
-        <div class="jp-card-title"><i class="fa fa-rupee-sign"></i> Salary Details</div>
-
-        <div class="jp-group">
-            <label class="jp-label">Salary Period <span class="required">*</span></label>
-            <div class="jp-salary-type-tabs" id="salary-period-tabs">
-                @foreach ($salaryRanges as $key => $label)
-                    <div class="jp-salary-tab {{ $key === 'monthly' ? 'active' : '' }}" data-value="{{ $key }}" onclick="selectSalaryPeriod(this)">{{ $label }}</div>
-                @endforeach
-                <div class="jp-salary-tab" data-value="negotiable" onclick="selectSalaryPeriod(this)">Negotiable</div>
+    <div class="jp-card jp-card-collapsible" data-section="2">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-rupee-sign"></i> Salary Details</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
+        {{-- Salary Period & Salary Type - one row, col-6 col-6 --}}
+        <div class="jp-row">
+            <div class="jp-col-9">
+                <div class="jp-group">
+                    <label class="jp-label">Salary Period <span class="required">*</span></label>
+                    <div class="jp-salary-type-tabs" id="salary-period-tabs">
+                        @foreach ($salaryRanges as $key => $label)
+                            <div class="jp-salary-tab {{ $key === 'monthly' ? 'active' : '' }}" data-value="{{ $key }}" onclick="selectSalaryPeriod(this)">{{ $label }}</div>
+                        @endforeach
+                        <div class="jp-salary-tab" data-value="negotiable" onclick="selectSalaryPeriod(this)">Negotiable</div>
+                    </div>
+                    <input type="hidden" name="salary_range" id="salary_range" value="monthly">
+                </div>
             </div>
-            <input type="hidden" name="salary_range" id="salary_range" value="monthly">
+            <div class="jp-col-3">
+                <div class="jp-group">
+                    <label class="jp-label">Salary Type</label>
+                    <div class="jp-option-cards">
+                        <label class="jp-option-card selected" onclick="selectSalaryMode(this, 'range')">
+                            <input type="radio" name="salary_mode" value="range" checked> Range
+                        </label>
+                        <label class="jp-option-card" onclick="selectSalaryMode(this, 'fixed')">
+                            <input type="radio" name="salary_mode" value="fixed"> Fixed
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="salary-amount-section">
             <div class="jp-row">
-                <div class="jp-col-4">
+                <div class="jp-col-6">
                     <div class="jp-group">
-                        <label class="jp-label">Salary Type</label>
-                        <div class="jp-option-cards">
-                            <label class="jp-option-card selected" onclick="selectSalaryMode(this, 'range')">
-                                <input type="radio" name="salary_mode" value="range" checked> Range
-                            </label>
-                            <label class="jp-option-card" onclick="selectSalaryMode(this, 'fixed')">
-                                <input type="radio" name="salary_mode" value="fixed"> Fixed
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="jp-col-4">
-                    <div class="jp-group">
-                        <label class="jp-label">Salary From</label>
+                        <label class="jp-label">Salary From ₹</label>
                         <input type="number" name="salary_from" id="salary_from" class="jp-input" placeholder="e.g. 25000">
                     </div>
                 </div>
-                <div class="jp-col-4" id="salary-to-wrap">
+                <div class="jp-col-6" id="salary-to-wrap">
                     <div class="jp-group">
-                        <label class="jp-label">Salary To</label>
+                        <label class="jp-label">Salary To ₹</label>
                         <input type="number" name="salary_to" id="salary_to" class="jp-input" placeholder="e.g. 50000">
                     </div>
                 </div>
             </div>
-            <div class="jp-row">
-                <div class="jp-col-6">
-                    <div class="jp-group">
-                        <label class="jp-label">Currency</label>
-                        <select name="currency_id" class="jp-select">
-                            @foreach ($currencies as $id => $title)
-                                <option value="{{ $id }}">{{ $title }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="jp-col-6">
-                    <div class="jp-check-wrap">
-                        <input type="checkbox" name="hide_salary" id="hide_salary" value="1">
-                        <label for="hide_salary" style="cursor:pointer; font-size:14px;">Hide Salary on Job Posting</label>
-                    </div>
+            @php
+                $inrCurrencyId = collect($currencies)->search(fn($t) => stripos($t, 'INR') !== false || stripos($t, '₹') !== false || stripos($t, 'Rupee') !== false);
+                if ($inrCurrencyId === false) { $inrCurrencyId = get_application_currency_id() ?? array_key_first($currencies); }
+            @endphp
+            <input type="hidden" name="currency_id" value="{{ $inrCurrencyId }}">
+            <div class="jp-group">
+                <div class="jp-check-wrap">
+                    <input type="checkbox" name="hide_salary" id="hide_salary" value="1">
+                    <label for="hide_salary" style="cursor:pointer; font-size:14px;">Hide Salary on Job Posting</label>
                 </div>
             </div>
         </div>
         <input type="hidden" name="salary_type" id="salary_type" value="fixed">
+        </div>
     </div>
 
     {{-- ====== SECTION 3: Requirements ====== --}}
-    <div class="jp-card">
-        <div class="jp-card-title"><i class="fa fa-certificate"></i> Requirements</div>
-
+    <div class="jp-card jp-card-collapsible" data-section="3">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-certificate"></i> Requirements</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
         <div class="jp-row">
             <div class="jp-col-6">
                 <div class="jp-group">
@@ -357,33 +397,40 @@
             </div>
         </div>
 
-        {{-- Certifications --}}
-        <div class="jp-group">
-            <label class="jp-label">Required Teaching / Other Certifications <span class="hint">(Select multiple)</span></label>
-            <div class="jp-suggest-wrap">
-                <input type="text" id="cert_search" class="jp-input" placeholder="Search certifications..." autocomplete="off">
-                <div class="jp-suggest-list" id="cert-suggestions"></div>
+        {{-- Certifications & Language - one row, col-6 col-6 --}}
+        <div class="jp-row">
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Required Teaching / Other Certifications <span class="hint">(Select multiple)</span></label>
+                    <div class="jp-suggest-wrap">
+                        <input type="text" id="cert_search" class="jp-input" placeholder="Search certifications..." autocomplete="off">
+                        <div class="jp-suggest-list" id="cert-suggestions"></div>
+                    </div>
+                    <div class="jp-tags-wrap" id="selected-certs"></div>
+                    <input type="hidden" name="required_certifications" id="required_certifications" value="">
+                </div>
             </div>
-            <div class="jp-tags-wrap" id="selected-certs"></div>
-            <input type="hidden" name="required_certifications" id="required_certifications" value="">
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Language Proficiency Required <span class="hint">(Select multiple)</span></label>
+                    <div class="jp-suggest-wrap">
+                        <input type="text" id="lang_search" class="jp-input" placeholder="Search languages..." autocomplete="off">
+                        <div class="jp-suggest-list" id="lang-suggestions"></div>
+                    </div>
+                    <div class="jp-tags-wrap" id="selected-langs"></div>
+                    <input type="hidden" name="language_proficiency" id="language_proficiency" value="">
+                </div>
+            </div>
         </div>
-
-        {{-- Language Proficiency --}}
-        <div class="jp-group">
-            <label class="jp-label">Language Proficiency Required <span class="hint">(Select multiple)</span></label>
-            <div class="jp-suggest-wrap">
-                <input type="text" id="lang_search" class="jp-input" placeholder="Search languages..." autocomplete="off">
-                <div class="jp-suggest-list" id="lang-suggestions"></div>
-            </div>
-            <div class="jp-tags-wrap" id="selected-langs"></div>
-            <input type="hidden" name="language_proficiency" id="language_proficiency" value="">
         </div>
     </div>
 
     {{-- ====== SECTION 4: Job Preferences ====== --}}
-    <div class="jp-card">
-        <div class="jp-card-title"><i class="fa fa-sliders-h"></i> Job Preferences</div>
-
+    <div class="jp-card jp-card-collapsible" data-section="4">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-sliders-h"></i> Job Preferences</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
         <div class="jp-row">
             <div class="jp-col-4">
                 <div class="jp-group">
@@ -429,12 +476,12 @@
             <div class="jp-col-4">
                 <div class="jp-group">
                     <label class="jp-label">Employment Type</label>
-                    <select name="jobTypes[]" id="employment_type" class="jp-select" multiple style="min-height: 44px;">
+                    <select name="jobTypes[]" id="employment_type" class="jp-select">
+                        <option value="">-- Select --</option>
                         @foreach ($jobTypes as $id => $name)
                             <option value="{{ $id }}">{{ $name }}</option>
                         @endforeach
                     </select>
-                    <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                 </div>
             </div>
             <div class="jp-col-4">
@@ -446,12 +493,15 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
 
     {{-- ====== SECTION 5: Application Location ====== --}}
-    <div class="jp-card">
-        <div class="jp-card-title"><i class="fa fa-map-marker-alt"></i> Application & Location</div>
-
+    <div class="jp-card jp-card-collapsible" data-section="5">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-map-marker-alt"></i> Application & Location</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
         <div class="jp-group">
             <label class="jp-label">Application accepted from which location <span class="required">*</span></label>
             <div class="jp-option-cards">
@@ -462,10 +512,6 @@
                 <label class="jp-option-card" onclick="selectOption(this, 'application_location_type')">
                     <input type="radio" name="application_location_type" value="specific">
                     <i class="fa fa-list"></i> Specific Locations (up to 3)
-                </label>
-                <label class="jp-option-card" onclick="selectOption(this, 'application_location_type')">
-                    <input type="radio" name="application_location_type" value="anywhere">
-                    <i class="fa fa-globe"></i> Anywhere India
                 </label>
             </div>
         </div>
@@ -525,12 +571,15 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
 
     {{-- ====== SECTION 6: Application Settings ====== --}}
-    <div class="jp-card">
-        <div class="jp-card-title"><i class="fa fa-paper-plane"></i> Application Settings</div>
-
+    <div class="jp-card jp-card-collapsible" data-section="6">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-paper-plane"></i> Application Settings</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
         <div class="jp-group">
             <label class="jp-label">Application received by <span class="required">*</span></label>
             <div class="jp-option-cards">
@@ -542,10 +591,6 @@
                     <input type="radio" name="apply_type" value="external">
                     <i class="fa fa-external-link-alt"></i> External Link
                 </label>
-                <label class="jp-option-card" onclick="selectOption(this, 'apply_type')">
-                    <input type="radio" name="apply_type" value="other_email">
-                    <i class="fa fa-envelope"></i> Other Email
-                </label>
             </div>
         </div>
 
@@ -554,9 +599,23 @@
             <input type="url" name="apply_url" id="apply_url" class="jp-input" placeholder="https://example.com/apply">
         </div>
 
-        <div class="jp-group" id="other-email-wrap" style="display: none;">
-            <label class="jp-label">Other Email for Applications</label>
-            <input type="email" name="apply_other_email" id="apply_other_email" class="jp-input" placeholder="hiring@example.com">
+        <div class="jp-group" id="internal-emails-wrap">
+            <label class="jp-label">Additional internal/registered emails <span class="hint">(optional, up to 3)</span></label>
+            <div id="internal-emails-list">
+                @php
+                    $internalEmails = old('apply_internal_emails', []);
+                    if (!is_array($internalEmails)) $internalEmails = $internalEmails ? [$internalEmails] : [];
+                @endphp
+                @foreach(array_slice($internalEmails, 0, 3) as $idx => $email)
+                <div class="jp-internal-email-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                    <input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" value="{{ is_string($email) ? $email : '' }}" style="flex:1;">
+                    <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>
+                </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-email-btn" style="border-radius:8px;">
+                <i class="fa fa-plus"></i> Add email
+            </button>
         </div>
 
         <div class="jp-row">
@@ -584,17 +643,21 @@
                 <label for="hide_company" style="cursor:pointer; font-size:14px;"><i class="fa fa-eye-slash" style="margin-right:4px;"></i> Hide my company details (Post as anonymously)</label>
             </div>
         </div>
+        </div>
     </div>
 
     {{-- ====== SECTION 7: Screening Questions ====== --}}
-    <div class="jp-card">
-        <div class="jp-card-title"><i class="fa fa-clipboard-list"></i> Screening Questions <span class="hint" style="font-weight:400;font-size:13px;">(Optional - restrict candidates who don't match criteria)</span></div>
-
+    <div class="jp-card jp-card-collapsible" data-section="7">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-clipboard-list"></i> Screening Questions <span class="hint" style="font-weight:400;font-size:13px;">(Optional)</span></div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
         <div id="screening-questions-container"></div>
 
         <button type="button" class="btn btn-outline-primary" onclick="addScreeningQuestion()" style="border-radius:8px;">
             <i class="fa fa-plus"></i> Add Screening Question
         </button>
+        </div>
     </div>
 
     {{-- ====== SUBMIT ====== --}}
@@ -654,8 +717,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const companyData = @json($companyDetails);
 
     // ===== AUTO-SUGGEST HELPER =====
-    function setupAutoSuggest(inputEl, listEl, items, onSelect, isObject) {
+    function setupAutoSuggest(inputEl, listEl, items, onSelect, isObject, clearInputOnSelect) {
         isObject = isObject || false;
+        clearInputOnSelect = clearInputOnSelect !== false; // default true for skills/certs/langs
         inputEl.addEventListener('input', function() {
             var val = this.value.toLowerCase().trim();
             listEl.innerHTML = '';
@@ -683,7 +747,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 div.addEventListener('click', function() {
                     onSelect(isObject ? { id: this.dataset.id, name: this.textContent } : this.textContent);
-                    inputEl.value = '';
+                    if (clearInputOnSelect) inputEl.value = '';
                     listEl.classList.remove('show');
                 });
                 listEl.appendChild(div);
@@ -702,7 +766,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupAutoSuggest(titleInput, titleList, jobTitles, function(title) {
         titleInput.value = title;
         autoSetJobType(title);
-    });
+    }, false, false); // isObject=false, clearInputOnSelect=false so selected title stays visible
 
     function autoSetJobType(title) {
         var nonTeachingKeywords = ['librarian', 'lab assistant', 'administrative', 'accountant',
@@ -869,9 +933,30 @@ document.addEventListener('DOMContentLoaded', function() {
         if (name === 'apply_type') {
             var val2 = el.querySelector('input').value;
             document.getElementById('external-url-wrap').style.display = val2 === 'external' ? 'block' : 'none';
-            document.getElementById('other-email-wrap').style.display = val2 === 'other_email' ? 'block' : 'none';
+            document.getElementById('internal-emails-wrap').style.display = val2 === 'internal' ? 'block' : 'none';
         }
     };
+
+    // ===== INTERNAL EMAILS (up to 3) - Add email button =====
+    var addEmailBtn = document.getElementById('add-internal-email-btn');
+    var internalEmailsList = document.getElementById('internal-emails-list');
+    if (addEmailBtn && internalEmailsList) {
+        addEmailBtn.addEventListener('click', function() {
+            var rows = internalEmailsList.querySelectorAll('.jp-internal-email-row');
+            if (rows.length >= 3) return;
+            var row = document.createElement('div');
+            row.className = 'jp-internal-email-row';
+            row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
+            row.innerHTML = '<input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" style="flex:1;">' +
+                '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
+            internalEmailsList.appendChild(row);
+            row.querySelector('.jp-remove-internal-email').addEventListener('click', function() { row.remove(); });
+        });
+        internalEmailsList.addEventListener('click', function(e) {
+            var removeBtn = e.target.closest('.jp-remove-internal-email');
+            if (removeBtn) removeBtn.closest('.jp-internal-email-row').remove();
+        });
+    }
 
     // ===== CITY SEARCH FOR JOB LOCATION =====
     var cityInput = document.getElementById('job_city_search');
@@ -1045,6 +1130,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== FORM VALIDATION =====
     document.getElementById('jobPostForm').addEventListener('submit', function(e) {
+        var empSel = document.getElementById('employment_type');
+        if (empSel) {
+            if (!empSel.value) {
+                empSel.removeAttribute('name');
+            } else {
+                empSel.setAttribute('name', 'jobTypes[]');
+            }
+        }
         var valid = true;
 
         if (!document.getElementById('company_id').value) {

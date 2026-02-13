@@ -1,1 +1,81 @@
-!function(n){var t=n(".companies"),i=n("#company-loading"),e=null;function o(){var t=n("form#company-filter-form"),o=t.serialize(),a=t.attr("action"),c=location.origin+location.pathname;e&&e.abort(),e=n.ajax({url:a,method:"GET",data:o,beforeSend:function(){i.show(),window.history.pushState(o,null,"".concat(c,"?").concat(o))},success:function(t){n(".companies-content").html(t.data),n(".woocommerce-result-count-left").text(n(".info-pagination").text())},complete:function(){i.hide()}})}function a(n){t.find('input[name="page"]').val(n)}t.on("change",".select-per-page",function(i){i.preventDefault(),t.find('input[name="per_page"]').val(n(this).val()),a(1),o()}),t.on("change",".select-sort-by",function(i){i.preventDefault(),t.find('input[name="sort_by"]').val(n(this).val()),o()}),t.on("change",".select-layout",function(i){i.preventDefault(),t.find('input[name="layout"]').val(n(this).val()),o()}),t.on("click","a.pagination-button",function(t){t.preventDefault(),a(n(this).data("page")),o()}),t.on("click",".btn-open-sidebar",function(){n("#mySidebar").css("width","300px"),n("#main").css("marginLeft","300px")}),t.on("click",".btn-close-sidebar",function(){n("#mySidebar").css("width","0"),n("#main").css("marginLeft","0")}),n(document).on("click",function(t){0===n(t.target).closest(".option-company-mobile").length&&(n("#mySidebar").css("width","0"),n("#main").css("marginLeft","0"))}),n(document).scroll(function(){n(".sticky-wrapper").find(".is-fixed").length>0?n(".option-company-mobile").find(".sidebar").css("marginTop","40px"):n(".option-company-mobile").find(".sidebar").css("marginTop","90px")})}(jQuery);
+/******/ (() => { // webpackBootstrap
+/*!*******************************************************!*\
+  !*** ./platform/themes/jobzilla/assets/js/company.js ***!
+  \*******************************************************/
+(function ($) {
+  var companies = $('.companies');
+  var Loading = $('#company-loading');
+  var filterAjax = null;
+  function getCompanies() {
+    var form = $('form#company-filter-form');
+    var formData = form.serialize();
+    var action = form.attr('action');
+    var currentUrl = location.origin + location.pathname;
+    if (filterAjax) {
+      filterAjax.abort();
+    }
+    filterAjax = $.ajax({
+      url: action,
+      method: 'GET',
+      data: formData,
+      beforeSend: function beforeSend() {
+        Loading.show();
+        window.history.pushState(formData, null, "".concat(currentUrl, "?").concat(formData));
+      },
+      success: function success(response) {
+        $('.companies-content').html(response.data);
+        $('.woocommerce-result-count-left').text($('.info-pagination').text());
+      },
+      complete: function complete() {
+        Loading.hide();
+      }
+    });
+  }
+  function setCurrentPage(page) {
+    companies.find('input[name="page"]').val(page);
+  }
+  companies.on('change', '.select-per-page', function (e) {
+    e.preventDefault();
+    companies.find('input[name="per_page"]').val($(this).val());
+    setCurrentPage(1);
+    getCompanies();
+  });
+  companies.on('change', '.select-sort-by', function (e) {
+    e.preventDefault();
+    companies.find('input[name="sort_by"]').val($(this).val());
+    getCompanies();
+  });
+  companies.on('change', '.select-layout', function (e) {
+    e.preventDefault();
+    companies.find('input[name="layout"]').val($(this).val());
+    getCompanies();
+  });
+  companies.on('click', 'a.pagination-button', function (e) {
+    e.preventDefault();
+    setCurrentPage($(this).data('page'));
+    getCompanies();
+  });
+  companies.on('click', '.btn-open-sidebar', function () {
+    $('#mySidebar').css('width', '300px');
+    $('#main').css('marginLeft', '300px');
+  });
+  companies.on('click', '.btn-close-sidebar', function () {
+    $('#mySidebar').css('width', '0');
+    $('#main').css('marginLeft', '0');
+  });
+  $(document).on("click", function (event) {
+    if ($(event.target).closest(".option-company-mobile").length === 0) {
+      $('#mySidebar').css('width', '0');
+      $('#main').css('marginLeft', '0');
+    }
+  });
+  $(document).scroll(function () {
+    if ($('.sticky-wrapper').find('.is-fixed').length > 0) {
+      $('.option-company-mobile').find('.sidebar').css('marginTop', '40px');
+    } else {
+      $('.option-company-mobile').find('.sidebar').css('marginTop', '90px');
+    }
+  });
+})(jQuery);
+/******/ })()
+;

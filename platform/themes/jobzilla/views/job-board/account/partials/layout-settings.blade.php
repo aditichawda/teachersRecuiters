@@ -273,7 +273,8 @@
 .js-content-card .form-control {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    padding: 10px 15px;
+    padding: 8px 14px;
+    height: 40px;
     font-size: 14px;
 }
 

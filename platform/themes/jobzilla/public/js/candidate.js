@@ -1,1 +1,81 @@
-!function(n){var t=n(".candidates"),i=n("#page-loading"),a=null;function e(){var t=n("form#candidate-filter-form"),e=t.serialize(),o=t.attr("action"),c=location.origin+location.pathname;a&&a.abort(),a=n.ajax({url:o,method:"GET",data:e,beforeSend:function(){i.show(),window.history.pushState(e,null,"".concat(c,"?").concat(e))},success:function(t){n(".candidates-content").html(t.data.list),n(".woocommerce-result-count-left").text(t.data.total_text)},complete:function(){i.hide()}})}function o(n){t.find('input[name="page"]').val(n)}t.on("change",".select-per-page",function(i){i.preventDefault(),t.find('input[name="per_page"]').val(n(this).val()),o(1),e()}),t.on("change",".select-sort-by",function(i){i.preventDefault(),t.find('input[name="sort_by"]').val(n(this).val()),e()}),t.on("change",".select-layout",function(i){i.preventDefault(),t.find('input[name="layout"]').val(n(this).val()),e()}),t.on("click","a.pagination-button",function(t){t.preventDefault(),o(n(this).data("page")),e()}),t.on("click",".btn-open-sidebar",function(){t.find("#mySidebar").css("width","300px"),t.find("#main").css("marginLeft","300px")}),t.on("click",".btn-close-sidebar",function(){t.find("#mySidebar").css("width","0"),t.find("#main").css("marginLeft","0")}),n(document).on("click",function(i){0===n(i.target).closest(".option-candidate-mobile").length&&(t.find("#mySidebar").css("width","0"),t.find("#main").css("marginLeft","0"))}),n(document).scroll(function(){n(".sticky-wrapper").find(".is-fixed").length>0?n(".option-candidate-mobile").find(".sidebar").css("marginTop","40px"):n(".option-candidate-mobile").find(".sidebar").css("marginTop","90px")})}(jQuery);
+/******/ (() => { // webpackBootstrap
+/*!*********************************************************!*\
+  !*** ./platform/themes/jobzilla/assets/js/candidate.js ***!
+  \*********************************************************/
+(function ($) {
+  var candidates = $('.candidates');
+  var Loading = $('#page-loading');
+  var filterAjax = null;
+  function getCandidates() {
+    var form = $('form#candidate-filter-form');
+    var formData = form.serialize();
+    var action = form.attr('action');
+    var currentUrl = location.origin + location.pathname;
+    if (filterAjax) {
+      filterAjax.abort();
+    }
+    filterAjax = $.ajax({
+      url: action,
+      method: 'GET',
+      data: formData,
+      beforeSend: function beforeSend() {
+        Loading.show();
+        window.history.pushState(formData, null, "".concat(currentUrl, "?").concat(formData));
+      },
+      success: function success(response) {
+        $('.candidates-content').html(response.data.list);
+        $('.woocommerce-result-count-left').text(response.data.total_text);
+      },
+      complete: function complete() {
+        Loading.hide();
+      }
+    });
+  }
+  function setCurrentPage(page) {
+    candidates.find('input[name="page"]').val(page);
+  }
+  candidates.on('change', '.select-per-page', function (e) {
+    e.preventDefault();
+    candidates.find('input[name="per_page"]').val($(this).val());
+    setCurrentPage(1);
+    getCandidates();
+  });
+  candidates.on('change', '.select-sort-by', function (e) {
+    e.preventDefault();
+    candidates.find('input[name="sort_by"]').val($(this).val());
+    getCandidates();
+  });
+  candidates.on('change', '.select-layout', function (e) {
+    e.preventDefault();
+    candidates.find('input[name="layout"]').val($(this).val());
+    getCandidates();
+  });
+  candidates.on('click', 'a.pagination-button', function (e) {
+    e.preventDefault();
+    setCurrentPage($(this).data('page'));
+    getCandidates();
+  });
+  candidates.on('click', '.btn-open-sidebar', function () {
+    candidates.find('#mySidebar').css('width', '300px');
+    candidates.find('#main').css('marginLeft', '300px');
+  });
+  candidates.on('click', '.btn-close-sidebar', function () {
+    candidates.find('#mySidebar').css('width', '0');
+    candidates.find('#main').css('marginLeft', '0');
+  });
+  $(document).on("click", function (event) {
+    if ($(event.target).closest(".option-candidate-mobile").length === 0) {
+      candidates.find('#mySidebar').css('width', '0');
+      candidates.find('#main').css('marginLeft', '0');
+    }
+  });
+  $(document).scroll(function () {
+    if ($('.sticky-wrapper').find('.is-fixed').length > 0) {
+      $('.option-candidate-mobile').find('.sidebar').css('marginTop', '40px');
+    } else {
+      $('.option-candidate-mobile').find('.sidebar').css('marginTop', '90px');
+    }
+  });
+})(jQuery);
+/******/ })()
+;

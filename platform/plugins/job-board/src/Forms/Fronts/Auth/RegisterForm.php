@@ -114,8 +114,8 @@ class RegisterForm extends AuthForm
                 'is_whatsapp_available',
                 OnOffField::class,
                 OnOffFieldOption::make()
-                    ->label('Is this number available on WhatsApp?')
-                    ->defaultValue(false)
+                ->label('&nbsp;Is this number available on WhatsApp?')
+                ->defaultValue(false)
                     ->addAttribute('data-step', '1')
             )
             ->add('step_1_col_phone_close', HtmlField::class, [

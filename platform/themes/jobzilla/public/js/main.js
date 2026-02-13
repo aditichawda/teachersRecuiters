@@ -1,1 +1,1453 @@
-(()=>{var e,i={2(){},237(){},284(){!function(e){"use strict";var i=e(".input_fields_youtube"),t=e(".input_fields_vimeo"),a=e(".input_fields_custom"),o=e(".add_field_youtube"),s=e(".add_field_vimeo"),l=e(".add_field_custom"),n=1;e(o).click(function(t){t.preventDefault(),n<100&&(n++,e(i).append('<div class="ls-inputicon-box"><input class="form-control wt-form-control m-tb10" name="mytext[]" type="text" placeholder="https://www.youtube.com/"><i class="fs-input-icon fab fa-youtube"></i><a href="#" class="remove_field"><i class="fa fa-times"></i></a></div>'))});n=1;e(s).click(function(i){i.preventDefault(),n<100&&(n++,e(t).append('<div class="ls-inputicon-box"><input class="form-control m-tb10 wt-form-control" name="mytext[]" type="text" placeholder="https://vimeo.com/"><i class="fs-input-icon fab fa-vimeo-v"></i><a href="#" class="remove_field"><i class="fa fa-times"></i></a></div>'))});n=1;e(l).click(function(i){i.preventDefault(),n<100&&(n++,e(a).append('<div class="ls-inputicon-box"><input class="form-control m-tb10 wt-form-control" name="mytext[]" type="text" placeholder="Selet the role that you work in"><i class="fs-input-icon fa fa-user"></i><a href="#" class="remove_field"><i class="fa fa-times"></i></a></div>'))}),e(i).on("click",".remove_field",function(i){i.preventDefault(),e(this).parent("div").remove(),n--}),e(t).on("click",".remove_field",function(i){i.preventDefault(),e(this).parent("div").remove(),n--}),e(a).on("click",".remove_field",function(i){i.preventDefault(),e(this).parent("div").remove(),n--});[].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')).map(function(e){return new bootstrap.Tooltip(e)});function r(){var i=e(window).scrollTop();i>=100?e(".main-bar").addClass("color-fill"):(i=100,e(".main-bar").removeClass("color-fill"))}e(document).ready(function(){(function(){e(".selectpicker").select2();var i=e(".selectpicker-location");i.length&&i.select2({ajax:{url:i.data("url")||window.siteUrl+"/ajax/cities",dataType:"json",type:"GET",data:function(e){return{k:e.term}},processResults:function(i){return{results:e.map(i.data,function(e){return Object.assign({text:e.label,id:e.id},e)})}}}})})(),e(".twm-h1-bnr-carousal").owlCarousel({animateIn:"fadeIn",animateOut:"fadeOut",items:1,loop:!0,nav:!1,dots:!1,autoplay:!0,autoplayHoverPause:!1,touchDrag:!1,mouseDrag:!1}),e(".job-categories-carousel").owlCarousel({loop:!0,nav:!0,dots:!1,center:!1,margin:30,autoplay:!0,navText:['<i class="feather-chevron-left"></i>','<i class="feather-chevron-right"></i>'],responsive:{0:{items:1},480:{items:1},767:{items:2,margin:0},991:{items:2},1024:{items:3}}}),e('a[href="#search"]').on("click",function(i){e("#search").addClass("open"),e('#search > form > input[type="search"]').focus()}),e("#search, #search button.close").on("click keyup",function(i){i.target!==this&&"close"!==i.target.className||e(this).removeClass("open")}),e('iframe[src*="youtube.com"]').wrap('<div class="embed-responsive embed-responsive-16by9"></div>'),e('iframe[src*="vimeo.com"]').wrap('<div class="embed-responsive embed-responsive-16by9"></div>'),lc_lightbox(".elem",{wrap_class:"lcl_fade_oc",gallery:!0,thumb_attr:"data-lcl-thumb",skin:"minimal",radius:0,padding:0,border_w:0}),e(".mfp-video").magnificPopup({type:"iframe"}),e(function(){function i(){var i=e(this),t=i.find(".modal-dialog");i.css("display","block"),t.css("margin-top",Math.max(0,(e(window).height()-t.height())/2))}e(".modal").on("show.bs.modal",i),e(window).on("resize",function(){e(".modal:visible").each(i)})}),e(".sticky-header").length&&new Waypoint.Sticky({element:e(".sticky-header")}),e(".rightSidebar").theiaStickySidebar({additionalMarginTop:100}),e("button.scroltop").on("click",function(){return e("html, body").animate({scrollTop:0},1e3),!1}),e(window).on("scroll",function(){e(window).scrollTop()>900?e("button.scroltop").fadeIn(1e3):e("button.scroltop").fadeOut(1e3)}),e(document).on("change",".btn-file :file",function(){var i=e(this),t=i.get(0).files?i.get(0).files.length:1,a=i.val().replace(/\\/g,"/").replace(/.*\//,"");i.trigger("fileselect",[t,a])}),e(".btn-file :file").on("fileselect",function(i,t,a){var o=e(this).parents(".input-group").find(":text"),s=t>10?t+" files selected":a;o.length?o.val(s):s&&alert(s)}),jQuery.support.placeholder="placeholder"in document.createElement("input"),jQuery.support.placeholder||(e("[placeholder]").on("focus",function(){e(this).val()===e(this).attr("placeholder")&&e(this).val("")}).blur(function(){""===e(this).val()&&e(this).val(e(this).attr("placeholder"))}).blur(),e("[placeholder]").parents("form").on("submit",function(){e(this).find("[placeholder]").each(function(){e(this).val()===e(this).attr("placeholder")&&e(this).val("")})})),e(".sub-menu").parent("li").addClass("has-child"),e("<div class='fa fa-angle-right submenu-toogle'></div>").insertAfter(".has-child > a"),e(".has-child a+.submenu-toogle").on("click",function(i){e(this).parent().siblings(".has-child ").children(".sub-menu").slideUp(500,function(){e(this).parent().removeClass("nav-active")}),e(this).next(e(".sub-menu")).slideToggle(500,function(){e(this).parent().toggleClass("nav-active")}),i.stopPropagation()}),e("#mobile-side-drawer").on("click",function(){e(".mobile-sider-drawer-menu").toggleClass("active")}),e(".home-client-carousel").owlCarousel({loop:!0,nav:!1,dots:!0,margin:5,autoplay:!0,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:2},480:{items:3},767:{items:4},1e3:{items:4}}}),e(".home-client-carousel2").owlCarousel({loop:!0,nav:!0,dots:!1,margin:30,autoplay:!0,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:2},480:{items:3},767:{items:4},1e3:{items:6}}}),e(".home-client-carousel3").owlCarousel({loop:!0,nav:!1,dots:!1,margin:30,autoplay:!0,autoplayTimeout:1500,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:2},480:{items:3},767:{items:4},1e3:{items:5}}}),e(".twm-related-jobs-carousel").owlCarousel({loop:!0,nav:!1,dots:!0,margin:30,autoplayTimeout:3e3,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:1},480:{items:1},767:{items:2},1e3:{items:3}}}),e(".home-client-carousel4").owlCarousel({loop:!0,nav:!1,dots:!1,margin:0,autoplay:!0,autoplayTimeout:1500,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:2},480:{items:3},767:{items:4},1e3:{items:5}}}),e(".trusted-logo").owlCarousel({loop:!0,nav:!1,dots:!1,margin:5,autoplay:!0,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:1},480:{items:2},767:{items:2},991:{items:2}}}),e(".twm-testimonial-1-carousel").owlCarousel({loop:!0,nav:!0,dots:!1,margin:30,autoplay:!0,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:1},480:{items:1},991:{items:2}}}),e(".twm-testimonial-2-carousel").owlCarousel({loop:!0,nav:!0,dots:!1,margin:5,autoplay:!0,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:1},480:{items:1},991:{items:2},1199:{items:3}}}),e(".twm-la-home-blog").owlCarousel({loop:!0,nav:!0,dots:!1,margin:30,autoplay:!1,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:1},480:{items:1},991:{items:2},1199:{items:3}}}),e(".counter").counterUp({delay:10,time:3e3}),e(".user-msg-list-btn-open, .user-msg-list-btn-close").on("click",function(){e(".wt-admin-dashboard-msg-2").toggleClass("active")}),e("#sidebarCollapse").on("click",function(){e("#header-admin, #sidebar-admin-wraper, #content").toggleClass("active")}),e(".dashboard-noti-dropdown").on("click",function(){e(".dashboard-noti-panel").toggleClass("active")}),e(".dashboard-message-dropdown").on("click",function(){e(".dashboard-message-panel").toggleClass("active")}),e(".scrollbar-macosx").scrollbar(),e.DataTable&&e("#jobs_bookmark_table").DataTable({aLengthMenu:[[3,5,10,-1],[3,5,10,"All"]],iDisplayLength:3}),e.DataTable&&e("#candidate_data_table").DataTable({aLengthMenu:[[5,8,10,-1],[5,8,10,"All"]],iDisplayLength:5}),e(".datepicker").datepicker({format:"dd/mm/yyyy"}),function(){if(e("#profileViewChart").length){var i=document.getElementById("profileViewChart").getContext("2d");i=new Chart(i,{type:"line",data:{labels:["January","February","March","April","May","June"],datasets:[{label:"Viewers",data:[200,250,350,200,250,150],pointHoverBorderColor:"#1967d2",pointBorderWidth:10,pointHoverBorderWidth:3,pointHitRadius:20,borderWidth:3,borderColor:"#1967d2",pointBackgroundColor:"rgba(255, 255, 255, 0)",pointHoverBackgroundColor:"rgba(255, 255, 255, 1)",pointBorderColor:"rgba(66, 133, 244, 0)",cubicInterpolationMode:"monotone",fill:!0,backgroundColor:"rgba(212, 230, 255, 0.2)"}]}})}}(),e(".map-show-btn-open, .map-show-btn-close").on("click",function(){e(".half-map-section").toggleClass("active")}),e("#ex2").slider({}),function(){if(e("#demo-upload").length){new Dropzone("#demo-upload",{previewTemplate:document.querySelector("#preview-template").innerHTML,parallelUploads:2,thumbnailHeight:120,thumbnailWidth:120,maxFilesize:3,filesizeBase:1e3,thumbnail:function(e,i){if(e.previewElement){e.previewElement.classList.remove("dz-file-preview");for(var t=e.previewElement.querySelectorAll("[data-dz-thumbnail]"),a=0;a<t.length;a++){var o=t[a];o.alt=e.name,o.src=i}setTimeout(function(){e.previewElement.classList.add("dz-image-preview")},1)}}}).uploadFiles=function(e){for(var i=this,t=0;t<e.length;t++){var a=e[t];totalSteps=Math.round(Math.min(60,Math.max(6,a.size/1e5)));for(var o=0;o<totalSteps;o++){var s=100*(o+1);setTimeout(function(e,t,a){return function(){e.upload={progress:100*(a+1)/t,total:e.size,bytesSent:(a+1)*e.size/t},i.emit("uploadprogress",e,e.upload.progress,e.upload.bytesSent),100==e.upload.progress&&(e.status=Dropzone.SUCCESS,i.emit("success",e,"success",null),i.emit("complete",e),i.processQueue())}}(a,totalSteps,o),s)}}}}}()}),e(window).on("load",function(){(function(){if(e().isotope){var i=e(".masonry-wrap");i.isotope({itemSelector:".masonry-item",transitionDuration:"1s",originLeft:!0,stamp:".stamp"}),i.imagesLoaded().progress(function(){i.isotope("layout")}),e(".masonry-filter li").on("click",function(){var t=e(this).find("a").attr("data-filter");return e(".masonry-filter li").removeClass("active"),e(this).addClass("active"),i.isotope({filter:t}),!1})}})(),r(),e(".loading-area").fadeOut(1e3)}),e(window).on("scroll",function(){r()});var d,c,p=document.getElementById("file-uploader"),m=(new FileReader,document.getElementById("upload-image-grid"));p&&p.addEventListener("change",function(e){var i=e.target.files[0],t=document.createElement("img");m.appendChild(t),t.src=URL.createObjectURL(i),t.alt=i.name}),e(".category-5-slider").length&&new Swiper(".category-5-slider",{slidesPerView:6,spaceBetween:30,grid:{rows:2,fill:"row"},pagination:{el:".swiper-pagination"},navigation:{nextEl:".swiper-button-next",prevEl:".swiper-button-prev"},breakpoints:{0:{slidesPerView:1,grid:{rows:2,fill:"row"}},360:{slidesPerView:1,grid:{rows:2,fill:"row"}},640:{slidesPerView:2,grid:{rows:2,fill:"row"}},991:{slidesPerView:3,grid:{rows:2,fill:"row"}},1366:{slidesPerView:4,grid:{rows:2,fill:"row"}},1440:{slidesPerView:5,grid:{rows:2,fill:"row"}},1720:{slidesPerView:5,grid:{rows:2,fill:"row"}},1721:{slidesPerView:6,grid:{rows:2,fill:"row"}}}}),e(".home-client-carousel6").length&&e(".home-client-carousel6").owlCarousel({loop:!0,nav:!1,dots:!1,center:!1,margin:30,autoplay:!0,autoplayTimeout:1500,navText:['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>'],responsive:{0:{items:1},480:{items:2},767:{items:2},991:{items:3},1366:{items:3}}}),e(".v-testimonial-slider").length&&new Swiper(".v-testimonial-slider",{slidesPerView:2,spaceBetween:20,loop:!0,autoplay:{delay:2500,disableOnInteraction:!1},direction:"vertical",pagination:{el:".swiper-pagination",clickable:!0},breakpoints:{0:{direction:"horizontal",slidesPerView:1},767:{direction:"vertical"}}}),e(".owl-carousel-filter").length&&(d=e(".owl-carousel-filter").owlCarousel({loop:!1,autoplay:!1,margin:30,nav:!0,dots:!1,navText:['<i class="feather-chevron-left"></i>','<i class="feather-chevron-right"></i>'],responsive:{0:{items:1},540:{items:2},768:{items:2},1024:{items:3},1136:{items:3},1366:{items:3}}}),e(".btn-filter-wrap").on("click",".btn-filter",function(i){var t=e(this).data("filter");e(this).hasClass("btn-active")||(e(this).addClass("btn-active").siblings().removeClass("btn-active"),d.owlFilter(t,function(i){e(i).find(".item").each(owlAnimateFilter)}))})),e(".h-page7-jobs-slider").length&&new Swiper(".h-page7-jobs-slider",{slidesPerView:8,spaceBetween:30,loop:!0,centeredSlides:!0,freeMode:!0,grabCursor:!0,pagination:{el:".swiper-pagination",clickable:!0},autoplay:{delay:2500,disableOnInteraction:!1},breakpoints:{0:{slidesPerView:1,centeredSlides:!1},420:{slidesPerView:2,centeredSlides:!1},640:{slidesPerView:3,centeredSlides:!0},768:{slidesPerView:3,centeredSlides:!0},1024:{slidesPerView:4,centeredSlides:!0},1366:{slidesPerView:6,centeredSlides:!0},1440:{slidesPerView:6,centeredSlides:!0},1800:{slidesPerView:8,centeredSlides:!0}}}),e(".testimonial-thumbpic-1").length&&(c=new Swiper(".testimonial-thumbpic-1",{loop:!0,spaceBetween:10,slidesPerView:3,freeMode:!0,watchSlidesProgress:!0,autoplay:{delay:5e3,disableOnInteraction:!1}}),new Swiper(".testimonial-thumb-1",{loop:!0,spaceBetween:10,navigation:{nextEl:".swiper-button-next",prevEl:".swiper-button-prev"},thumbs:{swiper:c},autoplay:{delay:5e3,disableOnInteraction:!1}})),e(".h-page8-jobs-slider").length&&e(".h-page8-jobs-slider").owlCarousel({loop:!0,nav:!1,dots:!0,center:!1,margin:30,autoplay:!0,navText:['<i class="feather-chevron-left"></i>','<i class="feather-chevron-right"></i>'],responsive:{0:{items:1},480:{items:2},575:{items:2},991:{items:3},1024:{items:4},1200:{items:5}}}),e("#applied_jobs_table").length&&e("#applied_jobs_table").DataTable({destroy:!0,searching:!1}),e(".apply-job-option").on("change",".option-order-by",function(){e(".apply-job-option").submit()});var u=e(".review-listing").find(".rating");u.length&&u.barrating({theme:"css-stars"}),window.jobBoardMaps={};var f=e(".job-board-street-map");f.length&&f.each(function(i,t){!function(i){if(i.data("center")){var t=i.data("uid");t||(t=(Math.random()+1).toString(36).substring(7)+(new Date).getTime(),i.data("uid",t)),jobBoardMaps[t]&&(jobBoardMaps[t].off(),jobBoardMaps[t].remove()),jobBoardMaps[t]=L.map(i[0],{zoomControl:!1,scrollWheelZoom:!0,dragging:!0,maxZoom:i.data("max-zoom")||20}).setView(i.data("center"),i.data("zoom")||14);var a=L.divIcon({className:"boxmarker",iconSize:L.point(50,20),html:i.data("map-icon")});L.tileLayer(i.data("tile-layer")?i.data("tile-layer"):"https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}").addTo(jobBoardMaps[t]),L.marker(i.data("center"),{icon:a}).addTo(jobBoardMaps[t]).bindPopup(e(i.data("popup-id")).html()).openPopup()}}(e(t))})}(window.jQuery)},885(){},939(){},1007(){},1105(){},1188(){},1332(){},1702(){},1805(){},1978(){},2009(){},2047(){},2145(){},2239(){},2420(){},2622(){},2795(){},2932(){},2949(){},3060(){},3255(){},3260(){},3707(){},4527(){},4587(){},5022(){},5402(){},5423(){},5695(){},5736(){},5803(){},5901(){},6312(){},6448(){},6670(){},7062(){},7735(){},8128(){},8343(){},8580(){},8738(){},8965(){},9804(){},9807(){}},t={};function a(e){var o=t[e];if(void 0!==o)return o.exports;var s=t[e]={exports:{}};return i[e](s,s.exports,a),s.exports}a.m=i,e=[],a.O=(i,t,o,s)=>{if(!t){var l=1/0;for(c=0;c<e.length;c++){for(var[t,o,s]=e[c],n=!0,r=0;r<t.length;r++)(!1&s||l>=s)&&Object.keys(a.O).every(e=>a.O[e](t[r]))?t.splice(r--,1):(n=!1,s<l&&(l=s));if(n){e.splice(c--,1);var d=o();void 0!==d&&(i=d)}}return i}s=s||0;for(var c=e.length;c>0&&e[c-1][2]>s;c--)e[c]=e[c-1];e[c]=[t,o,s]},a.o=(e,i)=>Object.prototype.hasOwnProperty.call(e,i),(()=>{var e={1462:0,2650:0,169:0,3080:0,9997:0,5625:0,2184:0,8987:0,7984:0,1159:0,5443:0,5376:0,1879:0,449:0,9979:0,4645:0,1391:0,3884:0,7215:0,4088:0,2375:0,25:0,7807:0,3383:0,3182:0,7405:0,9450:0,7741:0,7014:0,8066:0,508:0,5536:0,5670:0,3825:0,6164:0,1818:0,4679:0,7555:0,7589:0,7800:0,9558:0,4400:0,2043:0,7924:0,2296:0,6940:0};a.O.j=i=>0===e[i];var i=(i,t)=>{var o,s,[l,n,r]=t,d=0;if(l.some(i=>0!==e[i])){for(o in n)a.o(n,o)&&(a.m[o]=n[o]);if(r)var c=r(a)}for(i&&i(t);d<l.length;d++)s=l[d],a.o(e,s)&&e[s]&&e[s][0](),e[s]=0;return a.O(c)},t=self.webpackChunk=self.webpackChunk||[];t.forEach(i.bind(null,0)),t.push=i.bind(null,t.push.bind(t))})(),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(284)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2949)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(8965)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(1007)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(7062)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2009)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(3255)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2795)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(1978)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(4587)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2047)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(939)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(5402)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(8128)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(1702)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(4527)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(7735)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(3060)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(5423)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(8343)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(5695)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(3707)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2239)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(1188)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(237)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(9804)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(5901)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(1332)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(3260)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(8580)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(1105)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2420)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(885)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(6312)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(6670)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(5736)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(8738)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(6448)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2622)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(9807)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(5803)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(5022)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(1805)),a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2932));var o=a.O(void 0,[2650,169,3080,9997,5625,2184,8987,7984,1159,5443,5376,1879,449,9979,4645,1391,3884,7215,4088,2375,25,7807,3383,3182,7405,9450,7741,7014,8066,508,5536,5670,3825,6164,1818,4679,7555,7589,7800,9558,4400,2043,7924,2296,6940],()=>a(2145));o=a.O(o)})();
+/******/ (() => { // webpackBootstrap
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./platform/themes/jobzilla/assets/js/main.js"
+/*!****************************************************!*\
+  !*** ./platform/themes/jobzilla/assets/js/main.js ***!
+  \****************************************************/
+() {
+
+/* =====================================
+All JavaScript fuctions Start
+======================================*/
+(function ($) {
+  'use strict';
+
+  /*--------------------------------------------------------------------------------------------
+  document.ready ALL FUNCTION START
+  ---------------------------------------------------------------------------------------------*/
+  function select_picker_select() {
+    $('.selectpicker').select2();
+    var $singleLocation = $('.selectpicker-location');
+    if ($singleLocation.length) {
+      $singleLocation.select2({
+        ajax: {
+          url: $singleLocation.data('url') || window.siteUrl + '/ajax/cities',
+          dataType: 'json',
+          type: 'GET',
+          data: function data(params) {
+            return {
+              k: params.term
+            };
+          },
+          processResults: function processResults(res) {
+            // Transforms the top-level key of the response object from 'items' to 'results'
+            return {
+              results: $.map(res.data, function (item) {
+                return Object.assign({
+                  text: item.label,
+                  id: item.id
+                }, item);
+              })
+            };
+          }
+        }
+      });
+    }
+  }
+
+  //  Home 1 Banner Carousel function by = owl.carousel.js ========================== //
+  function twm_h1_bnr_carousal() {
+    $('.twm-h1-bnr-carousal').owlCarousel({
+      animateIn: 'fadeIn',
+      animateOut: 'fadeOut',
+      items: 1,
+      loop: true,
+      nav: false,
+      dots: false,
+      autoplay: true,
+      autoplayHoverPause: false,
+      touchDrag: false,
+      mouseDrag: false
+    });
+  }
+
+  //  Job Categories Carousel function by = owl.carousel.js ========================== //
+  function job_categories_carousel() {
+    $('.job-categories-carousel').owlCarousel({
+      loop: true,
+      nav: true,
+      dots: false,
+      center: false,
+      margin: 30,
+      autoplay: true,
+      navText: ['<i class="feather-chevron-left"></i>', '<i class="feather-chevron-right"></i>'],
+      responsive: {
+        0: {
+          items: 1
+        },
+        480: {
+          items: 1
+        },
+        767: {
+          items: 2,
+          margin: 0
+        },
+        991: {
+          items: 2
+        },
+        1024: {
+          items: 3
+        }
+      }
+    });
+  }
+
+  // > Video responsive function by = custom.js ========================= //
+  function video_responsive() {
+    $('iframe[src*="youtube.com"]').wrap('<div class="embed-responsive embed-responsive-16by9"></div>');
+    $('iframe[src*="vimeo.com"]').wrap('<div class="embed-responsive embed-responsive-16by9"></div>');
+  }
+
+  // > LIGHTBOX Gallery Popup function	by = lc_lightbox.lite.js =========================== //
+  function lightbox_popup() {
+    lc_lightbox('.elem', {
+      wrap_class: 'lcl_fade_oc',
+      gallery: true,
+      thumb_attr: 'data-lcl-thumb',
+      skin: 'minimal',
+      radius: 0,
+      padding: 0,
+      border_w: 0
+    });
+  }
+
+  // > magnificPopup for video function	by = magnific-popup.js ===================== //
+  function magnific_video() {
+    $('.mfp-video').magnificPopup({
+      type: 'iframe'
+    });
+  }
+
+  // Vertically center Bootstrap modal popup function by = custom.js ==============//
+  function popup_vertical_center() {
+    $(function () {
+      function reposition() {
+        var modal = $(this),
+          dialog = modal.find('.modal-dialog');
+        modal.css('display', 'block');
+
+        // Dividing by two centers the modal exactly, but dividing by three
+        // or four works better for larger screens.
+        dialog.css('margin-top', Math.max(0, ($(window).height() - dialog.height()) / 2));
+      }
+
+      // Reposition when a modal is shown
+      $('.modal').on('show.bs.modal', reposition);
+      // Reposition when the window is resized
+      $(window).on('resize', function () {
+        $('.modal:visible').each(reposition);
+      });
+    });
+  }
+
+  // > Main menu sticky on top  when scroll down function by = custom.js ========== //
+  function sticky_header() {
+    if ($('.sticky-header').length) {
+      new Waypoint.Sticky({
+        element: $('.sticky-header')
+      });
+    }
+  }
+
+  // > Sidebar sticky  when scroll down function by = theia-sticky-sidebar.js ========== //
+  function sticky_sidebar() {
+    $('.rightSidebar').theiaStickySidebar({
+      additionalMarginTop: 100
+    });
+  }
+
+  // > page scroll top on button click function by = custom.js ===================== //
+  function scroll_top() {
+    $('button.scroltop').on('click', function () {
+      $('html, body').animate({
+        scrollTop: 0
+      }, 1000);
+      return false;
+    });
+    $(window).on('scroll', function () {
+      var scroll = $(window).scrollTop();
+      if (scroll > 900) {
+        $('button.scroltop').fadeIn(1000);
+      } else {
+        $('button.scroltop').fadeOut(1000);
+      }
+    });
+  }
+
+  // > input type file function by = custom.js ========================== //
+  function input_type_file_form() {
+    $(document).on('change', '.btn-file :file', function () {
+      var input = $(this),
+        numFiles = input.get(0).files ? input.get(0).files.length : 1,
+        label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+      input.trigger('fileselect', [numFiles, label]);
+    });
+    $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
+      var input = $(this).parents('.input-group').find(':text'),
+        log = numFiles > 10 ? numFiles + ' files selected' : label;
+      if (input.length) {
+        input.val(log);
+      } else {
+        if (log) alert(log);
+      }
+    });
+  }
+
+  // > input Placeholder in IE9 function by = custom.js ======================== //
+  function placeholderSupport() {
+    /* input placeholder for ie9 & ie8 & ie7 */
+    jQuery.support.placeholder = 'placeholder' in document.createElement('input');
+    /* input placeholder for ie9 & ie8 & ie7 end*/
+    /*fix for IE7 and IE8  */
+    if (!jQuery.support.placeholder) {
+      $('[placeholder]').on('focus', function () {
+        if ($(this).val() === $(this).attr('placeholder')) $(this).val('');
+      }).blur(function () {
+        if ($(this).val() === '') $(this).val($(this).attr('placeholder'));
+      }).blur();
+      $('[placeholder]').parents('form').on('submit', function () {
+        $(this).find('[placeholder]').each(function () {
+          if ($(this).val() === $(this).attr('placeholder')) {
+            $(this).val('');
+          }
+        });
+      });
+    }
+    /*fix for IE7 and IE8 end */
+  }
+
+  // > Nav submenu show hide on mobile by = custom.js
+  function mobile_nav() {
+    $('.sub-menu').parent('li').addClass('has-child');
+    $("<div class='fa fa-angle-right submenu-toogle'></div>").insertAfter('.has-child > a');
+    $('.has-child a+.submenu-toogle').on('click', function (ev) {
+      $(this).parent().siblings('.has-child ').children('.sub-menu').slideUp(500, function () {
+        $(this).parent().removeClass('nav-active');
+      });
+      $(this).next($('.sub-menu')).slideToggle(500, function () {
+        $(this).parent().toggleClass('nav-active');
+      });
+      ev.stopPropagation();
+    });
+  }
+
+  // Mobile side drawer function by = custom.js
+  function mobile_side_drawer() {
+    $('#mobile-side-drawer').on('click', function () {
+      $('.mobile-sider-drawer-menu').toggleClass('active');
+    });
+  }
+
+  //  > Top Search bar Show Hide function by = custom.js =================== //
+
+  function site_search() {
+    $('a[href="#search"]').on('click', function (event) {
+      $('#search').addClass('open');
+      $('#search > form > input[type="search"]').focus();
+    });
+    $('#search, #search button.close').on('click keyup', function (event) {
+      if (event.target === this || event.target.className === 'close') {
+        $(this).removeClass('open');
+      }
+    });
+  }
+
+  //  Client logo Carousel function by = owl.carousel.js ========================== //
+  function home_client_carousel() {
+    $('.home-client-carousel').owlCarousel({
+      loop: true,
+      nav: false,
+      dots: true,
+      margin: 5,
+      autoplay: true,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 2
+        },
+        480: {
+          items: 3
+        },
+        767: {
+          items: 4
+        },
+        1000: {
+          items: 4
+        }
+      }
+    });
+  }
+
+  //  Client logo Carousel function by = owl.carousel.js ========================== //
+  function home_client_carousel_2() {
+    $('.home-client-carousel2').owlCarousel({
+      loop: true,
+      nav: true,
+      dots: false,
+      margin: 30,
+      autoplay: true,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 2
+        },
+        480: {
+          items: 3
+        },
+        767: {
+          items: 4
+        },
+        1000: {
+          items: 6
+        }
+      }
+    });
+  }
+
+  //  Client logo Carousel function by = owl.carousel.js ========================== //
+  function home_client_carousel_3() {
+    $('.home-client-carousel3').owlCarousel({
+      loop: true,
+      nav: false,
+      dots: false,
+      margin: 30,
+      autoplay: true,
+      autoplayTimeout: 1500,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 2
+        },
+        480: {
+          items: 3
+        },
+        767: {
+          items: 4
+        },
+        1000: {
+          items: 5
+        }
+      }
+    });
+  }
+
+  //  Related jobs Carousel function by = owl.carousel.js ========================== //
+  function twm_related_jobs_carousel() {
+    $('.twm-related-jobs-carousel').owlCarousel({
+      loop: true,
+      nav: false,
+      dots: true,
+      margin: 30,
+      //autoplay:true,
+      autoplayTimeout: 3000,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 1
+        },
+        480: {
+          items: 1
+        },
+        767: {
+          items: 2
+        },
+        1000: {
+          items: 3
+        }
+      }
+    });
+  }
+
+  //  Client logo Carousel function by = owl.carousel.js ========================== //
+  function home_client_carousel_4() {
+    $('.home-client-carousel4').owlCarousel({
+      loop: true,
+      nav: false,
+      dots: false,
+      margin: 0,
+      autoplay: true,
+      autoplayTimeout: 1500,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 2
+        },
+        480: {
+          items: 3
+        },
+        767: {
+          items: 4
+        },
+        1000: {
+          items: 5
+        }
+      }
+    });
+  }
+
+  //  Trusted logo Carousel function by = owl.carousel.js ========================== //
+  function trusted_logo() {
+    $('.trusted-logo').owlCarousel({
+      loop: true,
+      nav: false,
+      dots: false,
+      margin: 5,
+      autoplay: true,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 1
+        },
+        480: {
+          items: 2
+        },
+        767: {
+          items: 2
+        },
+        991: {
+          items: 2
+        }
+      }
+    });
+  }
+
+  //  Testimonial Carousel function by = owl.carousel.js ========================== //
+  function twm_testimonial_1_carousel() {
+    $('.twm-testimonial-1-carousel').owlCarousel({
+      loop: true,
+      nav: true,
+      dots: false,
+      margin: 30,
+      autoplay: true,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 1
+        },
+        480: {
+          items: 1
+        },
+        991: {
+          items: 2
+        }
+      }
+    });
+  }
+
+  //  Testimonial Carousel function by = owl.carousel.js ========================== //
+  function twm_testimonial_2_carousel() {
+    $('.twm-testimonial-2-carousel').owlCarousel({
+      loop: true,
+      nav: true,
+      dots: false,
+      margin: 5,
+      autoplay: true,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 1
+        },
+        480: {
+          items: 1
+        },
+        991: {
+          items: 2
+        },
+        1199: {
+          items: 3
+        }
+      }
+    });
+  }
+
+  //  Latest Article Blogs Carousel function by = owl.carousel.js ========================== //
+  function twm_la_home_blog() {
+    $('.twm-la-home-blog').owlCarousel({
+      loop: true,
+      nav: true,
+      dots: false,
+      margin: 30,
+      autoplay: false,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 1
+        },
+        480: {
+          items: 1
+        },
+        991: {
+          items: 2
+        },
+        1199: {
+          items: 3
+        }
+      }
+    });
+  }
+
+  //  Counter Section function by = counterup.min.js
+  function counter_section() {
+    $('.counter').counterUp({
+      delay: 10,
+      time: 3000
+    });
+  }
+
+  // sidebarCollapse function by = custom.js
+  function msg_user_list_slide() {
+    $('.user-msg-list-btn-open, .user-msg-list-btn-close').on('click', function () {
+      $('.wt-admin-dashboard-msg-2').toggleClass('active');
+    });
+  }
+
+  // sidebarCollapse function by = custom.js
+  function sidebarCollapse() {
+    $('#sidebarCollapse').on('click', function () {
+      $('#header-admin, #sidebar-admin-wraper, #content').toggleClass('active');
+    });
+  }
+
+  // dashboard Notification function by = custom.js
+  function dashboard_noti_dropdown() {
+    $('.dashboard-noti-dropdown').on('click', function () {
+      $('.dashboard-noti-panel').toggleClass('active');
+    });
+  }
+
+  // dashboard Message function by = custom.js
+  function dashboard_message_dropdown() {
+    $('.dashboard-message-dropdown').on('click', function () {
+      $('.dashboard-message-panel').toggleClass('active');
+    });
+  }
+
+  // CustomScrollbar function by = jquery.scrollbar.js
+  function scroll_bar_custome() {
+    $('.scrollbar-macosx').scrollbar();
+  }
+
+  // Jobs Bookmark table function by = dataTables.bootstrap5.js
+  function jobs_bookmark_table() {
+    if ($.DataTable) {
+      $('#jobs_bookmark_table').DataTable({
+        aLengthMenu: [[3, 5, 10, -1], [3, 5, 10, 'All']],
+        iDisplayLength: 3
+      });
+    }
+  }
+
+  // candidate_data_table function by = dataTables.bootstrap5.js
+  function candidate_data_table() {
+    if ($.DataTable) {
+      $('#candidate_data_table').DataTable({
+        aLengthMenu: [[5, 8, 10, -1], [5, 8, 10, 'All']],
+        iDisplayLength: 5
+      });
+    }
+    function checkAll(bx) {
+      var cbs = document.getElementsByTagName('input');
+      for (var i = 0; i < cbs.length; i++) {
+        if (cbs[i].type == 'checkbox') {
+          cbs[i].checked = bx.checked;
+        }
+      }
+    }
+  }
+
+  // datepicker function by = dbootstrap-datepicker.js
+  function datepicker_function() {
+    $('.datepicker').datepicker({
+      format: 'dd/mm/yyyy'
+    });
+  }
+
+  // profile-chart function by = chart.js
+  function profile_chart() {
+    if ($('#profileViewChart').length) {
+      var profileViewChart = document.getElementById('profileViewChart').getContext('2d');
+      var profileViewChart = new Chart(profileViewChart, {
+        type: 'line',
+        data: {
+          labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+          datasets: [{
+            label: 'Viewers',
+            data: [200, 250, 350, 200, 250, 150],
+            pointHoverBorderColor: '#1967d2',
+            pointBorderWidth: 10,
+            pointHoverBorderWidth: 3,
+            pointHitRadius: 20,
+            borderWidth: 3,
+            borderColor: '#1967d2',
+            pointBackgroundColor: 'rgba(255, 255, 255, 0)',
+            pointHoverBackgroundColor: 'rgba(255, 255, 255, 1)',
+            pointBorderColor: 'rgba(66, 133, 244, 0)',
+            cubicInterpolationMode: 'monotone',
+            fill: true,
+            backgroundColor: 'rgba(212, 230, 255, 0.2)'
+          }]
+        }
+      });
+    }
+  }
+
+  // view map sidebar function by = custom.js
+  function view_map_sidebar() {
+    $('.map-show-btn-open, .map-show-btn-close').on('click', function () {
+      $('.half-map-section').toggleClass('active');
+    });
+  }
+
+  //  Radius Range Slider function by = bootstrap-slider.min.js ========================== //
+  function radius_range() {
+    $('#ex2').slider({});
+  }
+
+  //DropZone File Uploading Function Start=========================//
+  function Dropzone_infut_file() {
+    if ($('#demo-upload').length) {
+      var dropzone = new Dropzone('#demo-upload', {
+        previewTemplate: document.querySelector('#preview-template').innerHTML,
+        parallelUploads: 2,
+        thumbnailHeight: 120,
+        thumbnailWidth: 120,
+        maxFilesize: 3,
+        filesizeBase: 1000,
+        thumbnail: function thumbnail(file, dataUrl) {
+          if (file.previewElement) {
+            file.previewElement.classList.remove('dz-file-preview');
+            var images = file.previewElement.querySelectorAll('[data-dz-thumbnail]');
+            for (var i = 0; i < images.length; i++) {
+              var thumbnailElement = images[i];
+              thumbnailElement.alt = file.name;
+              thumbnailElement.src = dataUrl;
+            }
+            setTimeout(function () {
+              file.previewElement.classList.add('dz-image-preview');
+            }, 1);
+          }
+        }
+      });
+
+      // Now fake the file upload, since GitHub does not handle file uploads
+      // and returns a 404
+
+      var minSteps = 6,
+        maxSteps = 60,
+        timeBetweenSteps = 100,
+        bytesPerStep = 100000;
+      dropzone.uploadFiles = function (files) {
+        var self = this;
+        for (var i = 0; i < files.length; i++) {
+          var file = files[i];
+          totalSteps = Math.round(Math.min(maxSteps, Math.max(minSteps, file.size / bytesPerStep)));
+          for (var step = 0; step < totalSteps; step++) {
+            var duration = timeBetweenSteps * (step + 1);
+            setTimeout(function (file, totalSteps, step) {
+              return function () {
+                file.upload = {
+                  progress: 100 * (step + 1) / totalSteps,
+                  total: file.size,
+                  bytesSent: (step + 1) * file.size / totalSteps
+                };
+                self.emit('uploadprogress', file, file.upload.progress, file.upload.bytesSent);
+                if (file.upload.progress == 100) {
+                  file.status = Dropzone.SUCCESS;
+                  self.emit('success', file, 'success', null);
+                  self.emit('complete', file);
+                  self.processQueue();
+                  //document.getElementsByClassName("dz-success-mark").style.opacity = "1";
+                }
+              };
+            }(file, totalSteps, step), duration);
+          }
+        }
+      };
+    }
+  }
+
+  //DropZone File Uploading Function End =========================//
+
+  //Maximum input box fields function Start by custom.js==============//
+
+  var max_fields = 100; //maximum input boxes allowed
+  var wrapper = $('.input_fields_youtube'); //Fields wrapper
+  var wrapper_2 = $('.input_fields_vimeo'); //Fields wrapper
+  var wrapper_3 = $('.input_fields_custom'); //Fields wrapper
+  var add_button_youtube = $('.add_field_youtube'); //Add button ID
+  var add_button_vimeo = $('.add_field_vimeo'); //Add button ID
+  var add_custom_field = $('.add_field_custom'); //Add button ID
+
+  var x = 1; //initlal text box count
+  $(add_button_youtube).click(function (e) {
+    //on add input button click
+    e.preventDefault();
+    if (x < max_fields) {
+      //max input box allowed
+      x++; //text box increment
+      $(wrapper).append('<div class="ls-inputicon-box"><input class="form-control wt-form-control m-tb10" name="mytext[]" type="text" placeholder="https://www.youtube.com/"><i class="fs-input-icon fab fa-youtube"></i><a href="#" class="remove_field"><i class="fa fa-times"></i></a></div>'); //add input box
+    }
+  });
+  var x = 1; //initlal text box count
+  $(add_button_vimeo).click(function (e) {
+    //on add input button click
+    e.preventDefault();
+    if (x < max_fields) {
+      //max input box allowed
+      x++; //text box increment
+      $(wrapper_2).append('<div class="ls-inputicon-box"><input class="form-control m-tb10 wt-form-control" name="mytext[]" type="text" placeholder="https://vimeo.com/"><i class="fs-input-icon fab fa-vimeo-v"></i><a href="#" class="remove_field"><i class="fa fa-times"></i></a></div>'); //add input box
+    }
+  });
+  var x = 1; //initlal text box count
+  $(add_custom_field).click(function (e) {
+    //on add input button click
+    e.preventDefault();
+    if (x < max_fields) {
+      //max input box allowed
+      x++; //text box increment
+      $(wrapper_3).append('<div class="ls-inputicon-box"><input class="form-control m-tb10 wt-form-control" name="mytext[]" type="text" placeholder="Selet the role that you work in"><i class="fs-input-icon fa fa-user"></i><a href="#" class="remove_field"><i class="fa fa-times"></i></a></div>'); //add input box
+    }
+  });
+  $(wrapper).on('click', '.remove_field', function (e) {
+    //user click on remove text
+    e.preventDefault();
+    $(this).parent('div').remove();
+    x--;
+  });
+  $(wrapper_2).on('click', '.remove_field', function (e) {
+    //user click on remove text
+    e.preventDefault();
+    $(this).parent('div').remove();
+    x--;
+  });
+  $(wrapper_3).on('click', '.remove_field', function (e) {
+    //user click on remove text
+    e.preventDefault();
+    $(this).parent('div').remove();
+    x--;
+  });
+
+  //Maximum input box fields function End by custom.js==============//
+
+  // > Tooltip function by = isotope.pkgd.min.js ========================= //
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+  /*--------------------------------------------------------------------------------------------
+  Window on load ALL FUNCTION START
+  ---------------------------------------------------------------------------------------------*/
+
+  // > masonry function function by = isotope.pkgd.min.js ========================= //
+
+  function masonryBox() {
+    if ($().isotope) {
+      var $container = $('.masonry-wrap');
+      $container.isotope({
+        itemSelector: '.masonry-item',
+        transitionDuration: '1s',
+        originLeft: true,
+        stamp: '.stamp'
+      });
+      $container.imagesLoaded().progress(function () {
+        $container.isotope('layout');
+      });
+      $('.masonry-filter li').on('click', function () {
+        var selector = $(this).find('a').attr('data-filter');
+        $('.masonry-filter li').removeClass('active');
+        $(this).addClass('active');
+        $container.isotope({
+          filter: selector
+        });
+        return false;
+      });
+    }
+  }
+
+  // > page loader function by = custom.js ========================= //
+  function page_loader() {
+    $('.loading-area').fadeOut(1000);
+  }
+
+  /*--------------------------------------------------------------------------------------------
+  Window on scroll ALL FUNCTION START
+  ---------------------------------------------------------------------------------------------*/
+
+  function color_fill_header() {
+    var scroll = $(window).scrollTop();
+    if (scroll >= 100) {
+      $('.main-bar').addClass('color-fill');
+    } else {
+      scroll = 100;
+      $('.main-bar').removeClass('color-fill');
+    }
+  }
+
+  /*--------------------------------------------------------------------------------------------
+  document.ready ALL FUNCTION START
+  ---------------------------------------------------------------------------------------------*/
+  $(document).ready(function () {
+    //  selectpicker function by = bootstrap-select.min.js ========================== //
+    select_picker_select(),
+    //  Home 1 Banner Carousel function by = owl.carousel.js ========================== //
+    twm_h1_bnr_carousal(),
+    //  Job Categories Carousel function by = owl.carousel.js ========================== //
+    job_categories_carousel(),
+    // > Top Search bar Show Hide function by = custom.js
+    site_search(),
+    // > Video responsive function by = custom.js
+    video_responsive(),
+    // > LIGHTBOX Gallery Popup function	by = lc_lightbox.lite.js =========================== //
+    lightbox_popup(),
+    // > magnificPopup for video function	by = magnific-popup.js
+    magnific_video(),
+    // > Vertically center Bootstrap modal popup function by = custom.js
+    popup_vertical_center();
+    // > Main menu sticky on top  when scroll down function by = custom.js
+    sticky_header(),
+    // > Sidebar sticky  when scroll down function by = theia-sticky-sidebar.js ========== //
+    sticky_sidebar(),
+    // > page scroll top on button click function by = custom.js
+    scroll_top(),
+    // > input type file function by = custom.js
+    input_type_file_form(),
+    // > input Placeholder in IE9 function by = custom.js
+    placeholderSupport(),
+    // > Nav submenu on off function by = custome.js ===================//
+    mobile_nav(),
+    // Mobile side drawer function by = custom.js
+    mobile_side_drawer(),
+    //  Client logo Carousel function by = owl.carousel.js ========================== //
+    home_client_carousel(),
+    //  Client logo Carousel function by = owl.carousel.js ========================== //
+    home_client_carousel_2(),
+    //  Client logo Carousel function by = owl.carousel.js ========================== //
+    home_client_carousel_3(),
+    //  Related jobs Carousel function by = owl.carousel.js ========================== //
+    twm_related_jobs_carousel(),
+    //  Client logo Carousel function by = owl.carousel.js ========================== //
+    home_client_carousel_4(),
+    //  Trusted logo Carousel function by = owl.carousel.js ========================== //
+    trusted_logo(),
+    //  Testimonial Carousel function by = owl.carousel.js ========================== //
+    twm_testimonial_1_carousel(),
+    //  Testimonial Carousel function by = owl.carousel.js ========================== //
+    twm_testimonial_2_carousel(),
+    //  Latest Article Blogs Carousel function by = owl.carousel.js ========================== //
+    twm_la_home_blog(),
+    //  Counter Section function by = counterup.min.js ========================== //
+    counter_section(),
+    //massage user list show hide function by = custom.js	 ========================== //
+    msg_user_list_slide(),
+    // sidebarCollapse function by = custom.js
+    sidebarCollapse(),
+    // dashboard Notification function by = custom.js
+    dashboard_noti_dropdown(),
+    // dashboard Message function by = custom.js
+    dashboard_message_dropdown(),
+    // CustomScrollbar function by = jquery.scrollbar.js
+    scroll_bar_custome(),
+    // Jobs Bookmark table function by = dataTables.bootstrap5.js
+    jobs_bookmark_table(),
+    // candidate_data_table function by = dataTables.bootstrap5.js
+    candidate_data_table(),
+    // datepicker function by = dbootstrap-datepicker.js
+    datepicker_function(),
+    // profile-chart function by = chart.js
+    profile_chart(),
+    // view map sidebar function by = custom.js
+    view_map_sidebar(),
+    //  Radius Range Slider function by = bootstrap-slider.min.js ========================== //
+    radius_range(),
+    //DropZone File Uploading Function Start=========================//
+    Dropzone_infut_file();
+  });
+
+  /*--------------------------------------------------------------------------------------------
+  Window Load START
+  ---------------------------------------------------------------------------------------------*/
+  $(window).on('load', function () {
+    // > masonry function function by = isotope.pkgd.min.js
+    masonryBox(), color_fill_header(),
+    // > page loader function by = custom.js
+    page_loader();
+  });
+
+  /*===========================
+  Window Scroll ALL FUNCTION START
+  ===========================*/
+
+  $(window).on('scroll', function () {
+    // > Window on scroll header color fill
+    color_fill_header();
+  });
+
+  /*upload profile pic function*/
+
+  var fileUploader = document.getElementById('file-uploader');
+  var reader = new FileReader();
+  var imageGrid = document.getElementById('upload-image-grid');
+  if (fileUploader) {
+    fileUploader.addEventListener('change', function (event) {
+      var files = event.target.files;
+      var file = files[0];
+      var img = document.createElement('img');
+      imageGrid.appendChild(img);
+      img.src = URL.createObjectURL(file);
+      img.alt = file.name;
+    });
+  }
+  function category_5_slider() {
+    new Swiper('.category-5-slider', {
+      slidesPerView: 6,
+      spaceBetween: 30,
+      grid: {
+        rows: 2,
+        fill: "row"
+      },
+      pagination: {
+        el: '.swiper-pagination'
+      },
+      navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev"
+      },
+      breakpoints: {
+        0: {
+          slidesPerView: 1,
+          grid: {
+            rows: 2,
+            fill: "row"
+          }
+        },
+        360: {
+          slidesPerView: 1,
+          grid: {
+            rows: 2,
+            fill: "row"
+          }
+        },
+        640: {
+          slidesPerView: 2,
+          grid: {
+            rows: 2,
+            fill: "row"
+          }
+        },
+        991: {
+          slidesPerView: 3,
+          grid: {
+            rows: 2,
+            fill: "row"
+          }
+        },
+        1366: {
+          slidesPerView: 4,
+          grid: {
+            rows: 2,
+            fill: "row"
+          }
+        },
+        1440: {
+          slidesPerView: 5,
+          grid: {
+            rows: 2,
+            fill: "row"
+          }
+        },
+        1720: {
+          slidesPerView: 5,
+          grid: {
+            rows: 2,
+            fill: "row"
+          }
+        },
+        1721: {
+          slidesPerView: 6,
+          grid: {
+            rows: 2,
+            fill: "row"
+          }
+        }
+      }
+    });
+  }
+  function home_client_carousel_6() {
+    $('.home-client-carousel6').owlCarousel({
+      loop: true,
+      nav: false,
+      dots: false,
+      center: false,
+      margin: 30,
+      autoplay: true,
+      autoplayTimeout: 1500,
+      navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+      responsive: {
+        0: {
+          items: 1
+        },
+        480: {
+          items: 2
+        },
+        767: {
+          items: 2
+        },
+        991: {
+          items: 3
+        },
+        1366: {
+          items: 3
+        }
+      }
+    });
+  }
+  function v_testimonial_slider() {
+    var swiper = new Swiper('.v-testimonial-slider', {
+      slidesPerView: 2,
+      spaceBetween: 20,
+      loop: true,
+      autoplay: {
+        delay: 2500,
+        disableOnInteraction: false
+      },
+      direction: "vertical",
+      pagination: {
+        el: ".swiper-pagination",
+        clickable: true
+      },
+      breakpoints: {
+        0: {
+          direction: "horizontal",
+          slidesPerView: 1
+        },
+        767: {
+          direction: "vertical"
+        }
+      }
+    });
+  }
+  function applied_jobs_table() {
+    $('#applied_jobs_table').DataTable({
+      destroy: true,
+      searching: false
+    });
+  }
+  if ($('.category-5-slider').length) {
+    category_5_slider();
+  }
+  if ($('.home-client-carousel6').length) {
+    home_client_carousel_6();
+  }
+  if ($('.v-testimonial-slider').length) {
+    v_testimonial_slider();
+  }
+
+  //________ Jobs Filter carousel  function by = owl.carousel.js________//
+
+  function job_type_filter() {
+    var owl = $('.owl-carousel-filter').owlCarousel({
+      loop: false,
+      autoplay: false,
+      margin: 30,
+      nav: true,
+      dots: false,
+      navText: ['<i class="feather-chevron-left"></i>', '<i class="feather-chevron-right"></i>'],
+      responsive: {
+        0: {
+          items: 1
+        },
+        540: {
+          items: 2
+        },
+        768: {
+          items: 2
+        },
+        1024: {
+          items: 3
+        },
+        1136: {
+          items: 3
+        },
+        1366: {
+          items: 3
+        }
+      }
+    });
+
+    /* Filter Nav */
+
+    $('.btn-filter-wrap').on('click', '.btn-filter', function (e) {
+      var filter_data = $(this).data('filter');
+
+      /* return if current */
+      if ($(this).hasClass('btn-active')) return;
+
+      /* active current */
+      $(this).addClass('btn-active').siblings().removeClass('btn-active');
+
+      /* Filter */
+      owl.owlFilter(filter_data, function (_owl) {
+        $(_owl).find('.item').each(owlAnimateFilter);
+      });
+    });
+  }
+  if ($('.owl-carousel-filter').length) {
+    job_type_filter();
+  }
+
+  //________ h-page7-jobs-slider carousel  function by = owl.carousel.js________//
+  function h_page7_jobs_slider() {
+    var swiper = new Swiper(".h-page7-jobs-slider", {
+      slidesPerView: 8,
+      spaceBetween: 30,
+      loop: true,
+      centeredSlides: true,
+      freeMode: true,
+      grabCursor: true,
+      //slidesPerView: "auto",
+      pagination: {
+        el: ".swiper-pagination",
+        clickable: true
+      },
+      autoplay: {
+        delay: 2500,
+        disableOnInteraction: false
+      },
+      breakpoints: {
+        0: {
+          slidesPerView: 1,
+          centeredSlides: false
+        },
+        420: {
+          slidesPerView: 2,
+          centeredSlides: false
+        },
+        640: {
+          slidesPerView: 3,
+          centeredSlides: true
+        },
+        768: {
+          slidesPerView: 3,
+          centeredSlides: true
+        },
+        1024: {
+          slidesPerView: 4,
+          centeredSlides: true
+        },
+        1366: {
+          slidesPerView: 6,
+          centeredSlides: true
+        },
+        1440: {
+          slidesPerView: 6,
+          centeredSlides: true
+        },
+        1800: {
+          slidesPerView: 8,
+          centeredSlides: true
+        }
+      }
+    });
+  }
+  if ($('.h-page7-jobs-slider').length) {
+    h_page7_jobs_slider();
+  }
+
+  // Testimonial Thumb slider function by = swiper-bundle.min.js
+  function thumb_testimonial_slider() {
+    var swiper = new Swiper(".testimonial-thumbpic-1", {
+      loop: true,
+      spaceBetween: 10,
+      slidesPerView: 3,
+      freeMode: true,
+      watchSlidesProgress: true,
+      autoplay: {
+        delay: 5000,
+        disableOnInteraction: false
+      }
+    });
+    var swiper2 = new Swiper(".testimonial-thumb-1", {
+      loop: true,
+      spaceBetween: 10,
+      navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev"
+      },
+      thumbs: {
+        swiper: swiper
+      },
+      autoplay: {
+        delay: 5000,
+        disableOnInteraction: false
+      }
+    });
+  }
+  if ($('.testimonial-thumbpic-1').length) {
+    thumb_testimonial_slider();
+  }
+
+  //  Job Categories Carousel function by = owl.carousel.js ========================== //
+  function job_categories_carousel_hpage8() {
+    $('.h-page8-jobs-slider').owlCarousel({
+      loop: true,
+      nav: false,
+      dots: true,
+      center: false,
+      margin: 30,
+      autoplay: true,
+      navText: ['<i class="feather-chevron-left"></i>', '<i class="feather-chevron-right"></i>'],
+      responsive: {
+        0: {
+          items: 1
+        },
+        480: {
+          items: 2
+        },
+        575: {
+          items: 2
+        },
+        991: {
+          items: 3
+        },
+        1024: {
+          items: 4
+        },
+        1200: {
+          items: 5
+        }
+      }
+    });
+  }
+  if ($('.h-page8-jobs-slider').length) {
+    job_categories_carousel_hpage8();
+  }
+  if ($('#applied_jobs_table').length) {
+    applied_jobs_table();
+  }
+  $('.apply-job-option').on('change', '.option-order-by', function () {
+    $('.apply-job-option').submit();
+  });
+  var rating = $('.review-listing').find('.rating');
+  if (rating.length) {
+    rating.barrating({
+      theme: 'css-stars'
+    });
+  }
+  window.jobBoardMaps = {};
+  function setJobBoardMap($el) {
+    if (!$el.data('center')) {
+      return;
+    }
+    var uid = $el.data('uid');
+    if (!uid) {
+      uid = (Math.random() + 1).toString(36).substring(7) + new Date().getTime();
+      $el.data('uid', uid);
+    }
+    if (jobBoardMaps[uid]) {
+      jobBoardMaps[uid].off();
+      jobBoardMaps[uid].remove();
+    }
+    jobBoardMaps[uid] = L.map($el[0], {
+      zoomControl: false,
+      scrollWheelZoom: true,
+      dragging: true,
+      maxZoom: $el.data('max-zoom') || 20
+    }).setView($el.data('center'), $el.data('zoom') || 14);
+    var myIcon = L.divIcon({
+      className: 'boxmarker',
+      iconSize: L.point(50, 20),
+      html: $el.data('map-icon')
+    });
+    L.tileLayer($el.data('tile-layer') ? $el.data('tile-layer') : 'https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}').addTo(jobBoardMaps[uid]);
+    L.marker($el.data('center'), {
+      icon: myIcon
+    }).addTo(jobBoardMaps[uid]).bindPopup($($el.data('popup-id')).html()).openPopup();
+  }
+  var $jobMaps = $('.job-board-street-map');
+  if ($jobMaps.length) {
+    $jobMaps.each(function (i, e) {
+      setJobBoardMap($(e));
+    });
+  }
+})(window.jQuery);
+
+/***/ },
+
+/***/ "./platform/themes/jobzilla/assets/sass/main.scss"
+/*!********************************************************!*\
+  !*** ./platform/themes/jobzilla/assets/sass/main.scss ***!
+  \********************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ },
+
+/***/ "./platform/themes/jobzilla/assets/sass/style.scss"
+/*!*********************************************************!*\
+  !*** ./platform/themes/jobzilla/assets/sass/style.scss ***!
+  \*********************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ }
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Check if module exists (development only)
+/******/ 		if (__webpack_modules__[moduleId] === undefined) {
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/chunk loaded */
+/******/ 	(() => {
+/******/ 		var deferred = [];
+/******/ 		__webpack_require__.O = (result, chunkIds, fn, priority) => {
+/******/ 			if(chunkIds) {
+/******/ 				priority = priority || 0;
+/******/ 				for(var i = deferred.length; i > 0 && deferred[i - 1][2] > priority; i--) deferred[i] = deferred[i - 1];
+/******/ 				deferred[i] = [chunkIds, fn, priority];
+/******/ 				return;
+/******/ 			}
+/******/ 			var notFulfilled = Infinity;
+/******/ 			for (var i = 0; i < deferred.length; i++) {
+/******/ 				var [chunkIds, fn, priority] = deferred[i];
+/******/ 				var fulfilled = true;
+/******/ 				for (var j = 0; j < chunkIds.length; j++) {
+/******/ 					if ((priority & 1 === 0 || notFulfilled >= priority) && Object.keys(__webpack_require__.O).every((key) => (__webpack_require__.O[key](chunkIds[j])))) {
+/******/ 						chunkIds.splice(j--, 1);
+/******/ 					} else {
+/******/ 						fulfilled = false;
+/******/ 						if(priority < notFulfilled) notFulfilled = priority;
+/******/ 					}
+/******/ 				}
+/******/ 				if(fulfilled) {
+/******/ 					deferred.splice(i--, 1)
+/******/ 					var r = fn();
+/******/ 					if (r !== undefined) result = r;
+/******/ 				}
+/******/ 			}
+/******/ 			return result;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/jsonp chunk loading */
+/******/ 	(() => {
+/******/ 		// no baseURI
+/******/ 		
+/******/ 		// object to store loaded and loading chunks
+/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
+/******/ 		var installedChunks = {
+/******/ 			"/themes/jobzilla/js/main": 0,
+/******/ 			"themes/jobzilla/css/style": 0,
+/******/ 			"themes/jobzilla/css/main": 0
+/******/ 		};
+/******/ 		
+/******/ 		// no chunk on demand loading
+/******/ 		
+/******/ 		// no prefetching
+/******/ 		
+/******/ 		// no preloaded
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
+/******/ 		
+/******/ 		__webpack_require__.O.j = (chunkId) => (installedChunks[chunkId] === 0);
+/******/ 		
+/******/ 		// install a JSONP callback for chunk loading
+/******/ 		var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
+/******/ 			var [chunkIds, moreModules, runtime] = data;
+/******/ 			// add "moreModules" to the modules object,
+/******/ 			// then flag all "chunkIds" as loaded and fire callback
+/******/ 			var moduleId, chunkId, i = 0;
+/******/ 			if(chunkIds.some((id) => (installedChunks[id] !== 0))) {
+/******/ 				for(moduleId in moreModules) {
+/******/ 					if(__webpack_require__.o(moreModules, moduleId)) {
+/******/ 						__webpack_require__.m[moduleId] = moreModules[moduleId];
+/******/ 					}
+/******/ 				}
+/******/ 				if(runtime) var result = runtime(__webpack_require__);
+/******/ 			}
+/******/ 			if(parentChunkLoadingFunction) parentChunkLoadingFunction(data);
+/******/ 			for(;i < chunkIds.length; i++) {
+/******/ 				chunkId = chunkIds[i];
+/******/ 				if(__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 					installedChunks[chunkId][0]();
+/******/ 				}
+/******/ 				installedChunks[chunkId] = 0;
+/******/ 			}
+/******/ 			return __webpack_require__.O(result);
+/******/ 		}
+/******/ 		
+/******/ 		var chunkLoadingGlobal = self["webpackChunk"] = self["webpackChunk"] || [];
+/******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
+/******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
+/******/ 	__webpack_require__.O(undefined, ["themes/jobzilla/css/style","themes/jobzilla/css/main"], () => (__webpack_require__("./platform/themes/jobzilla/assets/js/main.js")))
+/******/ 	__webpack_require__.O(undefined, ["themes/jobzilla/css/style","themes/jobzilla/css/main"], () => (__webpack_require__("./platform/themes/jobzilla/assets/sass/main.scss")))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["themes/jobzilla/css/style","themes/jobzilla/css/main"], () => (__webpack_require__("./platform/themes/jobzilla/assets/sass/style.scss")))
+/******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
+/******/ 	
+/******/ })()
+;

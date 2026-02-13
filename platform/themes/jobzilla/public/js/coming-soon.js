@@ -1,1 +1,52 @@
-$(function(){setInterval(function(){!function(){var t=$("#timer").attr("data-endtime"),e=new Date(t);e=Date.parse(e)/1e3;var a=new Date,r=e-(a=Date.parse(a)/1e3),m=Math.floor(r/86400),i=Math.floor((r-86400*m)/3600),o=Math.floor((r-86400*m-3600*i)/60),n=Math.floor(r-86400*m-3600*i-60*o);m<"10"&&(m="0"+m),m<"1"&&(m="0"),i<"10"&&(i="0"+i),i<"1"&&(i="0"),o<"10"&&(o="0"+o),o<"1"&&(o="0"),n<"10"&&(n="0"+n),n<"1"&&(n="0"),$("#timer").removeClass("d-none"),$("#timer #days time").html(m),$("#timer #hours time").html(i),$("#timer #minutes time").html(o),$("#timer #seconds time").html(n)}()},1e3)});
+/******/ (() => { // webpackBootstrap
+/*!***********************************************************!*\
+  !*** ./platform/themes/jobzilla/assets/js/coming-soon.js ***!
+  \***********************************************************/
+$(function () {
+  function myTimer() {
+    var ending = $('#timer').attr('data-endtime'),
+      endTime = new Date(ending);
+    endTime = Date.parse(endTime) / 1000;
+    var now = new Date();
+    now = Date.parse(now) / 1000;
+    var timeLeft = endTime - now;
+    var days = Math.floor(timeLeft / 86400);
+    var hours = Math.floor((timeLeft - days * 86400) / 3600);
+    var minutes = Math.floor((timeLeft - days * 86400 - hours * 3600) / 60);
+    var seconds = Math.floor(timeLeft - days * 86400 - hours * 3600 - minutes * 60);
+    if (days < '10') {
+      days = '0' + days;
+    }
+    if (days < '1') {
+      days = '0';
+    }
+    if (hours < '10') {
+      hours = '0' + hours;
+    }
+    if (hours < '1') {
+      hours = '0';
+    }
+    if (minutes < '10') {
+      minutes = '0' + minutes;
+    }
+    if (minutes < '1') {
+      minutes = '0';
+    }
+    if (seconds < '10') {
+      seconds = '0' + seconds;
+    }
+    if (seconds < '1') {
+      seconds = '0';
+    }
+    $('#timer').removeClass('d-none');
+    $('#timer #days time').html(days);
+    $('#timer #hours time').html(hours);
+    $('#timer #minutes time').html(minutes);
+    $('#timer #seconds time').html(seconds);
+  }
+  setInterval(function () {
+    myTimer();
+  }, 1000);
+});
+/******/ })()
+;

@@ -395,6 +395,14 @@ class AccountJobController extends BaseController
             ),
         ]);
 
+        // When not internal, clear internal emails; when internal, keep only non-empty (max 3 validated in request)
+        if ($request->input('apply_type') !== 'internal') {
+            $request->merge(['apply_internal_emails' => null]);
+        } else {
+            $emails = array_values(array_filter(array_map('trim', (array) $request->input('apply_internal_emails', []))));
+            $request->merge(['apply_internal_emails' => array_slice($emails, 0, 3) ?: null]);
+        }
+
         $except = [
             'is_featured',
         ];

@@ -40,6 +40,7 @@ class Job extends BaseModel
         'apply_url',
         'apply_type',
         'apply_other_email',
+        'apply_internal_emails',
         'external_apply_behavior',
         'is_freelance',
         'is_remote',
@@ -96,6 +97,7 @@ class Job extends BaseModel
         'address' => SafeContent::class,
         'apply_url' => SafeContent::class,
         'is_remote' => 'boolean',
+        'apply_internal_emails' => 'array',
     ];
 
     public function skills(): BelongsToMany
