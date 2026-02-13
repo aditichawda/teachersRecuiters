@@ -20943,6 +20943,7 @@ strong {
   padding-bottom: 40px;
 }
 
+
 @media(max-width:991px) {
     .twm-home8-banner-section .twm-home8-inner-section .twm-bnr-left-section {
         text-align: center
@@ -22026,6 +22027,7 @@ strong {
     display: none;
   }
 }
+
 .owl-stage-outer{
     padding: 1rem !important;
 }
