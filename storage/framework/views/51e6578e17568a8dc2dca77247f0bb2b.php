@@ -209,6 +209,7 @@
         cursor: not-allowed;
     }
 
+    /* OTP Success message - stays visible */
     /* Social Login Section */
     .social-login-divider {
         text-align: center;
@@ -498,7 +499,7 @@
             </div>
 
             <!-- Social Login -->
-            <div class="social-login-divider">
+            <!-- <div class="social-login-divider">
                 <span>or continue with</span>
             </div>
 
@@ -523,7 +524,7 @@
                         Sign in with Facebook
                     </a>
                 <?php endif; ?>
-            </div>
+            </div> -->
 
         </div>
     </div>
@@ -601,13 +602,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const whatsappOtpInputs = document.querySelectorAll('#whatsapp-otp-inputs .otp-input');
     setupOtpInputs(whatsappOtpInputs, document.getElementById('whatsapp-otp-value'));
 
-    // Show alert
+    // Show toast (right-side slide-in notification)
     function showAlert(message, type = 'danger') {
-        const alertDiv = document.getElementById('login-alert');
-        alertDiv.className = `alert alert-${type}`;
-        alertDiv.textContent = message;
-        alertDiv.style.display = 'block';
-        setTimeout(() => alertDiv.style.display = 'none', 5000);
+        const toastType = type === 'success' ? 'text-success' : 'text-danger';
+        if (typeof window.showAlert === 'function') {
+            window.showAlert(toastType, message);
+            return;
+        }
+        let container = document.getElementById('alert-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'alert-container';
+            container.className = 'toast-container';
+            container.style.cssText = 'position:fixed;right:5px;top:20vh;z-index:9999999;';
+            document.body.appendChild(container);
+        }
+        const id = 'toast-' + Math.floor(Math.random() * 10000);
+        const icon = toastType === 'text-success' ? 'feather-check-circle' : 'feather-alert-triangle';
+        const html = '<div class="toast align-items-center ' + toastType + '" id="' + id + '" role="alert"><div class="d-flex"><div class="toast-body"><i class="' + icon + ' message-icon"></i><span>' + (message || '').replace(/</g, '&lt;') + '</span></div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>';
+        container.insertAdjacentHTML('beforeend', html);
+        const el = document.getElementById(id);
+        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            const t = new bootstrap.Toast(el);
+            t.show();
+            el.addEventListener('hidden.bs.toast', () => el.remove());
+        } else {
+            el.classList.add('show');
+            setTimeout(() => el.remove(), 5000);
+        }
     }
 
     // Timer function
@@ -657,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('email-otp-step2').style.display = 'block';
                 emailOtpInputs[0].focus();
                 startTimer(document.getElementById('email-timer'), document.getElementById('resend-email-otp'));
-                showAlert(data.message, 'success');
+                showAlert('OTP sent! Check your inbox.', 'success');
             }
         } catch (error) {
             showAlert('An error occurred. Please try again.');
@@ -697,7 +719,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('whatsapp-otp-step2').style.display = 'block';
                 whatsappOtpInputs[0].focus();
                 startTimer(document.getElementById('whatsapp-timer'), document.getElementById('resend-whatsapp-otp'));
-                showAlert(data.message, 'success');
+                showAlert('OTP sent! Check WhatsApp.', 'success');
             }
         } catch (error) {
             showAlert('An error occurred. Please try again.');
@@ -811,9 +833,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             showAlert(data.message, data.error ? 'danger' : 'success');
-            
+
             if (!data.error) {
+                btn.innerHTML = 'Resend OTP in <span id="email-timer">60</span>s';
                 startTimer(document.getElementById('email-timer'), btn);
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = 'Resend OTP';
             }
         } catch (error) {
             showAlert('Failed to resend OTP');
@@ -839,9 +865,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             showAlert(data.message, data.error ? 'danger' : 'success');
-            
+
             if (!data.error) {
+                btn.innerHTML = 'Resend OTP in <span id="whatsapp-timer">60</span>s';
                 startTimer(document.getElementById('whatsapp-timer'), btn);
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = 'Resend OTP';
             }
         } catch (error) {
             showAlert('Failed to resend OTP');

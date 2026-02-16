@@ -4,7 +4,7 @@
     // Get counts
     $savedJobsCount = 0;
     $appliedJobsCount = 0;
-    $jobAlertsCount = 0;
+    $profileViewsCount = 0;
     
     try {
         if (auth('account')->check() && $account->isJobSeeker()) {
@@ -16,15 +16,8 @@
                 ->where('account_id', $account->id)
                 ->count();
 
-            // Job Alerts - count of new jobs posted in last 7 days
-            $jobAlertsCount = \Botble\JobBoard\Models\Job::query()
-                ->where('status', 'published')
-                ->where(function($q) {
-                    $q->whereNull('expire_date')
-                      ->orWhere('expire_date', '>=', now());
-                })
-                ->where('created_at', '>=', now()->subDays(7))
-                ->count();
+            // Profile Views - number of times profile was viewed by schools/employers
+            $profileViewsCount = (int) ($account->profile_views ?? 0);
         }
     } catch (\Exception $e) {
         // Silent fail
@@ -48,7 +41,9 @@
     $recentJobs = [];
     try {
         $recentJobs = \Botble\JobBoard\Models\Job::query()
+            ->with(['company', 'country', 'city', 'state'])
             ->where('status', 'published')
+            ->where('moderation_status', 'approved')
             ->where(function($q) {
                 $q->whereNull('expire_date')
                   ->orWhere('expire_date', '>=', now());
@@ -65,6 +60,7 @@
     try {
         $suggestedJobs = \Botble\JobBoard\Models\Job::query()
             ->where('status', 'published')
+            ->where('moderation_status', 'approved')
             ->where(function($q) {
                 $q->whereNull('expire_date')
                   ->orWhere('expire_date', '>=', now());
@@ -756,6 +752,14 @@
                         <h5 class="js-profile-name">Hello, {{ $account->first_name ?? $account->name }}</h5>
                         <p class="js-profile-date">Joined {{ $account->created_at->format('M d, Y') }}</p>
                         <p class="js-profile-updated">Last Updated: {{ $account->updated_at->format('M d, Y') }}</p>
+                        {{-- Profile Completion Bar --}}
+                        <div class="js-profile-completion">
+                            <h6>{{ __('Profile Completion') }}</h6>
+                            <div class="js-completion-bar">
+                                <div class="js-completion-fill" style="width: {{ $completion }}%;"></div>
+                            </div>
+                            <div class="js-completion-text">{{ $completion }}% {{ __('complete') }}</div>
+                        </div>
                         @php
                             $candidateSlug = \Botble\Slug\Models\Slug::where('reference_type', \Botble\JobBoard\Models\Account::class)
                                 ->where('reference_id', $account->id)
@@ -818,9 +822,9 @@
                             <i class="fa fa-file-alt js-stat-icon"></i>
                         </div>
                         <div class="js-stat-card orange">
-                            <h6>Job Alerts</h6>
-                            <h2>{{ $jobAlertsCount }}</h2>
-                            <i class="fa fa-bell js-stat-icon"></i>
+                            <h6>{{ __('Profile Views') }}</h6>
+                            <h2>{{ $profileViewsCount }}</h2>
+                            <i class="fa fa-eye js-stat-icon"></i>
                         </div>
                     </div>
                     
@@ -840,7 +844,7 @@
                                             </div>
                                             <div class="js-application-info">
                                                 <h6><a href="{{ $job->url }}" style="color: #333; text-decoration: none;">{{ Str::limit($job->name, 35) }}</a></h6>
-                                                <p>{{ $job->company->name ?? 'Company' }} • {{ $job->created_at->diffForHumans() }}</p>
+                                                <p>{{ $job->company->name ?? 'Company' }}{!! ($job->location ?? $job->address) ? ' • ' . e(Str::limit($job->location ?? $job->address ?? '', 25)) : '' !!} • {{ $job->created_at->diffForHumans() }}</p>
                                             </div>
                                         </div>
                                     @endforeach
@@ -868,7 +872,7 @@
                                             </div>
                                             <div class="js-application-info">
                                                 <h6><a href="{{ $job->url }}" style="color: #333; text-decoration: none;">{{ Str::limit($job->name, 35) }}</a></h6>
-                                                <p>{{ $job->company->name ?? 'Company' }} • {{ $job->created_at->diffForHumans() }}</p>
+                                                <p>{{ $job->company->name ?? 'Company' }}{!! ($job->location ?? $job->address) ? ' • ' . e(Str::limit($job->location ?? $job->address ?? '', 25)) : '' !!} • {{ $job->created_at->diffForHumans() }}</p>
                                             </div>
                                         </div>
                                     @endforeach

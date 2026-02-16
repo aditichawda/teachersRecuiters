@@ -77,6 +77,11 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'uses' => 'verifyEmployerEmailCode',
                     ]);
 
+                    Route::post('register/employer/resend-verification-code', [
+                        'as' => 'register.employer.resendVerificationCode',
+                        'uses' => 'resendEmployerVerificationCode',
+                    ]);
+
                     // Employer Step 3: Institution Type
                     Route::get('register/employer/institution-type', [
                         'as' => 'register.employer.institutionTypePage',

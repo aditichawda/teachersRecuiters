@@ -95,3 +95,7 @@ if (! defined('JOB_BOARD_CUSTOM_FIELD_MODULE_SCREEN_NAME')) {
 if (! defined('COUPON_MODULE_SCREEN_NAME')) {
     define('COUPON_MODULE_SCREEN_NAME', 'coupon');
 }
+
+if (! defined('SCREENING_QUESTION_MODULE_SCREEN_NAME')) {
+    define('SCREENING_QUESTION_MODULE_SCREEN_NAME', 'screening-question');
+}

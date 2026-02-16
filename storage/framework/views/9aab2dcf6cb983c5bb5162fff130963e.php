@@ -8,32 +8,6 @@
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['showLabel' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showLabel),'showField' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showField),'options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($options),'name' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($name),'prepend' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($prepend ?? null),'append' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($append ?? null),'showError' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showError),'nameKey' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($nameKey)]); ?>
-    <?php
-        if (Arr::get($options, 'choices')) {
-            $classAppend = 'list-tagify';
-        } else {
-            $classAppend = 'tags';
-        }
-
-        $options['attr']['class'] = (rtrim(Arr::get($options, 'attr.class'), ' ') ?: '') . ' ' . $classAppend;
-
-        if (Arr::has($options, 'choices')) {
-            $choices = $options['choices'];
-
-            if ($choices instanceof \Illuminate\Support\Collection) {
-                $choices = $choices->toArray();
-            }
-
-            if ($choices) {
-                $options['attr']['data-list'] = json_encode($choices);
-            }
-        }
-
-        if (Arr::has($options, 'selected')) {
-            $options['value'] = $options['selected'];
-        }
-    ?>
-
      <?php $__env->slot('label', null, []); ?> 
         <?php if($showLabel && $options['label'] !== false && $options['label_show']): ?>
             <?php echo Form::customLabel($name, $options['label'], $options['label_attr']); ?>
@@ -53,8 +27,4 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
-<<<<<<<< HEAD:storage/framework/views/9aab2dcf6cb983c5bb5162fff130963e.php
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/text.blade.php ENDPATH**/ ?>
-========
-<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/tags.blade.php ENDPATH**/ ?>
->>>>>>>> main:storage/framework/views/dd86f143fbceaff6abab7cac08b20297.php

@@ -15,11 +15,7 @@
         <?php endif; ?>
      <?php $__env->endSlot(); ?>
 
-<<<<<<<< HEAD:storage/framework/views/f8eb53a93b00872c25e24d945c23c024.php
     <?php echo Form::email($name, $options['value'], $options['attr']); ?>
-========
-    <?php echo Form::datePicker($name, $options['value'], $options['attr']); ?>
->>>>>>>> main:storage/framework/views/62933c2c2e0ab8c26cd0a32dd9c49b4e.php
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -31,8 +27,4 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
-<<<<<<<< HEAD:storage/framework/views/f8eb53a93b00872c25e24d945c23c024.php
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/email.blade.php ENDPATH**/ ?>
-========
-<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/date-picker.blade.php ENDPATH**/ ?>
->>>>>>>> main:storage/framework/views/62933c2c2e0ab8c26cd0a32dd9c49b4e.php

@@ -9,6 +9,7 @@ use Botble\JobBoard\Forms\JobForm as FormsJobForm;
 use Botble\JobBoard\Http\Requests\AccountJobRequest;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\Job;
+use Botble\JobBoard\Models\ScreeningQuestion;
 
 class JobForm extends FormsJobForm
 {
@@ -66,6 +67,40 @@ class JobForm extends FormsJobForm
                     'text' => trans('plugins/job-board::forms.external_apply_url_behavior_helper_text'),
                 ],
             ]);
+
+        $screeningQuestions = ScreeningQuestion::query()
+            ->wherePublished()
+            ->oldest('order')
+            ->oldest('id')
+            ->get();
+
+        $sqChoices = $screeningQuestions->mapWithKeys(fn ($q) => [$q->id => $q->question])->all();
+
+        $selectedSq = [];
+        $selectedRequired = [];
+        $model = $this->getModel();
+        if ($model && $model->exists) {
+            $pivots = $model->screeningQuestions()->get();
+            $selectedSq = $pivots->pluck('id')->all();
+            $selectedRequired = $pivots->filter(fn ($q) => (bool) ($q->pivot->is_required ?? false))->pluck('id')->all();
+        }
+
+        if ($sqChoices) {
+            $this->addBefore('number_of_positions', 'screening_question_ids[]', 'multiCheckList', [
+                'label' => trans('plugins/job-board::messages.job_screening_questions'),
+                'choices' => $sqChoices,
+                'value' => old('screening_question_ids', $selectedSq),
+                'wrapper' => ['class' => 'form-group col-12'],
+                'help_block' => ['text' => trans('plugins/job-board::screening-question.name') . ' - ' . __('Select which questions candidates will answer when applying')],
+            ]);
+            $this->addBefore('number_of_positions', 'screening_question_required[]', 'multiCheckList', [
+                'label' => __('Required for this job'),
+                'choices' => $sqChoices,
+                'value' => old('screening_question_required', $selectedRequired),
+                'wrapper' => ['class' => 'form-group col-12'],
+                'help_block' => ['text' => __('Mark which selected questions are required when candidates apply')],
+            ]);
+        }
 
         if (count($companies) === 1) {
             $this->addBefore('number_of_positions', 'company_id', 'hidden', [

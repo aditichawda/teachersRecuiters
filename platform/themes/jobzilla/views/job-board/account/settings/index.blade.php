@@ -53,6 +53,59 @@
         font-size: 12px;
         color: #64748b;
     }
+    /* ? Help icon - hover & click both show tooltip */
+    .field-help-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: help;
+        margin-left: 4px;
+        vertical-align: middle;
+        transition: background 0.2s, color 0.2s;
+    }
+    .field-help-icon:hover,
+    .field-help-icon:focus {
+        background: #0073d1;
+        color: #fff;
+        outline: none;
+    }
+    .field-help-icon i {
+        font-size: 11px;
+    }
+    .profile-section-header .field-help-icon {
+        background: rgba(255,255,255,0.3);
+        color: #fff;
+    }
+    .profile-section-header .field-help-icon:hover,
+    .profile-section-header .field-help-icon:focus {
+        background: rgba(255,255,255,0.5);
+        color: #fff;
+    }
+    /* Tooltip - wider & mobile responsive (field-help-icon tooltips) */
+    .tooltip .tooltip-inner {
+        max-width: 340px;
+        min-width: 200px;
+        padding: 12px 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        text-align: left;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    @media (max-width: 576px) {
+        .tooltip .tooltip-inner {
+            max-width: min(320px, calc(100vw - 32px));
+            min-width: 240px;
+            padding: 14px 18px;
+            font-size: 14px;
+        }
+    }
     .btn-save {
         background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
         border: none;
@@ -425,23 +478,23 @@
             <i class="fa fa-user"></i> {{ __('Personal Details') }}
         </div>
         <div class="profile-section-body">
+            <p class="form-text">{{ __('We collect these details to verify your profile, connect you with schools/institutions, and share relevant job opportunities.') }}</p>
             <div class="row">
                 <!-- 1. Full Name -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Full Name') }} <span class="required">*</span></label>
+                    <label class="form-label">{{ __('Full Name') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Help us to create your verified candidate profile and ensure accurate identification.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $account->first_name) }}" placeholder="{{ __('Enter your full name') }}" required>
                 </div>
 
                 <!-- 2. Email Address -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Email Address') }} <span class="required">*</span></label>
+                    <label class="form-label">{{ __('Email Address') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Help us to send job alerts, interview updates, application status, and important notifications.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="email" class="form-control" value="{{ $account->email }}" disabled>
-                    <small class="form-text">{{ __('Email cannot be changed') }}</small>
                 </div>
 
                 <!-- 3. Mobile Number -->
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Mobile Number') }} <span class="required">*</span></label>
+                    <label class="form-label">{{ __('Phone Number') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('For recruiters and schools to contact you directly regarding interviews and job opportunities and also help us to send you job alerts and updates on WhatsApp.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="tel" class="form-control" name="phone" value="{{ old('phone', $account->phone) }}" placeholder="{{ __('Enter mobile number with country code') }}">
                     <div class="form-check mt-2">
                         <input type="hidden" name="is_whatsapp_available" value="0">
@@ -452,7 +505,7 @@
 
                 <!-- 4. Alternate Contact -->
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Alternate Contact') }}</label>
+                    <label class="form-label">{{ __('Alternate Phone Number') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To ensure schools can reach you if your primary number is unavailable.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="tel" class="form-control" name="alternate_phone" value="{{ old('alternate_phone', $account->alternate_phone ?? '') }}" placeholder="{{ __('Alternate phone number') }}">
                     <div class="form-check mt-2">
                         <input type="hidden" name="is_alternate_whatsapp_available" value="0">
@@ -462,13 +515,13 @@
                 </div>
                 <!-- 7. DOB -->
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Date of Birth') }} <span class="required">*</span></label>
+                    <label class="form-label">{{ __('Date of Birth') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To verify eligibility criteria, age requirements, and ensure compliance with school policies.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="date" class="form-control" name="dob" value="{{ old('dob', $account->dob ? $account->dob->format('Y-m-d') : '') }}" max="{{ now()->subYears(16)->format('Y-m-d') }}">
                 </div>
                 
                 <!-- 5. Gender -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Gender') }} <span class="required">*</span></label>
+                    <label class="form-label">{{ __('Gender') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Some institutions may have role-specific preferences or accommodation arrangements.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div class="d-flex gap-3 mt-2">
                         <div class="form-check">
                             <input type="radio" class="form-check-input" name="gender" value="male" id="gender_male" @checked(old('gender', $account->gender) == 'male')>
@@ -483,7 +536,7 @@
 
                 <!-- 6. Marital Status -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Marital Status') }}</label>
+                    <label class="form-label">{{ __('Marital Status') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Certain schools (especially residential/boarding schools) may consider this for accommodation and relocation purposes.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div class="d-flex gap-3 flex-wrap mt-2">
                         @foreach(['single' => 'Single', 'married' => 'Married', 'separated' => 'Separated', 'others' => 'Others'] as $value => $label)
                             <div class="form-check">
@@ -502,13 +555,14 @@
     <!-- Section 2: Profile Visibility & Work Status -->
     <div class="profile-section">
         <div class="profile-section-header">
-            <i class="fa fa-eye"></i> {{ __('Profile Visibility & Work Status') }}
+            <i class="fa fa-eye"></i> {{ __('Profile Visibility, Work Availability, & Salary') }}
         </div>
         <div class="profile-section-body">
+            <p class="form-text mb-3">{{ __('Control who can view your profile and update your current job availability and salary to receive relevant opportunities.') }}</p>
             <div class="row">
                 <!-- 9. Profile Visibility -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Profile Visibility (Open for School View)') }} <span class="required">*</span></label>
+                    <label class="form-label">{{ __('Profile Visibility') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Choose whether schools/recruiters can view your profile in search results.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <select class="form-select" name="profile_visibility">
                         <option value="1" @selected(old('profile_visibility', $account->profile_visibility ?? 1) == 1)>{{ __('Yes - Schools can view my profile') }}</option>
                         <option value="0" @selected(old('profile_visibility', $account->profile_visibility ?? 1) == 0)>{{ __('No - Hide my profile') }}</option>
@@ -516,7 +570,7 @@
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Additional Privacy Options') }}</label>
+                    <label class="form-label">{{ __('Additional Privacy Options') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To give you flexibility while exploring opportunities confidentially.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div class="form-check mb-2">
                         <input type="hidden" name="hide_resume" value="0">
                         <input type="checkbox" class="form-check-input" name="hide_resume" value="1" id="hide_resume" @checked(old('hide_resume', $account->hide_resume ?? false))>
@@ -531,7 +585,7 @@
 
                 <!-- 10. Current Work Status -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Current Work Status') }} <span class="required">*</span></label>
+                    <label class="form-label">{{ __('Current Work Status') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Recruiters prioritize candidates based on immediate availability.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <select class="form-select" name="current_work_status" id="current_work_status">
                         <option value="">{{ __('-- Select --') }}</option>
                         <option value="not_working" @selected(old('current_work_status', $account->current_work_status ?? '') == 'not_working')>{{ __('Not Working Now') }}</option>
@@ -546,7 +600,7 @@
 
                 <!-- 11. Notice Period (shown if working) -->
                 <div class="col-md-6 mb-3" id="notice_period_wrapper" style="display: none;">
-                    <label class="form-label">{{ __('Notice Period') }}</label>
+                    <label class="form-label">{{ __('Notice Period') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Schools/recruiters filter candidates based on urgency of hiring.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <select class="form-select" name="notice_period">
                         <option value="">{{ __('-- Select --') }}</option>
                         <option value="7_days" @selected(old('notice_period', $account->notice_period ?? '') == '7_days')>{{ __('7 Days') }}</option>
@@ -557,9 +611,30 @@
                     </select>
                 </div>
 
-                <div class="col-md-6 mb-3">
-                   
-                </div>
+                 <!-- Salary (Not required when "Not Working Now") -->
+                 <div class="col-md-6 mb-3" id="current_salary_wrapper">
+                        <label class="form-label">{{ __('Current Salary') }} <span class="required" id="current_salary_req">*</span><span class="text-muted small ms-1" id="current_salary_optional" style="display:none;">({{ __('Not required when not working') }})</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Helps schools/institutions understand your experience level and compensation bracket.') }}"><i class="fa fa-question-circle"></i></span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" name="current_salary" id="current_salary_input" value="{{ old('current_salary', $account->current_salary ?? '') }}" placeholder="0">
+                            <select class="form-select" name="current_salary_period" style="max-width: 120px;">
+                                <option value="month" @selected(old('current_salary_period', $account->current_salary_period ?? 'month') == 'month')>Month</option>
+                                <option value="hour" @selected(old('current_salary_period', $account->current_salary_period ?? 'month') == 'hour')>Hour</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3" id="expected_salary_wrapper">
+                        <label class="form-label">{{ __('Expected Salary') }} <span class="required" id="expected_salary_req">*</span><span class="text-muted small ms-1" id="expected_salary_optional" style="display:none;">({{ __('Not required when not working') }})</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To ensure salary alignment before interview shortlisting.') }}"><i class="fa fa-question-circle"></i></span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" name="expected_salary" id="expected_salary_input" value="{{ old('expected_salary', $account->expected_salary ?? '') }}" placeholder="0">
+                            <select class="form-select" name="expected_salary_period" style="max-width: 120px;">
+                                <option value="month" @selected(old('expected_salary_period', $account->expected_salary_period ?? 'month') == 'month')>Month</option>
+                                <option value="hour" @selected(old('expected_salary_period', $account->expected_salary_period ?? 'month') == 'hour')>Hour</option>
+                            </select>
+                        </div>
+                    </div>
             </div>
         </div>
     </div>
@@ -567,16 +642,18 @@
     <!-- Section 3: About / Bio -->
     <div class="profile-section">
         <div class="profile-section-header">
-            <i class="fa fa-info-circle"></i> {{ __('About / Bio / Career Aspiration') }}
+            <i class="fa fa-info-circle"></i> {{ __('About Me') }}
         </div>
         <div class="profile-section-body">
+            <p class="form-text mb-3">{{ __('Write a short summary about your teaching experience, subject expertise, achievements, and career goals. Keep it clear and professional.') }}</p>
             <div class="row">
                 <!-- 12. Bio -->
                 <div class="col-12 mb-3">
-                    <label class="form-label">{{ __('About / Bio / Career Aspiration') }}</label>
-                    
-                    {!! Form::customEditor('bio', old('bio', $account->bio)) !!}
-                    <small class="form-text">{{ __('Tell schools about yourself, your teaching philosophy, and career goals') }}</small>
+                    <label class="form-label">{{ __('Teaching Philosophy / Career Objective / Key Strengths') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Example: Passionate Mathematics teacher with 5+ years of experience in CBSE schools. Skilled in concept-based teaching, exam preparation strategies, and classroom management. Committed to student-centric learning and academic excellence. Seeking a progressive institution where I can contribute to board results and holistic development of students. This helps schools quickly understand: Your teaching strengths, Classroom approach & methodology, Career aspirations, Suitability for their institution. Recruiters often read this section before downloading resumes.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    @php
+                        $bioPlaceholder = __('Passionate Mathematics teacher with 5+ years of experience in CBSE schools. Skilled in concept-based teaching, exam preparation strategies, and classroom management. Committed to student-centric learning and academic excellence. Seeking a progressive institution where I can contribute to board results and holistic development of students.');
+                    @endphp
+                    {!! Form::customEditor('bio', old('bio', $account->bio), ['data-placeholder' => $bioPlaceholder]) !!}
                 </div>
             </div>
         </div>
@@ -587,10 +664,11 @@
                 <i class="fa fa-briefcase"></i> {{ __('Job Preferences') }}
             </div>
             <div class="profile-section-body">
+                <p class="form-text mb-3">{{ __('Tell us what type of opportunities you are looking for so we can match you with relevant schools/institutions.') }}</p>
                 <div class="row">
                     <!-- 23. Institution Type Preferences -->
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">{{ __('Looking job for which type of Educational Institutions') }} <span class="required">*</span></label>
+                        <label class="form-label">{{ __('Preferred Institution Type') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To match your profile with the right category of schools/institutions.') }}"><i class="fa fa-question-circle"></i></span></label>
                         <select id="ts-institution-types" name="institution_types[]" multiple placeholder="{{ __('Search & select up to 3...') }}">
                             @php
                                 $instTypes = old('institution_types', $account->institution_types ?? []);
@@ -624,7 +702,7 @@
 
                     <!-- 24. Position Type -->
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">{{ __('Looking for which position?') }} <span class="required">*</span></label>
+                        <label class="form-label">{{ __('Role Category') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Choose the type of role you are interested in. It helps schools filter candidates by job role.') }}"><i class="fa fa-question-circle"></i></span></label>
                         <div class="d-flex gap-3 mt-2">
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="teaching" id="position_teaching" @checked(str_contains(old('position_type', $account->position_type ?? ''), 'teaching'))>
@@ -639,7 +717,7 @@
 
                     <!-- 25. Teaching Subjects (shown when Teaching is selected) -->
                     <div class="col-md-6 mb-3" id="teaching_subjects_wrapper">
-                        <label class="form-label">{{ __('Teaching Subjects / Post') }} ({{ __('Select up to 3') }}) <span class="required">*</span></label>
+                        <label class="form-label">{{ __('Preferred Teaching Subject & Level') }} ({{ __('Select up to 3') }}) <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select subjects you can teach. Schools filter candidates by subject and level.') }}"><i class="fa fa-question-circle"></i></span></label>
                         <select id="ts-teaching-subjects" name="teaching_subjects[]" multiple placeholder="{{ __('Search & select up to 3 subjects...') }}">
                             @php $teachingSubjects = old('teaching_subjects', $account->teaching_subjects ?? []); @endphp
                             <optgroup label="Primary Level">
@@ -705,7 +783,7 @@
 
                     <!-- Non-Teaching Positions (shown when Non-Teaching is selected) -->
                     <div class="col-md-6 mb-3" id="non_teaching_positions_wrapper" style="display: none;">
-                        <label class="form-label">{{ __('Non-Teaching Positions') }} ({{ __('Select up to 3') }}) <span class="required">*</span></label>
+                        <label class="form-label">{{ __('Preferred Non-Teaching Role') }} ({{ __('Select up to 3') }}) <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the non-teaching roles you are interested in. It helps to match you with suitable administrative or support positions.') }}"><i class="fa fa-question-circle"></i></span></label>
                         <select id="ts-non-teaching" name="non_teaching_positions[]" multiple placeholder="{{ __('Search & select up to 3 positions...') }}">
                             @php $nonTeachingPositions = old('non_teaching_positions', $account->non_teaching_positions ?? []); @endphp
                             @foreach([
@@ -726,12 +804,12 @@
                         <div class="ts-max-info"><span class="count" id="nt-count">0</span>/3 {{ __('selected') }}</div>
                     </div>
 
-                    <!-- 26. Job Type -->
+                    <!-- 26. Employment Type -->
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">{{ __('Job Type') }} <span class="required">*</span></label>
-                        <select id="ts-job-type" name="job_type_preferences[]" multiple placeholder="{{ __('Select job types...') }}">
+                        <label class="form-label">{{ __('Employment Type') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Choose your preferred working arrangement.') }}"><i class="fa fa-question-circle"></i></span></label>
+                        <select id="ts-job-type" name="job_type_preferences[]" multiple placeholder="{{ __('Select employment types...') }}">
                             @php $jobTypes = old('job_type_preferences', $account->job_type_preferences ?? []); @endphp
-                            @foreach(['full_time' => 'Full-Time', 'part_time' => 'Part-Time', 'internship' => 'Internship', 'freelance' => 'Freelance', 'contract' => 'Contract', 'remote' => 'Remote'] as $val => $lbl)
+                            @foreach(['full_time' => 'Full Time', 'part_time' => 'Part Time', 'contract' => 'Contract', 'temporary' => 'Temporary', 'visiting_faculty' => 'Visiting Faculty', 'ad_hoc' => 'Ad-Hoc'] as $val => $lbl)
                                 <option value="{{ $val }}" @selected(in_array($val, (array)$jobTypes))>{{ $lbl }}</option>
                             @endforeach
                         </select>
@@ -742,30 +820,7 @@
                         </div>
                     </div>
 
-                    <!-- Salary (moved from Personal Details) -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">{{ __('Current Salary') }} <span class="required">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₹</span>
-                            <input type="number" class="form-control" name="current_salary" value="{{ old('current_salary', $account->current_salary ?? '') }}" placeholder="0">
-                            <select class="form-select" name="current_salary_period" style="max-width: 120px;">
-                                <option value="month" @selected(old('current_salary_period', $account->current_salary_period ?? 'month') == 'month')>/ Month</option>
-                                <option value="hour" @selected(old('current_salary_period', $account->current_salary_period ?? 'month') == 'hour')>/ Hour</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">{{ __('Expected Salary') }} <span class="required">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₹</span>
-                            <input type="number" class="form-control" name="expected_salary" value="{{ old('expected_salary', $account->expected_salary ?? '') }}" placeholder="0">
-                            <select class="form-select" name="expected_salary_period" style="max-width: 120px;">
-                                <option value="month" @selected(old('expected_salary_period', $account->expected_salary_period ?? 'month') == 'month')>/ Month</option>
-                                <option value="hour" @selected(old('expected_salary_period', $account->expected_salary_period ?? 'month') == 'hour')>/ Hour</option>
-                            </select>
-                        </div>
-                    </div>
+                   
                 </div>
             </div>
         </div>
@@ -852,64 +907,43 @@
     @endphp
     <div class="profile-section">
         <div class="profile-section-header">
-            <i class="fa fa-map-marker-alt"></i> {{ __('Location') }}
+            <i class="fa fa-map-marker-alt"></i> {{ __('Location Details') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Help schools/institutions understand your current location and preferred work areas for better job matching.') }}"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="profile-section-body">
-            {{-- Current Location (pre-filled from registration) --}}
-            <h6 class="mb-3 text-dark">{{ __('Current Location') }}</h6>
-            <p class="form-text mb-3">{{ __('Used for resume. Pre-filled from registration.') }}</p>
+            {{-- Current Location - City, Address & Pin Code --}}
+            <h6 class="mb-2 text-dark">{{ __('Current Location') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the city, state, and locality where you are currently residing.') }}"><i class="fa fa-question-circle"></i></span></h6>
             <div class="row mb-4">
-                @if($useLocationDropdowns)
-                {{-- City first: type to search city then State & Country auto-fill (no required) --}}
                 <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('City') }}</label>
                     <div class="city-search-wrapper" style="position:relative;">
-                        <input type="text" id="js-current-city-search" class="form-control" value="{{ $currentCityName }}" placeholder="{{ __('Type city name to search...') }}" autocomplete="off">
+                        <input type="text" id="js-current-city-search" class="form-control" value="{{ $currentCityName }}" placeholder="{{ __('Type or select city...') }}" autocomplete="off">
                         <div id="js-current-city-suggestions" class="city-suggestions-dropdown" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:100; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
                     </div>
-                    <small class="text-muted">{{ __('Type and select city; State and Country will auto-fill.') }}</small>
+                    <small class="text-muted">{{ __('Type and select city; State and Country auto-fill') }}</small>
                     <input type="hidden" name="city_id" id="js-current-city-id" value="{{ old('city_id', $account->city_id) }}">
+                    <input type="hidden" name="state_id" id="js-current-state-id" value="{{ old('state_id', $account->state_id) }}">
+                    <input type="hidden" name="country_id" id="js-current-country-id" value="{{ old('country_id', $account->country_id) }}">
                 </div>
                 <div class="col-md-4 mb-2">
-                    <label class="form-label">{{ __('State') }} </label>
+                    <label class="form-label">{{ __('State') }}</label>
                     <input type="text" id="js-current-state-display" class="form-control" readonly placeholder="{{ __('Select city first') }}" value="{{ $currentStateName }}" style="background:#f8f9fa;">
-                    <input type="hidden" name="state_id" id="js-current-state-id" value="{{ old('state_id', $account->state_id) }}">
                 </div>
                 <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('Country') }}</label>
                     <input type="text" id="js-current-country-display" class="form-control" readonly placeholder="{{ __('Select city first') }}" value="{{ $currentCountryName }}" style="background:#f8f9fa;">
-                    <input type="hidden" name="country_id" id="js-current-country-id" value="{{ old('country_id', $account->country_id) }}">
                 </div>
-                @else
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">{{ __('Country') }}</label>
-                    <input type="text" class="form-control" name="country_name" value="{{ $currentCountryName }}" placeholder="{{ __('Country') }}">
-                </div>
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">{{ __('State') }}</label>
-                    <input type="text" class="form-control" name="state_name" value="{{ $currentStateName }}" placeholder="{{ __('State') }}">
-                </div>
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">{{ __('City') }}</label>
-                    <input type="text" class="form-control" name="city_name" value="{{ $currentCityName }}" placeholder="{{ __('City') }}">
-                </div>
-                @endif
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">{{ __('Locality') }}</label>
-                    <input type="text" class="form-control" name="locality" value="{{ old('locality', $account->locality ?? '') }}" placeholder="{{ __('Locality / Area') }}">
-                </div>
-                <div class="col-md-4 mb-2">
+                <div class="col-md-6 mb-2">
                     <label class="form-label">{{ __('Address') }}</label>
                     <input type="text" class="form-control" name="address" value="{{ old('address', $account->address) }}" placeholder="{{ __('Enter your address') }}">
                 </div>
-                <div class="col-md-4 mb-2">
+                <div class="col-md-6 mb-2">
                     <label class="form-label">{{ __('Pin Code') }}</label>
                     <input type="text" class="form-control" name="pin_code" value="{{ old('pin_code', $account->pin_code ?? '') }}" placeholder="{{ __('e.g. 110001') }}" maxlength="20">
                 </div>
             </div>
 
-            {{-- Native Location --}}
-            <h6 class="mb-1 text-dark">{{ __('Native Location') }}</h6>
+            {{-- Permanent / Native Location - Address & Pin Code only --}}
+            <h6 class="mb-2 text-dark">{{ __('Permanent / Native Location') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Enter your hometown or permanent residence location.') }}"><i class="fa fa-question-circle"></i></span></h6>
             <div class="row mb-1">
                 <div class="col-12 mb-3">
                     <div class="form-check">
@@ -920,55 +954,22 @@
                 </div>
             </div>
             <div id="native_location_fields" class="row mb-4" style="{{ old('native_same_as_current', $account->native_same_as_current ?? false) ? 'display:none;' : '' }}">
-                @if($useLocationDropdowns)
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('City') }}</label>
-                    <div class="city-search-wrapper" style="position:relative;">
-                        <input type="text" id="js-native-city-search" class="form-control" value="{{ $nativeCityName }}" placeholder="{{ __('Type city name...') }}" autocomplete="off">
-                        <div id="js-native-city-suggestions" class="city-suggestions-dropdown" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:100; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
-                    </div>
-                    <input type="hidden" name="native_city_id" id="js-native-city-id" value="{{ old('native_city_id', $account->native_city_id) }}">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('State') }}</label>
-                    <input type="text" id="js-native-state-display" class="form-control" placeholder="{{ __('Select city first') }}" readonly value="{{ $nativeStateName }}" style="background:#f8f9fa;">
-                    <input type="hidden" name="native_state_id" id="js-native-state-id" value="{{ old('native_state_id', $account->native_state_id) }}">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Country') }}</label>
-                    <input type="text" id="js-native-country-display" class="form-control"placeholder="{{ __('Select city first') }}" readonly value="{{ $nativeCountryName }}" style="background:#f8f9fa;">
-                    <input type="hidden" name="native_country_id" id="js-native-country-id" value="{{ old('native_country_id', $account->native_country_id) }}">
-                </div>
-                @else
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Country') }}</label>
-                    <input type="text" class="form-control" name="native_country_name" value="{{ $nativeCountryName }}" placeholder="{{ __('Country') }}">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('State') }}</label>
-                    <input type="text" class="form-control" name="native_state_name" value="{{ $nativeStateName }}" placeholder="{{ __('State') }}">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('City') }}</label>
-                    <input type="text" class="form-control" name="native_city_name"  value="{{ $nativeCityName }}" placeholder="{{ __('City') }}">
-                </div>
-                @endif
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">{{ __('Locality') }}</label>
-                    <input type="text" class="form-control" name="native_locality" value="{{ old('native_locality', $account->native_locality ?? '') }}" placeholder="{{ __('Locality / Area') }}">
-                </div>
-                <div class="col-md-4 mb-3">
+                <input type="hidden" name="native_city_id" value="{{ old('native_city_id', $account->native_city_id) }}">
+                <input type="hidden" name="native_state_id" value="{{ old('native_state_id', $account->native_state_id) }}">
+                <input type="hidden" name="native_country_id" value="{{ old('native_country_id', $account->native_country_id) }}">
+                <input type="hidden" name="native_locality" value="{{ old('native_locality', $account->native_locality ?? '') }}">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Address') }}</label>
                     <input type="text" class="form-control" name="native_address" value="{{ old('native_address', $account->native_address ?? '') }}" placeholder="{{ __('Address') }}">
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Pin Code') }}</label>
                     <input type="text" class="form-control" name="native_pin_code" value="{{ old('native_pin_code', $account->native_pin_code ?? '') }}" placeholder="{{ __('e.g. 110001') }}" maxlength="20">
                 </div>
             </div>
 
-            {{-- Work Location Preference --}}
-            <h6 class="mb-3 text-dark">{{ __('Work Location Preference') }}</h6>
+            {{-- Preferred Work Locations --}}
+            <h6 class="mb-2 text-dark">{{ __('Preferred Work Locations') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Choose the locations where you are willing to work. To show you relevant job opportunities based on your relocation preference.') }}"><i class="fa fa-question-circle"></i></span></h6>
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="form-check mb-2">
@@ -1052,10 +1053,11 @@
                             <i class="fa fa-graduation-cap"></i> {{ __('Qualifications, Certifications & Experience') }}
                         </div>
                         <div class="profile-section-body">
+                            <p class="form-text mb-3">{{ __('Provide your academic background and professional experience to help schools / institutions evaluate your eligibility.') }}</p>
                             <div class="row">
                                 <!-- 14. Qualifications (JSON array) -->
                                 <div class="col-12 mb-4">
-                                    <label class="form-label">{{ __('Educational Qualifications') }} <span class="required">*</span></label>
+                                    <label class="form-label">{{ __('Academic Qualifications') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Schools/Institutions verify subject eligibility and minimum qualification requirements before shortlisting candidates. Include degree level, specialization, and institution name.') }}"><i class="fa fa-question-circle"></i></span></label>
                                     <div id="qualifications-container">
                                         @php $qualifications = old('qualifications', $account->qualifications ?? [['level' => '', 'specialization' => '']]); @endphp
                                         @foreach($qualifications as $index => $qual)
@@ -1083,12 +1085,12 @@
                                         </div>
                                         @endforeach
                                     </div>
-                                    <button type="button" class="add-more-btn" onclick="addQualification()">+ {{ __('Add More Qualification') }}</button>
+                                    <button type="button" class="add-more-btn mt-2" onclick="addQualification()">+ {{ __('Add More Qualification') }}</button>
                                 </div>
 
                                 <!-- 15. Teaching Certifications -->
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">{{ __('Teaching Certifications') }} <span class="required">*</span></label>
+                                    <label class="form-label">{{ __('Professional Teaching Certification') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select all professional certifications you have completed. Many schools require mandatory certifications (e.g., B.Ed, CTET) for eligibility.') }}"><i class="fa fa-question-circle"></i></span></label>
                                     <select id="ts-teaching-certifications" name="teaching_certifications[]" multiple placeholder="{{ __('Search & select certifications...') }}">
                                         @php
                                         $certs = old('teaching_certifications', $account->teaching_certifications ?? []);
@@ -1098,13 +1100,12 @@
                                             <option value="{{ $val }}" @selected(in_array($val, $certs))>{{ $lbl }}</option>
                                         @endforeach
                                     </select>
-                                    <div class="ts-max-info">{{ __('Select all applicable certifications') }}</div>
                                 </div>
 
                                 <!-- 17. Total Experience -->
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">{{ __('Total Experience') }} <span class="required">*</span></label>
-                                    <select class="form-select" name="total_experience">
+                                    <label class="form-label">{{ __('Total Teaching / Professional Experience') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select your total relevant experience in teaching or education sector. Recruiters filter candidates based on experience requirements.') }}"><i class="fa fa-question-circle"></i></span></label>
+                                    <select class="form-select" name="total_experience" id="total_experience_select">
                                         <option value="">{{ __('-- Select --') }}</option>
                                         <option value="fresher" @selected(old('total_experience', $account->total_experience ?? '') == 'fresher')>{{ __('Fresher') }}</option>
                                         <option value="intern" @selected(old('total_experience', $account->total_experience ?? '') == 'intern')>{{ __('Intern') }}</option>
@@ -1115,18 +1116,56 @@
                                     </select>
                                 </div>
                             </div>
+
+                            {{-- Experience Details (shown when 1+ years selected) --}}
+                            <div id="experience_section_wrapper" class="mt-4" style="display: none;">
+                                <h6 class="mb-3 text-dark">{{ __('Experience Details') }}</h6>
+                                <p class="form-text mb-3">{{ __('Add your work experience below. These details will appear in your resume and help schools evaluate your profile.') }}</p>
+                                <div id="inline-experiences-list">
+                                    @php $expList = $experiences ?? collect(); @endphp
+                                    @if($expList->isNotEmpty())
+                                        @foreach($expList as $exp)
+                                    <div class="removable-item mb-3" style="background:#f8fafc; padding:14px; border-radius:8px; border:1px solid #e2e8f0;">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong>{!! BaseHelper::clean($exp->company) !!}</strong>
+                                                @if($exp->position)<span class="text-muted ms-2">— {!! BaseHelper::clean($exp->position) !!}</span>@endif
+                                                <div class="small text-muted mt-1">
+                                                    {{ $exp->started_at->format('M Y') }} - @if($exp->is_current){{ __('Present') }}@else{{ $exp->ended_at ? $exp->ended_at->format('M Y') : '' }}@endif
+                                                </div>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <a href="{{ route('public.account.experiences.edit', $exp->id) }}" class="btn btn-sm btn-outline-primary" target="_blank">{{ __('Edit') }}</a>
+                                                <form method="post" action="{{ route('public.account.experiences.destroy', $exp->id) }}" style="margin:0;" onsubmit="return confirm('{{ __('Are you sure?') }}');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Delete') }}</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                        @endforeach
+                                    @else
+                                    <p class="text-muted small mb-2">{{ __('No experience added yet.') }}</p>
+                                    @endif
+                                </div>
+                                <a href="{{ route('public.account.experiences.create') }}" class="add-more-btn" target="_blank">
+                                    <i class="fa fa-plus me-1"></i> {{ __('Add Experience') }}
+                                </a>
+                            </div>
                         </div>
                     </div>
     <!-- Section 6: Skills & Languages -->
     <div class="profile-section">
         <div class="profile-section-header">
-            <i class="fa fa-language"></i> {{ __('Skills & Languages') }}
+            <i class="fa fa-language"></i> {{ __('Languages & Skills') }}
         </div>
         <div class="profile-section-body">
+            <p class="form-text mb-3">{{ __('This section helps schools/institutions understand communication ability and practical competencies.') }}</p>
             <div class="row">
                 <!-- 21. Languages -->
                 <div class="col-12 mb-4">
-                    <label class="form-label">{{ __('Languages') }} ({{ __('Max 3') }}) <span class="required">*</span></label>
+                    <label class="form-label">{{ __('Languages Known') }} ({{ __('Max 3') }}) <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select up to 3 languages you can confidently use for communication and teaching. Schools often filter candidates based on communication skills, especially English proficiency and regional language requirement.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div id="languages-container">
                         @php $languages = old('languages', $account->languages ?? [['language' => '', 'proficiency' => '']]); @endphp
                         @foreach(array_slice($languages, 0, 3) as $index => $lang)
@@ -1151,32 +1190,31 @@
                         </div>
                         @endforeach
                     </div>
-                    <button type="button" class="add-more-btn" onclick="addLanguage()" id="add-language-btn">+ {{ __('Add Language') }}</button>
+                    <button type="button" class="add-more-btn mt-2" onclick="addLanguage()" id="add-language-btn">+ {{ __('Add Language') }}</button>
                 </div>
 
                 <!-- 22. Skills -->
                 @if ($account->isJobSeeker() && (count($jobSkills ?? []) || count($selectedJobSkills ?? [])))
                 <div class="col-12 mb-3">
-                    <label class="form-label">{{ __('Skills') }}</label>
-                    <input type="text" class="tags form-control list-tagify" style="padding:0px;" id="favorite_skills" name="favorite_skills" value="{{ implode(',', $selectedJobSkills ?? []) }}" data-keep-invalid-tags="false" data-list="{{ $jobSkills ?? '' }}" data-user-input="false" placeholder="{{ __('Select from the list') }}"/>
+                    <label class="form-label">{{ __('Key Skills & Competencies') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add your core teaching or professional skills relevant to your role. You can add up to 10 skills.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    <input type="text" class="tags form-control list-tagify" style="padding:0px;" id="favorite_skills" name="favorite_skills" value="{{ implode(',', $selectedJobSkills ?? []) }}" data-keep-invalid-tags="false" data-list="{{ $jobSkills ?? '' }}" data-user-input="false" data-max-tags="10" placeholder="{{ __('Select from the list') }}"/>
                 </div>
                 @endif
             </div>
         </div>
     </div>
 
-   
-
     <!-- Section 8: Resume & Documents -->
     <div class="profile-section">
         <div class="profile-section-header">
-            <i class="fa fa-file-alt"></i> {{ __('Resume & Documents') }}
+            <i class="fa fa-file-alt"></i> {{ __('Resume & Supporting Documents') }}
         </div>
         <div class="profile-section-body">
+            <p class="form-text mb-3">{{ __('Upload your professional documents to strengthen your profile and improve shortlisting chances.') }}</p>
             <div class="row">
                 <!-- 27. Resume -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Upload Resume') }} <span class="required">*</span></label>
+                    <label class="form-label">{{ __('Resume / CV Upload') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Upload your latest updated resume with complete academic and experience details. Schools review resumes before shortlisting candidates for interviews. PDF/Word files only. Max 2MB') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="file" class="form-control" name="resume" accept=".pdf,.doc,.docx">
                     @if ($account->resume)
                         <small class="form-text mt-1">
@@ -1184,7 +1222,6 @@
                             <a href="{{ RvMedia::url($account->resume) }}" target="_blank">{{ __('View Current Resume') }}</a>
                         </small>
                     @endif
-                    <small class="form-text d-block">{{ __('PDF/Word files only. Max 2MB') }}</small>
                     <div class="form-check mt-2">
                         <input type="hidden" name="resume_parsing_allowed" value="0">
                         <input type="checkbox" class="form-check-input" name="resume_parsing_allowed" value="1" id="resume_parsing_allowed" @checked(old('resume_parsing_allowed', $account->resume_parsing_allowed ?? false))>
@@ -1194,7 +1231,7 @@
 
                 <!-- 28. Cover Letter -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Upload Cover Letter') }}</label>
+                    <label class="form-label">{{ __('Cover Letter') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Upload a personalized cover letter explaining your teaching approach and career goals.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="file" class="form-control" name="cover_letter" accept=".pdf,.doc,.docx">
                     @if ($account->cover_letter)
                         <small class="form-text mt-1">
@@ -1204,34 +1241,48 @@
                     @endif
                 </div>
 
-                <!-- 13. Introductory Audio -->
+                <!-- Self Introduction Audio -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Introductory Audio') }}</label>
-                    <input type="file" class="form-control" name="introductory_audio" id="introductory_audio_file" accept="audio/*,.mp4,video/mp4">
-                    <small class="form-text" id="intro_audio_hint">{{ __('Upload an audio file (max 1.5 MB). Include: qualifications, experience, teaching style.') }}</small>
+                    <label class="form-label">{{ __('Self Introduction Audio') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Record a short introduction about yourself, your teaching experience, and subject expertise. Helps schools evaluate communication skills, fluency, and confidence before scheduling interviews. Max 1.5 MB. You can record using the button above or upload a file.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    <div class="d-flex gap-2 mb-2">
+                        <!-- <button type="button" class="btn btn-outline-primary btn-sm" id="record-audio-btn">
+                            <i class="fa fa-microphone me-1"></i> {{ __('Record') }}
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm d-none" id="stop-record-btn">
+                            <i class="fa fa-stop me-1"></i> {{ __('Stop') }}
+                        </button> -->
+                        <span class="text-muted small align-self-center" id="record-status"></span>
+                    </div>
+                    <input type="file" class="form-control" name="introductory_audio" id="introductory_audio_file" accept="audio/*,.mp4,video/mp4,.webm">
                 </div>
 
+                <!-- Teaching Demo YouTube -->
+                <!-- <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ __('Teaching Demo / Introduction Video Link (YouTube)') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Paste the link to your YouTube teaching demo or self-introduction video (3–10 minutes recommended).') }}"><i class="fa fa-question-circle"></i></span></label>
+                    <input type="url" class="form-control" name="introductory_video_url" value="{{ old('introductory_video_url', $account->introductory_video_url ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
+                </div> -->
             </div>
+            <p class="form-text text-muted mt-3 mb-0 p-3 rounded" style="background:#f8f9fa;"><i class="fa fa-lock me-2"></i>{{ __('Your documents are securely stored and shared only with schools/institutions based on your profile visibility settings.') }}</p>
         </div>
     </div>
 
     <!-- Section 9: Social Links -->
     <div class="profile-section">
         <div class="profile-section-header">
-            <i class="fa fa-link"></i> {{ __('Social Links') }}
+            <i class="fa fa-link"></i> {{ __('Social & Professional Link') }}
         </div>
         <div class="profile-section-body">
+            <p class="form-text mb-3">{{ __('Add your professional social profiles to strengthen credibility and help schools know you better.') }}</p>
             <div class="row">
                 @php $social = old('social_links', $account->social_links ?? []); @endphp
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="fab fa-linkedin text-primary me-2"></i>{{ __('LinkedIn') }}</label>
+                    <label class="form-label"><i class="fab fa-linkedin text-primary me-2"></i>{{ __('LinkedIn') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Schools may review your professional network, recommendations, and career history.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="url" class="form-control" name="social_links[linkedin]" value="{{ $social['linkedin'] ?? '' }}" placeholder="https://linkedin.com/in/...">
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="fab fa-facebook text-primary me-2"></i>{{ __('Facebook') }}</label>
+                    <label class="form-label"><i class="fab fa-facebook text-primary me-2"></i>{{ __('Facebook') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Some institutions review online presence for background understanding.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="url" class="form-control" name="social_links[facebook]" value="{{ $social['facebook'] ?? '' }}" placeholder="https://facebook.com/...">
                 </div>
-               
             </div>
         </div>
     </div>
@@ -1250,6 +1301,12 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Bootstrap tooltips (hover + click for mobile)
+    const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    if (typeof bootstrap !== 'undefined' && tooltipEls.length) {
+        tooltipEls.forEach(el => new bootstrap.Tooltip(el, { trigger: 'hover focus click' }));
+    }
+
     // ==========================================
     // TomSelect Dropdowns Initialization
     // ==========================================
@@ -1373,15 +1430,49 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle Logic
     // ==========================================
 
-    // Work status toggle for notice period
+    // Work status toggle for notice period and salary required
     const workStatus = document.getElementById('current_work_status');
     const noticePeriod = document.getElementById('notice_period_wrapper');
     
     function toggleNoticePeriod() {
         noticePeriod.style.display = workStatus.value === 'working' ? 'block' : 'none';
     }
-    workStatus.addEventListener('change', toggleNoticePeriod);
+    
+    // Salary: not required when "Not Working Now"
+    function toggleSalaryRequired() {
+        const isNotWorking = workStatus.value === 'not_working';
+        const currReq = document.getElementById('current_salary_req');
+        const currOpt = document.getElementById('current_salary_optional');
+        const currInput = document.getElementById('current_salary_input');
+        const expReq = document.getElementById('expected_salary_req');
+        const expOpt = document.getElementById('expected_salary_optional');
+        const expInput = document.getElementById('expected_salary_input');
+        if (currReq) currReq.style.display = isNotWorking ? 'none' : 'inline';
+        if (currOpt) currOpt.style.display = isNotWorking ? 'inline' : 'none';
+        if (currInput) currInput.required = !isNotWorking;
+        if (expReq) expReq.style.display = isNotWorking ? 'none' : 'inline';
+        if (expOpt) expOpt.style.display = isNotWorking ? 'inline' : 'none';
+        if (expInput) expInput.required = !isNotWorking;
+    }
+    
+    workStatus.addEventListener('change', function() {
+        toggleNoticePeriod();
+        toggleSalaryRequired();
+    });
     toggleNoticePeriod();
+    toggleSalaryRequired();
+
+    // Experience section: show when 1+ years selected
+    const totalExpSelect = document.getElementById('total_experience_select');
+    const expSectionWrapper = document.getElementById('experience_section_wrapper');
+    function toggleExperienceSection() {
+        if (!totalExpSelect || !expSectionWrapper) return;
+        var v = totalExpSelect.value;
+        var show = v && v !== 'fresher' && v !== 'intern';
+        expSectionWrapper.style.display = show ? 'block' : 'none';
+    }
+    if (totalExpSelect) totalExpSelect.addEventListener('change', toggleExperienceSection);
+    toggleExperienceSection();
 
     // Position type toggle for teaching subjects / non-teaching positions
     const teachingCheck = document.getElementById('position_teaching');
@@ -1424,7 +1515,7 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', toggleWorkPrefWrapper);
     });
 
-    // City-first: Current location - search city then auto-fill State & Country
+    // City search: Current location - default 12 cities on focus, search on type
     (function() {
         var searchEl = document.getElementById('js-current-city-search');
         var suggestionsEl = document.getElementById('js-current-city-suggestions');
@@ -1434,42 +1525,64 @@ document.addEventListener('DOMContentLoaded', function() {
         var stateDisplay = document.getElementById('js-current-state-display');
         var countryDisplay = document.getElementById('js-current-country-display');
         if (!searchEl || !suggestionsEl) return;
+        function renderCities(cities) {
+            if (!cities || cities.length === 0) { suggestionsEl.innerHTML = '<div class="p-2 text-muted">No cities found</div>'; return; }
+            var html = '';
+            cities.forEach(function(c) {
+                var parts = []; if (c.state_name) parts.push(c.state_name); if (c.country_name) parts.push(c.country_name);
+                html += '<div class="city-suggestion-item p-2 border-bottom" style="cursor:pointer;" data-id="' + (c.id||'') + '" data-name="' + (c.name||'') + '" data-state-id="' + (c.state_id||'') + '" data-state-name="' + (c.state_name||'') + '" data-country-id="' + (c.country_id||'') + '" data-country-name="' + (c.country_name||'') + '"><strong>' + (c.name||'') + '</strong>' + (parts.length ? ' <span class="text-muted">' + parts.join(', ') + '</span>' : '') + '</div>';
+            });
+            suggestionsEl.innerHTML = html;
+            suggestionsEl.querySelectorAll('.city-suggestion-item').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    searchEl.value = this.getAttribute('data-name') || '';
+                    if (cityIdEl) cityIdEl.value = this.getAttribute('data-id') || '';
+                    if (stateIdEl) stateIdEl.value = this.getAttribute('data-state-id') || '';
+                    if (countryIdEl) countryIdEl.value = this.getAttribute('data-country-id') || '';
+                    if (stateDisplay) stateDisplay.value = this.getAttribute('data-state-name') || '';
+                    if (countryDisplay) countryDisplay.value = this.getAttribute('data-country-name') || '';
+                    suggestionsEl.style.display = 'none';
+                });
+            });
+        }
+        function loadCities(k) {
+            suggestionsEl.innerHTML = '<div class="p-2 text-muted">Loading...</div>';
+            suggestionsEl.style.display = 'block';
+            var url = '{{ route("ajax.search-cities") }}' + (k && k.length >= 2 ? '?k=' + encodeURIComponent(k) : '');
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    var ct = r.headers.get('Content-Type') || '';
+                    if (!ct.includes('application/json')) throw new Error('Invalid response');
+                    return r.json();
+                })
+                .then(function(res) {
+                    var cities = Array.isArray(res.data) ? res.data : (res.data && res.data.data) ? res.data.data : [];
+                    if (!Array.isArray(cities) && res.data && !Array.isArray(res.data)) cities = [];
+                    renderCities(cities);
+                })
+                .catch(function(err) {
+                    suggestionsEl.innerHTML = '<div class="p-2 text-danger">Could not load cities. Please try again.</div>' +
+                        '<div class="p-2"><button type="button" class="btn btn-sm btn-outline-primary retry-city-load">Retry</button></div>';
+                    suggestionsEl.querySelector('.retry-city-load')?.addEventListener('click', function() {
+                        var k = searchEl.value.trim();
+                        loadCities(k);
+                    });
+                });
+        }
         var searchTimeout = null;
+        searchEl.addEventListener('focus', function() {
+            if (suggestionsEl.style.display === 'block') return;
+            loadCities(this.value.trim());
+        });
         searchEl.addEventListener('input', function() {
             var k = this.value.trim();
             if (searchTimeout) clearTimeout(searchTimeout);
-            cityIdEl.value = ''; stateIdEl.value = ''; countryIdEl.value = '';
+            if (!cityIdEl) return;
+            cityIdEl.value = ''; if (stateIdEl) stateIdEl.value = ''; if (countryIdEl) countryIdEl.value = '';
             if (stateDisplay) stateDisplay.value = ''; if (countryDisplay) countryDisplay.value = '';
             suggestionsEl.style.display = 'none'; suggestionsEl.innerHTML = '';
-            if (k.length < 2) return;
-            searchTimeout = setTimeout(function() {
-                suggestionsEl.innerHTML = '<div class="p-2 text-muted">Searching...</div>';
-                suggestionsEl.style.display = 'block';
-                fetch('{{ route("ajax.search-cities") }}?k=' + encodeURIComponent(k))
-                    .then(function(r) { return r.json(); })
-                    .then(function(res) {
-                        var cities = res.data || [];
-                        if (cities.length === 0) { suggestionsEl.innerHTML = '<div class="p-2 text-muted">No cities found</div>'; return; }
-                        var html = '';
-                        cities.forEach(function(c) {
-                            var parts = []; if (c.state_name) parts.push(c.state_name); if (c.country_name) parts.push(c.country_name);
-                            html += '<div class="city-suggestion-item p-2 border-bottom" style="cursor:pointer;" data-id="' + c.id + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '"><strong>' + (c.name || '') + '</strong>' + (parts.length ? ' <span class="text-muted">' + parts.join(', ') + '</span>' : '') + '</div>';
-                        });
-                        suggestionsEl.innerHTML = html;
-                        suggestionsEl.querySelectorAll('.city-suggestion-item').forEach(function(el) {
-                            el.addEventListener('click', function() {
-                                searchEl.value = this.getAttribute('data-name');
-                                cityIdEl.value = this.getAttribute('data-id');
-                                stateIdEl.value = this.getAttribute('data-state-id');
-                                countryIdEl.value = this.getAttribute('data-country-id');
-                                if (stateDisplay) stateDisplay.value = this.getAttribute('data-state-name') || '';
-                                if (countryDisplay) countryDisplay.value = this.getAttribute('data-country-name') || '';
-                                suggestionsEl.style.display = 'none';
-                            });
-                        });
-                    })
-                    .catch(function() { suggestionsEl.innerHTML = '<div class="p-2 text-muted">Error</div>'; });
-            }, 300);
+            searchTimeout = setTimeout(function() { loadCities(k); }, 300);
         });
         document.addEventListener('click', function(e) {
             if (!searchEl.contains(e.target) && !suggestionsEl.contains(e.target)) suggestionsEl.style.display = 'none';
@@ -1761,6 +1874,56 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize specialization autocomplete for existing fields
     initSpecializationAutocomplete();
+
+    // Record audio for Self Introduction
+    (function() {
+        var recordBtn = document.getElementById('record-audio-btn');
+        var stopBtn = document.getElementById('stop-record-btn');
+        var statusEl = document.getElementById('record-status');
+        var audioInput = document.getElementById('introductory_audio_file');
+        if (!recordBtn || !stopBtn || !audioInput) return;
+        var mediaRecorder = null;
+        var chunks = [];
+        recordBtn.addEventListener('click', function() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('{{ __("Recording is not supported in your browser. Please use Chrome or Edge and allow microphone access.") }}');
+                return;
+            }
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+                mediaRecorder = new MediaRecorder(stream);
+                chunks = [];
+                mediaRecorder.ondataavailable = function(e) { if (e.data.size) chunks.push(e.data); };
+                mediaRecorder.onstop = function() {
+                    stream.getTracks().forEach(function(t) { t.stop(); });
+                    if (chunks.length) {
+                        var blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                        if (blob.size > 1.5 * 1024 * 1024) {
+                            alert('{{ __("Recording too large (max 1.5 MB). Please record a shorter clip.") }}');
+                            return;
+                        }
+                        var file = new File([blob], 'intro_recording.webm', { type: blob.type });
+                        var dt = new DataTransfer();
+                        dt.items.add(file);
+                        audioInput.files = dt.files;
+                        statusEl.textContent = '{{ __("Recording saved. You can save the form to upload.") }}';
+                    }
+                };
+                mediaRecorder.start();
+                recordBtn.classList.add('d-none');
+                stopBtn.classList.remove('d-none');
+                statusEl.textContent = '{{ __("Recording...") }}';
+            }).catch(function() {
+                alert('{{ __("Microphone access denied. Please allow microphone access to record.") }}');
+            });
+        });
+        stopBtn.addEventListener('click', function() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            recordBtn.classList.remove('d-none');
+            stopBtn.classList.add('d-none');
+        });
+    })();
 });
 
 // ==========================================

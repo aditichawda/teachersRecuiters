@@ -467,9 +467,14 @@ class Job extends BaseModel
         };
     }
 
-    public function screeningQuestions(): HasMany
+    public function screeningQuestions(): BelongsToMany
     {
-        return $this->hasMany(JobScreeningQuestion::class, 'job_id')->orderBy('order');
+        return $this->belongsToMany(
+            ScreeningQuestion::class,
+            'jb_jobs_screening_questions',
+            'job_id',
+            'screening_question_id'
+        )->withPivot('order', 'is_required', 'question_override', 'options_override', 'correct_answer')->orderByPivot('order');
     }
 
     public function customFields(): MorphMany
@@ -497,7 +502,7 @@ class Job extends BaseModel
             $job->categories()->detach();
             $job->tags()->detach();
             $job->customFields()->delete();
-            $job->screeningQuestions()->delete();
+            $job->screeningQuestions()->detach();
         });
 
         self::updating(function (): void {

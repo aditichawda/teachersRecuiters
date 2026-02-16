@@ -94,6 +94,10 @@ AdminHelper::registerRoutes(function (): void {
                 ->parameters(['' => 'job-type']);
         });
 
+        Route::group(['prefix' => 'screening-questions', 'as' => 'screening-questions.'], function (): void {
+            Route::resource('', 'ScreeningQuestionController')->parameters(['' => 'screening-question']);
+        });
+
         Route::group(['prefix' => 'job-skills', 'as' => 'job-skills.'], function (): void {
             Route::resource('', 'JobSkillController')->parameters(['' => 'job-skill']);
         });

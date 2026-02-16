@@ -38,6 +38,8 @@ class HookServiceProvider extends ServiceProvider
             }
 
             if (Arr::get($data, 'use_css', true) && defined('THEME_OPTIONS_MODULE_SCREEN_NAME')) {
+                $cssPath = dirname(__DIR__, 2) . '/public/css/social-login.css';
+                $version = file_exists($cssPath) ? (string) filemtime($cssPath) : '1.2.2';
                 Theme::asset()
                     ->usePath(false)
                     ->add(
@@ -45,7 +47,7 @@ class HookServiceProvider extends ServiceProvider
                         asset('vendor/core/plugins/social-login/css/social-login.css'),
                         [],
                         [],
-                        '1.2.1'
+                        $version
                     );
 
                 do_action('social_login_assets_register');

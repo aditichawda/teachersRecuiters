@@ -56,7 +56,7 @@
         background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
         border: none;
         border-radius: 10px;
-        padding: 15px 30px;
+        padding: 8px 50Kpx;
         font-size: 16px;
         font-weight: 600;
         width: 100%;

@@ -27,6 +27,10 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
             'as' => 'public.ajax.job.screening-questions',
             'uses' => 'PublicController@getJobScreeningQuestions',
         ]);
+        Route::post('ajax/jobs/validate-screening/{id}', [
+            'as' => 'public.ajax.job.validate-screening',
+            'uses' => 'PublicController@validateScreening',
+        ]);
 
         Route::get('ajax/jobs', [
             'as' => 'public.ajax.jobs',

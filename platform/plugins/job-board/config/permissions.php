@@ -201,6 +201,26 @@ return [
     ],
 
     [
+        'name' => 'Screening Questions',
+        'flag' => 'screening-questions.index',
+        'parent_flag' => 'job-attributes.index',
+    ],
+    [
+        'name' => 'Create',
+        'flag' => 'screening-questions.create',
+        'parent_flag' => 'screening-questions.index',
+    ],
+    [
+        'name' => 'Edit',
+        'flag' => 'screening-questions.edit',
+        'parent_flag' => 'screening-questions.index',
+    ],
+    [
+        'name' => 'Delete',
+        'flag' => 'screening-questions.destroy',
+        'parent_flag' => 'screening-questions.index',
+    ],
+    [
         'name' => 'Job skills',
         'flag' => 'job-skills.index',
         'parent_flag' => 'job-attributes.index',

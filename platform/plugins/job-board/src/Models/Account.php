@@ -70,6 +70,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'type',
         'registration_type',
         'credits',
+        'profile_views',
         'unique_id',
         
         // Resume & Documents

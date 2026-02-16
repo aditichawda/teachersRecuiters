@@ -371,6 +371,46 @@
     @media (max-width: 360px) {
         .step span:last-child { display: none; }
     }
+
+    /* Custom file input - show filename + " selected" */
+    .resume-file-wrap {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #fff;
+        min-height: 46px;
+        position: relative;
+    }
+    .resume-file-wrap input[type="file"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+    .resume-file-wrap .resume-file-label {
+        color: #6b7280;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+    .resume-file-wrap .resume-file-name {
+        color: #374151;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .resume-file-wrap .resume-file-name.has-file {
+        color: #0073d1;
+        font-weight: 500;
+    }
 </style>
 
 <div class="institution-wrapper">
@@ -480,7 +520,11 @@
                 <!-- Upload Resume -->
                 <div class="form-group" style="margin-bottom: 16px; margin-top: 10px;">
                     <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 6px; font-size: 14px;">Upload Resume <span style="color: #dc3545;">*</span></label>
-                    <input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: #fff; cursor: pointer;" />
+                    <div class="resume-file-wrap" id="resume-file-wrap">
+                        <span class="resume-file-label">Choose file</span>
+                        <span class="resume-file-name" id="resume-file-name">No file chosen</span>
+                        <input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                    </div>
                     <div id="resume-error" style="font-size: 12px; color: #dc3545; margin-top: 5px; display: none;"></div>
                     <div style="font-size: 11px; color: #888; margin-top: 4px;">Only PDF and Word files accepted. Max size: 2 MB</div>
                 </div>
@@ -685,12 +729,21 @@
             }
         });
 
-        // Clear resume error when file is selected
+        // Show filename + " selected" and clear resume error when file is selected
         document.getElementById('resume').addEventListener('change', function() {
             var resumeError = document.getElementById('resume-error');
+            var nameEl = document.getElementById('resume-file-name');
+            var wrap = document.getElementById('resume-file-wrap');
             resumeError.style.display = 'none';
             resumeError.textContent = '';
-            this.style.borderColor = '#e2e8f0';
+            wrap.style.borderColor = '#e2e8f0';
+            if (this.files && this.files.length) {
+                nameEl.textContent = this.files[0].name + ' selected';
+                nameEl.classList.add('has-file');
+            } else {
+                nameEl.textContent = 'No file chosen';
+                nameEl.classList.remove('has-file');
+            }
         });
 
         // Continue
@@ -703,16 +756,17 @@
             // Validate resume
             // Resume validation — inline error below input
             var resumeInput = document.getElementById('resume');
+            var resumeWrap = document.getElementById('resume-file-wrap');
             var resumeError = document.getElementById('resume-error');
             resumeError.style.display = 'none';
             resumeError.textContent = '';
-            resumeInput.style.borderColor = '#e2e8f0';
+            resumeWrap.style.borderColor = '#e2e8f0';
 
             if (!resumeInput || !resumeInput.files.length) {
                 resumeError.textContent = 'Please upload your resume.';
                 resumeError.style.display = 'block';
-                resumeInput.style.borderColor = '#dc3545';
-                resumeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                resumeWrap.style.borderColor = '#dc3545';
+                resumeWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
             var resumeFile = resumeInput.files[0];
@@ -721,16 +775,16 @@
             if (allowedTypes.indexOf(resumeFile.type) === -1 && !fileName.endsWith('.pdf') && !fileName.endsWith('.doc') && !fileName.endsWith('.docx')) {
                 resumeError.textContent = 'Invalid file type. Only PDF and Word (.doc, .docx) files are allowed.';
                 resumeError.style.display = 'block';
-                resumeInput.style.borderColor = '#dc3545';
-                resumeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                resumeWrap.style.borderColor = '#dc3545';
+                resumeWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
             var maxSize = 2 * 1024 * 1024; // 2MB
             if (resumeFile.size > maxSize) {
                 resumeError.textContent = 'File size is too large. Maximum allowed size is 2 MB.';
                 resumeError.style.display = 'block';
-                resumeInput.style.borderColor = '#dc3545';
-                resumeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                resumeWrap.style.borderColor = '#dc3545';
+                resumeWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
