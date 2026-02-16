@@ -1,6 +1,10 @@
 <?php
     $layout = 'plugins/job-board::themes.dashboard.layouts.master';
-    Theme::set('pageTitle', __('Post a Job'));
+    $isEdit = isset($job) && $job && $job->exists;
+    $formAction = $isEdit ? route('public.account.jobs.update', $job->id) : route('public.account.jobs.store');
+    $submitLabel = $isEdit ? __('Update Job') : __('Post Job');
+    $pageTitle = $isEdit ? __('Edit Job') : __('Post a New Job');
+    Theme::set('pageTitle', $pageTitle);
 ?>
 
 
@@ -117,17 +121,25 @@
     .jp-salary-tab.active { background: #0073d1; color: #fff; border-color: #0073d1; }
 
     /* Screening questions */
+    .sq-list { display: flex; flex-direction: column; gap: 12px; }
     .sq-item {
-        background: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 10px;
-        padding: 20px; margin-bottom: 16px; position: relative;
+        display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        padding: 16px 18px; transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .sq-remove {
-        position: absolute; top: 10px; right: 10px;
-        background: #dc3545; color: #fff; border: none; border-radius: 50%;
-        width: 28px; height: 28px; cursor: pointer; font-size: 14px;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .sq-type-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .sq-item:hover { border-color: #d1d5db; }
+    .sq-item-main { display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0; }
+    .sq-select-cb { margin-top: 4px; width: 18px; height: 18px; accent-color: #0073d1; flex-shrink: 0; }
+    .sq-item-content { flex: 1; min-width: 0; }
+    .sq-question-text { display: block; cursor: pointer; margin: 0; font-size: 15px; font-weight: 500; color: #1f2937; line-height: 1.4; }
+    .sq-type-badge { display: inline-block; margin-top: 6px; padding: 2px 10px; background: #f3f4f6; color: #6b7280; border-radius: 6px; font-size: 12px; text-transform: capitalize; }
+    .sq-item-required { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding-left: 12px; border-left: 1px solid #e5e7eb; }
+    .sq-item-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; width: 100%; }
+    .sq-required-wrap { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+    .sq-required-cb { width: 16px; height: 16px; accent-color: #0073d1; }
+    .sq-required-label { margin: 0; cursor: pointer; font-size: 13px; color: #6b7280; white-space: nowrap; }
+    .sq-item-required:has(.sq-required-cb:not([disabled])) .sq-required-label { color: #374151; }
+    .sq-empty-msg { margin: 0; padding: 20px; background: #f9fafb; border-radius: 10px; color: #6b7280; font-size: 14px; }
 
     /* Submit button */
     .jp-submit-btn {
@@ -193,7 +205,7 @@
 
 <!-- Page Header -->
 <div class="jp-page-header">
-    <h2><i class="fa fa-plus-circle" style="color: #0073d1; margin-right: 8px;"></i><?php echo e(__('Post a New Job')); ?></h2>
+    <h2><i class="fa <?php echo e($isEdit ? 'fa-edit' : 'fa-plus-circle'); ?>" style="color: #0073d1; margin-right: 8px;"></i><?php echo e($pageTitle); ?></h2>
     <a href="<?php echo e(route('public.account.jobs.index')); ?>"><i class="fa fa-list me-1"></i><?php echo e(__('View All Jobs')); ?></a>
 </div>
 
@@ -208,8 +220,9 @@
     </div>
 <?php endif; ?>
 
-<form id="jobPostForm" method="POST" action="<?php echo e(route('public.account.jobs.store')); ?>" enctype="multipart/form-data">
+<form id="jobPostForm" method="POST" action="<?php echo e($formAction); ?>" enctype="multipart/form-data">
     <?php echo csrf_field(); ?>
+    <?php if($isEdit): ?><?php echo method_field('PUT'); ?><?php endif; ?>
 
     
     <div class="jp-card jp-card-collapsible" data-section="1">
@@ -225,7 +238,7 @@
                     <select name="company_id" id="company_id" class="jp-select" required>
                         <option value="">-- Select Company --</option>
                         <?php $__currentLoopData = $companies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($id); ?>" data-institution-type="<?php echo e($companyInstitutionTypes[$id] ?? ''); ?>"><?php echo e($name); ?></option>
+                            <option value="<?php echo e($id); ?>" data-institution-type="<?php echo e($companyInstitutionTypes[$id] ?? ''); ?>" <?php echo e(old('company_id', optional($job)->company_id ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                     <small class="text-muted">Select company if already created.</small>
@@ -251,7 +264,7 @@
                 <div class="jp-group">
                     <label class="jp-label">Job Title <span class="required">*</span> <span class="hint">(Start typing to search)</span></label>
                     <div class="jp-suggest-wrap">
-                        <input type="text" name="name" id="job_title" class="jp-input" placeholder="e.g. Primary English Teacher" required autocomplete="off">
+                        <input type="text" name="name" id="job_title" class="jp-input" placeholder="e.g. Primary English Teacher" value="<?php echo e(old('name', optional($job)->name ?? '')); ?>" required autocomplete="off">
                         <div class="jp-suggest-list" id="job-title-suggestions"></div>
                     </div>
                     <div class="jp-error" id="err-title">Job title is required.</div>
@@ -278,7 +291,7 @@
                     <i class="fa fa-magic"></i> Generate with AI
                 </button>
             </label>
-            <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required></textarea>
+            <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required><?php echo e(old('content', optional($job)->content ?? '')); ?></textarea>
             <div class="jp-error" id="err-description">Job description is required.</div>
         </div>
 
@@ -286,12 +299,13 @@
         <div class="jp-group">
             <label class="jp-label">Job Type <span class="required">*</span></label>
             <div class="jp-option-cards">
-                <label class="jp-option-card" onclick="selectOption(this, 'job_type_category')">
-                    <input type="radio" name="job_type_category" value="teaching" required>
+                <?php $jtCat = old('job_type_category', optional($job)->job_type_category ?? 'teaching'); ?>
+                <label class="jp-option-card <?php echo e($jtCat === 'teaching' ? 'selected' : ''); ?>" onclick="selectOption(this, 'job_type_category')">
+                    <input type="radio" name="job_type_category" value="teaching" <?php echo e($jtCat === 'teaching' ? 'checked' : ''); ?> required>
                     <i class="fa fa-chalkboard-teacher"></i> Teaching
                 </label>
-                <label class="jp-option-card" onclick="selectOption(this, 'job_type_category')">
-                    <input type="radio" name="job_type_category" value="non-teaching">
+                <label class="jp-option-card <?php echo e($jtCat === 'non-teaching' ? 'selected' : ''); ?>" onclick="selectOption(this, 'job_type_category')">
+                    <input type="radio" name="job_type_category" value="non-teaching" <?php echo e($jtCat === 'non-teaching' ? 'checked' : ''); ?>>
                     <i class="fa fa-briefcase"></i> Non-Teaching
                 </label>
             </div>
@@ -306,6 +320,11 @@
             <div class="jp-card-title"><i class="fa fa-rupee-sign"></i> Salary Details</div>
         </div>
         <div class="jp-card-body" style="padding-top: 20px;">
+        <?php
+            $srVal = optional($job)->salary_range;
+            $sr = old('salary_range', $srVal && is_object($srVal) ? $srVal->getValue() : ($srVal ?: 'monthly'));
+            $salaryMode = (optional($job)->salary_to ?? 0) ? 'range' : 'fixed';
+        ?>
         
         <div class="jp-row">
             <div class="jp-col-9">
@@ -313,40 +332,40 @@
                     <label class="jp-label">Salary Period <span class="required">*</span></label>
                     <div class="jp-salary-type-tabs" id="salary-period-tabs">
                         <?php $__currentLoopData = $salaryRanges; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <div class="jp-salary-tab <?php echo e($key === 'monthly' ? 'active' : ''); ?>" data-value="<?php echo e($key); ?>" onclick="selectSalaryPeriod(this)"><?php echo e($label); ?></div>
+                            <div class="jp-salary-tab <?php echo e($key === ($sr ?? 'monthly') ? 'active' : ''); ?>" data-value="<?php echo e($key); ?>" onclick="selectSalaryPeriod(this)"><?php echo e($label); ?></div>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        <div class="jp-salary-tab" data-value="negotiable" onclick="selectSalaryPeriod(this)">Negotiable</div>
+                        <div class="jp-salary-tab <?php echo e(($sr ?? '') === 'negotiable' ? 'active' : ''); ?>" data-value="negotiable" onclick="selectSalaryPeriod(this)">Negotiable</div>
                     </div>
-                    <input type="hidden" name="salary_range" id="salary_range" value="monthly">
+                    <input type="hidden" name="salary_range" id="salary_range" value="<?php echo e($sr ?? 'monthly'); ?>">
                 </div>
             </div>
             <div class="jp-col-3">
                 <div class="jp-group">
                     <label class="jp-label">Salary Type</label>
                     <div class="jp-option-cards">
-                        <label class="jp-option-card selected" onclick="selectSalaryMode(this, 'range')">
-                            <input type="radio" name="salary_mode" value="range" checked> Range
+                        <label class="jp-option-card <?php echo e($salaryMode === 'range' ? 'selected' : ''); ?>" onclick="selectSalaryMode(this, 'range')">
+                            <input type="radio" name="salary_mode" value="range" <?php echo e($salaryMode === 'range' ? 'checked' : ''); ?>> Range
                         </label>
-                        <label class="jp-option-card" onclick="selectSalaryMode(this, 'fixed')">
-                            <input type="radio" name="salary_mode" value="fixed"> Fixed
+                        <label class="jp-option-card <?php echo e($salaryMode === 'fixed' ? 'selected' : ''); ?>" onclick="selectSalaryMode(this, 'fixed')">
+                            <input type="radio" name="salary_mode" value="fixed" <?php echo e($salaryMode === 'fixed' ? 'checked' : ''); ?>> Fixed
                         </label>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="salary-amount-section">
+        <div id="salary-amount-section" style="display: <?php echo e(($sr ?? '') === 'negotiable' ? 'none' : 'block'); ?>;">
             <div class="jp-row">
                 <div class="jp-col-6">
                     <div class="jp-group">
                         <label class="jp-label">Salary From ₹</label>
-                        <input type="number" name="salary_from" id="salary_from" class="jp-input" placeholder="e.g. 25000">
+                        <input type="number" name="salary_from" id="salary_from" class="jp-input" placeholder="e.g. 25000" value="<?php echo e(old('salary_from', optional($job)->salary_from ?? '')); ?>">
                     </div>
                 </div>
-                <div class="jp-col-6" id="salary-to-wrap">
+                <div class="jp-col-6" id="salary-to-wrap" style="display: <?php echo e($salaryMode === 'fixed' ? 'none' : 'block'); ?>;">
                     <div class="jp-group">
                         <label class="jp-label">Salary To ₹</label>
-                        <input type="number" name="salary_to" id="salary_to" class="jp-input" placeholder="e.g. 50000">
+                        <input type="number" name="salary_to" id="salary_to" class="jp-input" placeholder="e.g. 50000" value="<?php echo e(old('salary_to', optional($job)->salary_to ?? '')); ?>">
                     </div>
                 </div>
             </div>
@@ -357,7 +376,7 @@
             <input type="hidden" name="currency_id" value="<?php echo e($inrCurrencyId); ?>">
             <div class="jp-group">
                 <div class="jp-check-wrap">
-                    <input type="checkbox" name="hide_salary" id="hide_salary" value="1">
+                    <input type="checkbox" name="hide_salary" id="hide_salary" value="1" <?php echo e(old('hide_salary', optional($job)->hide_salary ?? 0) ? 'checked' : ''); ?>>
                     <label for="hide_salary" style="cursor:pointer; font-size:14px;">Hide Salary on Job Posting</label>
                 </div>
             </div>
@@ -379,7 +398,7 @@
                     <select name="degree_level_id" id="degree_level_id" class="jp-select" required>
                         <option value="">-- Select --</option>
                         <?php $__currentLoopData = $degreeLevels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($id); ?>"><?php echo e($name); ?></option>
+                            <option value="<?php echo e($id); ?>" <?php echo e(old('degree_level_id', optional($job)->degree_level_id ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
@@ -390,7 +409,7 @@
                     <select name="job_experience_id" id="job_experience_id" class="jp-select" required>
                         <option value="">-- Select --</option>
                         <?php $__currentLoopData = $jobExperiences; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($id); ?>"><?php echo e($name); ?></option>
+                            <option value="<?php echo e($id); ?>" <?php echo e(old('job_experience_id', optional($job)->job_experience_id ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
@@ -407,7 +426,8 @@
                         <div class="jp-suggest-list" id="cert-suggestions"></div>
                     </div>
                     <div class="jp-tags-wrap" id="selected-certs"></div>
-                    <input type="hidden" name="required_certifications" id="required_certifications" value="">
+                    <?php $reqCerts = old('required_certifications', optional($job)->required_certifications ?? '[]'); $reqCertsStr = is_array($reqCerts) ? json_encode($reqCerts) : ($reqCerts ?: '[]'); ?>
+                    <input type="hidden" name="required_certifications" id="required_certifications" value="<?php echo e($reqCertsStr); ?>">
                 </div>
             </div>
             <div class="jp-col-6">
@@ -418,7 +438,8 @@
                         <div class="jp-suggest-list" id="lang-suggestions"></div>
                     </div>
                     <div class="jp-tags-wrap" id="selected-langs"></div>
-                    <input type="hidden" name="language_proficiency" id="language_proficiency" value="">
+                    <?php $langProf = old('language_proficiency', optional($job)->language_proficiency ?? '[]'); $langProfStr = is_array($langProf) ? json_encode($langProf) : ($langProf ?: '[]'); ?>
+                    <input type="hidden" name="language_proficiency" id="language_proficiency" value="<?php echo e($langProfStr); ?>">
                 </div>
             </div>
         </div>
@@ -435,16 +456,16 @@
             <div class="jp-col-4">
                 <div class="jp-group">
                     <label class="jp-label">Number of Positions <span class="hint">(max. 10)</span></label>
-                    <input type="number" name="number_of_positions" class="jp-input" value="1" min="1" max="10">
+                    <input type="number" name="number_of_positions" class="jp-input" value="<?php echo e(old('number_of_positions', optional($job)->number_of_positions ?? 1)); ?>" min="1" max="10">
                 </div>
             </div>
             <div class="jp-col-4">
                 <div class="jp-group">
                     <label class="jp-label">Gender Preference</label>
                     <select name="gender_preference" class="jp-select">
-                        <option value="">Any</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
+                        <option value="" <?php echo e(old('gender_preference', optional($job)->gender_preference ?? '') == '' ? 'selected' : ''); ?>>Any</option>
+                        <option value="male" <?php echo e(old('gender_preference', optional($job)->gender_preference ?? '') == 'male' ? 'selected' : ''); ?>>Male</option>
+                        <option value="female" <?php echo e(old('gender_preference', optional($job)->gender_preference ?? '') == 'female' ? 'selected' : ''); ?>>Female</option>
                     </select>
                 </div>
             </div>
@@ -452,10 +473,10 @@
                 <div class="jp-group">
                     <label class="jp-label">Marital Status Preference</label>
                     <select name="marital_status_preference" class="jp-select">
-                        <option value="">Any</option>
-                        <option value="married">Married</option>
-                        <option value="single">Single</option>
-                        <option value="other">Other</option>
+                        <option value="" <?php echo e(old('marital_status_preference', optional($job)->marital_status_preference ?? '') == '' ? 'selected' : ''); ?>>Any</option>
+                        <option value="married" <?php echo e(old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'married' ? 'selected' : ''); ?>>Married</option>
+                        <option value="single" <?php echo e(old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'single' ? 'selected' : ''); ?>>Single</option>
+                        <option value="other" <?php echo e(old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'other' ? 'selected' : ''); ?>>Other</option>
                     </select>
                 </div>
             </div>
@@ -468,7 +489,7 @@
                     <select name="job_shift_id" class="jp-select">
                         <option value="">-- Select --</option>
                         <?php $__currentLoopData = $jobShifts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($id); ?>"><?php echo e($name); ?></option>
+                            <option value="<?php echo e($id); ?>" <?php echo e(old('job_shift_id', optional($job)->job_shift_id ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
@@ -476,10 +497,11 @@
             <div class="jp-col-4">
                 <div class="jp-group">
                     <label class="jp-label">Employment Type</label>
+                    <?php $firstJobType = (isset($job) && $job && $job->jobTypes->isNotEmpty()) ? $job->jobTypes->first()->id : null; ?>
                     <select name="jobTypes[]" id="employment_type" class="jp-select">
                         <option value="">-- Select --</option>
                         <?php $__currentLoopData = $jobTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($id); ?>"><?php echo e($name); ?></option>
+                            <option value="<?php echo e($id); ?>" <?php echo e(old('jobTypes.0', $firstJobType ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
@@ -487,7 +509,7 @@
             <div class="jp-col-4">
                 <div class="jp-group" style="padding-top: 28px;">
                     <div class="jp-check-wrap">
-                        <input type="checkbox" name="is_remote" id="is_remote" value="1">
+                        <input type="checkbox" name="is_remote" id="is_remote" value="1" <?php echo e(old('is_remote', optional($job)->is_remote ?? 0) ? 'checked' : ''); ?>>
                         <label for="is_remote" style="cursor:pointer; font-size:14px;">This is a Remote / WFH / Online job</label>
                     </div>
                 </div>
@@ -504,20 +526,21 @@
         <div class="jp-card-body" style="padding-top: 20px;">
         <div class="jp-group">
             <label class="jp-label">Application accepted from which location <span class="required">*</span></label>
+            <?php $appLocType = old('application_location_type', optional($job)->application_location_type ?? 'nearby'); ?>
             <div class="jp-option-cards">
-                <label class="jp-option-card selected" onclick="selectOption(this, 'application_location_type')">
-                    <input type="radio" name="application_location_type" value="nearby" checked>
+                <label class="jp-option-card <?php echo e($appLocType === 'nearby' ? 'selected' : ''); ?>" onclick="selectOption(this, 'application_location_type')">
+                    <input type="radio" name="application_location_type" value="nearby" <?php echo e($appLocType === 'nearby' ? 'checked' : ''); ?>>
                     <i class="fa fa-map-pin"></i> Nearby areas only
                 </label>
-                <label class="jp-option-card" onclick="selectOption(this, 'application_location_type')">
-                    <input type="radio" name="application_location_type" value="specific">
+                <label class="jp-option-card <?php echo e($appLocType === 'specific' ? 'selected' : ''); ?>" onclick="selectOption(this, 'application_location_type')">
+                    <input type="radio" name="application_location_type" value="specific" <?php echo e($appLocType === 'specific' ? 'checked' : ''); ?>>
                     <i class="fa fa-list"></i> Specific Locations (up to 3)
                 </label>
             </div>
         </div>
 
         
-        <div class="jp-group" id="specific-locations-wrap" style="display: none;">
+        <div class="jp-group" id="specific-locations-wrap" style="display: <?php echo e($appLocType === 'specific' ? 'block' : 'none'); ?>;">
             <label class="jp-label">Choose Locations <span class="hint">(up to 3)</span></label>
             <div class="jp-row">
                 <div class="jp-col-4">
@@ -547,10 +570,10 @@
             <label class="jp-label">Job Location / Address <span class="hint">(Auto-defined from company, editable)</span></label>
             <div class="jp-row">
                 <div class="jp-col-6">
-                    <input type="text" name="address" id="job_address" class="jp-input" placeholder="Address">
+                    <input type="text" name="address" id="job_address" class="jp-input" placeholder="Address" value="<?php echo e(old('address', optional($job)->address ?? '')); ?>">
                 </div>
                 <div class="jp-col-6">
-                    <input type="text" name="zip_code" id="job_zip_code" class="jp-input" placeholder="Pin Code">
+                    <input type="text" name="zip_code" id="job_zip_code" class="jp-input" placeholder="Pin Code" value="<?php echo e(old('zip_code', optional($job)->zip_code ?? '')); ?>">
                 </div>
             </div>
             <div class="jp-row mt-2">
@@ -559,15 +582,15 @@
                         <input type="text" id="job_city_search" class="jp-input" placeholder="Search city..." autocomplete="off">
                         <div class="jp-suggest-list" id="job-city-suggestions"></div>
                     </div>
-                    <input type="hidden" name="city_id" id="job_city_id" value="">
+                    <input type="hidden" name="city_id" id="job_city_id" value="<?php echo e(old('city_id', optional($job)->city_id ?? '')); ?>">
                 </div>
                 <div class="jp-col-4">
                     <input type="text" id="job_state" class="jp-input" placeholder="State" readonly style="background:#f5f5f5;">
-                    <input type="hidden" name="state_id" id="job_state_id" value="">
+                    <input type="hidden" name="state_id" id="job_state_id" value="<?php echo e(old('state_id', optional($job)->state_id ?? '')); ?>">
                 </div>
                 <div class="jp-col-4">
                     <input type="text" id="job_country" class="jp-input" placeholder="Country" readonly style="background:#f5f5f5;">
-                    <input type="hidden" name="country_id" id="job_country_id" value="">
+                    <input type="hidden" name="country_id" id="job_country_id" value="<?php echo e(old('country_id', optional($job)->country_id ?? '')); ?>">
                 </div>
             </div>
         </div>
@@ -582,29 +605,31 @@
         <div class="jp-card-body" style="padding-top: 20px;">
         <div class="jp-group">
             <label class="jp-label">Application received by <span class="required">*</span></label>
+            <?php $applyType = old('apply_type', optional($job)->apply_type ?? 'internal'); ?>
             <div class="jp-option-cards">
-                <label class="jp-option-card selected" onclick="selectOption(this, 'apply_type')">
-                    <input type="radio" name="apply_type" value="internal" checked>
+                <label class="jp-option-card <?php echo e($applyType === 'internal' ? 'selected' : ''); ?>" onclick="selectOption(this, 'apply_type')">
+                    <input type="radio" name="apply_type" value="internal" <?php echo e($applyType === 'internal' ? 'checked' : ''); ?>>
                     <i class="fa fa-inbox"></i> Internal & Registered Email (Default)
                 </label>
-                <label class="jp-option-card" onclick="selectOption(this, 'apply_type')">
-                    <input type="radio" name="apply_type" value="external">
+                <label class="jp-option-card <?php echo e($applyType === 'external' ? 'selected' : ''); ?>" onclick="selectOption(this, 'apply_type')">
+                    <input type="radio" name="apply_type" value="external" <?php echo e($applyType === 'external' ? 'checked' : ''); ?>>
                     <i class="fa fa-external-link-alt"></i> External Link
                 </label>
             </div>
         </div>
 
-        <div class="jp-group" id="external-url-wrap" style="display: none;">
+        <div class="jp-group" id="external-url-wrap" style="display: <?php echo e($applyType === 'external' ? 'block' : 'none'); ?>;">
             <label class="jp-label">External Apply URL</label>
-            <input type="url" name="apply_url" id="apply_url" class="jp-input" placeholder="https://example.com/apply">
+            <input type="url" name="apply_url" id="apply_url" class="jp-input" placeholder="https://example.com/apply" value="<?php echo e(old('apply_url', optional($job)->apply_url ?? '')); ?>">
         </div>
 
-        <div class="jp-group" id="internal-emails-wrap">
+        <div class="jp-group" id="internal-emails-wrap" style="display: <?php echo e($applyType === 'internal' ? 'block' : 'none'); ?>;">
             <label class="jp-label">Additional internal/registered emails <span class="hint">(optional, up to 3)</span></label>
             <div id="internal-emails-list">
                 <?php
-                    $internalEmails = old('apply_internal_emails', []);
+                    $internalEmails = old('apply_internal_emails', optional($job)->apply_internal_emails ?? []);
                     if (!is_array($internalEmails)) $internalEmails = $internalEmails ? [$internalEmails] : [];
+                    $internalEmails = array_slice($internalEmails, 0, 3);
                 ?>
                 <?php $__currentLoopData = array_slice($internalEmails, 0, 3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $email): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="jp-internal-email-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
@@ -622,16 +647,18 @@
             <div class="jp-col-6">
                 <div class="jp-group">
                     <label class="jp-label">Application Deadline</label>
-                    <input type="date" name="application_closing_date" class="jp-input" min="<?php echo e(date('Y-m-d')); ?>">
+                    <?php $closingDate = optional($job)->application_closing_date; $closingStr = $closingDate ? (is_object($closingDate) ? $closingDate->format('Y-m-d') : $closingDate) : ''; ?>
+                    <input type="date" name="application_closing_date" class="jp-input" min="<?php echo e(date('Y-m-d')); ?>" value="<?php echo e(old('application_closing_date', $closingStr)); ?>">
                 </div>
             </div>
             <div class="jp-col-6">
                 <div class="jp-group">
                     <label class="jp-label">Job Status</label>
+                    <?php $st = optional($job)->status; $jobStatus = old('status', $st && is_object($st) ? $st->getValue() : ($st ?: 'published')); ?>
                     <select name="status" class="jp-select">
-                        <option value="published">Published</option>
-                        <option value="draft">Draft</option>
-                        <option value="pending">Pending</option>
+                        <option value="published" <?php echo e($jobStatus === 'published' ? 'selected' : ''); ?>>Published</option>
+                        <option value="draft" <?php echo e($jobStatus === 'draft' ? 'selected' : ''); ?>>Draft</option>
+                        <option value="pending" <?php echo e($jobStatus === 'pending' ? 'selected' : ''); ?>>Pending</option>
                     </select>
                 </div>
             </div>
@@ -639,7 +666,7 @@
 
         <div class="jp-group">
             <div class="jp-check-wrap">
-                <input type="checkbox" name="hide_company" id="hide_company" value="1">
+                <input type="checkbox" name="hide_company" id="hide_company" value="1" <?php echo e(old('hide_company', optional($job)->hide_company ?? 0) ? 'checked' : ''); ?>>
                 <label for="hide_company" style="cursor:pointer; font-size:14px;"><i class="fa fa-eye-slash" style="margin-right:4px;"></i> Hide my company details (Post as anonymously)</label>
             </div>
         </div>
@@ -649,21 +676,81 @@
     
     <div class="jp-card jp-card-collapsible" data-section="7">
         <div class="jp-card-header">
-            <div class="jp-card-title"><i class="fa fa-clipboard-list"></i> Screening Questions <span class="hint" style="font-weight:400;font-size:13px;">(Optional)</span></div>
+            <div class="jp-card-title"><i class="fa fa-clipboard-list"></i> <?php echo e(__('Job Screening Questions')); ?> <span class="hint" style="font-weight:400;font-size:13px;">(<?php echo e(__('Select, edit Q&A, and mark correct answer. Wrong answer restricts candidate from applying.')); ?>)</span></div>
         </div>
         <div class="jp-card-body" style="padding-top: 20px;">
-        <div id="screening-questions-container"></div>
-
-        <button type="button" class="btn btn-outline-primary" onclick="addScreeningQuestion()" style="border-radius:8px;">
-            <i class="fa fa-plus"></i> Add Screening Question
-        </button>
+        <div id="screening-questions-container" class="sq-list">
+            <?php
+                $jobSqs = optional($job)->screeningQuestions ?? collect();
+                $selectedSqIds = old('screening_question_ids', $jobSqs->pluck('id')->all());
+                $requiredSqIds = old('screening_question_required', $jobSqs->filter(fn($q) => $q->pivot->is_required ?? false)->pluck('id')->all());
+                $sqOverrides = [];
+                foreach ($screeningQuestions ?? [] as $q) {
+                    $pivot = $jobSqs->firstWhere('id', $q->id)?->pivot;
+                    $sqOverrides[$q->id] = [
+                        'question' => old('screening_question_question.'.$q->id, $pivot->question_override ?? ''),
+                        'options' => old('screening_question_options.'.$q->id, $pivot->options_override ?? ''),
+                        'correct_answer' => old('screening_question_correct.'.$q->id, $pivot->correct_answer ?? ''),
+                    ];
+                }
+            ?>
+            <?php $__empty_1 = true; $__currentLoopData = $screeningQuestions ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php
+                    $override = $sqOverrides[$sq->id] ?? ['question'=>'','options'=>'','correct_answer'=>''];
+                    $opts = $sq->options_array;
+                    $optsStr = is_array($opts) ? implode("\n", $opts) : (string)($opts ?? '');
+                    $optsForCorrect = !empty($override['options']) ? array_filter(array_map('trim', preg_split('/[\r\n]+/', (string)$override['options']))) : (is_array($opts) ? $opts : []);
+                ?>
+                <div class="sq-item" data-id="<?php echo e($sq->id); ?>" data-template-question="<?php echo e(e($sq->question)); ?>" data-template-options="<?php echo e(e($optsStr)); ?>" data-type="<?php echo e($sq->question_type); ?>">
+                    <div class="sq-item-main">
+                        <input type="checkbox" name="screening_question_ids[]" value="<?php echo e($sq->id); ?>" id="sq_cb_<?php echo e($sq->id); ?>" class="form-check-input sq-select-cb" <?php echo e(in_array($sq->id, $selectedSqIds) ? 'checked' : ''); ?>>
+                        <div class="sq-item-content">
+                            <label for="sq_cb_<?php echo e($sq->id); ?>" class="sq-question-text"><?php echo e($override['question'] ?: $sq->question); ?></label>
+                            <span class="sq-type-badge"><?php echo e($sq->question_type); ?></span>
+                        </div>
+                    </div>
+                    <div class="sq-item-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary sq-toggle-edit" title="<?php echo e(__('Edit Q&A')); ?>"><i class="fa fa-edit"></i></button>
+                        <button type="button" class="btn btn-sm btn-outline-primary sq-auto-fill" title="<?php echo e(__('1-Click: Fill from job form')); ?>"><i class="fa fa-magic"></i> 1-Click</button>
+                        <span class="sq-required-wrap">
+                            <input type="checkbox" name="screening_question_required[]" value="<?php echo e($sq->id); ?>" id="sq_req_<?php echo e($sq->id); ?>" class="form-check-input sq-required-cb" <?php echo e(in_array($sq->id, $requiredSqIds) ? 'checked' : ''); ?> <?php echo e(in_array($sq->id, $selectedSqIds) ? '' : 'disabled'); ?>>
+                            <label for="sq_req_<?php echo e($sq->id); ?>" class="sq-required-label"><?php echo e(__('Required')); ?></label>
+                        </span>
+                    </div>
+                    <div class="sq-item-expand" style="display:none; margin-top:12px; padding:16px; background:#f9f9f9; border-radius:8px; border:1px solid #eee;">
+                        <div class="mb-2">
+                            <label class="form-label small"><?php echo e(__('Question (editable)')); ?></label>
+                            <textarea name="screening_question_question[<?php echo e($sq->id); ?>]" class="form-control sq-edit-question" rows="2" placeholder="<?php echo e($sq->question); ?>"><?php echo e($override['question']); ?></textarea>
+                        </div>
+                        <?php if(in_array($sq->question_type, ['dropdown','checkbox'])): ?>
+                        <div class="mb-2">
+                            <label class="form-label small"><?php echo e(__('Options (one per line)')); ?></label>
+                            <textarea name="screening_question_options[<?php echo e($sq->id); ?>]" class="form-control sq-edit-options" rows="3" placeholder="<?php echo e($optsStr); ?>"><?php echo e(is_array($override['options']) ? implode("\n", $override['options']) : $override['options']); ?></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small"><?php echo e(__('Correct answer (restricts wrong)')); ?> <span class="text-muted">(<?php echo e(__('Candidate must select this to apply')); ?>)</span></label>
+                            <select name="screening_question_correct[<?php echo e($sq->id); ?>]" class="form-select sq-edit-correct">
+                                <option value=""><?php echo e(__('No restriction')); ?></option>
+                                <?php $__currentLoopData = $optsForCorrect; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $opt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($opt); ?>" <?php echo e(($override['correct_answer'] ?? '') === $opt ? 'selected' : ''); ?>><?php echo e($opt); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+            <p class="sq-empty-msg"><?php echo e(__('No screening questions available. Admin can add them in Job Board → Job Attributes → Screening Questions.')); ?></p>
+            <?php endif; ?>
+        </div>
         </div>
     </div>
 
     
     <div class="jp-card" style="text-align: center;">
         <button type="submit" class="jp-submit-btn" id="submitJobBtn">
-            <i class="fa fa-check"></i> Post Job
+            <i class="fa fa-check"></i> <?php echo e($submitLabel); ?>
+
         </button>
         <a href="<?php echo e(route('public.account.jobs.index')); ?>" class="btn btn-outline-secondary ms-3" style="border-radius:8px; padding:12px 30px;">
             Cancel
@@ -715,6 +802,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== COMPANY DATA =====
     const companyData = <?php echo json_encode($companyDetails, 15, 512) ?>;
+    const companies = <?php echo json_encode($companies ?? [], 15, 512) ?>;
+    const degreeLevels = <?php echo json_encode($degreeLevels ?? [], 15, 512) ?>;
+    const jobExperiences = <?php echo json_encode($jobExperiences ?? [], 15, 512) ?>;
+
+    // ===== EDIT MODE: pre-fill from job =====
+    var isEditMode = <?php echo e($isEdit ? 'true' : 'false'); ?>;
+    var editJobData = <?php echo json_encode($editJobData ?? null, 15, 512) ?>;
 
     // ===== AUTO-SUGGEST HELPER =====
     function setupAutoSuggest(inputEl, listEl, items, onSelect, isObject, clearInputOnSelect) {
@@ -739,14 +833,13 @@ document.addEventListener('DOMContentLoaded', function() {
             filtered.forEach(function(item) {
                 var div = document.createElement('div');
                 div.className = 'jp-suggest-item';
-                if (isObject) {
-                    div.textContent = item[1];
-                    div.dataset.id = item[0];
-                } else {
-                    div.textContent = item;
-                }
-                div.addEventListener('click', function() {
-                    onSelect(isObject ? { id: this.dataset.id, name: this.textContent } : this.textContent);
+                var itemText = isObject ? item[1] : item;
+                var itemId = isObject ? item[0] : null;
+                div.textContent = itemText;
+                if (isObject) div.dataset.id = itemId;
+                div.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    onSelect(isObject ? { id: this.dataset.id, name: itemText } : itemText);
                     if (clearInputOnSelect) inputEl.value = '';
                     listEl.classList.remove('show');
                 });
@@ -813,6 +906,11 @@ document.addEventListener('DOMContentLoaded', function() {
         renderSkillTags();
     };
 
+    if (isEditMode && editJobData) {
+        editJobData.skills.forEach(function(s) { selectedSkills[s.id] = s.name; });
+        renderSkillTags();
+    }
+
     // ===== CERTIFICATIONS =====
     var selectedCerts = [];
     var certSearch = document.getElementById('cert_search');
@@ -837,6 +935,11 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedCerts.splice(idx, 1);
         renderCertTags();
     };
+
+    if (isEditMode && editJobData && editJobData.required_certifications && editJobData.required_certifications.length) {
+        selectedCerts = editJobData.required_certifications.slice();
+        renderCertTags();
+    }
 
     // ===== LANGUAGES =====
     var selectedLangs = [];
@@ -863,7 +966,21 @@ document.addEventListener('DOMContentLoaded', function() {
         renderLangTags();
     };
 
+    if (isEditMode && editJobData && editJobData.language_proficiency && editJobData.language_proficiency.length) {
+        selectedLangs = editJobData.language_proficiency.slice();
+        renderLangTags();
+    }
+
     // ===== COMPANY SELECTION =====
+    function syncCompanyLocationFromJob() {
+        if (!isEditMode || !editJobData) return;
+        var cityInp = document.getElementById('job_city_search');
+        var stateInp = document.getElementById('job_state');
+        var countryInp = document.getElementById('job_country');
+        if (editJobData.city_name && cityInp) cityInp.value = editJobData.city_name;
+        if (editJobData.state_name && stateInp) stateInp.value = editJobData.state_name;
+        if (editJobData.country_name && countryInp) countryInp.value = editJobData.country_name;
+    }
     document.getElementById('company_id').addEventListener('change', function() {
         var companyId = this.value;
         var badge = document.getElementById('inst-type-badge');
@@ -894,6 +1011,7 @@ document.addEventListener('DOMContentLoaded', function() {
             badge.style.color = '#4a6cf7';
         }
     });
+    if (isEditMode) setTimeout(syncCompanyLocationFromJob, 100);
 
     // ===== SALARY PERIOD =====
     window.selectSalaryPeriod = function(el) {
@@ -936,6 +1054,55 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('internal-emails-wrap').style.display = val2 === 'internal' ? 'block' : 'none';
         }
     };
+
+    // ===== SCREENING QUESTIONS: Toggle edit, 1-Click auto-fill =====
+    document.querySelectorAll('.sq-toggle-edit').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var expand = this.closest('.sq-item').querySelector('.sq-item-expand');
+            expand.style.display = expand.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+    document.querySelectorAll('.sq-auto-fill').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var item = this.closest('.sq-item');
+            var templateQ = item.dataset.templateQuestion || '';
+            var templateO = item.dataset.templateOptions || '';
+            var repl = {
+                degree_level: degreeLevels[document.getElementById('degree_level_id')?.value] || '',
+                job_title: document.getElementById('job_title')?.value || '',
+                experience_years: jobExperiences[document.getElementById('job_experience_id')?.value] || '',
+                certification: (selectedCerts && selectedCerts[0]) || '',
+                language: (selectedLangs && selectedLangs[0]) || '',
+                job_location: (document.getElementById('job_address')?.value || '') + ' ' + (document.getElementById('job_city_search')?.value || ''),
+                application_locations: (function(){ var v = document.getElementById('application_locations')?.value; if (!v) return ''; try { var a = JSON.parse(v); return Array.isArray(a) ? a.join(', ') : v; } catch(e){ return v.replace(/[\[\]"]/g,'').split(',').map(function(s){return s.trim();}).filter(Boolean).join(', '); } })(),
+                company_name: companies[document.getElementById('company_id')?.value] || '',
+                institution_type: companyData[document.getElementById('company_id')?.value]?.institution_type || ''
+            };
+            for (var k in repl) {
+                templateQ = templateQ.replace(new RegExp('\\{' + k + '\\}', 'g'), repl[k]);
+                templateO = templateO.replace(new RegExp('\\{' + k + '\\}', 'g'), repl[k]);
+            }
+            var qInp = item.querySelector('.sq-edit-question');
+            var oInp = item.querySelector('.sq-edit-options');
+            if (qInp) qInp.value = templateQ;
+            if (oInp) oInp.value = templateO;
+            item.querySelector('.sq-question-text').textContent = templateQ || item.dataset.templateQuestion;
+            item.querySelector('.sq-item-expand').style.display = 'block';
+        });
+    });
+    document.querySelectorAll('.sq-select-cb').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            var req = document.getElementById('sq_req_' + this.value);
+            if (req) req.disabled = !this.checked;
+        });
+    });
+    document.querySelectorAll('.sq-edit-question').forEach(function(ta) {
+        ta.addEventListener('input', function() {
+            var item = this.closest('.sq-item');
+            var label = item.querySelector('.sq-question-text');
+            if (label) label.textContent = this.value || item.dataset.templateQuestion;
+        });
+    });
 
     // ===== INTERNAL EMAILS (up to 3) - Add email button =====
     var addEmailBtn = document.getElementById('add-internal-email-btn');
@@ -1046,68 +1213,17 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('application_locations').value = JSON.stringify(locs);
     }
 
-    // ===== SCREENING QUESTIONS =====
-    var sqCount = 0;
-    window.addScreeningQuestion = function() {
-        sqCount++;
-        var container = document.getElementById('screening-questions-container');
-        var html = '<div class="sq-item" id="sq-' + sqCount + '">' +
-            '<button type="button" class="sq-remove" onclick="removeScreeningQuestion(' + sqCount + ')">&times;</button>' +
-            '<div class="jp-group">' +
-                '<label class="jp-label">Question ' + sqCount + '</label>' +
-                '<input type="text" name="screening_questions[' + sqCount + '][question]" class="jp-input" placeholder="Enter your screening question..." required>' +
-            '</div>' +
-            '<div class="jp-group">' +
-                '<label class="jp-label">Question Type</label>' +
-                '<div class="sq-type-options">' +
-                    '<label class="jp-option-card selected" onclick="selectSQType(this, ' + sqCount + ', \'text\')"><input type="radio" name="screening_questions[' + sqCount + '][question_type]" value="text" checked> Text</label>' +
-                    '<label class="jp-option-card" onclick="selectSQType(this, ' + sqCount + ', \'textarea\')"><input type="radio" name="screening_questions[' + sqCount + '][question_type]" value="textarea"> Text Area</label>' +
-                    '<label class="jp-option-card" onclick="selectSQType(this, ' + sqCount + ', \'dropdown\')"><input type="radio" name="screening_questions[' + sqCount + '][question_type]" value="dropdown"> Dropdown</label>' +
-                    '<label class="jp-option-card" onclick="selectSQType(this, ' + sqCount + ', \'checkbox\')"><input type="radio" name="screening_questions[' + sqCount + '][question_type]" value="checkbox"> Checkbox</label>' +
-                    '<label class="jp-option-card" onclick="selectSQType(this, ' + sqCount + ', \'file\')"><input type="radio" name="screening_questions[' + sqCount + '][question_type]" value="file"> Upload File</label>' +
-                    '<label class="jp-option-card" onclick="selectSQType(this, ' + sqCount + ', \'link\')"><input type="radio" name="screening_questions[' + sqCount + '][question_type]" value="link"> Link</label>' +
-                '</div>' +
-            '</div>' +
-            '<div class="sq-options-wrap" id="sq-options-' + sqCount + '" style="display:none;">' +
-                '<div class="jp-group">' +
-                    '<label class="jp-label">Options <span class="hint">(one per line)</span></label>' +
-                    '<textarea name="screening_questions[' + sqCount + '][options_text]" class="jp-textarea" rows="3" placeholder="Option 1\nOption 2\nOption 3"></textarea>' +
-                '</div>' +
-                '<div class="jp-group">' +
-                    '<label class="jp-label">Required Correct Answer <span class="hint">(for restriction)</span></label>' +
-                    '<input type="text" name="screening_questions[' + sqCount + '][required_answer]" class="jp-input" placeholder="Enter correct answer to restrict">' +
-                '</div>' +
-            '</div>' +
-            '<div class="sq-file-wrap" id="sq-file-' + sqCount + '" style="display:none;">' +
-                '<div class="jp-group">' +
-                    '<label class="jp-label">Allowed File Types</label>' +
-                    '<input type="text" name="screening_questions[' + sqCount + '][file_types]" class="jp-input" placeholder="pdf, doc, docx, jpg">' +
-                '</div>' +
-            '</div>' +
-            '<div class="jp-check-wrap mt-2">' +
-                '<input type="checkbox" name="screening_questions[' + sqCount + '][is_required]" value="1" id="sq-req-' + sqCount + '">' +
-                '<label for="sq-req-' + sqCount + '" style="cursor:pointer; font-size:13px;">This question is required</label>' +
-            '</div>' +
-            '<input type="hidden" name="screening_questions[' + sqCount + '][order]" value="' + sqCount + '">' +
-        '</div>';
-        container.insertAdjacentHTML('beforeend', html);
-    };
-
-    window.removeScreeningQuestion = function(id) {
-        document.getElementById('sq-' + id).remove();
-    };
-
-    window.selectSQType = function(el, id, type) {
-        el.closest('.sq-type-options').querySelectorAll('.jp-option-card').forEach(function(c) { c.classList.remove('selected'); });
-        el.classList.add('selected');
-        el.querySelector('input').checked = true;
-
-        var optionsWrap = document.getElementById('sq-options-' + id);
-        var fileWrap = document.getElementById('sq-file-' + id);
-
-        optionsWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
-        fileWrap.style.display = type === 'file' ? 'block' : 'none';
-    };
+    // ===== SCREENING QUESTIONS: enable/disable "Required" when question is selected =====
+    document.querySelectorAll('.sq-select-cb').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            var item = this.closest('.sq-item');
+            var reqCb = item ? item.querySelector('.sq-required-cb') : null;
+            if (reqCb) {
+                reqCb.disabled = !this.checked;
+                if (!this.checked) reqCb.checked = false;
+            }
+        });
+    });
 
     // ===== AI GENERATE DESCRIPTION =====
     document.getElementById('aiGenerateBtn').addEventListener('click', function() {
@@ -1172,6 +1288,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!valid) {
             e.preventDefault();
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            var btn = document.getElementById('submitJobBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<?php echo e($isEdit ? __("Updating...") : __("Posting...")); ?>';
+            }
         }
     });
 });

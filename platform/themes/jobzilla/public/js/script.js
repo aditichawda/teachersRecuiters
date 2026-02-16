@@ -199,6 +199,56 @@
     $applyExternalJob.find('.modal-job-name').text('');
     $applyExternalJob.find('.modal-job-id').val('');
   });
+  $(document).on('submit', '.job-apply-form', function (e) {
+    e.preventDefault();
+    var $form = $(e.currentTarget);
+    var $button = $form.find('button[type=submit]');
+    $.ajax({
+      type: 'POST',
+      cache: false,
+      url: $form.prop('action'),
+      data: new FormData($form[0]),
+      contentType: false,
+      processData: false,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      beforeSend: function beforeSend() {
+        $button.prop('disabled', true).addClass('button-loading');
+      },
+      success: function success(res) {
+        if (!res.error) {
+          var applyModal = document.getElementById('applyNow');
+          var extModal = document.getElementById('applyExternalJob');
+          if (applyModal) {
+            var bsModal = bootstrap.Modal.getInstance(applyModal);
+            if (bsModal) bsModal.hide();
+          }
+          if (extModal) {
+            var _bsModal = bootstrap.Modal.getInstance(extModal);
+            if (_bsModal) _bsModal.hide();
+          }
+          showSuccess(res.message);
+          if (res.data && res.data.url) {
+            window.location.replace(res.data.url);
+          } else {
+            window.location.reload();
+          }
+        } else {
+          showError(res.message);
+        }
+      },
+      error: function error(res) {
+        handleError(res);
+      },
+      complete: function complete() {
+        if (typeof refreshRecaptcha !== 'undefined') {
+          refreshRecaptcha();
+        }
+        $button.prop('disabled', false).removeClass('button-loading');
+      }
+    });
+  });
   $(document).on('click', '.review-pagination a', function (e) {
     e.preventDefault();
     var page = $(this).attr('href').split('page=')[1];

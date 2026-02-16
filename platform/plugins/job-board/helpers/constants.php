@@ -103,3 +103,6 @@ if (! defined('SPECIALIZATION_MODULE_SCREEN_NAME')) {
 if (! defined('LANGUAGE_MODULE_SCREEN_NAME')) {
     define('LANGUAGE_MODULE_SCREEN_NAME', 'language');
 }
+if (! defined('SCREENING_QUESTION_MODULE_SCREEN_NAME')) {
+    define('SCREENING_QUESTION_MODULE_SCREEN_NAME', 'screening-question');
+}

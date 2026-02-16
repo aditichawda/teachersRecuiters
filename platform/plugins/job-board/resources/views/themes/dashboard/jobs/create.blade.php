@@ -578,17 +578,26 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 7: Screening Questions ====== --}}
+    {{-- ====== SECTION 7: Screening Questions (Select from Admin Pool) ====== --}}
     <div class="jp-card">
-        <div class="jp-card-title"><i class="ti ti-clipboard-list"></i> Screening Questions <span class="hint" style="font-weight:400;font-size:13px;">(Optional - restrict candidates who don't match criteria)</span></div>
+        <div class="jp-card-title"><i class="ti ti-clipboard-list"></i> {{ __('Job Screening Questions') }} <span class="hint" style="font-weight:400;font-size:13px;">({{ __('Select questions candidates will answer when applying') }})</span></div>
 
-        <div id="screening-questions-container">
-            {{-- Dynamic questions added here --}}
+        <div id="screening-questions-container" class="mb-3">
+            @forelse(($screeningQuestions ?? []) as $sq)
+            <div class="sq-select-item" style="display:flex; align-items:flex-start; gap:12px; padding:14px; background:#f9f9f9; border-radius:10px; margin-bottom:10px; border:1px solid #e8e8e8;">
+                <input type="checkbox" name="screening_question_ids[]" value="{{ $sq->id }}" id="sq_cb_{{ $sq->id }}" class="form-check-input mt-1">
+                <label for="sq_cb_{{ $sq->id }}" style="flex:1; cursor:pointer; margin:0; font-size:14px;">
+                    <strong>{{ $sq->question }}</strong>
+                    @if($sq->is_required)
+                    <span class="badge bg-danger ms-2" style="font-size:10px;">{{ __('Required') }}</span>
+                    @endif
+                    <span class="text-muted ms-2" style="font-size:12px;">({{ $sq->question_type }})</span>
+                </label>
+            </div>
+            @empty
+            <p class="text-muted small mb-0">{{ __('No screening questions available. Admin can add them in Job Board → Job Attributes → Screening Questions.') }}</p>
+            @endforelse
         </div>
-
-        <button type="button" class="btn btn-outline-danger" onclick="addScreeningQuestion()" style="border-radius:8px;">
-            <i class="ti ti-plus"></i> Add Screening Question
-        </button>
     </div>
 
     {{-- ====== SUBMIT ====== --}}
@@ -972,83 +981,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         document.getElementById('application_locations').value = JSON.stringify(locs);
     }
-
-    // ===== SCREENING QUESTIONS =====
-    let sqCount = 0;
-    window.addScreeningQuestion = function() {
-        sqCount++;
-        const container = document.getElementById('screening-questions-container');
-        const html = `
-            <div class="sq-item" id="sq-${sqCount}">
-                <button type="button" class="sq-remove" onclick="removeScreeningQuestion(${sqCount})">&times;</button>
-                <div class="jp-group">
-                    <label class="jp-label">Question ${sqCount}</label>
-                    <input type="text" name="screening_questions[${sqCount}][question]" class="jp-input" placeholder="Enter your screening question..." required>
-                </div>
-                <div class="jp-group">
-                    <label class="jp-label">Question Type</label>
-                    <div class="sq-type-options">
-                        <label class="jp-option-card selected" onclick="selectSQType(this, ${sqCount}, 'text')">
-                            <input type="radio" name="screening_questions[${sqCount}][question_type]" value="text" checked> Text
-                        </label>
-                        <label class="jp-option-card" onclick="selectSQType(this, ${sqCount}, 'textarea')">
-                            <input type="radio" name="screening_questions[${sqCount}][question_type]" value="textarea"> Text Area
-                        </label>
-                        <label class="jp-option-card" onclick="selectSQType(this, ${sqCount}, 'dropdown')">
-                            <input type="radio" name="screening_questions[${sqCount}][question_type]" value="dropdown"> Dropdown
-                        </label>
-                        <label class="jp-option-card" onclick="selectSQType(this, ${sqCount}, 'checkbox')">
-                            <input type="radio" name="screening_questions[${sqCount}][question_type]" value="checkbox"> Checkbox
-                        </label>
-                        <label class="jp-option-card" onclick="selectSQType(this, ${sqCount}, 'file')">
-                            <input type="radio" name="screening_questions[${sqCount}][question_type]" value="file"> Upload File
-                        </label>
-                        <label class="jp-option-card" onclick="selectSQType(this, ${sqCount}, 'link')">
-                            <input type="radio" name="screening_questions[${sqCount}][question_type]" value="link"> Link
-                        </label>
-                    </div>
-                </div>
-                <div class="sq-options-wrap" id="sq-options-${sqCount}" style="display:none;">
-                    <div class="jp-group">
-                        <label class="jp-label">Options <span class="hint">(one per line)</span></label>
-                        <textarea name="screening_questions[${sqCount}][options_text]" class="jp-textarea" rows="3" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
-                    </div>
-                    <div class="jp-group">
-                        <label class="jp-label">Required Correct Answer <span class="hint">(for restriction)</span></label>
-                        <input type="text" name="screening_questions[${sqCount}][required_answer]" class="jp-input" placeholder="Enter correct answer to restrict">
-                    </div>
-                </div>
-                <div class="sq-file-wrap" id="sq-file-${sqCount}" style="display:none;">
-                    <div class="jp-group">
-                        <label class="jp-label">Allowed File Types</label>
-                        <input type="text" name="screening_questions[${sqCount}][file_types]" class="jp-input" placeholder="pdf, doc, docx, jpg">
-                    </div>
-                </div>
-                <div class="jp-check-wrap mt-2">
-                    <input type="checkbox" name="screening_questions[${sqCount}][is_required]" value="1" id="sq-req-${sqCount}">
-                    <label for="sq-req-${sqCount}" style="cursor:pointer; font-size:13px;">This question is required</label>
-                </div>
-                <input type="hidden" name="screening_questions[${sqCount}][order]" value="${sqCount}">
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', html);
-    };
-
-    window.removeScreeningQuestion = function(id) {
-        document.getElementById('sq-' + id).remove();
-    };
-
-    window.selectSQType = function(el, id, type) {
-        el.closest('.sq-type-options').querySelectorAll('.jp-option-card').forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-        el.querySelector('input').checked = true;
-
-        const optionsWrap = document.getElementById('sq-options-' + id);
-        const fileWrap = document.getElementById('sq-file-' + id);
-
-        optionsWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
-        fileWrap.style.display = type === 'file' ? 'block' : 'none';
-    };
 
     // ===== AI GENERATE DESCRIPTION =====
     document.getElementById('aiGenerateBtn').addEventListener('click', function() {

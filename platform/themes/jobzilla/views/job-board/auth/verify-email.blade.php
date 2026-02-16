@@ -184,7 +184,7 @@
     /* Verify Button */
     .verify-btn {
         width: 100%;
-        padding: 14px 24px;
+        padding: 8px 0px;
         background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
         color: #fff;
         border: none;
@@ -385,7 +385,38 @@
 <script>
 (function() {
     'use strict';
-    
+
+    function showToast(type, msg) {
+        if (typeof window.showAlert === 'function') {
+            window.showAlert(type, msg);
+            return;
+        }
+        var container = document.getElementById('alert-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'alert-container';
+            container.className = 'toast-container';
+            container.style.cssText = 'position:fixed;right:5px;top:20vh;z-index:9999999;';
+            document.body.appendChild(container);
+        }
+        var id = 'toast-' + Math.floor(Math.random() * 10000);
+        var icon = type === 'text-success' ? 'feather-check-circle' : 'feather-alert-triangle';
+        var html = '<div class="toast align-items-center ' + type + '" id="' + id + '" role="alert">' +
+            '<div class="d-flex"><div class="toast-body">' +
+            '<i class="' + icon + ' message-icon"></i><span>' + (msg || '').replace(/</g, '&lt;') + '</span>' +
+            '</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>';
+        container.insertAdjacentHTML('beforeend', html);
+        var el = document.getElementById(id);
+        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            var toast = new bootstrap.Toast(el);
+            toast.show();
+            el.addEventListener('hidden.bs.toast', function() { el.remove(); });
+        } else {
+            el.classList.add('show');
+            setTimeout(function() { el.remove(); }, 5000);
+        }
+    }
+
     const email = @json($email);
     const verifyEmailCodeUrl = '{{ route("public.account.register.verifyEmailCode") }}';
     const sendVerificationCodeUrl = '{{ route("public.account.register.sendVerificationCode") }}';
@@ -516,24 +547,28 @@
             
             fetch(sendVerificationCodeUrl, {
                 method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: sendData
             })
             .then(res => res.json())
             .then(data => {
                 if (data.error === false) {
                     @if(!empty($isWhatsappAvailable) && !empty($phone))
-                        alert('Verification code resent successfully to your WhatsApp ({{ $phone }}) and Email ({{ $email }})!');
+                        showToast('text-success', 'Verification code resent successfully to your WhatsApp ({{ $phone }}) and Email ({{ $email }})!');
                     @else
-                        alert('Verification code resent successfully to your Email ({{ $email }})!');
+                        showToast('text-success', 'Verification code resent successfully to your Email ({{ $email }})!');
                     @endif
                     startTimer();
                 } else {
-                    alert(data.message || 'Failed to resend code');
+                    showToast('text-danger', data.message || 'Failed to resend code');
                     resendBtn.disabled = false;
                 }
             })
             .catch(err => {
-                alert('Failed to resend code');
+                showToast('text-danger', 'Failed to resend code');
                 resendBtn.disabled = false;
             });
         });
@@ -547,6 +582,13 @@
             errorDiv.textContent = '';
             errorDiv.classList.remove('show');
         }
+
+        // Success toast when user lands on verification page (OTP already sent)
+        @if(!empty($isWhatsappAvailable) && !empty($phone))
+            showToast('text-success', 'Verification code sent to your WhatsApp & Email. Please enter the 6-digit code below.');
+        @else
+            showToast('text-success', 'Verification code sent to your email. Please enter the 6-digit code below.');
+        @endif
         
         function startTimer() {
             let seconds = 60;

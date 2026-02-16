@@ -1,5 +1,6 @@
 <?php
     Theme::layout('without-navbar');
+    Theme::asset()->add('auth-overrides', Theme::asset()->url('css/front-auth-overrides.css'), ['auth-css']);
 ?>
 
 <style>
@@ -221,7 +222,7 @@
 <div class="employer-register-wrapper">
     <div class="employer-register-container">
         <div class="employer-register-header">
-            <h2><i class="ti ti-briefcase me-2"></i>Employer Registration</h2>
+            <h2><i class="ti ti-briefcase me-2"></i>School / Institution Registration</h2>
             <p>Step 1 of 4 - Create your account and start hiring</p>
         </div>
         

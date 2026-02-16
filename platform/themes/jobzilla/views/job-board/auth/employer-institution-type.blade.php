@@ -304,7 +304,7 @@
 
                 <!-- Name field (label changes dynamically) -->
                 <div class="mb-3">
-                    <label class="form-label" id="name-label">School/Institution Name (Whenregisterasschool/institution)
+                    <label class="form-label" id="name-label">School/Institution Name
                     <span class="text-danger">*</span></label>
                     <input type="text" name="institution_name" id="institution_name" class="form-control" 
                            placeholder="Enter your school/institution name" required>
@@ -350,21 +350,21 @@ function selectRegType(type) {
     var nameLabel = document.getElementById('name-label');
     var nameInput = document.getElementById('institution_name');
     if (isConsultancy) {
-        nameLabel.innerHTML = 'Organization Name (When register as consultancy) <span class="text-danger">*</span>';
+        nameLabel.innerHTML = 'Organization Name <span class="text-danger">*</span>';
         nameInput.placeholder = 'Enter your organization name';
     } else {
-        nameLabel.innerHTML = 'School/Institution Name(When register as school/institution) <span class="text-danger">*</span>';
+        nameLabel.innerHTML = 'School/Institution Name <span class="text-danger">*</span>';
         nameInput.placeholder = 'Enter your school/institution name';
     }
 
     // Update header
-    document.getElementById('header-title').textContent = isConsultancy ? 'Add school/institution' : 'Institution Details';
+    document.getElementById('header-title').textContent = isConsultancy ? 'Organization Details' : 'Institution Details';
     document.getElementById('header-subtitle').textContent = isConsultancy 
         ? 'Step 3 of 4 - Tell us about your organization' 
         : 'Step 3 of 4 - Tell us about your institution';
 
     // Update step 3 label
-    document.getElementById('step3-label').textContent = isConsultancy ? 'Add school/institution' : 'Institution Details';
+    document.getElementById('step3-label').textContent = isConsultancy ? 'Organization Details' : 'Institution Details';
 }
 
 document.addEventListener('DOMContentLoaded', function() {

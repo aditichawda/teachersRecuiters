@@ -462,8 +462,17 @@ class JobBoardServiceProvider extends ServiceProvider
                     'permissions' => ['job-attributes.index'],
                 ])
                 ->registerItem([
-                    'id' => 'cms-plugins-job-board-job-type',
+                    'id' => 'cms-plugins-job-board-screening-questions',
                     'priority' => 0,
+                    'parent_id' => 'cms-plugins-job-board-job-attributes',
+                    'name' => 'plugins/job-board::screening-question.name',
+                    'icon' => 'ti ti-help',
+                    'url' => route('screening-questions.index'),
+                    'permissions' => ['screening-questions.index'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-job-type',
+                    'priority' => 1,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::job-type.name',
                     'icon' => 'ti ti-clock',
@@ -472,7 +481,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-job-skill',
-                    'priority' => 1,
+                    'priority' => 2,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::job-skill.name',
                     'icon' => 'ti ti-tools',
@@ -499,7 +508,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-job-shift',
-                    'priority' => 2,
+                    'priority' => 3,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::job-shift.name',
                     'icon' => 'ti ti-calendar-time',
@@ -508,7 +517,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-job-experience',
-                    'priority' => 3,
+                    'priority' => 4,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::job-experience.name',
                     'icon' => 'ti ti-trophy',
@@ -517,7 +526,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-language-level',
-                    'priority' => 4,
+                    'priority' => 5,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::language-level.name',
                     'icon' => 'ti ti-language',
@@ -526,7 +535,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-career-level',
-                    'priority' => 5,
+                    'priority' => 6,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::career-level.name',
                     'icon' => 'ti ti-stairs-up',
@@ -535,7 +544,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-functional-area',
-                    'priority' => 6,
+                    'priority' => 7,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::functional-area.name',
                     'icon' => 'ti ti-layout-grid',
@@ -544,7 +553,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-job-category',
-                    'priority' => 7,
+                    'priority' => 8,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::job-category.name',
                     'icon' => 'ti ti-category',
@@ -553,7 +562,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-job-tag',
-                    'priority' => 8,
+                    'priority' => 9,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::tag.name',
                     'icon' => 'ti ti-tag',
@@ -562,7 +571,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-degree-level',
-                    'priority' => 9,
+                    'priority' => 10,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::degree-level.name',
                     'icon' => 'ti ti-school',
@@ -571,7 +580,7 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-degree-type',
-                    'priority' => 10,
+                    'priority' => 11,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',
                     'name' => 'plugins/job-board::degree-type.name',
                     'icon' => 'ti ti-certificate',

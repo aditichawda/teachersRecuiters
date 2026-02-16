@@ -22,6 +22,7 @@ use Botble\JobBoard\Models\Job as JobModel;
 use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\JobExperience;
 use Botble\JobBoard\Models\JobSkill;
+use Botble\JobBoard\Support\ScreeningQuestionPlaceholder;
 use Botble\JobBoard\Models\JobType;
 use Botble\JobBoard\Models\Tag;
 use Botble\JobBoard\Repositories\Interfaces\JobInterface;
@@ -51,6 +52,8 @@ class PublicController extends BaseController
 
     /**
      * Get screening questions for a job (for apply form).
+     * Uses question_override/options_override from pivot, or resolves template with job data.
+     * Includes correct_answer for restriction validation.
      */
     public function getJobScreeningQuestions(int $id)
     {
@@ -58,17 +61,78 @@ class PublicController extends BaseController
         if (! $job) {
             return response()->json(['questions' => []], 200);
         }
-        $questions = $job->screeningQuestions->sortBy('order')->values()->map(function ($q) {
+        $replacements = ScreeningQuestionPlaceholder::jobToReplacements($job);
+        $questions = $job->screeningQuestions->sortBy('pivot.order')->values()->map(function ($q) use ($replacements) {
+            $questionText = $q->pivot->question_override
+                ?: ScreeningQuestionPlaceholder::resolve($q->question, $replacements);
+            $opts = $q->pivot->options_override;
+            if ($opts !== null && $opts !== '') {
+                $optsArray = array_filter(array_map('trim', preg_split('/[\r\n]+/', $opts)));
+            } else {
+                $resolved = ScreeningQuestionPlaceholder::resolve(
+                    implode("\n", $q->options_array),
+                    $replacements
+                );
+                $optsArray = array_filter(array_map('trim', preg_split('/[\r\n]+/', $resolved)));
+            }
+
             return [
                 'id' => $q->id,
-                'question' => $q->question,
+                'question' => $questionText,
                 'question_type' => $q->question_type,
-                'options' => $q->options_array,
-                'is_required' => (bool) $q->is_required,
-                'file_types' => $q->file_types,
+                'options' => array_values($optsArray),
+                'is_required' => (bool) ($q->pivot->is_required ?? false),
             ];
         });
         return response()->json(['questions' => $questions]);
+    }
+
+    /**
+     * Validate screening answers before showing resume step.
+     * Returns { valid: true } or { valid: false, message: "..." }.
+     */
+    public function validateScreening(Request $request, int $id)
+    {
+        $job = JobModel::with('screeningQuestions')->find($id);
+        if (! $job) {
+            return response()->json(['valid' => false, 'message' => 'Job not found.'], 404);
+        }
+        $screeningAnswers = $request->input('screening_answers', []);
+        if (! is_array($screeningAnswers)) {
+            $screeningAnswers = [];
+        }
+        foreach ($screeningAnswers as $qId => $val) {
+            if (is_array($val)) {
+                $screeningAnswers[$qId] = json_encode(array_values($val));
+            }
+        }
+        foreach ($job->screeningQuestions as $sq) {
+            $correctAnswer = $sq->pivot->correct_answer ?: $sq->correct_answer;
+            if (! $correctAnswer || ! ($sq->pivot->is_required ?? false)) {
+                continue;
+            }
+            $answer = $screeningAnswers[$sq->id] ?? null;
+            if ($answer === null || $answer === '') {
+                return response()->json([
+                    'valid' => false,
+                    'message' => trans('plugins/job-board::messages.screening_answer_required', ['question' => $sq->question]),
+                ]);
+            }
+            $matches = false;
+            if (is_string($answer) && str_starts_with(trim($answer), '[')) {
+                $decoded = json_decode($answer, true);
+                $matches = is_array($decoded) && in_array(trim($correctAnswer), array_map('trim', $decoded));
+            } else {
+                $matches = trim((string) $answer) === trim($correctAnswer);
+            }
+            if (! $matches) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => trans('plugins/job-board::messages.screening_answer_incorrect'),
+                ]);
+            }
+        }
+        return response()->json(['valid' => true]);
     }
 
     public function getJob(string $slug)
@@ -502,6 +566,34 @@ class PublicController extends BaseController
             foreach ($screeningAnswers as $qId => $val) {
                 if (is_array($val)) {
                     $screeningAnswers[$qId] = json_encode(array_values($val));
+                }
+            }
+            // Validate correct_answer restriction: if question has correct_answer + is_required, candidate must match
+            $job->load('screeningQuestions');
+            foreach ($job->screeningQuestions as $sq) {
+                $correctAnswer = $sq->pivot->correct_answer ?: $sq->correct_answer;
+                if (! $correctAnswer || ! ($sq->pivot->is_required ?? false)) {
+                    continue;
+                }
+                $answer = $screeningAnswers[$sq->id] ?? null;
+                if ($answer === null || $answer === '') {
+                    return $this
+                        ->httpResponse()
+                        ->setError()
+                        ->setMessage(trans('plugins/job-board::messages.screening_answer_required', ['question' => $sq->question]));
+                }
+                $matches = false;
+                if (is_string($answer) && str_starts_with(trim($answer), '[')) {
+                    $decoded = json_decode($answer, true);
+                    $matches = is_array($decoded) && in_array(trim($correctAnswer), array_map('trim', $decoded));
+                } else {
+                    $matches = trim((string) $answer) === trim($correctAnswer);
+                }
+                if (! $matches) {
+                    return $this
+                        ->httpResponse()
+                        ->setError()
+                        ->setMessage(trans('plugins/job-board::messages.screening_answer_incorrect'));
                 }
             }
             // Screening file uploads: upload and store URL in screening_answers

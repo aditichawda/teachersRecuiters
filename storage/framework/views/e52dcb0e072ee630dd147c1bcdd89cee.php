@@ -4,14 +4,16 @@ document.addEventListener('DOMContentLoaded', function() {
     var applyNow = document.getElementById('applyNow');
     if (!applyNow) return;
     var screeningUrl = '<?php echo e(url("ajax/jobs/screening-questions")); ?>';
+
     applyNow.addEventListener('show.bs.modal', function(e) {
         var button = e.relatedTarget;
         var jobId = button && button.getAttribute('data-job-id');
         var wrap = document.getElementById('job-screening-questions-wrap');
         var list = document.getElementById('job-screening-questions-list');
-        if (!wrap || !list) return;
-        list.innerHTML = '';
-        wrap.style.display = 'none';
+        var step1 = document.getElementById('apply-step-1');
+        if (step1) step1.style.display = 'block';
+        if (list) list.innerHTML = '';
+        if (wrap) wrap.style.display = 'none';
         if (!jobId) return;
         fetch(screeningUrl + '/' + jobId, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
             .then(function(r) { return r.json(); })
@@ -57,12 +59,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 var val = typeof o === 'string' ? o : (o.value || o.label || o);
                                 var lbl = document.createElement('label');
                                 lbl.className = 'd-flex align-items-center gap-2 small mb-1';
-                                var cb = document.createElement('input');
-                                cb.type = 'checkbox';
-                                cb.name = namePrefix + '[]';
-                                cb.value = val;
-                                cb.className = 'form-check-input';
-                                lbl.appendChild(cb);
+                                var rb = document.createElement('input');
+                                rb.type = 'radio';
+                                rb.name = namePrefix;
+                                rb.value = val;
+                                rb.className = 'form-check-input';
+                                lbl.appendChild(rb);
                                 lbl.appendChild(document.createTextNode(typeof o === 'string' ? o : (o.label || o.value || o)));
                                 div.appendChild(lbl);
                             });
@@ -100,12 +102,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 wrap.style.display = 'block';
             });
     });
+
     applyNow.addEventListener('hide.bs.modal', function() {
         var list = document.getElementById('job-screening-questions-list');
         if (list) list.innerHTML = '';
         var wrap = document.getElementById('job-screening-questions-wrap');
         if (wrap) wrap.style.display = 'none';
+        var step1 = document.getElementById('apply-step-1');
+        if (step1) step1.style.display = 'block';
+        var errEl = document.getElementById('apply-screening-error');
+        if (errEl) errEl.remove();
     });
+
 });
 </script>
     <div class="modal fade" id="applyExternalJob" tabindex="-1" aria-labelledby="applyExternalJob" aria-hidden="true">

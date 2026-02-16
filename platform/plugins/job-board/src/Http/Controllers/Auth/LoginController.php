@@ -37,6 +37,15 @@ class LoginController extends Controller
             session(['url.intended' => url()->previous()]);
         }
 
+        // Load social-login CSS early so it applies (plugin adds it in form filter, which runs after layout head)
+        if (is_plugin_active('social-login')) {
+            $cssPath = platform_path('plugins/social-login/public/css/social-login.css');
+            $version = file_exists($cssPath) ? (string) filemtime($cssPath) : '1.2.2';
+            Theme::asset()
+                ->usePath(false)
+                ->add('social-login-css', asset('vendor/core/plugins/social-login/css/social-login.css'), [], [], $version);
+        }
+
         Theme::asset()->container('footer')->add('js-validation', 'vendor/core/core/js-validation/js/js-validation.js', ['jquery']);
         Theme::asset()->container('footer')
             ->writeContent('js-validation-scripts', JsValidator::formRequest(LoginRequest::class), ['jquery']);
@@ -76,6 +85,38 @@ class LoginController extends Controller
         $this->incrementLoginAttempts($request);
 
         return $this->sendFailedLoginResponse();
+    }
+
+    protected function credentials(Request $request): array
+    {
+        $login = $request->input('email');
+        $email = $this->resolveLoginToEmail($login);
+
+        return [
+            'email' => $email,
+            'password' => $request->input('password'),
+        ];
+    }
+
+    /**
+     * Resolve login input (email or phone) to account email for authentication.
+     */
+    protected function resolveLoginToEmail(string $login): string
+    {
+        $login = trim($login);
+        if (str_contains($login, '@')) {
+            return $login;
+        }
+        $digits = preg_replace('/[^0-9]/', '', $login);
+        if ($digits === '') {
+            return $login;
+        }
+        $last10 = strlen($digits) >= 10 ? substr($digits, -10) : $digits;
+        $account = Account::where('phone', 'LIKE', '%' . $last10)->first();
+        if ($account) {
+            return $account->email;
+        }
+        return $login;
     }
 
     protected function attemptLogin(Request $request)
