@@ -36,9 +36,7 @@ class SendJobAlertListener
             $logMessage = 'JobPublishedEvent triggered for job: ' . $job->id . ' - ' . $job->name;
             \Log::info($logMessage);
             error_log('[JOB_ALERT] ' . $logMessage);
-            
             $emailsSent = 0;
-
         // Get all active job alerts
         $alerts = JobAlert::query()
             ->where('is_active', true)
@@ -172,6 +170,7 @@ class SendJobAlertListener
             error_log('[JOB_ALERT] Listener error: ' . $e->getMessage());
         }
     }
+
 
     protected function sendJobAlertEmail(JobAlert $alert, $job): void
     {
