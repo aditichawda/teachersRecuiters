@@ -72,6 +72,11 @@ return [
             'description' => 'Send email to job seeker when a new job posted',
             'subject' => 'Hiring {{ job_name }} at {{ company_name }}',
         ],
+        'job-alert-notification' => [
+            'title' => 'Job Alert Notification',
+            'description' => 'Send email to job seeker when a new job matches their alert criteria',
+            'subject' => 'New Job Alert: {{ job_name }} - {{ job_area }}',
+        ],
         'job-approved' => [
             'title' => 'Job approved',
             'description' => 'Send email to the author when their job is approved',
@@ -117,6 +122,14 @@ return [
         'reset_link' => 'Reset link',
         'invoice_code' => 'Invoice Code',
         'invoice_link' => 'Invoice Link',
+        'alert_name' => 'Alert name',
+        'job_area' => 'Job area/category',
+        'job_type' => 'Job type',
+        'location' => 'Location',
+        'salary_range' => 'Salary range',
+        'view_jobs_url' => 'View all jobs URL',
+        'unsubscribe_url' => 'Unsubscribe/manage alerts URL',
+        'job_description' => 'Job description',
     ],
     'email_templates' => [
         // Account registered email template
@@ -257,6 +270,27 @@ return [
         'job_alert_job_info' => 'Job: :job_name',
         'job_alert_company_info' => 'Company: :company_name',
         'job_alert_view_job' => 'View Job',
+
+        // Job alert notification email template (new)
+        'job_alert_notification_greeting' => 'Hello :account_name,',
+        'job_alert_notification_title' => 'New Job Alert: :job_name',
+        'job_alert_notification_message' => 'We found a new job opportunity that matches your alert "<strong>:alert_name</strong>".',
+        'job_alert_notification_preferences' => 'Your Alert Preferences:',
+        'job_alert_notification_job_area' => 'Preferred Job Area: <strong>:job_area</strong>',
+        'job_alert_notification_job_type' => 'Job Type: <strong>:job_type</strong>',
+        'job_alert_notification_location' => 'Location: <strong>:location</strong>',
+        'job_alert_notification_salary' => 'Salary Range: <strong>:salary_range</strong>',
+        'job_alert_notification_job_details' => 'Job Details:',
+        'job_alert_notification_job_title' => 'Job Title: <strong>:job_name</strong>',
+        'job_alert_notification_company' => 'Company: <strong>:company_name</strong>',
+        'job_alert_notification_description' => 'Description:',
+        'job_alert_notification_view_button' => 'View Job Details',
+        'job_alert_notification_browse_button' => 'Browse All Jobs',
+        'job_alert_notification_manage_alerts' => 'Manage Your Job Alerts',
+        'job_alert_notification_unsubscribe' => 'To update or unsubscribe from this alert, click here',
+        'job_alert_notification_thanks' => 'Thank you for using our job alert service!',
+        'job_alert_notification_regards' => 'Best regards,',
+        'job_alert_notification_team' => ':site_title Team',
 
         // Job seeker applied job email template
         'job_application_confirmation_title' => 'Job Application Confirmation',

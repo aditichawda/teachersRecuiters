@@ -95,3 +95,11 @@ if (! defined('JOB_BOARD_CUSTOM_FIELD_MODULE_SCREEN_NAME')) {
 if (! defined('COUPON_MODULE_SCREEN_NAME')) {
     define('COUPON_MODULE_SCREEN_NAME', 'coupon');
 }
+
+if (! defined('SPECIALIZATION_MODULE_SCREEN_NAME')) {
+    define('SPECIALIZATION_MODULE_SCREEN_NAME', 'specialization');
+}
+
+if (! defined('LANGUAGE_MODULE_SCREEN_NAME')) {
+    define('LANGUAGE_MODULE_SCREEN_NAME', 'language');
+}
