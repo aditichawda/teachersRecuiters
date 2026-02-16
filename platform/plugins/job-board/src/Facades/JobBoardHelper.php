@@ -22,7 +22,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static string|null getJobsPageURL()
  * @method static string|null getJobCategoriesPageURL()
  * @method static string|null getJobcompaniesPageURL()
- * @method static string|null getJobInstitutesPageURL()
  * @method static string|null getJobCandidatesPageURL()
  * @method static array getJobFilters(\Illuminate\Http\Request|array $inputs)
  * @method static array getCompanyFilterParams(\Illuminate\Http\Request|array $inputs)

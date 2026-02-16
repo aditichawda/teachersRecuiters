@@ -98,6 +98,14 @@ AdminHelper::registerRoutes(function (): void {
             Route::resource('', 'JobSkillController')->parameters(['' => 'job-skill']);
         });
 
+        Route::group(['prefix' => 'specializations', 'as' => 'specializations.'], function (): void {
+            Route::resource('', 'SpecializationController')->parameters(['' => 'specialization']);
+        });
+
+        Route::group(['prefix' => 'languages', 'as' => 'languages.'], function (): void {
+            Route::resource('', 'LanguageController')->parameters(['' => 'language']);
+        });
+
         Route::group(['prefix' => 'job-shifts', 'as' => 'job-shifts.'], function (): void {
             Route::resource('', 'JobShiftController')->parameters(['' => 'job-shift']);
         });

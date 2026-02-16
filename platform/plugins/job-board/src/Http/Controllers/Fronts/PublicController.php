@@ -49,28 +49,6 @@ class PublicController extends BaseController
     ) {
     }
 
-    /**
-     * Get screening questions for a job (for apply form).
-     */
-    public function getJobScreeningQuestions(int $id)
-    {
-        $job = JobModel::with('screeningQuestions')->find($id);
-        if (! $job) {
-            return response()->json(['questions' => []], 200);
-        }
-        $questions = $job->screeningQuestions->sortBy('order')->values()->map(function ($q) {
-            return [
-                'id' => $q->id,
-                'question' => $q->question,
-                'question_type' => $q->question_type,
-                'options' => $q->options_array,
-                'is_required' => (bool) $q->is_required,
-                'file_types' => $q->file_types,
-            ];
-        });
-        return response()->json(['questions' => $questions]);
-    }
-
     public function getJob(string $slug)
     {
         $slug = SlugHelper::getSlug($slug, SlugHelper::getPrefix(JobModel::class));
@@ -367,108 +345,6 @@ class PublicController extends BaseController
             ->setMessage($message);
     }
 
-    public function getInstitutes(Request $request)
-    {
-        $requestQuery = JobBoardHelper::getCompanyFilterParams($request->input());
-
-        // Filter companies by institution_type (institutes)
-        $instituteTypes = [
-            'school',
-            'college',
-            'coaching-institute',
-            'university',
-            'distance-learning',
-            'teacher-training-academy',
-            'sports-academy',
-        ];
-
-        $institutes = Company::query()
-            ->whereIn('institution_type', $instituteTypes)
-            ->withCount([
-                'activeJobs as jobs_count',
-                'reviews',
-            ])
-            ->withAvg('reviews', 'star')
-            ->with(['slugable'])
-            ->pinFeatured();
-
-        if ($requestQuery['keyword']) {
-            if (
-                is_plugin_active('language') &&
-                is_plugin_active('language-advanced') &&
-                Language::getCurrentLocale() != Language::getDefaultLocale()
-            ) {
-                $institutes = $institutes->where(function (Builder $query) use ($requestQuery): void {
-                    $query->where('name', 'LIKE', $requestQuery['keyword'] . '%')
-                        ->orWhereHas('translations', function (Builder $query) use ($requestQuery): void {
-                            $query->where('name', 'LIKE', $requestQuery['keyword'] . '%');
-                        });
-                });
-            } else {
-                $institutes = $institutes->where('name', 'LIKE', $requestQuery['keyword'] . '%');
-            }
-        }
-
-        match ($requestQuery['sort_by'] ?? 'oldest') {
-            'newest' => $institutes = $institutes->latest(),
-            default => $institutes = $institutes->oldest(),
-        };
-
-        $institutes = $institutes->paginate($requestQuery['per_page'] ?: 12);
-
-        $total = $institutes->total();
-
-        if ($total) {
-            $message = trans('plugins/job-board::messages.showing_results', [
-                'from' => number_format($institutes->firstItem()),
-                'to' => number_format($institutes->lastItem()),
-                'total' => number_format($institutes->total()),
-            ]);
-        } else {
-            $message = trans('plugins/job-board::messages.no_results_found');
-        }
-
-        if ($request->ajax()) {
-            $view = Theme::getThemeNamespace('views.job-board.partials.institutes');
-
-            if (! view()->exists($view)) {
-                $view = Theme::getThemeNamespace('views.job-board.partials.companies');
-            }
-
-            if (! view()->exists($view)) {
-                $view = 'plugins/job-board::themes.partials.companies';
-            }
-
-            return $this
-                ->httpResponse()
-                ->setData(view($view, compact('institutes'))->render())
-                ->setAdditional([
-                    'total' => $total,
-                    'message' => $message,
-                ])
-                ->setMessage($message);
-        }
-
-        $view = Theme::getThemeNamespace('views.job-board.partials.institutes');
-
-        if (! view()->exists($view)) {
-            $view = Theme::getThemeNamespace('views.job-board.partials.companies');
-        }
-
-        if (! view()->exists($view)) {
-            $view = 'plugins/job-board::themes.partials.companies';
-        }
-
-        return $this
-            ->httpResponse()
-            ->setData(view($view, compact('institutes'))->render())
-            ->setAdditional([
-                'total' => $total,
-                'message' => $message,
-            ])
-            ->setMessage($message);
-    }
-
     public function postApplyJob(ApplyJobRequest $request, ?int $id = null)
     {
         if (! auth('account')->check() && ! JobBoardHelper::isGuestApplyEnabled()) {
@@ -550,20 +426,6 @@ class PublicController extends BaseController
 
             $request->merge(['job_id' => $job->id]);
 
-            // Full name → first_name + last_name
-            $fullName = $request->input('full_name');
-            if (is_string($fullName) && $fullName !== '') {
-                $parts = preg_split('/\s+/', trim($fullName), 2, PREG_SPLIT_NO_EMPTY);
-                $request->merge([
-                    'first_name' => $parts[0] ?? '',
-                    'last_name' => $parts[1] ?? '',
-                ]);
-            }
-            // Email: ensure sent (hidden in form; use account email when logged in)
-            if ($account && ! $request->filled('email')) {
-                $request->merge(['email' => $account->email]);
-            }
-
             if (! $job->apply_url) {
                 if ($request->hasFile('resume')) {
                     $result = RvMedia::handleUpload($request->file('resume'), 0, 'job-applications');
@@ -595,33 +457,7 @@ class PublicController extends BaseController
                 $jobApplication->is_external_apply = true;
             }
 
-            $input = $request->input();
-            $screeningAnswers = $request->input('screening_answers', []);
-            if (! is_array($screeningAnswers)) {
-                $screeningAnswers = [];
-            }
-            // Flatten screening_answers: arrays (e.g. from checkboxes) as JSON string
-            foreach ($screeningAnswers as $qId => $val) {
-                if (is_array($val)) {
-                    $screeningAnswers[$qId] = json_encode(array_values($val));
-                }
-            }
-            // Screening file uploads: upload and store URL in screening_answers
-            $screeningFiles = $request->file('screening_answers_file', []);
-            if (is_array($screeningFiles)) {
-                foreach ($screeningFiles as $qId => $file) {
-                    if ($file && $file->isValid()) {
-                        $result = RvMedia::handleUpload($file, 0, 'job-applications');
-                        if (! $result['error'] && isset($result['data'])) {
-                            $screeningAnswers[$qId] = $result['data']->url;
-                        }
-                    }
-                }
-            }
-            $input['screening_answers'] = array_filter($screeningAnswers, function ($v) {
-                return $v !== null && $v !== '';
-            });
-            $jobApplication->fill($input);
+            $jobApplication->fill($request->input());
             $jobApplication->save();
 
             $job::withoutEvents(fn () => $job::withoutTimestamps(fn () => $job->increment('number_of_applied')));
@@ -1045,129 +881,6 @@ class PublicController extends BaseController
             'job-board.company',
             compact('company', 'jobs', 'canReview', 'canReviewCompany'),
             'plugins/job-board::themes.company'
-        )->render();
-    }
-
-    public function getInstitute(string $slug)
-    {
-        // Use the same prefix as companies since institutes are companies with specific institution_type
-        $slug = SlugHelper::getSlug($slug, SlugHelper::getPrefix(Company::class, 'companies'));
-
-        abort_unless($slug, 404);
-
-        // Filter by institution_type to ensure it's an institute
-        $instituteTypes = [
-            'school',
-            'college',
-            'coaching-institute',
-            'university',
-            'distance-learning',
-            'teacher-training-academy',
-            'sports-academy',
-        ];
-
-        $condition = [
-            'id' => $slug->reference_id,
-            'status' => BaseStatusEnum::PUBLISHED,
-        ];
-
-        if (AdminHelper::isPreviewing()) {
-            Arr::forget($condition, 'status');
-        }
-
-        /**
-         * @var Company $institute
-         */
-        $institute = Company::query()
-            ->where($condition)
-            ->whereIn('institution_type', $instituteTypes)
-            ->withCount([
-                'jobs' => function (Builder $query): void {
-                    // @phpstan-ignore-next-line
-                    $query
-                        ->active()
-                        ->where(['jb_jobs.hide_company' => false]);
-                },
-                'reviews',
-            ])
-            ->withAvg('reviews', 'star')
-            ->firstOrFail();
-
-        $institute->setRelation('slugable', $slug);
-
-        $params = [
-            'condition' => [
-                'jb_jobs.company_id' => $institute->getKey(),
-                'jb_jobs.hide_company' => false,
-            ],
-            'order_by' => ['created_at' => 'DESC'],
-            'paginate' => [
-                'per_page' => 3,
-                'current_paged' => request()->integer('page') ?: 1,
-            ],
-        ];
-
-        $jobs = $this->jobRepository->getJobs([], $params);
-
-        if (request()->ajax()) {
-            $view = Theme::getThemeNamespace('views.job-board.partials.institute-job-items');
-
-            if (! view()->exists($view)) {
-                $view = Theme::getThemeNamespace('views.job-board.partials.company-job-items');
-            }
-
-            if (! view()->exists($view)) {
-                $view = 'plugins/job-board::themes.partials.job-items';
-            }
-
-            return $this
-                ->httpResponse()->setData(view($view, compact('jobs', 'institute'))->render());
-        }
-
-        if (function_exists('admin_bar')) {
-            admin_bar()->registerLink(trans('plugins/job-board::messages.edit_this_company'), route('companies.edit', $institute->getKey()), 'companies.edit');
-        }
-
-        SeoHelper::setTitle($institute->name)->setDescription($institute->description);
-
-        $meta = new SeoOpenGraph();
-        if ($institute->logo) {
-            $meta->setImage(RvMedia::getImageUrl($institute->logo));
-        }
-        $meta->setDescription($institute->description);
-        $meta->setUrl($institute->url);
-        $meta->setTitle($institute->name);
-        $meta->setType('article');
-
-        SeoHelper::setSeoOpenGraph($meta);
-
-        Helper::handleViewCount($institute, 'viewed_company');
-
-        Theme::breadcrumb()
-            ->add(trans('plugins/job-board::messages.institutes'), JobBoardHelper::getJobInstitutesPageURL())
-            ->add($institute->name, $institute->url);
-
-        do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, COMPANY_MODULE_SCREEN_NAME, $institute);
-
-        if (JobBoardHelper::isEnabledReview()) {
-            $institute->setRelation('reviews', $institute->reviews()->with('createdBy')->paginate(10));
-
-            /** @var Account $account */
-            $account = Auth::guard('account')->user();
-
-            $canReview = $account
-                && ! $account->isEmployer()
-                && $account->canReview($institute);
-        } else {
-            $canReview = false;
-        }
-
-        $canReviewInstitute = $canReview;
-
-        return Theme::scope(
-            'job-board.institute',
-            compact('institute', 'jobs', 'canReview', 'canReviewInstitute'),
-            'plugins/job-board::themes.institute'
         )->render();
     }
 

@@ -64,7 +64,8 @@ return [
                     ->with('externalJobApplicationForm', $externalJobApplicationForm);
             });
 
-            $version = get_cms_version() . '.2';
+            // Add timestamp to bust cache
+            $version = get_cms_version() . '.' . time();
 
             $stylePrefix = 'plugins/css/';
             $scriptPrefix = 'plugins/js/';

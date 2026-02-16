@@ -218,13 +218,17 @@ class AccountJobController extends BaseController
             }
         } else {
             $job->moderation_status = ModerationStatusEnum::APPROVED;
-            if (empty($job->status)) {
-                $job->status = JobStatusEnum::PUBLISHED;
-            }
-            event(new JobPublishedEvent($job));
+            // Always set status to PUBLISHED if approval is disabled (override any existing status)
+            $job->status = JobStatusEnum::PUBLISHED;
         }
 
         $job->save();
+        
+        // Reload to ensure status is correct
+        $job->refresh();
+        
+        // Debug: Log job status
+        error_log('[JOB_CREATE] Job created - ID: ' . $job->id . ', Status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null') . ', Approval Enabled: ' . (JobBoardHelper::isEnabledJobApproval() ? 'Yes' : 'No'));
 
         $customFields = CustomFieldValue::formatCustomFields($request->input('custom_fields') ?? []);
 
@@ -237,6 +241,18 @@ class AccountJobController extends BaseController
         $job->skills()->sync($request->input('skills', []));
         $job->jobTypes()->sync($request->input('jobTypes', []));
         $job->categories()->sync($request->input('categories', []));
+        
+        // Trigger event after all relationships are synced
+        if ($job->moderation_status == ModerationStatusEnum::APPROVED && $job->status == JobStatusEnum::PUBLISHED) {
+            // Reload job with relationships before triggering event
+            try {
+                $job->load(['categories', 'jobTypes', 'skills', 'company', 'city', 'state', 'country', 'currency']);
+                event(new JobPublishedEvent($job));
+            } catch (\Exception $e) {
+                \Log::error('Failed to trigger JobPublishedEvent: ' . $e->getMessage());
+                // Continue even if event fails
+            }
+        }
 
         $storeTagService->execute($request, $job);
 
@@ -281,7 +297,8 @@ class AccountJobController extends BaseController
             $account->save();
         }
 
-        if (Job::query()->whereKey($job->getKey())->value('status')->getValue() == JobStatusEnum::PUBLISHED) {
+        // Check if job is published (use the model instance, not query again)
+        if ($job->status == JobStatusEnum::PUBLISHED && $job->moderation_status == ModerationStatusEnum::APPROVED) {
             EmployerPostedJobEvent::dispatch($job, $account);
         }
 
@@ -394,14 +411,6 @@ class AccountJobController extends BaseController
                 $shortcodeCompiler->whitelistShortcodes()
             ),
         ]);
-
-        // When not internal, clear internal emails; when internal, keep only non-empty (max 3 validated in request)
-        if ($request->input('apply_type') !== 'internal') {
-            $request->merge(['apply_internal_emails' => null]);
-        } else {
-            $emails = array_values(array_filter(array_map('trim', (array) $request->input('apply_internal_emails', []))));
-            $request->merge(['apply_internal_emails' => array_slice($emails, 0, 3) ?: null]);
-        }
 
         $except = [
             'is_featured',

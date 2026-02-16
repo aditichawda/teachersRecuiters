@@ -84,7 +84,14 @@ class JobController extends BaseController
         event(new CreatedContentEvent(JOB_MODULE_SCREEN_NAME, $request, $job));
 
         if ($job->moderation_status == ModerationStatusEnum::APPROVED) {
-            event(new JobPublishedEvent($job));
+            // Reload job with relationships before triggering event
+            try {
+                $job->load(['categories', 'jobTypes', 'skills', 'company', 'city', 'state', 'country', 'currency']);
+                event(new JobPublishedEvent($job));
+            } catch (\Exception $e) {
+                \Log::error('Failed to trigger JobPublishedEvent: ' . $e->getMessage());
+                // Continue even if event fails
+            }
         }
 
         $storeTagService->execute($request, $job);

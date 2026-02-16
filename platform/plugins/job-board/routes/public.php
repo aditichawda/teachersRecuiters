@@ -22,12 +22,7 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
         'uses' => 'PublicController@changeCurrency',
     ]);
 
-        Theme::registerRoutes(function (): void {
-        Route::get('ajax/jobs/screening-questions/{id}', [
-            'as' => 'public.ajax.job.screening-questions',
-            'uses' => 'PublicController@getJobScreeningQuestions',
-        ]);
-
+    Theme::registerRoutes(function (): void {
         Route::get('ajax/jobs', [
             'as' => 'public.ajax.jobs',
             'uses' => 'PublicController@getJobs',
@@ -48,11 +43,6 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
             'uses' => 'PublicController@getcompanies',
         ]);
 
-        Route::get('ajax/institutes', [
-            'as' => 'public.ajax.institutes',
-            'uses' => 'PublicController@getInstitutes',
-        ]);
-
         Route::get(SlugHelper::getPrefix(Job::class, 'jobs') . '/{slug}', [
             'as' => 'public.job',
             'uses' => 'PublicController@getJob',
@@ -71,11 +61,6 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
         Route::get(SlugHelper::getPrefix(Company::class, 'companies') . '/{slug}', [
             'as' => 'public.company',
             'uses' => 'PublicController@getCompany',
-        ]);
-
-        Route::get('institutes/{slug}', [
-            'as' => 'public.institute',
-            'uses' => 'PublicController@getInstitute',
         ]);
 
         Route::get(SlugHelper::getPrefix(Account::class, 'candidates') . '/{slug}', [
