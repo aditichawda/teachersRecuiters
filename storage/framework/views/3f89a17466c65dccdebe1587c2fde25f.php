@@ -53,6 +53,7 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
+<<<<<<< HEAD
 
 <?php if($withCountryCodeSelection): ?>
     <?php if (! $__env->hasRenderedOnce('3f47b39b-8072-499a-95ba-39c33ba3b00a')): $__env->markAsRenderedOnce('3f47b39b-8072-499a-95ba-39c33ba3b00a'); ?>
@@ -60,3 +61,6 @@
     <?php endif; ?>
 <?php endif; ?>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/phone-number.blade.php ENDPATH**/ ?>
+=======
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/custom-select.blade.php ENDPATH**/ ?>
+>>>>>>> main

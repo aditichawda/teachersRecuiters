@@ -99,3 +99,11 @@ if (! defined('COUPON_MODULE_SCREEN_NAME')) {
 if (! defined('SCREENING_QUESTION_MODULE_SCREEN_NAME')) {
     define('SCREENING_QUESTION_MODULE_SCREEN_NAME', 'screening-question');
 }
+
+if (! defined('SPECIALIZATION_MODULE_SCREEN_NAME')) {
+    define('SPECIALIZATION_MODULE_SCREEN_NAME', 'specialization');
+}
+
+if (! defined('LANGUAGE_MODULE_SCREEN_NAME')) {
+    define('LANGUAGE_MODULE_SCREEN_NAME', 'language');
+}

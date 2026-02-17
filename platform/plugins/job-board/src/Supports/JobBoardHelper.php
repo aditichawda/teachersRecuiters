@@ -46,8 +46,6 @@ class JobBoardHelper
 
     protected ?string $jobcompaniesPageURL = null;
 
-    protected ?string $jobInstitutesPageURL = null;
-
     public function isGuestApplyEnabled(): bool
     {
         return setting('job_board_enable_guest_apply', 1) == 1;
@@ -206,19 +204,6 @@ class JobBoardHelper
         $this->jobcompaniesPageURL = $page?->url;
 
         return $this->jobcompaniesPageURL;
-    }
-
-    public function getJobInstitutesPageURL(): ?string
-    {
-        if (isset($this->jobInstitutesPageURL) && $this->jobInstitutesPageURL) {
-            return $this->jobInstitutesPageURL;
-        }
-
-        $page = $this->getPage(theme_option('job_institutes_page_id'));
-
-        $this->jobInstitutesPageURL = $page?->url;
-
-        return $this->jobInstitutesPageURL;
     }
 
     public function getJobCandidatesPageURL(): ?string

@@ -11,6 +11,8 @@ return [
     'job_shift_not_found' => 'Job shift not found',
     'career_level_not_found' => 'Career level not found',
     'job_skill_not_found' => 'Job skill not found',
+    'specialization_not_found' => 'Specialization not found',
+    'language_not_found' => 'Language not found',
     'job_experience_not_found' => 'Job experience not found',
     'currency_not_found' => 'Currency not found',
     'degree_level_not_found' => 'Degree level not found',

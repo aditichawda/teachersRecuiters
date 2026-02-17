@@ -319,6 +319,16 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     Route::post('', [AccountLanguageController::class, 'store'])->name('store');
                     Route::delete('{id}', [AccountLanguageController::class, 'destroy'])->name('destroy');
                 });
+
+                Route::group(['prefix' => 'job-alerts', 'as' => 'job-alerts.'], function (): void {
+                    Route::get('/', 'JobAlertController@index')->name('index');
+                    Route::get('create', 'JobAlertController@create')->name('create');
+                    Route::post('/', 'JobAlertController@store')->name('store');
+                    Route::get('{id}/edit', 'JobAlertController@edit')->name('edit');
+                    Route::put('{id}', 'JobAlertController@update')->name('update');
+                    Route::delete('{id}', 'JobAlertController@destroy')->name('destroy');
+                    Route::post('{id}/toggle', 'JobAlertController@toggle')->name('toggle');
+                });
             });
         });
     });

@@ -101,12 +101,12 @@
                             <!-- Job Seeker Menu -->
                             <li class="nav-item">
                                 <a class="nav-link" style="color: black;" href="{{ JobBoardHelper::getJobsPageURL() }}">
-                                    <span>{{ __('Find Jobs') }}</span>
+                                    <span>{{ __('Jobs') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" style="color: black;" href="{{ JobBoardHelper::getJobcompaniesPageURL() }}">
-                                    <span>{{ __('Find Schools') }}</span>
+                                    <span>{{ __('Schools/Institutions') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -120,8 +120,8 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
-                                    <i class="feather-bell"></i>
+                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                                    <i class="feather-bell" style="font-size: 20px !important"></i>
                                 </a>
                             </li>
                         @else

@@ -422,14 +422,6 @@
                     </div>
                 </div>
 
-                <div class="loading">
-                    <div class="loading__inner">
-                        <div class="loading__content">
-                            <span class="spinner"></span>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="twm-jobs-list-wrap jobs-listing">
                     {!! Theme::partial("jobs.$layout", ['jobs' => $jobs, 'style' => 2]) !!}
                 </div>

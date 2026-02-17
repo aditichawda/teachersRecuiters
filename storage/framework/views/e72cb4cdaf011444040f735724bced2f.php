@@ -19,4 +19,4 @@
 <?php unset($__componentOriginal73995948b3bd877b76251b40caf28170); ?>
 <?php endif; ?><?php echo e(trans('core/base::forms.create')); ?>
 
-<?php /**PATH C:\xampp\htdocs\Aditi\platform\core\table\/resources/views/partials/create.blade.php ENDPATH**/ ?>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/table/resources/views/partials/create.blade.php ENDPATH**/ ?>

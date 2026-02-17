@@ -8,6 +8,32 @@
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['showLabel' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showLabel),'showField' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showField),'options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($options),'name' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($name),'prepend' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($prepend ?? null),'append' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($append ?? null),'showError' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showError),'nameKey' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($nameKey)]); ?>
+    <?php
+        if (Arr::get($options, 'choices')) {
+            $classAppend = 'list-tagify';
+        } else {
+            $classAppend = 'tags';
+        }
+
+        $options['attr']['class'] = (rtrim(Arr::get($options, 'attr.class'), ' ') ?: '') . ' ' . $classAppend;
+
+        if (Arr::has($options, 'choices')) {
+            $choices = $options['choices'];
+
+            if ($choices instanceof \Illuminate\Support\Collection) {
+                $choices = $choices->toArray();
+            }
+
+            if ($choices) {
+                $options['attr']['data-list'] = json_encode($choices);
+            }
+        }
+
+        if (Arr::has($options, 'selected')) {
+            $options['value'] = $options['selected'];
+        }
+    ?>
+
      <?php $__env->slot('label', null, []); ?> 
         <?php if($showLabel && $options['label'] !== false && $options['label_show']): ?>
             <?php echo Form::customLabel($name, $options['label'], $options['label_attr']); ?>
@@ -61,7 +87,7 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
-
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/text.blade.php ENDPATH**/ ?>
 <?php if (! $__env->hasRenderedOnce('0dbde2c6-555a-4f87-8c31-60559fa3f68f')): $__env->markAsRenderedOnce('0dbde2c6-555a-4f87-8c31-60559fa3f68f'); ?>
     <?php echo $__env->make('core/base::forms.fields.password-toggle-script', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php endif; ?>

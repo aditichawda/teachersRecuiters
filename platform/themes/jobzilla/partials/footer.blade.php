@@ -210,7 +210,7 @@
                                 <li><a href="/about-us">About Us</a></li>
                                 <li><a href="/contact">Contact Us</a></li>
                                 <li><a href="/how-it-works">How it works</a></li>
-                                <li><a href="/blogs">Blog</a></li>
+                                <li><a href="/blog">Blog</a></li>
                                 <li><a href="/faq">FAQ's</a></li>
                             </ul>
                         </div>

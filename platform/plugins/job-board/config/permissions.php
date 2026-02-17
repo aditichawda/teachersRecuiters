@@ -242,6 +242,48 @@ return [
     ],
 
     [
+        'name' => 'Specializations',
+        'flag' => 'specializations.index',
+        'parent_flag' => 'job-attributes.index',
+    ],
+    [
+        'name' => 'Create',
+        'flag' => 'specializations.create',
+        'parent_flag' => 'specializations.index',
+    ],
+    [
+        'name' => 'Edit',
+        'flag' => 'specializations.edit',
+        'parent_flag' => 'specializations.index',
+    ],
+    [
+        'name' => 'Delete',
+        'flag' => 'specializations.destroy',
+        'parent_flag' => 'specializations.index',
+    ],
+
+    [
+        'name' => 'Languages',
+        'flag' => 'languages.index',
+        'parent_flag' => 'job-attributes.index',
+    ],
+    [
+        'name' => 'Create',
+        'flag' => 'languages.create',
+        'parent_flag' => 'languages.index',
+    ],
+    [
+        'name' => 'Edit',
+        'flag' => 'languages.edit',
+        'parent_flag' => 'languages.index',
+    ],
+    [
+        'name' => 'Delete',
+        'flag' => 'languages.destroy',
+        'parent_flag' => 'languages.index',
+    ],
+
+    [
         'name' => 'Job shifts',
         'flag' => 'job-shifts.index',
         'parent_flag' => 'job-attributes.index',

@@ -489,6 +489,24 @@ class JobBoardServiceProvider extends ServiceProvider
                     'permissions' => ['job-skills.index'],
                 ])
                 ->registerItem([
+                    'id' => 'cms-plugins-job-board-specialization',
+                    'priority' => 1.5,
+                    'parent_id' => 'cms-plugins-job-board-job-attributes',
+                    'name' => 'plugins/job-board::specialization.name',
+                    'icon' => 'ti ti-certificate',
+                    'url' => route('specializations.index'),
+                    'permissions' => ['specializations.index'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-language',
+                    'priority' => 1.6,
+                    'parent_id' => 'cms-plugins-job-board-job-attributes',
+                    'name' => 'plugins/job-board::language.name',
+                    'icon' => 'ti ti-world',
+                    'url' => route('languages.index'),
+                    'permissions' => ['languages.index'],
+                ])
+                ->registerItem([
                     'id' => 'cms-plugins-job-board-job-shift',
                     'priority' => 3,
                     'parent_id' => 'cms-plugins-job-board-job-attributes',

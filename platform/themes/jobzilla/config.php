@@ -64,7 +64,8 @@ return [
                     ->with('externalJobApplicationForm', $externalJobApplicationForm);
             });
 
-            $version = get_cms_version() . '.2';
+            // Add timestamp to bust cache
+            $version = get_cms_version() . '.' . time();
 
             $stylePrefix = 'plugins/css/';
             $scriptPrefix = 'plugins/js/';
@@ -82,8 +83,10 @@ return [
             $theme->asset()->styleUsingPath('flaticon', $stylePrefix . 'flaticon.css');
             $theme->asset()->styleUsingPath('select2-css', 'plugins/select2/css/select2.min.css');
 
-            $theme->asset()->styleUsingPath('main', 'css/main.css');
-            $theme->asset()->container('footer')->usePath()->add('style', 'css/style.css', [], [], $version);
+            // Add cache busting query parameter
+            $cacheBuster = '?v=' . time();
+            $theme->asset()->styleUsingPath('main', 'css/main.css' . $cacheBuster);
+            $theme->asset()->container('footer')->usePath()->add('style', 'css/style.css' . $cacheBuster, [], [], $version);
 
             $theme->asset()->container('footer')->scriptUsingPath('jquery', $scriptPrefix . 'jquery-3.6.0.min.js');
             $theme->asset()->container('footer')->scriptUsingPath('popper', $scriptPrefix . 'popper.min.js');

@@ -53,4 +53,8 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
+<<<<<<< HEAD:storage/framework/views/b496c0e6e90b0410aa5b2e889f90c0a2.php
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/tags.blade.php ENDPATH**/ ?>
+=======
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/tags.blade.php ENDPATH**/ ?>
+>>>>>>> main:storage/framework/views/dd86f143fbceaff6abab7cac08b20297.php

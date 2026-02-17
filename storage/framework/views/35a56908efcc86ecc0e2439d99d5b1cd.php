@@ -133,7 +133,11 @@
     </li>
 </ul>
 
+<<<<<<< HEAD
 <?php if (! $__env->hasRenderedOnce('56a818fb-0bcd-4edc-ae86-f4b3842cb54a')): $__env->markAsRenderedOnce('56a818fb-0bcd-4edc-ae86-f4b3842cb54a'); ?>
+=======
+<?php if (! $__env->hasRenderedOnce('fe7f4c4b-07a0-4d30-8b2b-cba5d56c0755')): $__env->markAsRenderedOnce('fe7f4c4b-07a0-4d30-8b2b-cba5d56c0755'); ?>
+>>>>>>> main
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             function toggleClipboardActionIcon(element) {

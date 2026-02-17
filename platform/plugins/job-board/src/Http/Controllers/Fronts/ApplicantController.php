@@ -5,6 +5,8 @@ namespace Botble\JobBoard\Http\Controllers\Fronts;
 use Botble\Base\Events\UpdatedContentEvent;
 use Botble\Base\Http\Actions\DeleteResourceAction;
 use Botble\Base\Http\Controllers\BaseController;
+use Botble\JobBoard\Enums\JobApplicationStatusEnum;
+use Botble\JobBoard\Events\JobApplicationStatusUpdatedEvent;
 use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Forms\Fronts\ApplicantForm;
 use Botble\JobBoard\Http\Requests\EditJobApplicationRequest;
@@ -60,11 +62,26 @@ class ApplicantController extends BaseController
             ->whereHas('job.company.accounts', function (Builder $query) use ($account): void {
                 $query->where('account_id', $account->getKey());
             })
+            ->with(['job'])
             ->where('id', $id)
             ->firstOrFail();
 
+        // Store old status before updating
+        $oldStatus = $jobApplication->status;
+
         $jobApplication->fill($request->only(['status']));
         $jobApplication->save();
+
+        // Fire status update event if status changed
+        $newStatus = $jobApplication->status;
+        if ($oldStatus->getValue() !== $newStatus->getValue()) {
+            JobApplicationStatusUpdatedEvent::dispatch(
+                $jobApplication,
+                $jobApplication->job,
+                $oldStatus,
+                $newStatus
+            );
+        }
 
         event(new UpdatedContentEvent(JOB_APPLICATION_MODULE_SCREEN_NAME, $request, $jobApplication));
 

@@ -18,7 +18,7 @@
                 </div>
                 <span>({{ __(':count reviews', ['count' => $company->reviews_count]) }})</span>
             @if ($company->state_name) <p class="text-muted mb-4">{{ $company->state_name }}</p> @endif
-                <a href="{{ $company->url }}" class="btn btn-outline-primary">{{ __(':total Opening Jobs', ['total' => $company->jobs_count]) }}</a>
+                <a href="{{ $company->url }}" class="btn btn-outline-primary">{{ __(':total Job Openings', ['total' => $company->jobs_count]) }}</a>
             </div>
         </div>
     </div>

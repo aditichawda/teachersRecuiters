@@ -7,11 +7,13 @@ use Botble\JobBoard\Events\AdminApprovedCompanyEvent;
 use Botble\JobBoard\Events\AdminApprovedJobEvent;
 use Botble\JobBoard\Events\EmployerPostedJobEvent;
 use Botble\JobBoard\Events\JobAppliedEvent;
+use Botble\JobBoard\Events\JobApplicationStatusUpdatedEvent;
 use Botble\JobBoard\Events\JobPublishedEvent;
 use Botble\JobBoard\Listeners\AdminApprovedCompanyListener;
 use Botble\JobBoard\Listeners\AdminApprovedJobListener;
 use Botble\JobBoard\Listeners\EmployerPostedJobListener;
 use Botble\JobBoard\Listeners\JobAppliedListener;
+use Botble\JobBoard\Listeners\JobApplicationStatusUpdatedListener;
 use Botble\JobBoard\Listeners\NewApplicationNotification;
 use Botble\JobBoard\Listeners\RenderingSiteMapListener;
 use Botble\JobBoard\Listeners\SaveFavoriteTagAndSkillsListener;
@@ -47,6 +49,9 @@ class EventServiceProvider extends ServiceProvider
         JobAppliedEvent::class => [
             JobAppliedListener::class,
             NewApplicationNotification::class,
+        ],
+        JobApplicationStatusUpdatedEvent::class => [
+            JobApplicationStatusUpdatedListener::class,
         ],
         PaymentWebhookReceived::class => [
             SubscribedPackageListener::class,

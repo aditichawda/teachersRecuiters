@@ -43,4 +43,12 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
+<<<<<<< HEAD:storage/framework/views/25f54e6547f6f83528b4c3132c546ed2.php
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/autocomplete.blade.php ENDPATH**/ ?>
+=======
+
+<?php if (! $__env->hasRenderedOnce('638a1b94-f5c0-4654-bf35-ed30b0278bad')): $__env->markAsRenderedOnce('638a1b94-f5c0-4654-bf35-ed30b0278bad'); ?>
+    <?php echo $__env->make('core/base::forms.fields.password-toggle-script', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php endif; ?>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/password.blade.php ENDPATH**/ ?>
+>>>>>>> main:storage/framework/views/1ca5bd3304b4e5bb6edf1f8a947a6cc1.php

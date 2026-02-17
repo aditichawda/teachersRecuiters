@@ -4,7 +4,10 @@ namespace Botble\JobBoard\Listeners;
 
 use Botble\Base\Facades\EmailHandler;
 use Botble\JobBoard\Events\JobAppliedEvent;
+use Botble\JobBoard\Jobs\SendEmployerApplicationNotificationJob;
+use Botble\JobBoard\Jobs\SendJobSeekerApplicationConfirmationJob;
 use Botble\Media\Facades\RvMedia;
+use Illuminate\Support\Facades\Log;
 
 class JobAppliedListener
 {
@@ -13,6 +16,36 @@ class JobAppliedListener
         $job = $event->job;
         $jobApplication = $event->jobApplication;
 
+        try {
+            // Dispatch queue-based email jobs for better performance
+            // Send employer notification email (with screening answers)
+            SendEmployerApplicationNotificationJob::dispatch($jobApplication, $job);
+
+            // Send job seeker confirmation email
+            SendJobSeekerApplicationConfirmationJob::dispatch($jobApplication, $job);
+
+            Log::info('Job application email jobs dispatched', [
+                'application_id' => $jobApplication->id,
+                'job_id' => $job->id,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch job application email jobs', [
+                'application_id' => $jobApplication->id,
+                'job_id' => $job->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fallback to old email handler system if queue fails
+            $this->sendLegacyEmails($job, $jobApplication);
+        }
+    }
+
+    /**
+     * Legacy email sending method (fallback)
+     */
+    protected function sendLegacyEmails($job, $jobApplication): void
+    {
         $employerEmails = array_filter($job->employer_emails ?: []);
 
         $emailHandler = EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)

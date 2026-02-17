@@ -140,6 +140,13 @@ class Job extends BaseModel
         return $this->belongsToMany(JobType::class, 'jb_jobs_types', 'job_id', 'job_type_id');
     }
 
+    public function jobAlerts(): BelongsToMany
+    {
+        return $this->belongsToMany(JobAlert::class, 'jb_job_alert_jobs', 'job_id', 'job_alert_id')
+            ->withPivot('sent_at')
+            ->withTimestamps();
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id')->withDefault();

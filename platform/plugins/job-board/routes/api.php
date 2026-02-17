@@ -51,6 +51,18 @@ Route::group([
         Route::get('/{id}', 'JobSkillController@show')->wherePrimaryKey();
     });
 
+    // Public Specializations API
+    Route::group(['prefix' => 'specializations'], function (): void {
+        Route::get('/', 'SpecializationController@index');
+        Route::get('/{id}', 'SpecializationController@show')->wherePrimaryKey();
+    });
+
+    // Public Languages API
+    Route::group(['prefix' => 'languages'], function (): void {
+        Route::get('/', 'LanguageController@index');
+        Route::get('/{id}', 'LanguageController@show')->wherePrimaryKey();
+    });
+
     // Public Job Experiences API
     Route::group(['prefix' => 'job-experiences'], function (): void {
         Route::get('/', 'JobExperienceController@index');
