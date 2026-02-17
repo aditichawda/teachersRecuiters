@@ -53,11 +53,11 @@ class SendJobAlertListener
         // Get all active job alerts - wrapped in try-catch in case table doesn't exist
         $alerts = collect();
         try {
-            $alerts = JobAlert::query()
-                ->where('is_active', true)
-                ->where('frequency', 'instant')
-                ->with(['account', 'jobCategory', 'jobType', 'city', 'state', 'country'])
-                ->get();
+        $alerts = JobAlert::query()
+            ->where('is_active', true)
+            ->where('frequency', 'instant')
+            ->with(['account', 'jobCategory', 'jobType', 'city', 'state', 'country'])
+            ->get();
             error_log('[JOB_ALERT] Loaded ' . $alerts->count() . ' active job alerts');
         } catch (\Exception $e) {
             \Log::warning('Job alerts table may not exist: ' . $e->getMessage());
@@ -68,9 +68,9 @@ class SendJobAlertListener
 
         foreach ($alerts as $alert) {
             try {
-                // Check if we already sent this job to this alert
-                if ($alert->sentJobs()->where('job_id', $job->id)->exists()) {
-                    continue;
+            // Check if we already sent this job to this alert
+            if ($alert->sentJobs()->where('job_id', $job->id)->exists()) {
+                continue;
                 }
             } catch (\Exception $e) {
                 error_log('[JOB_ALERT] Error checking sent jobs for alert ' . $alert->id . ': ' . $e->getMessage());
@@ -141,9 +141,9 @@ class SendJobAlertListener
                     
                     // Mark job as sent to this alert - wrapped in try-catch in case pivot table doesn't exist
                     try {
-                        $alert->sentJobs()->attach($job->id, ['sent_at' => Carbon::now()]);
-                        $alert->last_sent_at = Carbon::now();
-                        $alert->save();
+                    $alert->sentJobs()->attach($job->id, ['sent_at' => Carbon::now()]);
+                    $alert->last_sent_at = Carbon::now();
+                    $alert->save();
                     } catch (\Exception $attachException) {
                         error_log('[JOB_ALERT] Could not mark job as sent (pivot table may not exist): ' . $attachException->getMessage());
                         // Continue - email was sent successfully
@@ -459,25 +459,25 @@ class SendJobAlertListener
             // Database se directly type = 'job-seeker' wale accounts fetch karein
             error_log('[JOB_ALERT] 📊 Running database query...');
             error_log('[JOB_ALERT]   Searching for: type = "' . $jobSeekerTypeValue . '"');
-            
+                
             // First, let's check what types exist in database
             $allTypes = DB::table('jb_accounts')
                 ->selectRaw('DISTINCT type')
-                ->get();
+                    ->get();
             error_log('[JOB_ALERT]   All types in database: ' . $allTypes->pluck('type')->implode(', '));
-            
-            $jobSeekerIds = DB::table('jb_accounts')
+                
+                $jobSeekerIds = DB::table('jb_accounts')
                 ->where('type', $jobSeekerTypeValue)  // type = 'job-seeker' (exact match)
-                ->whereNotNull('email')
-                ->where('email', '!=', '')
-                ->where('email', 'LIKE', '%@%')
-                ->pluck('id')
-                ->toArray();
-            
+                    ->whereNotNull('email')
+                    ->where('email', '!=', '')
+                    ->where('email', 'LIKE', '%@%')
+                    ->pluck('id')
+                    ->toArray();
+                
             error_log('[JOB_ALERT] 📊 DATABASE QUERY RESULT:');
             error_log('[JOB_ALERT]   Query: SELECT id FROM jb_accounts WHERE type = "' . $jobSeekerTypeValue . '" AND email IS NOT NULL');
             error_log('[JOB_ALERT]   Found ' . count($jobSeekerIds) . ' job seeker IDs with valid email');
-            
+                
             // Also check total count for debugging
             $totalJobSeekersInDb = DB::table('jb_accounts')
                 ->where('type', $jobSeekerTypeValue)
@@ -486,7 +486,7 @@ class SendJobAlertListener
             
             // Convert IDs to Account models
             $jobSeekers = collect();
-            if (!empty($jobSeekerIds)) {
+                if (!empty($jobSeekerIds)) {
                 // Apply limit only if specified (null = no limit, send to all)
                 if ($limit !== null && $limit > 0 && count($jobSeekerIds) > $limit) {
                     $jobSeekerIds = array_slice($jobSeekerIds, 0, $limit);
@@ -495,9 +495,9 @@ class SendJobAlertListener
                     error_log('[JOB_ALERT] ✅ No limit - sending to ALL ' . count($jobSeekerIds) . ' job seekers');
                 }
                 
-                $jobSeekers = Account::query()
-                    ->whereIn('id', $jobSeekerIds)
-                    ->get();
+                    $jobSeekers = Account::query()
+                        ->whereIn('id', $jobSeekerIds)
+                        ->get();
                 
                 error_log('[JOB_ALERT] ✅ Loaded ' . $jobSeekers->count() . ' job seeker accounts from database');
                 
@@ -572,8 +572,8 @@ class SendJobAlertListener
             $totalJobSeekers = $jobSeekers->count();
             
             \Log::info('[JOB_ALERT] Dispatching ' . $totalJobSeekers . ' email jobs to queue');
-            
-                foreach ($jobSeekers as $jobSeeker) {
+
+            foreach ($jobSeekers as $jobSeeker) {
                 try {
                     // Validate email format before queuing
                     if (!filter_var($jobSeeker->email, FILTER_VALIDATE_EMAIL)) {
@@ -617,11 +617,11 @@ class SendJobAlertListener
                     
                     // Add to list for display (limit to first 100 for console display)
                     if (count($jobSeekersList) < 100) {
-                        $jobSeekerName = $jobSeeker->name ?? ($jobSeeker->full_name ?? ($jobSeeker->first_name . ' ' . $jobSeeker->last_name));
-                        $jobSeekersList[] = [
-                            'name' => trim($jobSeekerName) ?: 'Job Seeker',
-                            'email' => $jobSeeker->email
-                        ];
+                    $jobSeekerName = $jobSeeker->name ?? ($jobSeeker->full_name ?? ($jobSeeker->first_name . ' ' . $jobSeeker->last_name));
+                    $jobSeekersList[] = [
+                        'name' => trim($jobSeekerName) ?: 'Job Seeker',
+                        'email' => $jobSeeker->email
+                    ];
                     }
                     
                     // Log progress every 50 emails
@@ -650,7 +650,7 @@ class SendJobAlertListener
                     'email' => ''
                 ];
             }
-            
+
             return [
                 'emails_sent' => $emailsQueued, // Count of queued emails
                 'job_seekers_list' => $jobSeekersList
@@ -781,32 +781,32 @@ class SendJobAlertListener
     {
         // Build HTML email content with all job details
         return "
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset='utf-8'>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset='utf-8'>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
                     h2 { color: #1967d2; }
-                    .job-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                        .job-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
                     .button { display: inline-block; background: #1967d2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-top: 15px; font-weight: bold; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
                     <h2>New Job Alert: " . htmlspecialchars($emailVariables['job_name']) . "</h2>
                     <p>Hello " . htmlspecialchars($emailVariables['account_name']) . ",</p>
                     <p>We found a new job opportunity that matches your preferences.</p>
                     
-                    <div class='job-details'>
+                        <div class='job-details'>
                         <p><strong>Job Title:</strong> " . htmlspecialchars($emailVariables['job_name']) . "</p>
                         " . (!empty($emailVariables['company_name']) ? "<p><strong>Company:</strong> " . htmlspecialchars($emailVariables['company_name']) . "</p>" : "") . "
                         <p><strong>Location:</strong> " . htmlspecialchars($emailVariables['location'] ?? 'Any Location') . "</p>
                         <p><strong>Job Area:</strong> " . htmlspecialchars($emailVariables['job_area'] ?? 'All Categories') . "</p>
                         <p><strong>Job Type:</strong> " . htmlspecialchars($emailVariables['job_type'] ?? 'All Types') . "</p>
                         <p><strong>Salary Range:</strong> " . htmlspecialchars($emailVariables['salary_range'] ?? 'Negotiable') . "</p>
-                    </div>
+                        </div>
                     
                     " . (!empty($emailVariables['job_description']) ? "<p><strong>Description:</strong></p><p>" . htmlspecialchars(substr($emailVariables['job_description'], 0, 200)) . (strlen($emailVariables['job_description']) > 200 ? '...' : '') . "</p>" : "") . "
                     
@@ -827,10 +827,10 @@ class SendJobAlertListener
                         Best regards,<br>
                         <strong>TeachersRecruiter Team</strong>
                     </p>
-                </div>
-            </body>
-            </html>
-        ";
+                    </div>
+                </body>
+                </html>
+            ";
     }
 
     protected function formatSalaryRange($job): string

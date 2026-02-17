@@ -64,19 +64,12 @@ class SendJobAlertEmailJob implements ShouldQueue
             $accountName = $this->jobSeeker->name ?? ($this->jobSeeker->full_name ?? ($this->jobSeeker->first_name . ' ' . $this->jobSeeker->last_name));
             $accountName = trim($accountName) ?: 'Job Seeker';
 
-            // Get job URL - ensure it's absolute
-            $jobUrl = $this->jobPost->url;
-            // If URL is relative, make it absolute
-            if (!filter_var($jobUrl, FILTER_VALIDATE_URL)) {
-                $jobUrl = url($jobUrl);
-            }
-
             // Prepare email variables
             $emailVariables = [
                 'account_name' => $accountName,
                 'alert_name' => 'New Job Opportunity',
                 'job_name' => $this->jobPost->name,
-                'job_url' => $jobUrl,
+                'job_url' => $this->jobPost->url,
                 'job_description' => strip_tags($this->jobPost->description ?? ''),
                 'company_name' => $this->jobPost->hide_company ? '' : ($this->jobPost->company->name ?? ''),
                 'job_area' => $jobArea,
@@ -106,15 +99,40 @@ class SendJobAlertEmailJob implements ShouldQueue
             ]);
 
         } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
+            $isGmailLimitError = str_contains($errorMessage, 'Daily user sending limit exceeded') || 
+                                 str_contains($errorMessage, '550-5.4.5');
+
             Log::error('Failed to send job alert email', [
                 'job_seeker_id' => $this->jobSeeker->id,
                 'job_seeker_email' => $this->jobSeeker->email,
                 'job_id' => $this->jobPost->id,
-                'error' => $e->getMessage(),
+                'error' => $errorMessage,
+                'is_gmail_limit' => $isGmailLimitError,
             ]);
+
+            // If it's a Gmail limit error, log a warning but still throw to retry later
+            if ($isGmailLimitError) {
+                Log::warning('[JOB_ALERT] Gmail daily sending limit exceeded. Job will retry later with backoff.', [
+                    'job_seeker_email' => $this->jobSeeker->email,
+                    'job_id' => $this->jobPost->id,
+                ]);
+            }
 
             throw $e; // Re-throw to trigger retry
         }
+    }
+
+    /**
+     * Calculate the backoff delay for retries
+     * For Gmail limit errors, use longer delays (hours)
+     * For other errors, use shorter delays (minutes)
+     */
+    public function backoff(): array
+    {
+        // Exponential backoff: 1 hour, 2 hours, 4 hours
+        // This helps with Gmail daily sending limits
+        return [3600, 7200, 14400]; // 1 hour, 2 hours, 4 hours
     }
 
     /**

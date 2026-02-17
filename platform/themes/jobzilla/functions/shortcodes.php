@@ -1399,6 +1399,17 @@ app()->booted(function (): void {
         });
 
         add_shortcode('job-board-candidates', __('Job board - Candidates'), __('Job board - Candidates'), function ($shortcode) {
+            // Check if user is authenticated and is an employer
+            $account = auth('account')->user();
+            if (!$account || !$account->isEmployer()) {
+                $message = __('Only employers can view candidates. Please login as an employer to access this page.');
+                return '<div class="alert alert-warning" style="padding: 20px; margin: 20px 0; border: 1px solid #ffc107; background-color: #fff3cd; border-radius: 4px;">
+                    <h4 style="margin-top: 0;">' . __('Access Denied') . '</h4>
+                    <p>' . $message . '</p>
+                    <p><a href="' . route('public.account.login') . '" class="btn btn-primary">' . __('Login') . '</a></p>
+                </div>';
+            }
+
             $with = ['avatar'];
 
             if (! JobBoardHelper::isDisabledPublicProfile()) {
@@ -1410,7 +1421,7 @@ app()->booted(function (): void {
                 ['type', '=', AccountTypeEnum::JOB_SEEKER],
             ];
 
-            if (config('plugins.job-board.job-board.verify_email')) {
+            if (setting('verify_account_email', 0)) {
                 $condition[] = ['confirmed_at', '!=', null];
             }
 

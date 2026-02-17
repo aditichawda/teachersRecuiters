@@ -557,18 +557,34 @@
             .then(data => {
                 if (data.error === false) {
                     @if(!empty($isWhatsappAvailable) && !empty($phone))
-                        showToast('text-success', 'Verification code resent successfully to your WhatsApp ({{ $phone }}) and Email ({{ $email }})!');
+                        if (typeof window.showDialogAlert === 'function') {
+                            window.showDialogAlert('success', 'Verification code resent successfully to your WhatsApp ({{ $phone }}) and Email ({{ $email }})!', 'Success');
+                        } else {
+                            showToast('text-success', 'Verification code resent successfully to your WhatsApp ({{ $phone }}) and Email ({{ $email }})!');
+                        }
                     @else
-                        showToast('text-success', 'Verification code resent successfully to your Email ({{ $email }})!');
+                        if (typeof window.showDialogAlert === 'function') {
+                            window.showDialogAlert('success', 'Verification code resent successfully to your Email ({{ $email }})!', 'Success');
+                        } else {
+                            showToast('text-success', 'Verification code resent successfully to your Email ({{ $email }})!');
+                        }
                     @endif
                     startTimer();
                 } else {
-                    showToast('text-danger', data.message || 'Failed to resend code');
+                    if (typeof window.showDialogAlert === 'function') {
+                        window.showDialogAlert('error', data.message || 'Failed to resend code', 'Error');
+                    } else {
+                        showToast('text-danger', data.message || 'Failed to resend code');
+                    }
                     resendBtn.disabled = false;
                 }
             })
             .catch(err => {
-                showToast('text-danger', 'Failed to resend code');
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('error', 'Failed to resend code', 'Error');
+                } else {
+                    showToast('text-danger', 'Failed to resend code');
+                }
                 resendBtn.disabled = false;
             });
         });

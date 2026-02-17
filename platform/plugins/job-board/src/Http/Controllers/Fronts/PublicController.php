@@ -1042,6 +1042,12 @@ class PublicController extends BaseController
     {
         abort_if(JobBoardHelper::isDisabledPublicProfile(), 404);
 
+        // Check if user is authenticated and is an employer
+        $account = Auth::guard('account')->user();
+        if (!$account || !$account->isEmployer()) {
+            abort(403, __('Only employers can view candidate profiles'));
+        }
+
         $slug = SlugHelper::getSlug($slug, SlugHelper::getPrefix(Account::class));
 
         abort_unless($slug, 404);
@@ -1089,11 +1095,6 @@ class PublicController extends BaseController
         $experiences = AccountExperience::where('account_id', $candidate->id)->get();
         $educations = AccountEducation::where('account_id', $candidate->id)->get();
 
-        /**
-         * @var Account $account
-         */
-        $account = Auth::guard('account')->user();
-
         if (JobBoardHelper::isEnabledReview()) {
             $candidate
                 ->loadCount('reviews')
@@ -1117,6 +1118,12 @@ class PublicController extends BaseController
     public function getCandidates(Request $request)
     {
         abort_if(! $request->ajax() || JobBoardHelper::isDisabledPublicProfile(), 404);
+
+        // Check if user is authenticated and is an employer
+        $account = Auth::guard('account')->user();
+        if (!$account || !$account->isEmployer()) {
+            abort(403, __('Only employers can view candidates'));
+        }
 
         $candidates = JobBoardHelper::filterCandidates(request()->input());
 

@@ -1737,7 +1737,11 @@ function addQualification() {
 let languageIndex = {{ count($languages ?? [1]) }};
 function addLanguage() {
     if (document.querySelectorAll('.language-item').length >= 3) {
-        alert('Maximum 3 languages allowed');
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('error', 'Maximum 3 languages allowed', 'Limit Reached');
+        } else {
+            alert('Maximum 3 languages allowed');
+        }
         return;
     }
     const container = document.getElementById('languages-container');
@@ -1774,7 +1778,11 @@ var useLocationDropdowns = document.getElementById('js-use-location-dropdowns') 
 var countriesData = @json($countries ?? []);
 function addWorkLocation() {
     if (document.querySelectorAll('.work-location-item').length >= 3) {
-        alert('{{ __("Maximum 3 location preferences allowed") }}');
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('error', '{{ __("Maximum 3 location preferences allowed") }}', 'Limit Reached');
+        } else {
+            alert('{{ __("Maximum 3 location preferences allowed") }}');
+        }
         return;
     }
     var idx = document.querySelectorAll('.work-location-item').length;
@@ -1849,11 +1857,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!data.error) {
                     window.location.reload();
                 } else {
-                    alert(data.message || 'Failed to remove photo');
+                    if (typeof window.showDialogAlert === 'function') {
+                        window.showDialogAlert('error', data.message || 'Failed to remove photo', 'Error');
+                    } else {
+                        alert(data.message || 'Failed to remove photo');
+                    }
                 }
             })
             .catch(function() {
-                alert('Something went wrong. Please try again.');
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('error', 'Something went wrong. Please try again.', 'Error');
+                } else {
+                    alert('Something went wrong. Please try again.');
+                }
             });
         });
     }
@@ -1934,7 +1950,11 @@ var isSpeechActive = false;
 
 function toggleSpeechToText() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        alert('{{ __("Speech-to-Text is not supported in your browser. Please use Chrome or Edge.") }}');
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('error', '{{ __("Speech-to-Text is not supported in your browser. Please use Chrome or Edge.") }}', 'Browser Not Supported');
+        } else {
+            alert('{{ __("Speech-to-Text is not supported in your browser. Please use Chrome or Edge.") }}');
+        }
         return;
     }
 
@@ -1979,7 +1999,11 @@ function startSpeechToText() {
     speechRecognition.onerror = function(event) {
         console.error('Speech recognition error:', event.error);
         if (event.error === 'not-allowed') {
-            alert('{{ __("Microphone access was denied. Please allow microphone access in your browser settings.") }}');
+            if (typeof window.showDialogAlert === 'function') {
+                window.showDialogAlert('error', '{{ __("Microphone access was denied. Please allow microphone access in your browser settings.") }}', 'Permission Denied');
+            } else {
+                alert('{{ __("Microphone access was denied. Please allow microphone access in your browser settings.") }}');
+            }
         }
         stopSpeechToText();
     };
@@ -1994,7 +2018,11 @@ function startSpeechToText() {
     try {
         speechRecognition.start();
     } catch(e) {
-        alert('{{ __("Could not start speech recognition. Please try again.") }}');
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('error', '{{ __("Could not start speech recognition. Please try again.") }}', 'Error');
+        } else {
+            alert('{{ __("Could not start speech recognition. Please try again.") }}');
+        }
     }
 }
 
