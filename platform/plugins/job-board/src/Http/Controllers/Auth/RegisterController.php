@@ -1757,6 +1757,37 @@ class RegisterController extends BaseController
     }
 
     /**
+     * Resend employer verification code (OTP)
+     */
+    public function resendEmployerVerificationCode(Request $request)
+    {
+        abort_unless(JobBoardHelper::isRegisterEnabled(), 404);
+
+        $sessionData = $request->session()->get('employer_registration');
+        if (!$sessionData) {
+            return $this->httpResponse()->setError()->setMessage('Session expired. Please start registration again.');
+        }
+
+        $tempAccount = Account::find($sessionData['temp_account_id'] ?? 0);
+        if (!$tempAccount) {
+            return $this->httpResponse()->setError()->setMessage('Session expired. Please start registration again.');
+        }
+
+        $code = $sessionData['code'];
+        $email = $sessionData['email'];
+
+        try {
+            $tempAccount->notify(new EmailVerificationNotification($code));
+            Log::info('Employer verification code resent', ['email' => $email]);
+        } catch (\Exception $e) {
+            Log::error('Employer resend email failed: ' . $e->getMessage(), ['email' => $email]);
+            return $this->httpResponse()->setError()->setMessage('Failed to resend code. Please try again.');
+        }
+
+        return $this->httpResponse()->setMessage('Verification code resent to your email.');
+    }
+
+    /**
      * Show employer institution type page
      */
     public function showEmployerInstitutionTypePage()

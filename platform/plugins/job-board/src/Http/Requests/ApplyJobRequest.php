@@ -41,12 +41,8 @@ class ApplyJobRequest extends Request
                 $internalRules['resume'] = 'nullable|file';
             }
 
-            // Cover letter field - check if required (only if user doesn't have existing cover letter)
-            if (setting('job_board_require_cover_letter_in_apply_job', false) && (! $account || ! $account->cover_letter)) {
-                $internalRules['cover_letter'] = 'required|file';
-            } else {
-                $internalRules['cover_letter'] = 'nullable|file';
-            }
+            // Cover letter - optional (field removed from apply form; uses account's existing if any)
+            $internalRules['cover_letter'] = 'nullable|file';
 
             $rules = array_merge($rules, $internalRules);
         }

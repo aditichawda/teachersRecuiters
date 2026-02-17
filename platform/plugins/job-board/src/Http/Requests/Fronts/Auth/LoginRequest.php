@@ -9,7 +9,7 @@ class LoginRequest extends Request
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string'], // Accept email or phone; validation in controller
             'password' => ['required', 'string'],
         ];
     }

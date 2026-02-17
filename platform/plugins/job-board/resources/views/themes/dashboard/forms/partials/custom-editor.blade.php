@@ -25,6 +25,20 @@
         function setImageValue(file) {
             $('.mce-btn.mce-open').parent().find('.mce-textbox').val(file);
         }
+
+        document.addEventListener('core-editor-init', function (ev) {
+            ev.detail.tinyMceConfigUsing(function (config) {
+                var sel = config.selector;
+                if (typeof sel === 'string' && sel.indexOf('#') === 0) {
+                    var id = sel.slice(1);
+                    var $el = $('#' + id);
+                    if ($el.length && $el.data('placeholder')) {
+                        config.placeholder = $el.data('placeholder');
+                    }
+                }
+                return config;
+            });
+        });
     </script>
     <iframe
         id="form_target"

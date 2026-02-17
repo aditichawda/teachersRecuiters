@@ -7,13 +7,11 @@ use Botble\Base\Forms\FieldOptions\EmailFieldOption;
 use Botble\Base\Forms\FieldOptions\FileFieldOption;
 use Botble\Base\Forms\FieldOptions\HiddenFieldOption;
 use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
-use Botble\Base\Forms\FieldOptions\TextareaFieldOption;
 use Botble\Base\Forms\FieldOptions\TextFieldOption;
 use Botble\Base\Forms\Fields\EmailField;
 use Botble\Base\Forms\Fields\FileField;
 use Botble\Base\Forms\Fields\HiddenField;
 use Botble\Base\Forms\Fields\HtmlField;
-use Botble\Base\Forms\Fields\TextareaField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Captcha\Facades\Captcha;
 use Botble\JobBoard\Http\Requests\ApplyJobRequest;
@@ -75,7 +73,12 @@ class InternalJobApplicationForm extends FormFront
                 ->value('internal')
             )
 
-            // Full name (single field; backend will split to first_name + last_name)
+            // Step 1: Basic info + Screening
+            ->add('step1_start', HtmlField::class, HtmlFieldOption::make()->content('<div id="apply-step-1" class="apply-step">'))
+
+            // Full name + Phone in one row
+            ->add('name_phone_row', HtmlField::class, HtmlFieldOption::make()->content('<div class="row g-2">'))
+            ->add('full_name_col', HtmlField::class, HtmlFieldOption::make()->content('<div class="col-md-6">'))
             ->add('full_name', TextField::class, TextFieldOption::make()
                 ->label(trans('plugins/job-board::messages.full_name_label'))
                 ->value(old('full_name', ($account ? trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) : '')))
@@ -83,50 +86,38 @@ class InternalJobApplicationForm extends FormFront
                 ->required()
                 ->addAttribute('id', 'full_name_apply_now')
             )
-
-            // Email (hidden – not shown, sent at submit from account)
-            ->add('email', HiddenField::class, HiddenFieldOption::make()
-                ->value(old('email', $account->email ?? ''))
-                ->addAttribute('id', 'email_apply_now')
-            )
-
-            // Contact row: Phone only (email hidden above)
-            ->add('contact_row_start', HtmlField::class, HtmlFieldOption::make()->content('<div class="row g-2">'))
-            ->add('phone_col_start', HtmlField::class, HtmlFieldOption::make()->content('<div class="col-12">'))
+            ->add('full_name_col_end', HtmlField::class, HtmlFieldOption::make()->content('</div><div class="col-md-6">'))
             ->add(
                 'phone',
                 TextField::class,
                 TextFieldOption::make()
                 ->label(trans('plugins/job-board::forms.phone'))
-                ->value(old('phone', $account->phone ?? ''))
+                ->value(old('phone', $account?->phone ?? ''))
                 ->placeholder(trans('plugins/job-board::messages.enter_phone_number'))
                 ->required()
                 ->addAttribute('id', 'phone_apply_now')
             )
-            ->add('phone_col_end', HtmlField::class, HtmlFieldOption::make()->content('</div>'))
-            ->add('contact_row_end', HtmlField::class, HtmlFieldOption::make()->content('</div>'))
+            ->add('name_phone_row_end', HtmlField::class, HtmlFieldOption::make()->content('</div></div>'))
+
+            // Email (visible – pre-filled when logged in)
+            ->add('email', EmailField::class, EmailFieldOption::make()
+                ->label(trans('plugins/job-board::messages.email_label'))
+                ->value(old('email', $account?->email ?? ''))
+                ->placeholder(trans('plugins/job-board::messages.email_address'))
+                ->required()
+                ->addAttribute('id', 'email_apply_now')
+            )
 
             // Job Screening Questions (loaded by JS when modal opens)
             ->add('screening_questions_wrap', HtmlField::class, HtmlFieldOption::make()->content('
-                <div id="job-screening-questions-wrap" class="job-apply-screening mb-2" style="display:none;">
+                <div id="job-screening-questions-wrap" class="job-apply-screening mb-3" style="display:none;">
                     <label class="form-label fw-semibold small">' . trans('plugins/job-board::messages.job_screening_questions') . '</label>
                     <div id="job-screening-questions-list"></div>
                 </div>
             '))
 
-            // Message field (compact)
-            ->add(
-                'message',
-                TextareaField::class,
-                TextareaFieldOption::make()
-                ->label(trans('plugins/job-board::messages.message_label'))
-                ->placeholder(trans('plugins/job-board::messages.enter_message'))
-                ->rows(3)
-                ->addAttribute('id', 'message_apply_now')
-                ->when(setting('job_board_require_message_in_apply_job', false), function (TextareaFieldOption $field) {
-                    return $field->required();
-                })
-            )
+            // Single step: screening + resume + submit (no Next/Back)
+            ->add('step1_end', HtmlField::class, HtmlFieldOption::make()->content(''))
 
             // Resume field
             ->add(
@@ -141,42 +132,16 @@ class InternalJobApplicationForm extends FormFront
                 })
             );
 
-        // Resume info if exists
+        // Resume info if exists – short text with clickable filename
         if ($account && $account->resume) {
+            $resumeUrl = RvMedia::url($account->resume);
+            $resumeFilename = basename(str_replace('\\', '/', $account->resume));
+            $displayName = strlen($resumeFilename) > 35 ? substr($resumeFilename, 0, 30) . '…' . substr($resumeFilename, -4) : $resumeFilename;
             $this->add('resume_info', HtmlField::class, HtmlFieldOption::make()->content('
                 <div class="mb-2 mt-1">
                     <p class="job-apply-resume-info small text-muted mb-0">
-                        <i class="mdi mdi-information-outline"></i>
-                        ' . trans('plugins/job-board::messages.current_resume_message', [
-                            'resume' => '<a href="' . RvMedia::url($account->resume) . '" target="_blank">' . $account->resume . '</a>',
-                        ]) . '
-                    </p>
-                </div>
-            '));
-        }
-
-        $this
-            // Cover letter field
-            ->add(
-                'cover_letter',
-                FileField::class,
-                FileFieldOption::make()
-                ->label($this->getCoverLetterLabel($account))
-                ->addAttribute('id', 'cover_letter_apply_now')
-                ->cssClass($account && $account->cover_letter ? 'mb-2' : 'mb-2')
-                ->when(setting('job_board_require_cover_letter_in_apply_job', false) && (! $account || ! $account->cover_letter), function (FileFieldOption $field) {
-                    return $field->required();
-                })
-            );
-
-        // Cover letter info if exists
-        if ($account && $account->cover_letter) {
-            $this->add('cover_letter_info', HtmlField::class, HtmlFieldOption::make()->content('
-                <div class="mb-2 mt-1">
-                    <p class="job-apply-resume-info small text-muted mb-0">
-                        <i class="mdi mdi-information-outline"></i>
-                        ' . trans('plugins/job-board::messages.current_cover_letter_message', [
-                            'cover_letter' => '<a href="' . RvMedia::url($account->cover_letter) . '" target="_blank">' . $account->cover_letter . '</a>',
+                        ' . trans('plugins/job-board::messages.current_resume_short', [
+                            'resume' => '<a href="' . e($resumeUrl) . '" target="_blank" rel="noopener">' . e($displayName) . '</a>',
                         ]) . '
                     </p>
                 </div>
@@ -200,7 +165,9 @@ class InternalJobApplicationForm extends FormFront
                 ButtonFieldOption::make()
                 ->label(trans('plugins/job-board::messages.send_application'))
                 ->cssClass('btn btn-primary w-100')
-            );
+            )
+            // Close apply-step-1 wrapper
+            ->add('step2_end', HtmlField::class, HtmlFieldOption::make()->content('</div>'));
     }
 
     protected function getResumeLabel($account): string

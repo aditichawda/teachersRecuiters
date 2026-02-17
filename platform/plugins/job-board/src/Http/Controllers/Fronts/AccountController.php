@@ -114,9 +114,14 @@ class AccountController extends BaseController
 
         $languageForm = AccountLanguageForm::create();
 
+        $experiences = AccountExperience::query()
+            ->where('account_id', $account->id)
+            ->orderByDesc('started_at')
+            ->get();
+
         return JobBoardHelper::scope(
             'account.settings.index',
-            compact('account', 'jobSkills', 'jobTags', 'selectedJobSkills', 'selectedJobTags', 'languages', 'form', 'languageForm')
+            compact('account', 'jobSkills', 'jobTags', 'selectedJobSkills', 'selectedJobTags', 'languages', 'form', 'languageForm', 'experiences')
         );
     }
 

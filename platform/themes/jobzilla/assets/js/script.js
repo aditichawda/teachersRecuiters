@@ -233,6 +233,59 @@
         $applyExternalJob.find('.modal-job-id').val('');
     });
 
+    $(document).on('submit', '.job-apply-form', function (e) {
+        e.preventDefault();
+
+        const $form = $(e.currentTarget);
+        const $button = $form.find('button[type=submit]');
+
+        $.ajax({
+            type: 'POST',
+            cache: false,
+            url: $form.prop('action'),
+            data: new FormData($form[0]),
+            contentType: false,
+            processData: false,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            beforeSend: () => {
+                $button.prop('disabled', true).addClass('button-loading');
+            },
+            success: (res) => {
+                if (!res.error) {
+                    const applyModal = document.getElementById('applyNow');
+                    const extModal = document.getElementById('applyExternalJob');
+                    if (applyModal) {
+                        const bsModal = bootstrap.Modal.getInstance(applyModal);
+                        if (bsModal) bsModal.hide();
+                    }
+                    if (extModal) {
+                        const bsModal = bootstrap.Modal.getInstance(extModal);
+                        if (bsModal) bsModal.hide();
+                    }
+                    showSuccess(res.message);
+                    if (res.data && res.data.url) {
+                        window.location.replace(res.data.url);
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    showError(res.message);
+                }
+            },
+            error: (res) => {
+                handleError(res);
+            },
+            complete: () => {
+                if (typeof refreshRecaptcha !== 'undefined') {
+                    refreshRecaptcha();
+                }
+                $button.prop('disabled', false).removeClass('button-loading');
+            }
+        });
+    });
+
     $(document).on('click', '.review-pagination a', function (e) {
         e.preventDefault();
         let page = $(this).attr('href').split('page=')[1];

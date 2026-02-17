@@ -41,9 +41,16 @@ class AccountJobRequest extends JobRequest
             'hide_company' => ['nullable'],
             'hide_salary' => ['nullable'],
             'job_shift_id' => ['nullable', 'integer'],
-            'screening_questions' => ['nullable', 'array'],
-            'screening_questions.*.question' => ['nullable', 'string', 'max:500'],
-            'screening_questions.*.question_type' => ['nullable', 'in:text,textarea,dropdown,checkbox,file,link'],
+            'screening_question_ids' => ['nullable', 'array'],
+            'screening_question_ids.*' => ['integer', 'exists:jb_screening_questions,id'],
+            'screening_question_required' => ['nullable', 'array'],
+            'screening_question_required.*' => ['integer', 'exists:jb_screening_questions,id'],
+            'screening_question_question' => ['nullable', 'array'],
+            'screening_question_question.*' => ['nullable', 'string', 'max:2000'],
+            'screening_question_options' => ['nullable', 'array'],
+            'screening_question_options.*' => ['nullable', 'string', 'max:2000'],
+            'screening_question_correct' => ['nullable', 'array'],
+            'screening_question_correct.*' => ['nullable', 'string', 'max:500'],
         ]);
     }
 

@@ -61,7 +61,9 @@ class EditorManagement {
 
         const editor = document.querySelector('#' + element)
 
+        const placeholder = $('#' + element).data('placeholder') || ''
         let config = {
+            placeholder: placeholder || ' ',
             fontSize: {
                 options: [9, 10, 11, 12, 13, 'default', 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
             },
@@ -101,7 +103,6 @@ class EditorManagement {
                     { model: 'heading6', view: 'h6', title: 'Heading 6', class: 'ck-heading_heading4' },
                 ],
             },
-            placeholder: ' ',
             toolbar: {
                 items: [
                     'heading',
@@ -321,10 +322,12 @@ class EditorManagement {
     }
 
     async initTinyMce(element) {
+        const $el = $(`#${element}`)
+        const placeholder = $el.data('placeholder') || ''
         let options = {
             menubar: true,
             selector: `#${element}`,
-            min_height: $(`#${element}`).prop('rows') * 110,
+            min_height: $el.prop('rows') * 110,
             resize: 'vertical',
             plugins:
                 'code autolink advlist visualchars link image media table charmap hr pagebreak nonbreaking anchor insertdatetime lists wordcount imagetools visualblocks',
@@ -335,7 +338,7 @@ class EditorManagement {
             image_caption: true,
             image_advtab: true,
             image_title: true,
-            placeholder: '',
+            placeholder: placeholder,
             contextmenu: 'link image inserttable | cell row column deletetable',
             images_upload_url: RV_MEDIA_URL.media_upload_from_editor,
             automatic_uploads: true,

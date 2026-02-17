@@ -258,7 +258,7 @@
     <div class="employer-location-container">
         <div class="employer-location-header">
             <h2><i class="ti ti-map-pin me-2"></i>Location</h2>
-            <p>Step 4 of 4 – What is your current location?</p>
+            <p>Step 4 of 4 – Where your institution is located?</p>
         </div>
         
         <div class="employer-location-body">
@@ -339,6 +339,81 @@ $(document).ready(function() {
     const errorMessage = document.getElementById('error-message');
     let searchTimeout = null;
     let activeSuggestionIndex = -1;
+
+    function renderCityItems(cities) {
+        let html = '';
+        cities.forEach(function(city) {
+            const locationParts = [];
+            if (city.state_name) locationParts.push(city.state_name);
+            if (city.country_name) locationParts.push(city.country_name);
+            html += '<div class="city-suggestion-item" ' +
+                'data-id="' + city.id + '" ' +
+                'data-name="' + city.name + '" ' +
+                'data-state-id="' + (city.state_id || '') + '" ' +
+                'data-state-name="' + (city.state_name || '') + '" ' +
+                'data-country-id="' + (city.country_id || '') + '" ' +
+                'data-country-name="' + (city.country_name || '') + '">' +
+                '<div class="city-name">' + city.name + '</div>' +
+                (locationParts.length ? '<div class="city-location">' + locationParts.join(', ') + '</div>' : '') +
+                '</div>';
+        });
+        return html;
+    }
+
+    let indiaLoading = false;
+    function loadIndiaCities(page, append) {
+        const $suggestions = $('#city-suggestions');
+        if (indiaLoading) return;
+        indiaLoading = true;
+        if (!append) {
+            $suggestions.html('<div class="city-loading">Loading...</div>').addClass('show');
+        } else {
+            $('#city-loading-more').remove();
+            $suggestions.append('<div class="city-loading city-loading-more" id="city-loading-more">Loading...</div>');
+        }
+        $.ajax({
+            url: '{{ route("ajax.search-cities") }}',
+            type: 'GET',
+            data: { default_country: '1', page: page },
+            success: function(response) {
+                const data = response.data || {};
+                const cities = data.cities || [];
+                const hasMore = data.has_more || false;
+                if (!append) $suggestions.empty();
+                if (cities.length === 0 && !append) {
+                    $suggestions.html('<div class="city-no-results">No cities found</div>');
+                    indiaLoading = false;
+                    return;
+                }
+                $('#city-loading-more').remove();
+                $suggestions.append(renderCityItems(cities));
+                $suggestions.data('india-page', page);
+                $suggestions.data('india-has-more', hasMore);
+            },
+            error: function() {
+                if (!append) $suggestions.html('<div class="city-no-results">Error loading cities</div>');
+                $('#city-loading-more').remove();
+            },
+            complete: function() { indiaLoading = false; }
+        });
+    }
+
+    $('#city_search').on('focus', function() {
+        const keyword = $(this).val().trim();
+        if (keyword.length < 2) {
+            loadIndiaCities(1, false);
+        }
+    });
+
+    $('#city-suggestions').on('scroll', function() {
+        const el = this;
+        const $suggestions = $(el);
+        if (!$suggestions.data('india-has-more') || indiaLoading) return;
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20) {
+            const nextPage = ($suggestions.data('india-page') || 1) + 1;
+            loadIndiaCities(nextPage, true);
+        }
+    });
 
     // City search autocomplete
     $('#city_search').on('input', function() {

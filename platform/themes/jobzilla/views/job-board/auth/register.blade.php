@@ -316,7 +316,7 @@
     <div class="jobseeker-register-container">
         <div class="jobseeker-register-header">
             <h2>Educator Registration</h2>
-            <p id="step-subtitle">Step 1 of 4 - Basic Details</p>
+            <p id="step-subtitle">Step 1 of 4 - Create your profile and explore school jobs</p>
         </div>
         
         <div class="jobseeker-register-body">

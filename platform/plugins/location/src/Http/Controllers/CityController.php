@@ -10,6 +10,7 @@ use Botble\Location\Forms\CityForm;
 use Botble\Location\Http\Requests\CityRequest;
 use Botble\Location\Http\Resources\CityResource;
 use Botble\Location\Models\City;
+use Botble\Location\Models\Country;
 use Botble\Location\Tables\CityTable;
 use Illuminate\Http\Request;
 
@@ -141,34 +142,73 @@ class CityController extends BaseController
     public function ajaxSearchCities(Request $request)
     {
         try {
-            $keyword = BaseHelper::stringify($request->query('k'));
+            $keyword = BaseHelper::stringify($request->query('k') ?: $request->query('keyword'));
+            $defaultCountry = $request->query('default_country');
 
+            $query = City::query()
+                ->select(['id', 'name', 'state_id', 'country_id'])
+                ->with(['state:id,name,country_id', 'state.country:id,name', 'country:id,name']);
+
+            $perPage = 10;
+            $page = max(1, (int) $request->query('page', 1));
+
+            // When no keyword: show India cities by default if default_country=1 (paginated)
             if (! $keyword || strlen($keyword) < 2) {
-                return $this
-                    ->httpResponse()
-                    ->setData([]);
+                if ($defaultCountry === '1' || $defaultCountry === 'true') {
+                    $india = Country::query()->where('name', 'India')->first();
+                    if ($india) {
+                        $query->where(function ($q) use ($india) {
+                            $q->where('cities.country_id', $india->id)
+                                ->orWhereHas('state', fn ($s) => $s->where('country_id', $india->id));
+                        });
+                        $total = $query->count();
+                        $citiesQuery = (clone $query)->orderBy('order')->orderBy('name')
+                            ->offset(($page - 1) * $perPage)
+                            ->limit($perPage);
+                        $cities = $citiesQuery->get()->map(function ($city) {
+                            $countryId = $city->country_id ?: $city->state?->country_id;
+                            $countryName = $city->country?->name ?: $city->state?->country?->name;
+
+                            return [
+                                'id' => $city->id,
+                                'name' => $city->name,
+                                'state_id' => $city->state_id,
+                                'state_name' => $city->state?->name,
+                                'country_id' => $countryId,
+                                'country_name' => $countryName,
+                            ];
+                        });
+
+                        return $this->httpResponse()->setData([
+                            'cities' => $cities,
+                            'has_more' => ($page * $perPage) < $total,
+                            'page' => $page,
+                        ]);
+                    }
+                    $query->limit(12);
+                } else {
+                    $query->limit(12);
+                }
+            } else {
+                // Keyword search: search across all countries
+                $query->where('name', 'LIKE', '%' . $keyword . '%')->limit(15);
             }
 
-            $cities = City::query()
-                ->select(['id', 'name', 'state_id', 'country_id'])
-                ->with(['state:id,name,country_id', 'state.country:id,name', 'country:id,name'])
-                ->where('name', 'LIKE', '%' . $keyword . '%')
-                ->orderBy('name')
-                ->limit(15)
-                ->get()
-                ->map(function ($city) {
-                    $countryId = $city->country_id ?: $city->state?->country_id;
-                    $countryName = $city->country?->name ?: $city->state?->country?->name;
+            $query->orderBy('order')->orderBy('name');
 
-                    return [
-                        'id' => $city->id,
-                        'name' => $city->name,
-                        'state_id' => $city->state_id,
-                        'state_name' => $city->state?->name,
-                        'country_id' => $countryId,
-                        'country_name' => $countryName,
-                    ];
-                });
+            $cities = $query->get()->map(function ($city) {
+                $countryId = $city->country_id ?: $city->state?->country_id;
+                $countryName = $city->country?->name ?: $city->state?->country?->name;
+
+                return [
+                    'id' => $city->id,
+                    'name' => $city->name,
+                    'state_id' => $city->state_id,
+                    'state_name' => $city->state?->name,
+                    'country_id' => $countryId,
+                    'country_name' => $countryName,
+                ];
+            });
 
             return $this
                 ->httpResponse()

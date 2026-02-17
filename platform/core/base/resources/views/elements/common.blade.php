@@ -41,6 +41,7 @@
         </script>
     @endif
     
+    {{-- Cursor AI: Job created console log (session → browser console). See CURSOR_AI_CHANGES.md - 17 Feb 2026 --}}
     @if (Session::has('job_created_console_data'))
         @php
             $consoleData = session('job_created_console_data');
