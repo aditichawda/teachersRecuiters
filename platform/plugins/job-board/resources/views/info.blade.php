@@ -96,4 +96,64 @@
             {{ $jobApplication->message }}
         </x-core::datagrid.item>
     @endif
+
+    @php
+        $screeningAnswers = $jobApplication->screening_answers ?? [];
+        $screeningQuestions = $jobApplication->job->screeningQuestions ?? collect();
+    @endphp
+    @if (!$jobApplication->is_external_apply && $screeningQuestions->isNotEmpty())
+        <div class="mt-4 pt-3 border-top">
+            <h6 class="mb-3 fw-semibold">{{ trans('plugins/job-board::job-application.screening_questions_answers') }}</h6>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:40%">{{ trans('plugins/job-board::job-application.screening_question') }}</th>
+                            <th style="width:45%">{{ trans('plugins/job-board::job-application.applicant_answer') }}</th>
+                            <th class="text-center" style="width:15%">{{ trans('plugins/job-board::job-application.correct_answer') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($screeningQuestions as $sq)
+                            @php
+                                $answer = $screeningAnswers[$sq->id] ?? null;
+                                if (is_string($answer) && str_starts_with(trim($answer), '[')) {
+                                    $decoded = json_decode($answer, true);
+                                    $answerDisplay = is_array($decoded) ? implode(', ', array_map('trim', $decoded)) : $answer;
+                                } else {
+                                    $answerDisplay = $answer !== null && $answer !== '' ? (string) $answer : '—';
+                                }
+                                $correctAnswer = $sq->pivot->correct_answer ?? $sq->correct_answer ?? null;
+                                $hasCorrect = (bool) $correctAnswer;
+                                $isCorrect = false;
+                                if ($hasCorrect && $answer !== null && $answer !== '') {
+                                    if (is_string($answer) && str_starts_with(trim($answer), '[')) {
+                                        $arr = json_decode($answer, true);
+                                        $isCorrect = is_array($arr) && in_array(trim($correctAnswer), array_map('trim', $arr));
+                                    } else {
+                                        $isCorrect = trim((string) $answer) === trim($correctAnswer);
+                                    }
+                                }
+                            @endphp
+                            <tr>
+                                <td>{{ $sq->pivot->question_override ?: $sq->question }}</td>
+                                <td>{{ $answerDisplay }}</td>
+                                <td class="text-center">
+                                    @if ($hasCorrect)
+                                        @if ($isCorrect)
+                                            <span class="text-success" title="{{ trans('plugins/job-board::job-application.answer_correct') }}"><x-core::icon name="ti ti-circle-check" /></span>
+                                        @else
+                                            <span class="text-danger" title="{{ trans('plugins/job-board::job-application.answer_incorrect') }}"><x-core::icon name="ti ti-circle-x" /></span>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 @endif

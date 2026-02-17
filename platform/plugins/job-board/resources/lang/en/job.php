@@ -3,7 +3,9 @@
 return [
     'name' => 'Jobs',
     'jobs' => 'Jobs',
+    'job_name' => 'Job Name',
     'create' => 'New job',
+    'applicants' => 'Applicants',
     'moderation_status' => 'Moderation status',
     'statuses' => [
         'draft' => 'Draft',

@@ -401,6 +401,11 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'uses' => 'analytics',
                     ])->wherePrimaryKey();
 
+                    Route::get('{id}/view', [
+                        'as' => 'view',
+                        'uses' => 'view',
+                    ])->wherePrimaryKey();
+
                     Route::get('tags/all', [
                         'as' => 'tags.all',
                         'uses' => 'getAllTags',

@@ -27,11 +27,11 @@ class JobTable extends TableAbstract
         $this
             ->model(Job::class)
             ->addActions([
-                Action::make('analytics')
-                    ->route('public.account.jobs.analytics')
-                    ->label(trans('plugins/job-board::messages.analytics'))
-                    ->icon('ti ti-chart-line')
-                    ->color('info'),
+                Action::make('view')
+                    ->route('public.account.jobs.view')
+                    ->label(trans('plugins/job-board::messages.view'))
+                    ->icon('ti ti-eye')
+                    ->color('primary'),
                 EditAction::make()->route('public.account.jobs.edit'),
                 DeleteAction::make()->route('public.account.jobs.destroy'),
             ]);
@@ -52,7 +52,10 @@ class JobTable extends TableAbstract
                 'expire_date',
                 'never_expired',
                 'application_closing_date',
+                'views',
+                'number_of_applied',
             ])
+            ->withCount('applicants')
             ->byAccount(auth('account')->id());
 
         return $this->applyScopes($query);
@@ -83,6 +86,32 @@ class JobTable extends TableAbstract
                     }
 
                     return $item->expire_date->toDateString();
+                }),
+            FormattedColumn::make('applicants_count')
+                ->title(trans('plugins/job-board::job.applicants'))
+                ->width(100)
+                ->orderable(false)
+                ->searchable(false)
+                ->getValueUsing(function (FormattedColumn $column) {
+                    $item = $column->getItem();
+                    $count = (int) ($item->applicants_count ?? $item->number_of_applied ?? 0);
+
+                    return Html::link(
+                        route('public.account.jobs.view', $item->id),
+                        (string) $count,
+                        ['class' => 'text-primary text-decoration-none fw-semibold']
+                    )->toHtml();
+                }),
+            FormattedColumn::make('views')
+                ->title(trans('plugins/job-board::general.views'))
+                ->width(100)
+                ->orderable(false)
+                ->searchable(false)
+                ->getValueUsing(function (FormattedColumn $column) {
+                    $item = $column->getItem();
+                    $views = (int) (is_object($item) ? ($item->views ?? 0) : (data_get($item, 'views', 0)));
+
+                    return (string) $views;
                 }),
             StatusColumn::make(),
             EnumColumn::make('moderation_status')

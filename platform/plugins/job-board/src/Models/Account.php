@@ -49,6 +49,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'first_name',
         'last_name',
         'full_name',
+        'designation',
         'email',
         'password',
         'avatar_id',

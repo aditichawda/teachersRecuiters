@@ -847,8 +847,13 @@
                                     <?php else: ?>
                                         <i class="<?php echo e($item['icon'] ?? 'fa fa-circle'); ?>"></i>
                                     <?php endif; ?>
-                                    <?php echo e(trans($item['name'])); ?>
+                                    <?php if(($item['id'] ?? '') === 'cms-account-change-password' || $item['url'] === route('public.account.security')): ?>
+                                        <?php echo e(trans('plugins/job-board::dashboard.menu.change_password')); ?>
 
+                                    <?php else: ?>
+                                        <?php echo e(trans($item['name'])); ?>
+
+                                    <?php endif; ?>
                                 </a>
                             </li>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>

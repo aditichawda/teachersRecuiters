@@ -52,14 +52,14 @@
 
                 <x-core::stat-widget.item
                     :label="trans('plugins/job-board::job-board.reports.approved_applications')"
-                    :value="number_format($applicationsByStatus[\Botble\JobBoard\Enums\JobApplicationStatusEnum::CHECKED] ?? 0)"
+                    :value="number_format($applicationsByStatus[\Botble\JobBoard\Enums\JobApplicationStatusEnum::HIRED] ?? 0)"
                     icon="ti ti-check"
                     color="success"
                 />
 
                 <x-core::stat-widget.item
                     :label="trans('plugins/job-board::job-board.reports.rejected_applications')"
-                    :value="0"
+                    :value="number_format($applicationsByStatus[\Botble\JobBoard\Enums\JobApplicationStatusEnum::REJECTED] ?? 0)"
                     icon="ti ti-x"
                     color="danger"
                 />

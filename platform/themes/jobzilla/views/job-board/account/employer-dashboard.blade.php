@@ -100,7 +100,7 @@
     opacity: 0.3;
 }
 
-/* Content Cards */
+/* Content Cards - line by line layout */
 .emp-content-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -111,52 +111,68 @@
 .emp-content-card {
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #eef2f6;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
     overflow: hidden;
 }
 
 .emp-content-card-header {
-    padding: 20px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 16px 18px;
+    border-bottom: 1px solid #eef2f6;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
 }
 
 .emp-content-card-header h5 {
     margin: 0;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
-    color: #333;
+    color: #0f172a;
 }
 
 .emp-content-card-body {
-    padding: 20px;
+    padding: 0;
 }
 
-/* List Items */
+/* Line-by-line list (sidebar style) */
+.emp-list-wrap {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eef2f6;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    overflow: hidden;
+}
+
 .emp-list-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid #f5f5f5;
+    gap: 14px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #f1f5f9;
     transition: background 0.15s;
+    text-decoration: none;
+    color: inherit;
 }
 
 .emp-list-item:last-child { border-bottom: none; }
+.emp-list-item:hover { background: #f8fafc; }
 
 .emp-list-item .item-icon {
     width: 40px;
     height: 40px;
-    border-radius: 8px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 14px;
+    font-size: 18px;
 }
 
 .emp-list-item .item-icon.blue { background: #e8f4fc; color: #0073d1; }
 .emp-list-item .item-icon.green { background: #e8f5e9; color: #28a745; }
-.emp-list-item .item-icon.gray { background: #f5f5f5; color: #888; }
+.emp-list-item .item-icon.gray { background: #f1f5f9; color: #64748b; }
 .emp-list-item .item-icon.orange { background: #fff3e0; color: #f57c00; }
 
 .emp-list-item .item-info {
@@ -167,12 +183,12 @@
 .emp-list-item .item-info h6 {
     font-size: 14px;
     font-weight: 500;
-    margin: 0 0 3px 0;
-    color: #333;
+    margin: 0 0 2px 0;
+    color: #334155;
 }
 
 .emp-list-item .item-info h6 a {
-    color: #333;
+    color: #334155;
     text-decoration: none;
 }
 
@@ -180,13 +196,13 @@
 
 .emp-list-item .item-info p {
     font-size: 12px;
-    color: #888;
+    color: #64748b;
     margin: 0;
 }
 
 .emp-list-item .item-time {
     font-size: 12px;
-    color: #999;
+    color: #94a3b8;
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -199,10 +215,14 @@
     padding: 40px 20px;
 }
 
+.emp-list-wrap .emp-empty-state {
+    padding: 32px 18px;
+}
+
 .emp-empty-state i {
-    font-size: 50px;
-    color: #ddd;
-    margin-bottom: 15px;
+    font-size: 48px;
+    color: #cbd5e1;
+    margin-bottom: 12px;
     display: block;
 }
 
@@ -261,16 +281,17 @@
 
 <!-- Stats Cards -->
 <div class="emp-stats-row">
+    <div class="emp-stat-card green">
+        <h6>{{ __('Institutions') }}</h6>
+        <h2>{{ $totalcompanies ?? 0 }}</h2>
+        <i class="fa fa-university stat-icon"></i>
+    </div>
     <div class="emp-stat-card blue">
         <h6>{{ __('Jobs') }}</h6>
         <h2>{{ $totalJobs ?? 0 }}</h2>
         <i class="fa fa-briefcase stat-icon"></i>
     </div>
-    <div class="emp-stat-card green">
-        <h6>{{ __('Institution') }}</h6>
-        <h2>{{ $totalcompanies ?? 0 }}</h2>
-        <i class="fa fa-university stat-icon"></i>
-    </div>
+    
     <div class="emp-stat-card red">
         <h6>{{ __('Applicants') }}</h6>
         <h2>{{ $totalApplicants ?? 0 }}</h2>
@@ -280,25 +301,29 @@
 
 <!-- Content Row: Applicants + Recent Activities -->
 <div class="emp-content-row">
-    <!-- New Applicants -->
+    <!-- New Applicants (line by line) -->
     <div class="emp-content-card">
         <div class="emp-content-card-header">
-            <h5><i class="fa fa-user-friends me-2" style="color: #0073d1;"></i>{{ __('New Applicants') }}</h5>
+            <span class="item-icon blue" style="width:36px;height:36px;font-size:16px;"><i class="ti ti-users"></i></span>
+            <h5>{{ __('New Applicants') }}</h5>
         </div>
-        <div class="emp-content-card-body">
+        <div class="emp-content-card-body emp-list-wrap">
             @forelse($newApplicants ?? [] as $applicant)
-                <div class="emp-list-item">
+                <a href="{{ route('public.account.applicants.edit', $applicant->id) }}" class="emp-list-item d-block">
                     <div class="item-icon blue">
-                        <i class="fa fa-user"></i>
+                        <i class="ti ti-user"></i>
                     </div>
                     <div class="item-info">
-                        <h6><a href="{{ route('public.account.applicants.edit', $applicant->id) }}">{{ $applicant->full_name }}</a></h6>
+                        <h6>{{ $applicant->full_name }}</h6>
                         <p>{{ $applicant->email }}</p>
                     </div>
-                </div>
+                    <div class="item-time">
+                        <i class="ti ti-chevron-right"></i>
+                    </div>
+                </a>
             @empty
                 <div class="emp-empty-state">
-                    <i class="fa fa-user-friends"></i>
+                    <i class="ti ti-users"></i>
                     <h6>{{ __('No new applicants') }}</h6>
                     <p>{{ __('There are no new applicants.') }}</p>
                 </div>
@@ -306,28 +331,29 @@
         </div>
     </div>
 
-    <!-- Recent Activities -->
+    <!-- Recent Activities (line by line) -->
     <div class="emp-content-card">
         <div class="emp-content-card-header">
-            <h5><i class="fa fa-history me-2" style="color: #28a745;"></i>{{ __('Recent Activities') }}</h5>
+            <span class="item-icon green" style="width:36px;height:36px;font-size:16px;"><i class="ti ti-history"></i></span>
+            <h5>{{ __('Recent Activities') }}</h5>
         </div>
-        <div class="emp-content-card-body">
+        <div class="emp-content-card-body emp-list-wrap">
             @forelse($activities ?? [] as $activity)
                 <div class="emp-list-item">
                     <div class="item-icon green">
-                        <i class="fa fa-clock"></i>
+                        <i class="ti ti-clock"></i>
                     </div>
                     <div class="item-info">
                         <h6>{!! BaseHelper::clean($activity->getDescription(false)) !!}</h6>
                     </div>
                     <div class="item-time">
-                        <i class="fa fa-clock"></i>
+                        <i class="ti ti-clock"></i>
                         {{ $activity->created_at->diffForHumans() }}
                     </div>
                 </div>
             @empty
                 <div class="emp-empty-state">
-                    <i class="fa fa-history"></i>
+                    <i class="ti ti-history"></i>
                     <h6>{{ __('No recent activities') }}</h6>
                     <p>{{ __('Your recent activities will appear here.') }}</p>
                 </div>
@@ -336,27 +362,28 @@
     </div>
 </div>
 
-<!-- Expiring Jobs -->
+<!-- Expiring Jobs (line by line) -->
 @if(isset($expiredJobs) && count($expiredJobs) > 0)
 <div class="emp-section-gap">
     <div class="emp-content-card">
         <div class="emp-content-card-header">
-            <h5><i class="fa fa-exclamation-triangle me-2" style="color: #dc3545;"></i>{{ __('Jobs About to Expire') }}</h5>
+            <span class="item-icon orange" style="width:36px;height:36px;font-size:16px;"><i class="ti ti-alert-circle"></i></span>
+            <h5>{{ __('Jobs About to Expire') }}</h5>
         </div>
-        <div class="emp-content-card-body">
+        <div class="emp-content-card-body emp-list-wrap">
             @foreach($expiredJobs as $job)
-                <div class="emp-list-item">
+                <a href="{{ route('public.account.jobs.edit', $job->id) }}" class="emp-list-item d-block">
                     <div class="item-icon orange">
-                        <i class="fa fa-briefcase"></i>
+                        <i class="ti ti-briefcase"></i>
                     </div>
                     <div class="item-info">
-                        <h6><a href="{{ route('public.account.jobs.edit', $job->id) }}">{{ $job->name }}</a></h6>
-                        <p>{{ $job->company->name ?? '' }} &bull; Expires: {{ BaseHelper::formatDate($job->expire_date) }} &bull; {{ $job->applicants_count }} applicants</p>
+                        <h6>{{ $job->name }}</h6>
+                        <p>{{ $job->company->name ?? '' }} &bull; Expires: {{ BaseHelper::formatDate($job->expire_date) }}</p>
                     </div>
                     <div class="item-time">
-                        <a href="{{ route('public.account.jobs.edit', $job->id) }}" class="btn btn-sm btn-outline-primary" style="border-radius:6px;font-size:12px;"><i class="fa fa-edit"></i> Edit</a>
+                        <i class="ti ti-chevron-right"></i>
                     </div>
-                </div>
+                </a>
             @endforeach
         </div>
     </div>

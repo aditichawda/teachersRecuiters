@@ -8,16 +8,16 @@ use Illuminate\Support\HtmlString;
 
 /**
  * @method static JobApplicationStatusEnum PENDING()
- * @method static JobApplicationStatusEnum CHECKED()
- * @method static JobApplicationStatusEnum SHORTLISTED()
+ * @method static JobApplicationStatusEnum HIRED()
  * @method static JobApplicationStatusEnum REJECTED()
+ * @method static JobApplicationStatusEnum SHORT_LIST()
  */
 class JobApplicationStatusEnum extends Enum
 {
     public const PENDING = 'pending';
-    public const CHECKED = 'checked';
-    public const SHORTLISTED = 'shortlisted';
+    public const HIRED = 'hired';
     public const REJECTED = 'rejected';
+    public const SHORT_LIST = 'short_list';
 
     public static $langPath = 'plugins/job-board::job-application.statuses';
 
@@ -25,9 +25,9 @@ class JobApplicationStatusEnum extends Enum
     {
         $color = match ($this->value) {
             self::PENDING => 'warning',
-            self::CHECKED => 'success',
-            self::SHORTLISTED => 'info',
+            self::HIRED => 'success',
             self::REJECTED => 'danger',
+            self::SHORT_LIST => 'info',
             default => 'primary',
         };
 

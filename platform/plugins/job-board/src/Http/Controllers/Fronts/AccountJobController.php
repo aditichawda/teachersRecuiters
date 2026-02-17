@@ -686,6 +686,36 @@ class AccountJobController extends BaseController
         return JobBoardHelper::view('dashboard.jobs.analytics', $data);
     }
 
+    public function view(int|string $id)
+    {
+        /** @var \Botble\JobBoard\Models\Job $job */
+        $job = Job::query()->findOrFail($id);
+
+        abort_unless($this->canManageJob($job), 404);
+
+        $job->load(['company', 'country', 'state', 'city', 'currency', 'jobTypes', 'jobExperience']);
+
+        $applications = JobApplication::query()
+            ->where('job_id', $job->id)
+            ->with(['account'])
+            ->latest()
+            ->paginate(20);
+
+        $title = trans('plugins/job-board::messages.view_job', ['name' => $job->name]);
+
+        Theme::breadcrumb()
+            ->add(trans('plugins/job-board::messages.my_profile'), route('public.account.dashboard'))
+            ->add(trans('plugins/job-board::messages.manage_jobs'), route('public.account.jobs.index'))
+            ->add($job->name);
+
+        SeoHelper::setTitle($title);
+        $this->pageTitle($title);
+
+        $data = compact('job', 'applications', 'title');
+
+        return JobBoardHelper::view('dashboard.jobs.view', $data);
+    }
+
     public function appliedJobs(Request $request)
     {
         /**

@@ -105,6 +105,7 @@ class ApplicantTable extends TableAbstract
                 $query->where('account_id', $account->getKey());
             })
             ->with([
+                'account',
                 'job:id,name,company_id',
                 'job.slugable',
                 'job.company:id,name',
@@ -122,16 +123,19 @@ class ApplicantTable extends TableAbstract
                 ->alignLeft()
                 ->getValueUsing(function (FormattedColumn $column) {
                     $jobApplication = $column->getItem();
+                    $name = $jobApplication->full_name ?: '&mdash;';
 
                     if ($jobApplication->is_external_apply) {
-                        return $jobApplication->full_name ?: '&mdash;';
+                        $url = route('public.account.applicants.edit', $jobApplication->id);
+                        return '<a href="' . e($url) . '" class="text-primary text-decoration-none">' . $name . '</a>';
                     }
 
-                    if ($jobApplication->account->id && $jobApplication->account->is_public_profile) {
-                        return '<a href="' . $jobApplication->account->url . '">' . $jobApplication->account->name . ' ' . BaseHelper::renderIcon('ti ti-external-link') . '</a>';
+                    if ($jobApplication->account->id && $jobApplication->account->is_public_profile && ! empty($jobApplication->account->url)) {
+                        return '<a href="' . e($jobApplication->account->url) . '" target="_blank" class="text-primary text-decoration-none">' . e($jobApplication->account->name) . ' ' . BaseHelper::renderIcon('ti ti-external-link') . '</a>';
                     }
 
-                    return $jobApplication->full_name ?: '&mdash;';
+                    $url = route('public.account.applicants.edit', $jobApplication->id);
+                    return '<a href="' . e($url) . '" class="text-primary text-decoration-none">' . $name . '</a>';
                 }),
             Column::make('email')
                 ->title(trans('plugins/job-board::job-application.tables.email'))
