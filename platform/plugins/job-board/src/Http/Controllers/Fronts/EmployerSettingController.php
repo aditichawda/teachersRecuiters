@@ -138,9 +138,11 @@ class EmployerSettingController extends BaseController
             // Account fields
             'full_name' => 'required|string|max:120',
             'account_phone' => 'required|string|max:30',
+            'designation' => 'nullable|string|max:120',
             // Company fields
             'name' => 'required|string|max:120',
-            'institution_type' => 'required|string|max:100',
+            'institution_type' => 'required|array|min:1|max:4',
+            'institution_type.*' => 'required|string|max:80',
             'description' => 'required|string|max:400',
             'email' => 'required|email|max:60',
             'phone' => 'required|string|max:30',
@@ -177,13 +179,18 @@ class EmployerSettingController extends BaseController
         // Update account full name and phone
         $fullName = $request->input('full_name');
         $nameParts = explode(' ', $fullName, 2);
+        $institutionTypeInput = $request->input('institution_type', []);
+        $institutionTypeStr = is_array($institutionTypeInput)
+            ? implode(',', array_slice(array_filter($institutionTypeInput), 0, 4))
+            : (string) $institutionTypeInput;
         $account->update([
             'first_name' => $nameParts[0],
             'last_name' => $nameParts[1] ?? '',
             'full_name' => $fullName,
+            'designation' => $request->input('designation'),
             'phone' => $request->input('account_phone'),
             'institution_name' => $request->input('name'),
-            'institution_type' => $request->input('institution_type'),
+            'institution_type' => $institutionTypeStr,
         ]);
 
         $company = $account->companies()->first();
@@ -197,12 +204,13 @@ class EmployerSettingController extends BaseController
         }
 
         $data = $request->only([
-            'name', 'institution_type', 'description', 'email', 'phone',
+            'name', 'description', 'email', 'phone',
             'website', 'year_founded', 'principal_name', 'total_staff',
             'campus_type', 'standard_level', 'staff_facilities',
             'country_id', 'state_id', 'city_id', 'address', 'postal_code',
             'facebook', 'linkedin', 'youtube_video', 'instagram',
         ]);
+        $data['institution_type'] = $institutionTypeStr;
 
         // Institution logo (right side): store in jb_companies.logo only. Left profile logo = account avatar, unchanged.
         if ($request->hasFile('logo')) {

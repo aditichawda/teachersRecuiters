@@ -84,6 +84,7 @@ return [
     'invoices' => 'Invoices',
     'manage_invoices' => 'Manage Invoices',
     'analytics' => 'Analytics',
+    'edit' => 'Edit',
     'view' => 'View',
 
     // Account messages
@@ -278,6 +279,7 @@ return [
     'security' => 'Security',
     'applicants' => 'Applicants',
     'view_applicant' => 'View applicant ":name"',
+    'view_job' => 'View job: :name',
     'dashboard' => 'Dashboard',
     'packages' => 'Packages',
     'payment_failed' => 'Payment failed!',

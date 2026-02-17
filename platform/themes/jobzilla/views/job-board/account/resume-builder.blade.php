@@ -261,8 +261,8 @@
 </style>
 
 <div class="rb-page-header">
-    <h3><i class="fa fa-file-pdf"></i>{{ __('Resume Builder') }}</h3>
-    <p>{{ __('Choose a template and generate your professional resume from your profile data') }}</p>
+    <h3><i class="fa fa-file-pdf"></i> {{ __('Resume Builder') }}</h3>
+    <p>{{ __('Choose Classic or Modern template. Resume uses your profile details (name, email, experience, education, skills). Empty fields show sample text so the resume always looks complete.') }}</p>
 </div>
 
 @php
@@ -286,7 +286,7 @@
 @endif
 
 <div class="rb-templates-grid">
-    <!-- Template 1: Classic -->
+    <!-- Template 1: Classic (Recommended) -->
     <div class="rb-template-card selected" data-template="classic" onclick="selectTemplate(this)">
         <div class="rb-template-preview">
             <div class="preview-inner">
@@ -295,8 +295,8 @@
             <div class="preview-fade"></div>
         </div>
         <div class="rb-template-info">
-            <h5>{{ __('Classic') }}</h5>
-            <p>{{ __('Clean and professional — perfect for teaching positions') }}</p>
+            <h5>{{ __('Classic') }} <span class="badge bg-success ms-1" style="font-size: 10px;">{{ __('Recommended') }}</span></h5>
+            <p>{{ __('Clean, professional layout. Uses your profile details; shows placeholder text when data is missing.') }}</p>
             <div class="rb-template-tags">
                 <span class="rb-template-tag tag-free">Free</span>
                 <span class="rb-template-tag">Professional</span>
@@ -315,7 +315,7 @@
         </div>
         <div class="rb-template-info">
             <h5>{{ __('Modern') }}</h5>
-            <p>{{ __('Sidebar layout with accent colors — stands out') }}</p>
+            <p>{{ __('Two-column design with sidebar. Profile details and dummy text when fields are empty.') }}</p>
             <div class="rb-template-tags">
                 <span class="rb-template-tag tag-free">Free</span>
                 <span class="rb-template-tag">Creative</span>

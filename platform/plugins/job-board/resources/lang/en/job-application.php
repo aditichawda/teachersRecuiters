@@ -16,6 +16,12 @@ return [
         'position' => 'Position',
         'download_resume' => 'Download Resume',
     ],
+    'screening_questions_answers' => 'Screening Questions & Answers',
+    'screening_question' => 'Question',
+    'applicant_answer' => 'Applicant\'s Answer',
+    'correct_answer' => 'Correct?',
+    'answer_correct' => 'Correct answer',
+    'answer_incorrect' => 'Incorrect answer',
     'information' => 'Information',
     'email' => [
         'header' => 'Email',

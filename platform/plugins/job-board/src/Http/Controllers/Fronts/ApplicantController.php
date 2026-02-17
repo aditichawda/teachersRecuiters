@@ -37,7 +37,7 @@ class ApplicantController extends BaseController
             ->whereHas('job.company.accounts', function (Builder $query) use ($account): void {
                 $query->where('account_id', $account->getKey());
             })
-            ->with(['account'])
+            ->with(['account', 'job.screeningQuestions'])
             ->where('id', $id)
             ->firstOrFail();
 

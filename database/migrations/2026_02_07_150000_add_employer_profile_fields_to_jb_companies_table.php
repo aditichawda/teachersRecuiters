@@ -14,9 +14,6 @@ return new class () extends Migration {
             // Institution type
             $table->string('institution_type', 100)->nullable()->after('name');
 
-            // Principal name
-            $table->string('principal_name', 120)->nullable()->after('ceo');
-
             // Total staff
             $table->unsignedSmallInteger('total_staff')->nullable()->after('principal_name');
 

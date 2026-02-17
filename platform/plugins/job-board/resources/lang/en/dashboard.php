@@ -13,7 +13,7 @@ return [
         'packages' => 'Packages',
         'invoices' => 'Invoices',
         'settings' => 'Settings',
-        'change_password' => 'Change Password',
+        'change_password' => 'Security',
     ],
 
     // Auth translate key
