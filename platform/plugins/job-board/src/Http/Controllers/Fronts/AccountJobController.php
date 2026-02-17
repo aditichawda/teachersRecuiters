@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Cursor AI: Merge conflicts resolved, job create success flow (session/email), stash apply (16 Feb changes) - 17 Feb 2026
+ * @see CURSOR_AI_CHANGES.md for full list of changes
+ */
 namespace Botble\JobBoard\Http\Controllers\Fronts;
 
 use Botble\Base\Events\BeforeEditContentEvent;
@@ -310,11 +314,9 @@ class AccountJobController extends BaseController
             EmployerPostedJobEvent::dispatch($job, $account);
         }
 
-<<<<<<< HEAD
         $jobsUrl = url('/account/jobs');
         return redirect()->to($jobsUrl)
             ->with('success_msg', trans('core/base::notices.create_success_message'));
-=======
         // Get job seekers list from session if emails were sent
         $jobSeekersList = session()->get('job_created_email_recipients', []);
         $emailCount = count($jobSeekersList);
@@ -371,7 +373,7 @@ class AccountJobController extends BaseController
             ->setNextUrl(route('public.account.jobs.edit', $job->id))
             ->setMessage($successMessage)
             ->withCreatedSuccessMessage();
->>>>>>> main
+
     }
 
     public function edit(Job $job, Request $request)
