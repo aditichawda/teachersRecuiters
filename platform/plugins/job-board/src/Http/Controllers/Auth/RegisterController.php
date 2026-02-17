@@ -1461,7 +1461,8 @@ class RegisterController extends BaseController
                     $phone = preg_replace('/[^0-9]/', '', $phone);
                 }
 
-                $account->update([
+                // Set confirmed_at if email verification is disabled
+                $updateData = [
                     'type' => $data['type'],
                     'first_name' => $firstName,
                     'last_name' => $lastName,
@@ -1479,7 +1480,14 @@ class RegisterController extends BaseController
                     'password' => Hash::make($data['password']),
                     'is_public_profile' => true,
                     // Email verification fields are already set
-                ]);
+                ];
+                
+                // Set confirmed_at if email verification is disabled
+                if (!setting('verify_account_email', 0)) {
+                    $updateData['confirmed_at'] = Carbon::now();
+                }
+                
+                $account->update($updateData);
 
                 return $account;
             }
@@ -1521,6 +1529,12 @@ class RegisterController extends BaseController
             'phone_country_code' => $phoneCountryCode,
         ]);
         
+        // Set confirmed_at if email verification is disabled
+        $confirmedAt = null;
+        if (!setting('verify_account_email', 0)) {
+            $confirmedAt = Carbon::now();
+        }
+        
         return Account::query()->forceCreate([
             'type' => $data['type'],
             'first_name' => $firstName,
@@ -1543,6 +1557,8 @@ class RegisterController extends BaseController
             'email_verified_at' => now(),
             'is_email_verified' => true,
             'verification_code' => Arr::get($data, 'verification_code'),
+            // Set confirmed_at if email verification is disabled
+            'confirmed_at' => $confirmedAt,
         ]);
     }
 

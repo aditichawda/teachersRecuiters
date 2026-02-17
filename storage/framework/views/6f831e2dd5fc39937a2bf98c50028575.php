@@ -1,6 +1,6 @@
-@php
+<?php
     Theme::layout('without-navbar');
-@endphp
+?>
 
 <style>
     .employer-verify-wrapper {
@@ -77,7 +77,7 @@
         background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
         border: none;
         border-radius: 8px;
-        padding: 8px 5px;
+        padding: 12px 25px;
         font-size: 14px;
         font-weight: 600;
         width: 100%;
@@ -184,13 +184,13 @@
 <div class="employer-verify-wrapper">
     <div class="employer-verify-container">
         <div class="employer-verify-header">
-            @if(!empty($isWhatsappAvailable) && !empty($phone))
+            <?php if(!empty($isWhatsappAvailable) && !empty($phone)): ?>
                 <h2><i class="ti ti-mail-check me-2"></i>Verify Your Account</h2>
                 <p>Step 2 of 4 - WhatsApp & Email Verification</p>
-            @else
+            <?php else: ?>
                 <h2><i class="ti ti-mail-check me-2"></i>Verify Your Email</h2>
                 <p>Step 2 of 4 - Email Verification</p>
-            @endif
+            <?php endif; ?>
         </div>
         
         <div class="employer-verify-body">
@@ -215,21 +215,21 @@
             </div>
 
             <!-- Verification Code Sent To -->
-            @if(!empty($isWhatsappAvailable) && !empty($phone))
+            <?php if(!empty($isWhatsappAvailable) && !empty($phone)): ?>
                 <div class="email-display">
-                    Verification code sent to: <i class="ti ti-brand-whatsapp" style="color: #25D366; font-size: 15px; vertical-align: middle;"></i> <strong>{{ $phone }}</strong> & <i class="ti ti-mail" style="color: #0073d1; font-size: 15px; vertical-align: middle;"></i> <strong>{{ $email }}</strong>
+                    Verification code sent to: <i class="ti ti-brand-whatsapp" style="color: #25D366; font-size: 15px; vertical-align: middle;"></i> <strong><?php echo e($phone); ?></strong> & <i class="ti ti-mail" style="color: #0073d1; font-size: 15px; vertical-align: middle;"></i> <strong><?php echo e($email); ?></strong>
                 </div>
                 <p class="text-muted mb-4">Enter the 6-digit code sent to your WhatsApp & Email</p>
-            @else
+            <?php else: ?>
                 <div class="email-display">
-                    Verification code sent to: <i class="ti ti-mail" style="color: #0073d1; font-size: 15px; vertical-align: middle;"></i> <strong>{{ $email }}</strong>
+                    Verification code sent to: <i class="ti ti-mail" style="color: #0073d1; font-size: 15px; vertical-align: middle;"></i> <strong><?php echo e($email); ?></strong>
                 </div>
                 <p class="text-muted mb-4">Enter the 6-digit code we sent to your email</p>
-            @endif
+            <?php endif; ?>
 
             <form id="otp-form">
-                @csrf
-                <input type="hidden" name="email" value="{{ $email }}">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="email" value="<?php echo e($email); ?>">
                 
                 <div class="otp-inputs">
                     <input type="text" maxlength="1" class="otp-digit" data-index="0" autofocus>
@@ -249,17 +249,16 @@
             </form>
 
             <p class="mt-4 text-muted">
-                @if(!empty($isWhatsappAvailable) && !empty($phone))
+                <?php if(!empty($isWhatsappAvailable) && !empty($phone)): ?>
                     Didn't receive the code on WhatsApp or Email?
-                @else
+                <?php else: ?>
                     Didn't receive the code?
-                @endif
-                <button type="button" class="resend-link btn-link p-0 border-0 bg-transparent" id="employer-resend-btn">Resend</button>
-                <span id="employer-resend-timer" style="display:none;color:#94a3b8;">Resend in <span id="employer-timer-count">60</span>s</span>
+                <?php endif; ?>
+                <a href="#" class="resend-link" onclick="resendCode()">Resend</a>
             </p>
 
             <p class="mt-3">
-                <a href="{{ route('public.account.register.employer') }}" class="text-muted">
+                <a href="<?php echo e(route('public.account.register.employer')); ?>" class="text-muted">
                     <i class="ti ti-arrow-left"></i> Back to Registration
                 </a>
             </p>
@@ -330,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
         verifyBtn.innerHTML = 'Verifying...';
         errorMessage.style.display = 'none';
 
-        fetch('{{ route("public.account.register.employer.verifyEmailCode") }}', {
+        fetch('<?php echo e(route("public.account.register.employer.verifyEmailCode")); ?>', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -338,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json'
             },
             body: JSON.stringify({
-                email: '{{ $email }}',
+                email: '<?php echo e($email); ?>',
                 code: code
             })
         })
@@ -349,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 verifyBtn.disabled = false;
                 verifyBtn.innerHTML = 'Verify & Continue';
             } else {
-                window.location.href = data.next_url || '{{ route("public.account.register.employer.institutionTypePage") }}';
+                window.location.href = data.next_url || '<?php echo e(route("public.account.register.employer.institutionTypePage")); ?>';
             }
         })
         .catch(error => {
@@ -365,97 +364,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function showToast(type, msg) {
-    // Use showDialogAlert if available, otherwise fall back to showAlert or toast
-    if (typeof window.showDialogAlert === 'function') {
-        var alertType = type === 'text-success' ? 'success' : 'error';
-        var title = type === 'text-success' ? 'Success' : 'Error';
-        window.showDialogAlert(alertType, msg, title);
-        return;
-    }
-    if (typeof window.showAlert === 'function') {
-        window.showAlert(type, msg);
-        return;
-    }
-    var container = document.getElementById('alert-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'alert-container';
-        container.className = 'toast-container';
-        container.style.cssText = 'position:fixed;right:5px;top:20vh;z-index:9999999;';
-        document.body.appendChild(container);
-    }
-    var id = 'toast-' + Math.floor(Math.random() * 10000);
-    var icon = type === 'text-success' ? 'feather-check-circle' : 'feather-alert-triangle';
-    var html = '<div class="toast align-items-center ' + type + '" id="' + id + '" role="alert">' +
-        '<div class="d-flex"><div class="toast-body">' +
-        '<i class="' + icon + ' message-icon"></i><span>' + (msg || '').replace(/</g, '&lt;') + '</span>' +
-        '</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>';
-    container.insertAdjacentHTML('beforeend', html);
-    var el = document.getElementById(id);
-    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-        var toast = new bootstrap.Toast(el);
-        toast.show();
-        el.addEventListener('hidden.bs.toast', function() { el.remove(); });
-    } else {
-        el.classList.add('show');
-        setTimeout(function() { el.remove(); }, 5000);
-    }
+function resendCode() {
+    <?php if(!empty($isWhatsappAvailable) && !empty($phone)): ?>
+        alert('Verification code resent to your WhatsApp (<?php echo e($phone); ?>) and Email (<?php echo e($email); ?>)!');
+    <?php else: ?>
+        alert('Verification code resent to your Email (<?php echo e($email); ?>)!');
+    <?php endif; ?>
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    var resendBtn = document.getElementById('employer-resend-btn');
-    var timerEl = document.getElementById('employer-resend-timer');
-    var countEl = document.getElementById('employer-timer-count');
-    if (resendBtn && timerEl && countEl) {
-        resendBtn.addEventListener('click', function() {
-            resendBtn.disabled = true;
-            fetch('{{ route("public.account.register.employer.resendVerificationCode") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({})
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (!data.error) {
-                    @if(!empty($isWhatsappAvailable) && !empty($phone))
-                        showToast('text-success', 'Verification code resent to your WhatsApp ({{ $phone }}) and Email ({{ $email }})!');
-                    @else
-                        showToast('text-success', 'Verification code resent to your Email ({{ $email }})!');
-                    @endif
-                    resendBtn.style.display = 'none';
-                    timerEl.style.display = 'inline';
-                    var seconds = 60;
-                    var interval = setInterval(function() {
-                        seconds--;
-                        countEl.textContent = seconds;
-                        if (seconds <= 0) {
-                            clearInterval(interval);
-                            timerEl.style.display = 'none';
-                            resendBtn.style.display = 'inline';
-                            resendBtn.disabled = false;
-                        }
-                    }, 1000);
-                } else {
-                    showToast('text-danger', data.message || 'Failed to resend code');
-                    resendBtn.disabled = false;
-                }
-            })
-            .catch(function() {
-                showToast('text-danger', 'Failed to resend code');
-                resendBtn.disabled = false;
-            });
-        });
-    }
-    @if(!empty($isWhatsappAvailable) && !empty($phone))
-        showToast('text-success', 'Verification code sent to your WhatsApp & Email. Please enter the 6-digit code below.');
-    @else
-        showToast('text-success', 'Verification code sent to your email. Please enter the 6-digit code below.');
-    @endif
-});
 </script>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/views/job-board/auth/employer-verify-email.blade.php ENDPATH**/ ?>

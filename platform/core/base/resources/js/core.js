@@ -85,8 +85,6 @@ class Botble {
 
     static showNotice(messageType, message, messageHeader = '') {
         let key = `notices_msg.${messageType}.${message}`
-        let color = ''
-        let icon = ''
 
         if (Botble.noticesTimeout[key]) {
             clearTimeout(Botble.noticesTimeout[key])
@@ -96,40 +94,21 @@ class Botble {
             if (!messageHeader) {
                 switch (messageType) {
                     case 'error':
-                        messageHeader = BotbleVariables.languages.notices_msg.error
+                        messageHeader = BotbleVariables.languages.notices_msg.error || 'Error'
                         break
                     case 'success':
-                        messageHeader = BotbleVariables.languages.notices_msg.success
+                        messageHeader = BotbleVariables.languages.notices_msg.success || 'Success'
                         break
                 }
             }
 
-            switch (messageType) {
-                case 'error':
-                    color = '#f44336'
-                    icon =
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 9v4" /><path d="M12 16v.01" /></svg>'
-                    break
-                case 'success':
-                    color = '#4caf50'
-                    icon =
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>'
-                    break
+            // Use dialog alert instead of Toastify
+            if (typeof window.showDialogAlert === 'function') {
+                window.showDialogAlert(messageType, message, messageHeader)
+            } else {
+                // Fallback to console if dialog not available
+                console.log(`[${messageType.toUpperCase()}] ${messageHeader}: ${message}`)
             }
-
-            Toastify({
-                text: message,
-                duration: 5000,
-                close: true,
-                gravity: 'bottom',
-                position: 'right',
-                stopOnFocus: true,
-                escapeMarkup: false,
-                icon: icon,
-                style: {
-                    background: color,
-                },
-            }).showToast()
         }, Botble.noticesTimeoutCount)
     }
 

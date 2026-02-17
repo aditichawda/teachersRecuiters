@@ -645,7 +645,11 @@
             const cityId = $('#city_id').val();
             
             if (!cityId) {
-                alert('Please search and select a city');
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('error', 'Please search and select a city', 'Validation Error');
+                } else {
+                    alert('Please search and select a city');
+                }
                 $('#city_search').focus();
                 return;
             }
@@ -679,7 +683,11 @@
                     window.location.href = '{{ route("public.account.jobseeker.dashboard") }}';
                 },
                 error: function(xhr) {
-                    alert('Failed to save. Please try again.');
+                    if (typeof window.showDialogAlert === 'function') {
+                        window.showDialogAlert('error', 'Failed to save. Please try again.', 'Error');
+                    } else {
+                        alert('Failed to save. Please try again.');
+                    }
                     btn.html(originalText).prop('disabled', false);
                 }
             });

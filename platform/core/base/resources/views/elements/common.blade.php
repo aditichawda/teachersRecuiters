@@ -1,4 +1,45 @@
 <script type="text/javascript">
+    // Immediately override alert() and confirm() before any other scripts load
+    (function() {
+        if (!window._dialogOverridesInstalled) {
+            window._dialogOverridesInstalled = true;
+            window.originalAlert = window.alert;
+            window.originalConfirm = window.confirm;
+            
+            window.alert = function(message) {
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('info', message, 'Alert');
+                } else {
+                    // Queue for later
+                    if (!window._pendingAlerts) window._pendingAlerts = [];
+                    window._pendingAlerts.push({type: 'alert', message: message});
+                    window.originalAlert(message);
+                }
+            };
+            
+            window.confirm = function(message) {
+                if (typeof window.showDialogConfirm === 'function') {
+                    let result = null;
+                    let resolved = false;
+                    window.showDialogConfirm(message, 'Confirm').then((confirmed) => {
+                        result = confirmed;
+                        resolved = true;
+                    });
+                    // Block until resolved (with timeout to prevent infinite loop)
+                    const start = Date.now();
+                    const maxWait = 60000; // 60 seconds
+                    while (!resolved && (Date.now() - start) < maxWait) {
+                        // Busy wait - needed for synchronous compatibility
+                    }
+                    return result === true;
+                } else {
+                    // Fallback to original - dialog system not ready yet
+                    return window.originalConfirm(message);
+                }
+            };
+        }
+    })();
+    
     var BotbleVariables = BotbleVariables || {};
 
     @if (Auth::guard()->check())

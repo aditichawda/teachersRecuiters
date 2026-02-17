@@ -1227,7 +1227,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== AI GENERATE DESCRIPTION =====
     document.getElementById('aiGenerateBtn').addEventListener('click', function() {
         var title = document.getElementById('job_title').value;
-        if (!title) { alert('Please enter a job title first.'); return; }
+        if (!title) { 
+            if (typeof window.showDialogAlert === 'function') {
+                window.showDialogAlert('error', 'Please enter a job title first.', 'Validation Error');
+            } else {
+                alert('Please enter a job title first.');
+            }
+            return; 
+        }
 
         this.disabled = true;
         this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';

@@ -749,7 +749,11 @@
         // Continue
         document.getElementById('continue-btn').addEventListener('click', function() {
             if (selected.length === 0) {
-                alert('Please select at least 1 institution type');
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('error', 'Please select at least 1 institution type', 'Validation Error');
+                } else {
+                    alert('Please select at least 1 institution type');
+                }
                 return;
             }
 
@@ -818,13 +822,21 @@
                     localStorage.setItem('selected_institution_types', JSON.stringify(selected));
                     window.location.href = '{{ route("public.account.register.locationPage") }}';
                 } else {
-                    alert(data.message || 'Failed to save');
+                    if (typeof window.showDialogAlert === 'function') {
+                        window.showDialogAlert('error', data.message || 'Failed to save', 'Error');
+                    } else {
+                        alert(data.message || 'Failed to save');
+                    }
                     btn.innerHTML = 'Continue';
                     btn.disabled = false;
                 }
             })
             .catch(function() {
-                alert('Failed to save. Please try again.');
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('error', 'Failed to save. Please try again.', 'Error');
+                } else {
+                    alert('Failed to save. Please try again.');
+                }
                 btn.innerHTML = 'Continue';
                 btn.disabled = false;
             });

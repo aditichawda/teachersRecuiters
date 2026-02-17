@@ -87,6 +87,8 @@ return [
             $cacheBuster = '?v=' . time();
             $theme->asset()->styleUsingPath('main', 'css/main.css' . $cacheBuster);
             $theme->asset()->container('footer')->usePath()->add('style', 'css/style.css' . $cacheBuster, [], [], $version);
+            // Add dialog alert CSS in header for immediate availability
+            $theme->asset()->usePath()->add('dialog-alert-css', 'css/dialog-alert.css', [], [], $version);
 
             $theme->asset()->container('footer')->scriptUsingPath('jquery', $scriptPrefix . 'jquery-3.6.0.min.js');
             $theme->asset()->container('footer')->scriptUsingPath('popper', $scriptPrefix . 'popper.min.js');
@@ -111,7 +113,9 @@ return [
             $theme->asset()->container('footer')->scriptUsingPath('select2-js', 'plugins/select2/js/select2.min.js');
 
             $theme->asset()->container('footer')->usePath()->add('main', 'js/main.js', ['swiper-js', 'datatables-js'], [], $version);
-            $theme->asset()->container('footer')->usePath()->add('script', 'js/script.js', [], [], $version);
+            // Add dialog alert JS (load early, no jQuery dependency - it will wait for jQuery internally)
+            $theme->asset()->container('footer')->usePath()->add('dialog-alert-js', 'js/dialog-alert.js', [], [], $version);
+            $theme->asset()->container('footer')->usePath()->add('script', 'js/script.js', ['dialog-alert-js'], [], $version);
 
             if (function_exists('shortcode')) {
                 $theme->composer([
