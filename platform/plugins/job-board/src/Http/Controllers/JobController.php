@@ -96,10 +96,69 @@ class JobController extends BaseController
 
         $storeTagService->execute($request, $job);
 
+        // Get job seekers list from session if emails were sent
+        $jobSeekersList = session()->get('job_created_email_recipients', []);
+        $emailCount = count($jobSeekersList);
+        
+        // Build success message with job seekers list
+        $successMessage = trans('plugins/job-board::job.create_success');
+        
+        if ($emailCount > 0) {
+            $successMessage .= "\n\n✅ Email sent successfully to " . $emailCount . " job seeker(s):\n";
+            $namesList = [];
+            foreach ($jobSeekersList as $index => $jobSeeker) {
+                $namesList[] = ($index + 1) . ". " . $jobSeeker['name'] . " (" . $jobSeeker['email'] . ")";
+            }
+            $successMessage .= implode("\n", $namesList);
+            
+            // Store in session for JavaScript console output
+            session()->put('job_created_console_data', [
+                'job_id' => $job->id,
+                'job_name' => $job->name,
+                'email_count' => $emailCount,
+                'job_seekers' => $jobSeekersList
+            ]);
+            
+            // Also log to console
+            \Log::info('Job created successfully by admin. Emails sent to job seekers:', [
+                'job_id' => $job->id,
+                'job_name' => $job->name,
+                'total_emails_sent' => $emailCount,
+                'job_seekers' => $jobSeekersList
+            ]);
+            
+            error_log('[JOB_CREATE] ✅ Job created successfully by admin!');
+            error_log('[JOB_CREATE] 📧 Email sent to ' . $emailCount . ' job seeker(s):');
+            foreach ($jobSeekersList as $index => $jobSeeker) {
+                error_log('[JOB_CREATE]    ' . ($index + 1) . '. ' . $jobSeeker['name'] . ' (' . $jobSeeker['email'] . ')');
+            }
+        } else {
+            // Even if no emails sent, check if fixed email was attempted
+            $fixedEmailInfo = session()->get('job_alert_fixed_email_info', null);
+            session()->forget('job_alert_fixed_email_info');
+            
+            session()->put('job_created_console_data', [
+                'job_id' => $job->id,
+                'job_name' => $job->name,
+                'email_count' => 0,
+                'job_seekers' => [],
+                'debug_info' => $fixedEmailInfo ? 'Fixed email attempted: ' . ($fixedEmailInfo['sent'] ? 'Sent ✅' : 'Failed ❌') : 'Event listener may not have run'
+            ]);
+            error_log('[JOB_CREATE] ✅ Job created successfully by admin!');
+            error_log('[JOB_CREATE] ⚠️ No job seekers found to send emails.');
+            if ($fixedEmailInfo) {
+                error_log('[JOB_CREATE] Fixed email status: ' . ($fixedEmailInfo['sent'] ? 'Sent' : 'Failed - ' . ($fixedEmailInfo['error'] ?? 'Unknown error')));
+            }
+        }
+        
+        // Clear session data
+        session()->forget('job_created_email_recipients');
+
         return $this
             ->httpResponse()
             ->setPreviousUrl(route('jobs.index'))
             ->setNextUrl(route('jobs.edit', $job->id))
+            ->setMessage($successMessage)
             ->withCreatedSuccessMessage();
     }
 

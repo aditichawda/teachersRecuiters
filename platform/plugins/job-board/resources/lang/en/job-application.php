@@ -29,6 +29,8 @@ return [
     'statuses' => [
         'pending' => 'Pending',
         'checked' => 'Checked',
+        'shortlisted' => 'Shortlisted',
+        'rejected' => 'Rejected',
     ],
     'notifications' => [
         'title' => 'New job application',

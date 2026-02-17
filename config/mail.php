@@ -39,7 +39,11 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_ENCRYPTION', 'tls'),
+            'scheme' => (function() {
+                $encryption = env('MAIL_ENCRYPTION', 'tls');
+                // Convert 'ssl' to 'smtps' for Laravel's new mailer (Laravel 9+)
+                return $encryption === 'ssl' ? 'smtps' : $encryption;
+            })(),
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', '127.0.0.1'),
             'port' => env('MAIL_PORT', 587),

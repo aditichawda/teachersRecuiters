@@ -40,5 +40,34 @@
             })
         </script>
     <?php endif; ?>
+    
+    <?php if(Session::has('job_created_console_data')): ?>
+        <?php
+            $consoleData = session('job_created_console_data');
+            session()->forget('job_created_console_data');
+        ?>
+        <script type="text/javascript">
+            $(function() {
+                console.log('%c✅ Job Created Successfully!', 'color: #10b981; font-size: 16px; font-weight: bold;');
+                console.log('%cJob Details:', 'color: #3b82f6; font-size: 14px; font-weight: bold;');
+                console.log('  Job ID: <?php echo e($consoleData['job_id']); ?>');
+                console.log('  Job Name: <?php echo e($consoleData['job_name']); ?>');
+                console.log('');
+                
+                <?php if($consoleData['email_count'] > 0): ?>
+                    console.log('%c📧 Email sent to <?php echo e($consoleData['email_count']); ?> job seeker(s):', 'color: #8b5cf6; font-size: 14px; font-weight: bold;');
+                    <?php $__currentLoopData = $consoleData['job_seekers']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $jobSeeker): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        console.log('  <?php echo e($index + 1); ?>. <?php echo e($jobSeeker['name']); ?> (<?php echo e($jobSeeker['email']); ?>)');
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php else: ?>
+                    console.log('%c⚠️ No job seekers found to send emails.', 'color: #f59e0b; font-size: 14px; font-weight: bold;');
+                    <?php if(isset($consoleData['debug_info'])): ?>
+                        console.log('%cDebug Info: <?php echo e($consoleData['debug_info']); ?>', 'color: #6b7280; font-size: 12px;');
+                    <?php endif; ?>
+                    console.log('%c💡 Tip: Check PHP error logs for detailed debugging information.', 'color: #6b7280; font-size: 12px; font-style: italic;');
+                <?php endif; ?>
+            });
+        </script>
+    <?php endif; ?>
 <?php $__env->stopPush(); ?>
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/elements/common.blade.php ENDPATH**/ ?>

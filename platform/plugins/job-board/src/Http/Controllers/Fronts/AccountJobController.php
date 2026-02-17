@@ -247,11 +247,19 @@ class AccountJobController extends BaseController
             // Reload job with relationships before triggering event
             try {
                 $job->load(['categories', 'jobTypes', 'skills', 'company', 'city', 'state', 'country', 'currency']);
+                \Log::info('Triggering JobPublishedEvent for job: ' . $job->id);
+                error_log('[JOB_CREATE] Triggering JobPublishedEvent for job: ' . $job->id . ' - ' . $job->name);
+                
                 event(new JobPublishedEvent($job));
             } catch (\Exception $e) {
                 \Log::error('Failed to trigger JobPublishedEvent: ' . $e->getMessage());
+                error_log('[JOB_CREATE] Failed to trigger JobPublishedEvent: ' . $e->getMessage());
+                
                 // Continue even if event fails
             }
+        } else {
+            \Log::info('JobPublishedEvent NOT triggered - Job status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
+            error_log('[JOB_CREATE] JobPublishedEvent NOT triggered - Status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
         }
 
         $storeTagService->execute($request, $job);
@@ -302,10 +310,61 @@ class AccountJobController extends BaseController
             EmployerPostedJobEvent::dispatch($job, $account);
         }
 
+        // Get job seekers list from session if emails were sent
+        $jobSeekersList = session()->get('job_created_email_recipients', []);
+        $emailCount = count($jobSeekersList);
+        
+        // Build success message with job seekers list
+        $successMessage = trans('plugins/job-board::job.create_success');
+        
+        if ($emailCount > 0) {
+            $successMessage .= "\n\n✅ Email sent successfully to " . $emailCount . " job seeker(s):\n";
+            $namesList = [];
+            foreach ($jobSeekersList as $index => $jobSeeker) {
+                $namesList[] = ($index + 1) . ". " . $jobSeeker['name'] . " (" . $jobSeeker['email'] . ")";
+            }
+            $successMessage .= implode("\n", $namesList);
+            
+            // Store in session for JavaScript console output
+            session()->put('job_created_console_data', [
+                'job_id' => $job->id,
+                'job_name' => $job->name,
+                'email_count' => $emailCount,
+                'job_seekers' => $jobSeekersList
+            ]);
+            
+            // Also log to console
+            \Log::info('Job created successfully. Emails sent to job seekers:', [
+                'job_id' => $job->id,
+                'job_name' => $job->name,
+                'total_emails_sent' => $emailCount,
+                'job_seekers' => $jobSeekersList
+            ]);
+            
+            error_log('[JOB_CREATE] ✅ Job created successfully!');
+            error_log('[JOB_CREATE] 📧 Email sent to ' . $emailCount . ' job seeker(s):');
+            foreach ($jobSeekersList as $index => $jobSeeker) {
+                error_log('[JOB_CREATE]    ' . ($index + 1) . '. ' . $jobSeeker['name'] . ' (' . $jobSeeker['email'] . ')');
+            }
+        } else {
+            session()->put('job_created_console_data', [
+                'job_id' => $job->id,
+                'job_name' => $job->name,
+                'email_count' => 0,
+                'job_seekers' => []
+            ]);
+            error_log('[JOB_CREATE] ✅ Job created successfully!');
+            error_log('[JOB_CREATE] ⚠️ No job seekers found to send emails.');
+        }
+        
+        // Clear session data
+        session()->forget('job_created_email_recipients');
+
         return $this
             ->httpResponse()
             ->setPreviousUrl(route('public.account.jobs.index'))
             ->setNextUrl(route('public.account.jobs.edit', $job->id))
+            ->setMessage($successMessage)
             ->withCreatedSuccessMessage();
     }
 

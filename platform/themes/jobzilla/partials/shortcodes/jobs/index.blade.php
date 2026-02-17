@@ -943,30 +943,136 @@ html {
                 <div class="side-bar-filter">
                     <div class="backdrop"></div>
                     <div class="side-bar">
-                        <div class="sidebar-elements search-bx">
-                            <button class="d-md-none position-absolute btn btn-link btn-close-filter">
+                        <div class="sidebar-elements search-bx" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 0; overflow: hidden;">
+                            <button class="d-md-none position-absolute btn btn-link btn-close-filter" style="top: 15px; right: 15px; z-index: 10; color: #64748b; font-size: 20px; padding: 8px;">
                                 <i class="feather-x"></i>
                             </button>
-                            <div class="sidebar-header-controls" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
-                                <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #1e293b;">{{ __('Filters') }}</h4>
+                            
+                            <!-- Compact Header -->
+                            <div class="sidebar-header-controls" style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%); padding: 20px; color: #0c4a6e; margin: 0; border-bottom: 1px solid #bae6fd;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <h4 style="margin: 0; font-size: 18px; font-weight: 700; color: #0c4a6e; display: flex; align-items: center; gap: 10px;">
+                                        <i class="feather-filter" style="font-size: 20px;"></i>
+                                        {{ __('Filters') }}
+                                    </h4>
+                                    <button type="button" class="btn-clear-filters" style="background: rgba(12, 74, 110, 0.1); border: 1px solid rgba(12, 74, 110, 0.2); color: #0c4a6e; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                        <i class="feather-refresh-cw" style="font-size: 12px; margin-right: 4px;"></i>
+                                        {{ __('Clear All') }}
+                                    </button>
+                                </div>
                             </div>
-                            <form action="{{ JobBoardHelper::getJobsPageURL() }}" method="get" id="jobs-filter-form" data-ajax-url="{{ route('public.ajax.jobs') }}">
-                                {!! Theme::partial('jobs.filters.keyword') !!}
+                            
+                            <!-- Filters Form with Scroll -->
+                            <div class="filters-scroll-container" style="max-height: 115rem; overflow-y: auto; overflow-x: hidden; padding: 20px; position: relative;">
+                                <form action="{{ JobBoardHelper::getJobsPageURL() }}" method="get" id="jobs-filter-form" data-ajax-url="{{ route('public.ajax.jobs') }}">
+                                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                                        {!! Theme::partial('jobs.filters.keyword') !!}
 
-                                {!! Theme::partial('jobs.filters.categories') !!}
+                                        {!! Theme::partial('jobs.filters.categories') !!}
 
-                                {!! Theme::partial('jobs.filters.city') !!}
+                                        {!! Theme::partial('jobs.filters.city') !!}
 
-                                {!! Theme::partial('jobs.filters.types') !!}
+                                        {!! Theme::partial('jobs.filters.types') !!}
 
-                                {!! Theme::partial('jobs.filters.date_posted') !!}
+                                        {!! Theme::partial('jobs.filters.date_posted') !!}
 
-                                {!! Theme::partial('jobs.filters.experiences') !!}
+                                        {!! Theme::partial('jobs.filters.experiences') !!}
 
-                                {!! Theme::partial('jobs.filters.skills') !!}
-                            </form>
+                                        {!! Theme::partial('jobs.filters.skills') !!}
+                                    </div>
+                                    
+                                    <!-- Apply Button -->
+                                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; padding-right: 0;">
+                                        <button type="submit" style="width: 100%; background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 50%, #0ea5e9 100%); color: #0c4a6e; border: none; padding: 14px 20px; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);">
+                                            <i class="feather-check-circle" style="margin-right: 8px;"></i>
+                                            {{ __('Apply Filters') }}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
+                    
+                    <style>
+                        /* Custom Scrollbar for Filters - Inside Container */
+                        .filters-scroll-container {
+                            scrollbar-width: thin;
+                            scrollbar-color: #7dd3fc #f0f9ff;
+                        }
+                        
+                        .filters-scroll-container::-webkit-scrollbar {
+                            width: 8px;
+                        }
+                        
+                        .filters-scroll-container::-webkit-scrollbar-track {
+                            background: #f0f9ff;
+                            border-radius: 10px;
+                            margin: 10px 0;
+                        }
+                        
+                        .filters-scroll-container::-webkit-scrollbar-thumb {
+                            background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 50%, #38bdf8 100%);
+                            border-radius: 10px;
+                            border: 2px solid #f0f9ff;
+                        }
+                        
+                        .filters-scroll-container::-webkit-scrollbar-thumb:hover {
+                            background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 50%, #0ea5e9 100%);
+                        }
+                        
+                        /* Ensure scrollbar stays inside */
+                        .sidebar-elements.search-bx {
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        
+                        .filters-scroll-container {
+                            padding-right: 12px !important;
+                        }
+                        
+                        /* Clear Filters Button Hover */
+                        .btn-clear-filters:hover {
+                            background: rgba(12, 74, 110, 0.15) !important;
+                            border-color: rgba(12, 74, 110, 0.3) !important;
+                            transform: translateY(-1px);
+                        }
+                        
+                        /* Apply Button Hover */
+                        .sidebar-elements button[type="submit"]:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important;
+                            background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%) !important;
+                        }
+                        
+                        /* Filter Sections Spacing */
+                        .sidebar-elements .form-group,
+                        .sidebar-elements .form-item,
+                        .sidebar-elements .filter-section {
+                            margin-bottom: 0 !important;
+                        }
+                        
+                        /* Right side alignment */
+                        .sidebar-elements.search-bx {
+                            width: 100%;
+                        }
+                        
+                        .filters-scroll-container form {
+                            width: 100%;
+                        }
+                    </style>
+                    
+                    <script>
+                        $(document).ready(function() {
+                            // Clear all filters
+                            $('.btn-clear-filters').on('click', function(e) {
+                                e.preventDefault();
+                                $('#jobs-filter-form')[0].reset();
+                                $('select').val('').trigger('change');
+                                $('input[type="checkbox"]').prop('checked', false);
+                                $('input[type="radio"]').prop('checked', false);
+                            });
+                        });
+                    </script>
                 </div>
 
                 {!! dynamic_sidebar('job_board_sidebar') !!}
@@ -995,14 +1101,6 @@ html {
                         <i class="feather-grid" id="layout-icon-sidebar"></i>
                         <span id="layout-text-sidebar">{{ $layout === 'list' ? __('List') : __('Grid') }}</span>
                     </button>
-                </div>
-
-                <div class="loading">
-                    <div class="loading__inner">
-                        <div class="loading__content">
-                            <span class="spinner"></span>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="twm-jobs-list-wrap jobs-listing" id="jobs-listing-container">

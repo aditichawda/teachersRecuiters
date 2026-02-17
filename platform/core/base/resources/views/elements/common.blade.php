@@ -40,4 +40,33 @@
             })
         </script>
     @endif
+    
+    @if (Session::has('job_created_console_data'))
+        @php
+            $consoleData = session('job_created_console_data');
+            session()->forget('job_created_console_data');
+        @endphp
+        <script type="text/javascript">
+            $(function() {
+                console.log('%c✅ Job Created Successfully!', 'color: #10b981; font-size: 16px; font-weight: bold;');
+                console.log('%cJob Details:', 'color: #3b82f6; font-size: 14px; font-weight: bold;');
+                console.log('  Job ID: {{ $consoleData['job_id'] }}');
+                console.log('  Job Name: {{ $consoleData['job_name'] }}');
+                console.log('');
+                
+                @if ($consoleData['email_count'] > 0)
+                    console.log('%c📧 Email sent to {{ $consoleData['email_count'] }} job seeker(s):', 'color: #8b5cf6; font-size: 14px; font-weight: bold;');
+                    @foreach ($consoleData['job_seekers'] as $index => $jobSeeker)
+                        console.log('  {{ $index + 1 }}. {{ $jobSeeker['name'] }} ({{ $jobSeeker['email'] }})');
+                    @endforeach
+                @else
+                    console.log('%c⚠️ No job seekers found to send emails.', 'color: #f59e0b; font-size: 14px; font-weight: bold;');
+                    @if (isset($consoleData['debug_info']))
+                        console.log('%cDebug Info: {{ $consoleData['debug_info'] }}', 'color: #6b7280; font-size: 12px;');
+                    @endif
+                    console.log('%c💡 Tip: Check PHP error logs for detailed debugging information.', 'color: #6b7280; font-size: 12px; font-style: italic;');
+                @endif
+            });
+        </script>
+    @endif
 @endpush
