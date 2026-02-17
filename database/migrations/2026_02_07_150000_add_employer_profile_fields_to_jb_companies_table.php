@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Cursor AI: Stash apply se restore. Employer profile fields (institution_type, principal_name, etc.). See CURSOR_AI_CHANGES.md - 17 Feb 2026
+ */
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

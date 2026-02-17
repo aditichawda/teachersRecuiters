@@ -1,3 +1,4 @@
+/* Cursor AI: Theme overrides. See CURSOR_AI_CHANGES.md - 17 Feb 2026 */
 .header-top {
   background-color: var(--primary-color);
   height: 50px;
@@ -563,13 +564,9 @@
 form.auth-form .form-control {
   background-color: #f0f6fe;
 }
-<<<<<<< HEAD
 form.auth-form .auth-input-icon {
   top: 12px;
 }
-=======
-
->>>>>>> 10eda922 (16 feb changs)
 
 .newsletter-minimal-form .invalid-feedback {
   color: #fff;

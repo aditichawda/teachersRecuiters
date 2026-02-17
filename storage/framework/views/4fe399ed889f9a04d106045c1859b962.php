@@ -8,30 +8,7 @@
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['showLabel' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showLabel),'showField' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showField),'options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($options),'name' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($name),'prepend' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($prepend ?? null),'append' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($append ?? null),'showError' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showError),'nameKey' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($nameKey)]); ?>
-     <?php $__env->slot('label', null, []); ?> 
-        <?php if($showLabel && $options['label'] !== false && $options['label_show']): ?>
-            <?php echo Form::customLabel($name, $options['label'], $options['label_attr']); ?>
-
-        <?php endif; ?>
-     <?php $__env->endSlot(); ?>
-
-    <?php
-        if ($options['choices'] instanceof \Illuminate\Contracts\Support\Arrayable) {
-            $options['choices'] = $options['choices']->toArray();
-        }
-
-        // Merge the select-autocomplete class with existing classes
-        $options['attr']['class'] = trim(($options['attr']['class'] ?? '') . ' select-autocomplete');
-    ?>
-
-    <?php echo Form::customSelect(
-        $name,
-        ($options['empty_value'] ? ['' => $options['empty_value']] : []) + $options['choices'],
-        $options['selected'] !== null ? $options['selected'] : $options['default_value'],
-        $options['attr'],
-        Arr::get($options, 'optionAttrs', []),
-        Arr::get($options, 'optgroupsAttributes', []),
-    ); ?>
+    <?php echo $options['html']; ?>
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -43,4 +20,4 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
-<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/autocomplete.blade.php ENDPATH**/ ?>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/html.blade.php ENDPATH**/ ?>

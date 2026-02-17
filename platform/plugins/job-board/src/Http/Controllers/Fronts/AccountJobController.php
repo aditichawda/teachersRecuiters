@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Cursor AI: Merge conflicts resolved, job create success flow (session/email), stash apply (16 Feb changes) - 17 Feb 2026
+ * @see CURSOR_AI_CHANGES.md for full list of changes
+ */
 namespace Botble\JobBoard\Http\Controllers\Fronts;
 
 use Botble\Base\Events\BeforeEditContentEvent;
