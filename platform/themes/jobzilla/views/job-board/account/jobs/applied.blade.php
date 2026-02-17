@@ -128,9 +128,13 @@
         background: #fff3e0;
         color: #e65100;
     }
-    .status-approved {
+    .status-hired {
         background: #e6f9ee;
         color: #1a9c4a;
+    }
+    .status-short_list {
+        background: #e3f2fd;
+        color: #1565c0;
     }
     .status-rejected {
         background: #ffebee;
@@ -235,6 +239,10 @@
                     @if($application->job->expire_date)
                         <span><i class="fa fa-clock"></i> {{ __('Expires') }}: {{ $application->job->expire_date }}</span>
                     @endif
+                    @php
+                        $statusValue = $application->status ? $application->status->getValue() : 'pending';
+                    @endphp
+                    <span class="applied-status-badge status-{{ $statusValue }}">{{ $application->status ? $application->status->label() : __('Pending') }}</span>
                 </div>
             </div>
             <div class="applied-job-actions">

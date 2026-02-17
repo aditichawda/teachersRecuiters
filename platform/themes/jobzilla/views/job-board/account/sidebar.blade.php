@@ -28,7 +28,7 @@
             @endif
             <li @class(['active' => $url === route('public.account.settings')])><a href="{{ route('public.account.settings') }}"><i class="fa fa-user"></i>{{ __('My Profile') }}</a></li>
             <li @class(['active' => $url === route('public.account.overview')])><a href="{{ route('public.account.overview') }}"><i class="fa fa-eye"></i>{{ __('Overview') }}</a></li>
-            <li @class(['active' => $url === route('public.account.security')])><a href="{{ route('public.account.security') }}"><i class="fa fa-fingerprint"></i>{{ __('Change Password') }}</a></li>
+            <li @class(['active' => $url === route('public.account.security')])><a href="{{ route('public.account.security') }}"><i class="fa fa-fingerprint"></i>{{ trans('plugins/job-board::dashboard.menu.change_password') }}</a></li>
             @if ($account->isJobSeeker())
                 <li @class(['active' => $url === route('public.account.jobs.applied-jobs')])><a href="{{ route('public.account.jobs.applied-jobs') }}"><i class="fa fa-suitcase"></i>{{ __('Applied Jobs') }}</a></li>
                 <li @class(['active' => $url === route('public.account.jobs.saved')])><a href="{{ route('public.account.jobs.saved') }}"><i class="fa fa-file-download"></i>{{ __('Saved Jobs') }}</a></li>

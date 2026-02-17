@@ -822,7 +822,11 @@
                                     @else
                                         <i class="{{ $item['icon'] ?? 'fa fa-circle' }}"></i>
                                     @endif
-                                    {{ trans($item['name']) }}
+                                    @if(($item['id'] ?? '') === 'cms-account-change-password' || $item['url'] === route('public.account.security'))
+                                        {{ trans('plugins/job-board::dashboard.menu.change_password') }}
+                                    @else
+                                        {{ trans($item['name']) }}
+                                    @endif
                                 </a>
                             </li>
                         @endforeach

@@ -1,84 +1,90 @@
-<div style="font-family: 'Georgia', 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 40px; background: #fff; color: #333;">
+@php
+    $displayEducations = $educations->isNotEmpty() ? $educations : collect([
+        (object)['school' => __('Your School / University'), 'specialized' => __('Degree e.g. B.Ed, M.A'), 'description' => null, 'started_at' => null, 'ended_at' => null],
+    ]);
+    $displayExperiences = $experiences->isNotEmpty() ? $experiences : collect([
+        (object)['company' => __('School / Institution Name'), 'position' => __('Position e.g. Teacher'), 'description' => null, 'started_at' => null, 'ended_at' => null],
+    ]);
+    $displaySkills = !empty($skills) ? $skills : [__('Teaching'), __('Communication'), __('Classroom Management'), __('Add your skills in profile')];
+    $summaryText = $account->career_aspiration ? strip_tags($account->career_aspiration) : ($account->description ? strip_tags($account->description) : ($account->bio ? strip_tags($account->bio) : __('Passionate educator committed to student growth. Complete your profile to personalize this summary.')));
+    $displayName = $account->name ?: __('Your Name');
+    $displayEmail = $account->email ?: 'your.email@example.com';
+    $displayPhone = $account->phone ?: __('Your Phone');
+    $displayLocation = $account->address ?: (($account->city_name || $account->state_name) ? implode(', ', array_filter([$account->city_name, $account->state_name])) : __('Your City, State'));
+@endphp
+<div style="font-family: 'Georgia', 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 44px 40px; background: #fff; color: #333;">
     <!-- Header -->
-    <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #1967d2; margin-bottom: 25px;">
-        <h1 style="font-size: 28px; font-weight: 700; color: #1a1a1a; margin: 0 0 6px 0; letter-spacing: 1px;">
-            {{ strtoupper($account->name ?: 'Your Name') }}
+    <div style="text-align: center; padding-bottom: 22px; border-bottom: 3px solid #1967d2; margin-bottom: 28px;">
+        <h1 style="font-size: 30px; font-weight: 700; color: #1a1a1a; margin: 0 0 8px 0; letter-spacing: 1px;">
+            {{ strtoupper($displayName) }}
         </h1>
-        @if($account->career_aspiration)
-            <p style="font-size: 14px; color: #555; margin: 0 0 12px 0; font-style: italic;">
-                {{ Str::limit(strip_tags($account->career_aspiration), 120) }}
+        @if($account->designation)
+            <p style="font-size: 14px; color: #1967d2; font-weight: 600; margin: 0 0 10px 0;">{{ $account->designation }}</p>
+        @endif
+        @if($summaryText && strlen($summaryText) > 10)
+            <p style="font-size: 13px; color: #555; margin: 0 0 14px 0; font-style: italic; max-width: 640px; margin-left: auto; margin-right: auto;">
+                {{ Str::limit($summaryText, 140) }}
             </p>
         @endif
-        <div style="font-size: 12px; color: #666; display: flex; justify-content: center; flex-wrap: wrap; gap: 12px;">
-            @if($account->email)
-                <span>📧 {{ $account->email }}</span>
-            @endif
-            @if($account->phone)
-                <span>📞 {{ $account->phone }}</span>
-            @endif
-            @if($account->address)
-                <span>📍 {{ $account->address }}</span>
-            @elseif($account->state_name || $account->city_name)
-                <span>📍 {{ implode(', ', array_filter([$account->city_name, $account->state_name])) }}</span>
-            @endif
+        <div style="font-size: 12px; color: #666; display: flex; justify-content: center; flex-wrap: wrap; gap: 14px;">
+            <span>📧 {{ $displayEmail }}</span>
+            <span>📞 {{ $displayPhone }}</span>
+            <span>📍 {{ $displayLocation }}</span>
         </div>
     </div>
 
-    <!-- About / Career Aspiration -->
-    @if($account->career_aspiration)
-    <div style="margin-bottom: 22px;">
-        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 10px 0;">
-            Professional Summary
+    <!-- Professional Summary -->
+    @if($summaryText)
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            {{ __('Professional Summary') }}
         </h2>
-        <p style="font-size: 13px; line-height: 1.7; color: #444; margin: 0;">
-            {{ strip_tags($account->career_aspiration) }}
+        <p style="font-size: 13px; line-height: 1.75; color: #444; margin: 0;">
+            {{ $summaryText }}
         </p>
     </div>
     @endif
 
     <!-- Experience -->
-    @if($experiences->count() > 0)
-    <div style="margin-bottom: 22px;">
-        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
-            Work Experience
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 14px 0;">
+            {{ __('Work Experience') }}
         </h2>
-        @foreach($experiences as $exp)
-        <div style="margin-bottom: 14px;">
+        @foreach($displayExperiences as $exp)
+        <div style="margin-bottom: 16px;">
             <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
                 <h3 style="font-size: 14px; font-weight: 600; color: #222; margin: 0;">{{ $exp->position }}</h3>
                 <span style="font-size: 12px; color: #888;">
-                    {{ $exp->started_at ? $exp->started_at->format('M Y') : '' }}
+                    {{ $exp->started_at ? $exp->started_at->format('M Y') : '—' }}
                     –
-                    {{ $exp->ended_at ? $exp->ended_at->format('M Y') : 'Present' }}
+                    {{ $exp->ended_at ? $exp->ended_at->format('M Y') : __('Present') }}
                 </span>
             </div>
             <p style="font-size: 13px; color: #1967d2; margin: 2px 0 6px 0; font-weight: 500;">
                 {{ $exp->company }}
             </p>
-            @if($exp->description)
-            <p style="font-size: 12px; color: #555; line-height: 1.6; margin: 0;">
+            @if(!empty($exp->description))
+            <p style="font-size: 12px; color: #555; line-height: 1.65; margin: 0;">
                 {{ strip_tags($exp->description) }}
             </p>
             @endif
         </div>
         @endforeach
     </div>
-    @endif
 
     <!-- Education -->
-    @if($educations->count() > 0)
-    <div style="margin-bottom: 22px;">
-        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
-            Education
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 14px 0;">
+            {{ __('Education') }}
         </h2>
-        @foreach($educations as $edu)
-        <div style="margin-bottom: 12px;">
+        @foreach($displayEducations as $edu)
+        <div style="margin-bottom: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
-                <h3 style="font-size: 14px; font-weight: 600; color: #222; margin: 0;">{{ $edu->specialized ?? $edu->description }}</h3>
+                <h3 style="font-size: 14px; font-weight: 600; color: #222; margin: 0;">{{ $edu->specialized ?? $edu->description ?? __('Degree') }}</h3>
                 <span style="font-size: 12px; color: #888;">
-                    {{ $edu->started_at ? $edu->started_at->format('Y') : '' }}
+                    {{ $edu->started_at ? $edu->started_at->format('Y') : '—' }}
                     –
-                    {{ $edu->ended_at ? $edu->ended_at->format('Y') : 'Present' }}
+                    {{ $edu->ended_at ? $edu->ended_at->format('Y') : __('Present') }}
                 </span>
             </div>
             <p style="font-size: 13px; color: #1967d2; margin: 2px 0 0 0; font-weight: 500;">
@@ -87,27 +93,24 @@
         </div>
         @endforeach
     </div>
-    @endif
 
     <!-- Skills -->
-    @if(count($skills) > 0)
-    <div style="margin-bottom: 22px;">
-        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 10px 0;">
-            Skills
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            {{ __('Skills') }}
         </h2>
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            @foreach($skills as $skill)
-            <span style="background: #f0f4ff; color: #1967d2; padding: 4px 12px; border-radius: 14px; font-size: 12px; font-weight: 500;">{{ $skill }}</span>
+            @foreach($displaySkills as $skill)
+            <span style="background: #f0f4ff; color: #1967d2; padding: 5px 14px; border-radius: 16px; font-size: 12px; font-weight: 500;">{{ is_string($skill) ? $skill : $skill->name ?? '' }}</span>
             @endforeach
         </div>
     </div>
-    @endif
 
     <!-- Languages -->
     @if($account->languages && count($account->languages) > 0)
-    <div style="margin-bottom: 22px;">
-        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 10px 0;">
-            Languages
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            {{ __('Languages') }}
         </h2>
         <div style="display: flex; flex-wrap: wrap; gap: 16px;">
             @foreach($account->languages as $lang)
@@ -124,11 +127,11 @@
     </div>
     @endif
 
-    <!-- Teaching Certifications -->
+    <!-- Certifications -->
     @if($account->teaching_certifications && count($account->teaching_certifications) > 0)
     <div style="margin-bottom: 22px;">
-        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 10px 0;">
-            Certifications
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            {{ __('Certifications') }}
         </h2>
         <ul style="margin: 0; padding: 0 0 0 18px; font-size: 13px; color: #444; line-height: 1.8;">
             @foreach($account->teaching_certifications as $cert)

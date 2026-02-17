@@ -4,6 +4,7 @@ namespace Botble\JobBoard\Providers;
 
 use Botble\JobBoard\Commands\CheckExpiredJobsSoonCommand;
 use Botble\JobBoard\Commands\RenewJobsCommand;
+use Botble\JobBoard\Commands\SyncJobApplicantsCountCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\ServiceProvider;
 
@@ -18,6 +19,7 @@ class CommandServiceProvider extends ServiceProvider
         $this->commands([
             RenewJobsCommand::class,
             CheckExpiredJobsSoonCommand::class,
+            SyncJobApplicantsCountCommand::class,
         ]);
 
         $this->app->afterResolving(Schedule::class, function (Schedule $schedule): void {

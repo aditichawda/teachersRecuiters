@@ -311,13 +311,7 @@
                     <label class="form-label">{{ __('Established Year') }} <span class="required">*</span></label>
                     <input type="number" name="year_founded" class="form-control" value="{{ old('year_founded', $company->year_founded ?? '') }}" required min="1800" max="{{ date('Y') }}" placeholder="{{ __('e.g. 1995') }}">
                 </div>
-                
-                <!-- Principal Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Principal Name') }}</label>
-                    <input type="text" name="principal_name" class="form-control" value="{{ old('principal_name', $company->principal_name ?? '') }}" placeholder="{{ __('Enter principal/director name') }}">
-                </div>
-                
+
                 <!-- Total Staff -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Total Number of Staff') }}</label>

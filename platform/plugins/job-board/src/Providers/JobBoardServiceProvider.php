@@ -599,58 +599,57 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => fn () => route('public.account.dashboard'),
                     'icon' => 'ti ti-home',
                 ])
+                ->when(JobBoardHelper::employerManageCompanyInfo(), fn (DashboardMenuSupport $m) => $m->registerItem([
+                    'id' => 'cms-account-companies',
+                    'priority' => 2,
+                    'parent_id' => null,
+                    'name' => 'plugins/job-board::dashboard.menu.companies',
+                    'url' => fn () => route('public.account.companies.index'),
+                    'icon' => 'ti ti-building',
+                ]))
                 ->registerItem([
                     'id' => 'cms-account-jobs',
-                    'priority' => 2,
+                    'priority' => 3,
                     'parent_id' => null,
                     'name' => 'plugins/job-board::dashboard.menu.jobs',
                     'url' => fn () => route('public.account.jobs.index'),
                     'icon' => 'ti ti-briefcase',
                 ])
-                ->when(JobBoardHelper::employerManageCompanyInfo(), function (DashboardMenuSupport $dashboardMenu): void {
-                    $dashboardMenu
-                        ->registerItem([
-                            'id' => 'cms-account-companies',
-                            'priority' => 3,
-                            'parent_id' => null,
-                            'name' => 'plugins/job-board::dashboard.menu.companies',
-                            'url' => fn () => route('public.account.companies.index'),
-                            'icon' => 'ti ti-building',
-                        ]);
-                })
-                ->when(JobBoardHelper::isEnabledReview(), function (DashboardMenuSupport $dashboardMenu): void {
-                    $dashboardMenu
-                        ->registerItem([
-                            'id' => 'cms-account-reviews',
-                            'priority' => 4,
-                            'parent_id' => null,
-                            'name' => 'plugins/job-board::dashboard.menu.reviews',
-                            'url' => fn () => route('public.account.reviews.index'),
-                            'icon' => 'ti ti-star',
-                        ]);
-                })
                 ->registerItem([
                     'id' => 'cms-account-applicants',
-                    'priority' => 5,
+                    'priority' => 4,
                     'parent_id' => null,
                     'name' => 'plugins/job-board::dashboard.menu.applicants',
                     'url' => fn () => route('public.account.applicants.index'),
                     'icon' => 'ti ti-users-group',
                 ])
-                ->when(JobBoardHelper::isEnabledCreditsSystem(), static function (DashboardMenuSupport $dashboardMenu): void {
-                    $dashboardMenu
-                        ->registerItem([
-                            'id' => 'cms-account-invoices',
-                            'priority' => 6,
-                            'parent_id' => null,
-                            'name' => 'plugins/job-board::dashboard.menu.invoices',
-                            'url' => fn () => route('public.account.invoices.index'),
-                            'icon' => 'ti ti-file-invoice',
-                        ]);
-                })
+                ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
+                    'id' => 'cms-account-packages',
+                    'priority' => 5,
+                    'parent_id' => null,
+                    'name' => 'plugins/job-board::dashboard.menu.packages',
+                    'url' => fn () => route('public.account.packages'),
+                    'icon' => 'ti ti-packages',
+                ]))
+                ->when(JobBoardHelper::isEnabledReview(), fn (DashboardMenuSupport $m) => $m->registerItem([
+                    'id' => 'cms-account-reviews',
+                    'priority' => 6,
+                    'parent_id' => null,
+                    'name' => 'plugins/job-board::dashboard.menu.reviews',
+                    'url' => fn () => route('public.account.reviews.index'),
+                    'icon' => 'ti ti-star',
+                ]))
+                ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
+                    'id' => 'cms-account-invoices',
+                    'priority' => 7,
+                    'parent_id' => null,
+                    'name' => 'plugins/job-board::dashboard.menu.invoices',
+                    'url' => fn () => route('public.account.invoices.index'),
+                    'icon' => 'ti ti-file-invoice',
+                ]))
                 ->registerItem([
                     'id' => 'cms-account-settings',
-                    'priority' => 7,
+                    'priority' => 8,
                     'parent_id' => null,
                     'name' => 'plugins/job-board::dashboard.menu.settings',
                     'url' => fn () => route('public.account.employer.settings.edit'),
@@ -658,23 +657,12 @@ class JobBoardServiceProvider extends ServiceProvider
                 ])
                 ->registerItem([
                     'id' => 'cms-account-change-password',
-                    'priority' => 8,
+                    'priority' => 9,
                     'parent_id' => null,
                     'name' => 'plugins/job-board::dashboard.menu.change_password',
                     'url' => fn () => route('public.account.security'),
                     'icon' => 'ti ti-lock',
-                ])
-                ->when(JobBoardHelper::isEnabledCreditsSystem(), function (DashboardMenuSupport $dashboardMenu): void {
-                    $dashboardMenu
-                        ->registerItem([
-                            'id' => 'cms-account-packages',
-                            'priority' => 4,
-                            'parent_id' => null,
-                            'name' => 'plugins/job-board::dashboard.menu.packages',
-                            'url' => fn () => route('public.account.packages'),
-                            'icon' => 'ti ti-packages',
-                        ]);
-                });
+                ]);
         });
 
         DashboardMenu::default();

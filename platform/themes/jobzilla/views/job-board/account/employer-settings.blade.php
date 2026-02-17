@@ -177,7 +177,7 @@
     {{-- ===== SECTION 1: Institution Logo (stored in jb_companies.logo). Left side = profile/avatar, unchanged. ===== --}}
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-image"></i> {{ __('Institution Logo') }}
+            <i class="fa fa-image"></i> {{ __('School/Institution Logo') }}
         </div>
         <div class="emp-section-body">
             <div class="logo-upload-area">
@@ -199,7 +199,7 @@
     {{-- ===== SECTION 2: Your Details ===== --}}
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-user"></i> {{ __('Your Details') }}
+            <i class="fa fa-user"></i> {{ __('Profile Manage Details') }}
         </div>
         <div class="emp-section-body">
             <div class="row">
@@ -221,13 +221,20 @@
                     <label class="form-label">{{ __('Mobile Number') }} <span class="required">*</span></label>
                     <input type="tel" name="account_phone" class="form-control" value="{{ old('account_phone', $account->phone ?? '') }}" required placeholder="{{ __('Enter your mobile number') }}">
                 </div>
+                
+                <!-- Designation -->
+                <div class="col-md-6 mb-sm-3">
+                    <label class="form-label">{{ __('Designation') }}</label>
+                    <input type="text" name="designation" class="form-control" value="{{ old('designation', $account->designation ?? '') }}" placeholder="{{ __('e.g. Principal, HR Manager, Admin') }}">
+                </div>
             </div>
         </div>
     </div>
 
     {{-- ===== SECTION 3: Institution Information ===== --}}
     @php
-        $instType = old('institution_type', $company->institution_type ?? $account->institution_type ?? '');
+        $instTypeRaw = old('institution_type', $company->institution_type ?? $account->institution_type ?? '');
+        $instTypes = is_array($instTypeRaw) ? $instTypeRaw : (is_string($instTypeRaw) && $instTypeRaw !== '' ? array_map('trim', explode(',', $instTypeRaw)) : []);
     @endphp
     <div class="emp-section mb-4">
         <div class="emp-section-header">
@@ -244,52 +251,51 @@
                 <!-- Institution Type -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Type of Institution') }} <span class="required">*</span></label>
-                    <select name="institution_type" id="institution_type" class="form-select" required>
-                        <option value="">{{ __('Select type') }}</option>
+                    <select name="institution_type[]" id="institution_type" class="form-select" multiple required>
                         <optgroup label="🏫 School">
-                            <option value="cbse-school" @selected($instType == 'cbse-school')>CBSE School</option>
-                            <option value="icse-school" @selected($instType == 'icse-school')>ICSE School</option>
-                            <option value="cambridge-school" @selected($instType == 'cambridge-school')>Cambridge School</option>
-                            <option value="ib-school" @selected($instType == 'ib-school')>IB School</option>
-                            <option value="igcse-school" @selected($instType == 'igcse-school')>IGCSE School</option>
-                            <option value="primary-school" @selected($instType == 'primary-school')>Primary School</option>
-                            <option value="play-school" @selected($instType == 'play-school')>Play School</option>
-                            <option value="state-board-school" @selected($instType == 'state-board-school')>State Board School</option>
+                            <option value="cbse-school" @selected(in_array('cbse-school', $instTypes))>CBSE School</option>
+                            <option value="icse-school" @selected(in_array('icse-school', $instTypes))>ICSE School</option>
+                            <option value="cambridge-school" @selected(in_array('cambridge-school', $instTypes))>Cambridge School</option>
+                            <option value="ib-school" @selected(in_array('ib-school', $instTypes))>IB School</option>
+                            <option value="igcse-school" @selected(in_array('igcse-school', $instTypes))>IGCSE School</option>
+                            <option value="primary-school" @selected(in_array('primary-school', $instTypes))>Primary School</option>
+                            <option value="play-school" @selected(in_array('play-school', $instTypes))>Play School</option>
+                            <option value="state-board-school" @selected(in_array('state-board-school', $instTypes))>State Board School</option>
                         </optgroup>
                         <optgroup label="🎓 College">
-                            <option value="engineering-college" @selected($instType == 'engineering-college')>Engineering College</option>
-                            <option value="medical-college" @selected($instType == 'medical-college')>Medical College</option>
-                            <option value="nursing-college" @selected($instType == 'nursing-college')>Nursing College</option>
-                            <option value="pharmacy-college" @selected($instType == 'pharmacy-college')>Pharmacy College</option>
-                            <option value="science-college" @selected($instType == 'science-college')>Science College</option>
-                            <option value="management-college" @selected($instType == 'management-college')>Management College</option>
-                            <option value="degree-college" @selected($instType == 'degree-college')>Degree College</option>
+                            <option value="engineering-college" @selected(in_array('engineering-college', $instTypes))>Engineering College</option>
+                            <option value="medical-college" @selected(in_array('medical-college', $instTypes))>Medical College</option>
+                            <option value="nursing-college" @selected(in_array('nursing-college', $instTypes))>Nursing College</option>
+                            <option value="pharmacy-college" @selected(in_array('pharmacy-college', $instTypes))>Pharmacy College</option>
+                            <option value="science-college" @selected(in_array('science-college', $instTypes))>Science College</option>
+                            <option value="management-college" @selected(in_array('management-college', $instTypes))>Management College</option>
+                            <option value="degree-college" @selected(in_array('degree-college', $instTypes))>Degree College</option>
                         </optgroup>
                         <optgroup label="📚 Coaching Institute">
-                            <option value="jee-neet-institute" @selected($instType == 'jee-neet-institute')>JEE & NEET Institute</option>
-                            <option value="banking-institute" @selected($instType == 'banking-institute')>Banking Institute</option>
-                            <option value="civil-services-institute" @selected($instType == 'civil-services-institute')>Civil Services Institute</option>
-                            <option value="it-training-institute" @selected($instType == 'it-training-institute')>IT Training Institute</option>
+                            <option value="jee-neet-institute" @selected(in_array('jee-neet-institute', $instTypes))>JEE & NEET Institute</option>
+                            <option value="banking-institute" @selected(in_array('banking-institute', $instTypes))>Banking Institute</option>
+                            <option value="civil-services-institute" @selected(in_array('civil-services-institute', $instTypes))>Civil Services Institute</option>
+                            <option value="it-training-institute" @selected(in_array('it-training-institute', $instTypes))>IT Training Institute</option>
                         </optgroup>
                         <optgroup label="💻 EdTech & Online">
-                            <option value="edtech-company" @selected($instType == 'edtech-company')>EdTech Company</option>
-                            <option value="online-education-platform" @selected($instType == 'online-education-platform')>Online Education Platform</option>
+                            <option value="edtech-company" @selected(in_array('edtech-company', $instTypes))>EdTech Company</option>
+                            <option value="online-education-platform" @selected(in_array('online-education-platform', $instTypes))>Online Education Platform</option>
                         </optgroup>
                         <optgroup label="🏛️ University & Academy">
-                            <option value="university" @selected($instType == 'university')>University</option>
-                            <option value="sport-academy" @selected($instType == 'sport-academy')>Sport Academy</option>
-                            <option value="music-academy" @selected($instType == 'music-academy')>Music Academy</option>
+                            <option value="university" @selected(in_array('university', $instTypes))>University</option>
+                            <option value="sport-academy" @selected(in_array('sport-academy', $instTypes))>Sport Academy</option>
+                            <option value="music-academy" @selected(in_array('music-academy', $instTypes))>Music Academy</option>
                         </optgroup>
                         <optgroup label="📋 Other">
-                            <option value="non-profit-organization" @selected($instType == 'non-profit-organization')>Non-Profit Organization</option>
-                            <option value="book-publishing-company" @selected($instType == 'book-publishing-company')>Book Publishing Company</option>
+                            <option value="non-profit-organization" @selected(in_array('non-profit-organization', $instTypes))>Non-Profit Organization</option>
+                            <option value="book-publishing-company" @selected(in_array('book-publishing-company', $instTypes))>Book Publishing Company</option>
                         </optgroup>
                     </select>
                 </div>
                 
                 <!-- About Us -->
                 <div class="col-12 mb-3">
-                    <label class="form-label">{{ __('About Us') }} <span class="required">*</span></label>
+                    <label class="form-label">{{ __('About School/Institution') }} <span class="required">*</span></label>
                     <textarea name="description" class="form-control" rows="4" required placeholder="{{ __('Tell about your institution...') }}">{{ old('description', $company->description ?? '') }}</textarea>
                 </div>
                 
@@ -317,13 +323,7 @@
                     <label class="form-label">{{ __('Established Year') }} <span class="required">*</span></label>
                     <input type="number" name="year_founded" class="form-control" value="{{ old('year_founded', $company->year_founded ?? '') }}" required min="1800" max="{{ date('Y') }}" placeholder="{{ __('e.g. 1995') }}">
                 </div>
-                
-                <!-- Principal Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Principal Name') }}</label>
-                    <input type="text" name="principal_name" class="form-control" value="{{ old('principal_name', $company->principal_name ?? '') }}" placeholder="{{ __('Enter principal/director name') }}">
-                </div>
-                
+            
                 <!-- Total Staff -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Total Number of Staff') }}</label>
@@ -601,11 +601,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // TomSelect: Institution Type
+    // TomSelect: Institution Type (max 4, no validation message)
     if (document.getElementById('institution_type')) {
         new TomSelect('#institution_type', {
-            allowEmptyOption: true,
-            maxItems: 1,
+            plugins: ['remove_button'],
+            maxItems: 4,
         });
     }
 
