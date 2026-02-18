@@ -13,6 +13,8 @@ use Botble\JobBoard\Enums\ModerationStatusEnum;
 use Botble\JobBoard\Events\AdminApprovedJobEvent;
 use Botble\JobBoard\Events\JobPublishedEvent;
 use Botble\JobBoard\Facades\JobBoardHelper;
+use Botble\JobBoard\Listeners\SendJobAlertListener;
+use Illuminate\Support\Facades\Mail;
 use Botble\JobBoard\Forms\JobForm;
 use Botble\JobBoard\Http\Requests\ExpireJobsRequest;
 use Botble\JobBoard\Http\Requests\JobRequest;
@@ -87,9 +89,47 @@ class JobController extends BaseController
             // Reload job with relationships before triggering event
             try {
                 $job->load(['categories', 'jobTypes', 'skills', 'company', 'city', 'state', 'country', 'currency']);
+                
+                // Trigger event
                 event(new JobPublishedEvent($job));
+                error_log('[JOB_CREATE] JobPublishedEvent triggered for job: ' . $job->id);
+                
+                // ALSO: Directly call listener as backup (in case event doesn't fire)
+                try {
+                    $listener = app(SendJobAlertListener::class);
+                    $listener->handle(new JobPublishedEvent($job));
+                    error_log('[JOB_CREATE] ✅ SendJobAlertListener called directly as backup');
+                } catch (\Exception $listenerException) {
+                    error_log('[JOB_CREATE] ❌ Direct listener call failed: ' . $listenerException->getMessage());
+                    \Log::error('Direct listener call failed: ' . $listenerException->getMessage());
+                    
+                    // Last resort: Send fixed email directly
+                    try {
+                        $fixedEmail = 'hemanshi.amplewebservices@gmail.com';
+                        $emailContent = "
+                            <html>
+                            <body>
+                                <h2>New Job: {$job->name}</h2>
+                                <p><strong>Company:</strong> " . ($job->company->name ?? 'N/A') . "</p>
+                                <p><a href='{$job->url}'>View Job</a></p>
+                            </body>
+                            </html>
+                        ";
+                        
+                        Mail::send([], [], function ($message) use ($fixedEmail, $job, $emailContent) {
+                            $message->to($fixedEmail)
+                                ->subject('New Job: ' . $job->name)
+                                ->html($emailContent);
+                        });
+                        
+                        error_log('[JOB_CREATE] ✅ Fixed email sent directly as last resort');
+                    } catch (\Exception $emailException) {
+                        error_log('[JOB_CREATE] ❌ Even direct email failed: ' . $emailException->getMessage());
+                    }
+                }
             } catch (\Exception $e) {
                 \Log::error('Failed to trigger JobPublishedEvent: ' . $e->getMessage());
+                error_log('[JOB_CREATE] Failed to trigger JobPublishedEvent: ' . $e->getMessage());
                 // Continue even if event fails
             }
         }
