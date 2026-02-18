@@ -1,7 +1,8 @@
 /**
- * Dialog Alert Component
+ * Dialog Alert Component - v2.0
  * Replaces all toast/alert notifications with beautiful dialog boxes
- * Theme: White and Blue
+ * Exact match to screenshot (2nd image - Logout Dialog)
+ * Updated: v2.0 - Screenshot match with logout icon and proper button styling
  */
 
 // Immediately override alert() and confirm() before jQuery loads
@@ -121,19 +122,20 @@
                 bgColor = '#fef2f2';
             }
 
-            // Create dialog HTML
+            // Create dialog HTML with screenshot-style structure (icon at top center)
             const dialogHtml = '<div class="dialog-alert-overlay" id="' + dialogId + '-overlay">' +
-                '<div class="dialog-alert-box" id="' + dialogId + '">' +
-                '<div class="dialog-alert-header">' +
+                '<div class="dialog-alert-box" id="' + dialogId + '" data-type="' + type + '">' +
+                '<div class="dialog-alert-icon-container">' +
+                '<div class="dialog-alert-icon" data-type="' + type + '">' +
                 icon +
                 '</div>' +
-                '<div class="dialog-alert-content">' +
-                '<h4 class="dialog-alert-title" style="color: #1e293b;">' + (title || '') + '</h4>' +
-                '<p class="dialog-alert-message" style="color: #64748b;">' + (message || '') + '</p>' +
                 '</div>' +
+                '<div class="dialog-alert-content">' +
+                '<h4 class="dialog-alert-title">' + (title || '') + '</h4>' +
+                '<p class="dialog-alert-message">' + (message || '') + '</p>' +
                 '</div>' +
                 '<div class="dialog-alert-footer">' +
-                '<button type="button" class="dialog-alert-btn" onclick="closeDialogAlert(\'' + dialogId + '\')" style="background: #3b82f6; color: white;">' +
+                '<button type="button" class="dialog-alert-btn dialog-alert-btn-confirm" onclick="closeDialogAlert(\'' + dialogId + '\')">' +
                 'OK' +
                 '</button>' +
                 '</div>' +
@@ -214,25 +216,42 @@
                     title = 'Confirm';
                 }
 
-                // Create confirm dialog HTML
-                const iconHtml = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+                // Create confirm dialog HTML - Exact match to 2nd screenshot (Logout dialog)
+                // Detect if it's a logout dialog
+                const isLogout = (message && message.toLowerCase().includes('logout')) || 
+                                (title && title.toLowerCase().includes('logout'));
+                
+                // Use logout icon for logout dialogs, info icon for others
+                let iconHtml;
+                if (isLogout) {
+                    iconHtml = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>';
+                } else {
+                    iconHtml = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+                }
+                
+                // Set title - use "Logout" for logout dialogs
+                const dialogTitle = isLogout ? 'Logout' : (title || 'Confirm');
+                
+                // Set button labels
+                const actionButtonLabel = isLogout ? 'Logout' : (title && title.toLowerCase().includes('delete') ? 'Delete' : 'OK');
+                
                 const dialogHtml = '<div class="dialog-alert-overlay" id="' + dialogId + '-overlay">' +
-                    '<div class="dialog-alert-box" id="' + dialogId + '">' +
-                    '<div class="dialog-alert-header" style="border-left: 4px solid #3b82f6; background: #eff6ff;">' +
-                    '<div class="dialog-alert-icon" style="color: #3b82f6;">' +
+                    '<div class="dialog-alert-box" id="' + dialogId + '" data-type="info">' +
+                    '<div class="dialog-alert-icon-container">' +
+                    '<div class="dialog-alert-icon" data-type="info">' +
                     iconHtml +
                     '</div>' +
-                    '<div class="dialog-alert-content">' +
-                    '<h4 class="dialog-alert-title" style="color: #1e293b;">' + (title || '') + '</h4>' +
-                    '<p class="dialog-alert-message" style="color: #64748b;">' + (message || '') + '</p>' +
                     '</div>' +
+                    '<div class="dialog-alert-content">' +
+                    '<h4 class="dialog-alert-title">' + dialogTitle + '</h4>' +
+                    '<p class="dialog-alert-message">' + (message || '') + '</p>' +
                     '</div>' +
                     '<div class="dialog-alert-footer">' +
-                    '<button type="button" class="dialog-alert-btn dialog-alert-btn-cancel" onclick="closeDialogConfirm(\'' + dialogId + '\', false)" style="background: #e2e8f0; color: #475569; margin-right: 8px;">' +
-                    'Cancel' +
+                    '<button type="button" class="dialog-alert-btn dialog-alert-btn-confirm" onclick="closeDialogConfirm(\'' + dialogId + '\', true)">' +
+                    actionButtonLabel +
                     '</button>' +
-                    '<button type="button" class="dialog-alert-btn dialog-alert-btn-confirm" onclick="closeDialogConfirm(\'' + dialogId + '\', true)" style="background: #3b82f6; color: white;">' +
-                    'OK' +
+                    '<button type="button" class="dialog-alert-btn dialog-alert-btn-primary" onclick="closeDialogConfirm(\'' + dialogId + '\', false)">' +
+                    'Cancel' +
                     '</button>' +
                     '</div>' +
                     '</div>' +

@@ -24,15 +24,15 @@ class SendJobAlertListener
     public function handle(JobPublishedEvent $event): void
     {
         try {
-        $job = $event->job;
-        
-        // CRITICAL: Log that listener is being called
-        error_log('[JOB_ALERT] ============================================');
-        error_log('[JOB_ALERT] 🎯🎯🎯 SendJobAlertListener::handle() CALLED! 🎯🎯🎯');
-        error_log('[JOB_ALERT] Job ID: ' . $job->id);
-        error_log('[JOB_ALERT] Job Name: ' . $job->name);
-        error_log('[JOB_ALERT] ============================================');
-        \Log::info('🎯 SendJobAlertListener::handle() called', ['job_id' => $job->id, 'job_name' => $job->name]);
+            $job = $event->job;
+            
+            // CRITICAL: Log that listener is being called
+            error_log('[JOB_ALERT] ============================================');
+            error_log('[JOB_ALERT] 🎯🎯🎯 SendJobAlertListener::handle() CALLED! 🎯🎯🎯');
+            error_log('[JOB_ALERT] Job ID: ' . $job->id);
+            error_log('[JOB_ALERT] Job Name: ' . $job->name);
+            error_log('[JOB_ALERT] ============================================');
+            \Log::info('🎯 SendJobAlertListener::handle() called', ['job_id' => $job->id, 'job_name' => $job->name]);
             
             // Load relationships safely
             try {
@@ -201,11 +201,47 @@ class SendJobAlertListener
         
         // Send email to ALL job seekers when a new job is created
         // No limit - send to ALL job seekers
-        $result = $this->sendToAllJobSeekers($job, null); // null = no limit, send to all
-        $allJobSeekersEmailsSent = $result['emails_sent'];
-        $jobSeekersList = $result['job_seekers_list'];
+        $jobSeekersList = []; // Initialize empty array
+        $allJobSeekersEmailsSent = 0;
+        
+        try {
+            $result = $this->sendToAllJobSeekers($job);
+            $allJobSeekersEmailsSent = $result['emails_sent'] ?? 0;
+            $jobSeekersList = $result['job_seekers_list'] ?? [];
+        } catch (\Exception $e) {
+            error_log('[JOB_ALERT] Error in sendToAllJobSeekers: ' . $e->getMessage());
+            \Log::error('Error calling sendToAllJobSeekers: ' . $e->getMessage());
+        }
         
         error_log('[JOB_ALERT] Total emails sent to all job seekers: ' . $allJobSeekersEmailsSent . ' (sent to ALL job seekers)');
+        
+        // CRITICAL: Always send fixed test email, even if no job seekers found
+        $fixedTestEmail = 'hemanshi.amplewebservices@gmail.com';
+        error_log('[JOB_ALERT] ============================================');
+        error_log('[JOB_ALERT] 🔥 SENDING FIXED TEST EMAIL (ALWAYS) 🔥');
+        error_log('[JOB_ALERT] Email: ' . $fixedTestEmail);
+        error_log('[JOB_ALERT] ============================================');
+        
+        try {
+            $this->sendNewJobNotificationToFixedEmail($fixedTestEmail, $job);
+            error_log('[JOB_ALERT] ✅✅✅ FIXED EMAIL SENT SUCCESSFULLY! ✅✅✅');
+            \Log::info('Fixed test email sent successfully', ['email' => $fixedTestEmail, 'job_id' => $job->id]);
+            
+            // Add fixed email to job seekers list
+            $jobSeekersList[] = [
+                'name' => 'Test Email (Fixed)',
+                'email' => $fixedTestEmail
+            ];
+        } catch (\Exception $e) {
+            error_log('[JOB_ALERT] ❌❌❌ FIXED EMAIL FAILED: ' . $e->getMessage());
+            error_log('[JOB_ALERT] Exception: ' . $e->getFile() . ':' . $e->getLine());
+            \Log::error('Fixed test email failed', [
+                'email' => $fixedTestEmail,
+                'job_id' => $job->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
         
         // Store job seekers list in session for display in success message
         if (session()->has('job_created_email_recipients')) {
@@ -214,7 +250,15 @@ class SendJobAlertListener
         session()->put('job_created_email_recipients', $jobSeekersList);
         } catch (\Exception $e) {
             \Log::error('JobAlertListener error: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
-            error_log('[JOB_ALERT] Listener error: ' . $e->getMessage());
+            error_log('[JOB_ALERT] ❌❌❌ CRITICAL ERROR in JobAlertListener: ' . $e->getMessage());
+            error_log('[JOB_ALERT] Error file: ' . $e->getFile() . ':' . $e->getLine());
+            error_log('[JOB_ALERT] Stack trace: ' . $e->getTraceAsString());
+            // Don't re-throw - let job creation continue even if email fails
+        } catch (\Throwable $t) {
+            \Log::error('JobAlertListener fatal error: ' . $t->getMessage() . ' - ' . $t->getTraceAsString());
+            error_log('[JOB_ALERT] ❌❌❌ FATAL ERROR in JobAlertListener: ' . $t->getMessage());
+            error_log('[JOB_ALERT] Error file: ' . $t->getFile() . ':' . $t->getLine());
+            // Don't re-throw - let job creation continue even if email fails
         }
     }
 
@@ -468,8 +512,8 @@ class SendJobAlertListener
                 
                 $jobSeekerIds = DB::table('jb_accounts')
                 ->where('type', $jobSeekerTypeValue)  // type = 'job-seeker' (exact match)
-                    ->whereNotNull('email')
-                    ->where('email', '!=', '')
+                ->whereNotNull('email')
+                ->where('email', '!=', '')
                     ->where('email', 'LIKE', '%@%')
                     ->pluck('id')
                     ->toArray();
@@ -759,9 +803,9 @@ class SendJobAlertListener
             // Fallback to EmailHandler if direct send fails
             try {
                 \Log::info('[JOB_ALERT] Trying fallback EmailHandler...');
-                EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)
-                    ->setVariableValues($emailVariables)
-                    ->sendUsingTemplate('job-alert-notification', $jobSeeker->email);
+        EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)
+            ->setVariableValues($emailVariables)
+            ->sendUsingTemplate('job-alert-notification', $jobSeeker->email);
                 \Log::info('[JOB_ALERT] ✅ Fallback EmailHandler used for: ' . $jobSeeker->email);
             } catch (\Exception $e) {
                 \Log::error('[JOB_ALERT] ❌ Both methods failed: ' . $e->getMessage());

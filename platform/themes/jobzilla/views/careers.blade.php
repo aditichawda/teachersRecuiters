@@ -20,7 +20,7 @@
     text-align: center;
     margin-bottom: 80px;
     padding: 60px 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 50%, #004a94 100%);
     border-radius: 30px;
     color: #fff;
     position: relative;
@@ -35,6 +35,21 @@
     bottom: 0;
     background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
     opacity: 0.5;
+}
+.careers-hero::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-20px, -20px) scale(1.1); }
 }
 .careers-hero-content {
     position: relative;
@@ -95,39 +110,62 @@
     transition: all 0.3s ease;
     border: 2px solid #f1f5f9;
     position: relative;
+    overflow: hidden;
 }
-.value-card::after {
+.value-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    height: 5px;
+    background: linear-gradient(90deg, #0073d1 0%, #005bb5 50%, #004a94 100%);
     border-radius: 20px 20px 0 0;
     transform: scaleX(0);
     transition: transform 0.3s ease;
+    z-index: 1;
+}
+.value-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 115, 209, 0.05) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 .value-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 50px rgba(102, 126, 234, 0.15);
-    border-color: #667eea;
+    box-shadow: 0 20px 50px rgba(0, 115, 209, 0.2);
+    border-color: #0073d1;
+}
+.value-card:hover::before {
+    transform: scaleX(1);
 }
 .value-card:hover::after {
-    transform: scaleX(1);
+    opacity: 1;
 }
 .value-icon {
     width: 80px;
     height: 80px;
     margin: 0 auto 25px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 50%, #004a94 100%);
     border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 36px;
     color: #fff;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 115, 209, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+.value-card:hover .value-icon {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 30px rgba(0, 115, 209, 0.4);
 }
 .value-card h3 {
     font-size: 24px;
@@ -166,19 +204,24 @@
 }
 .benefit-item:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 8px 25px rgba(0, 115, 209, 0.15);
 }
 .benefit-icon {
     width: 50px;
     height: 50px;
     min-width: 50px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 50%, #004a94 100%);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
     font-size: 24px;
+    transition: all 0.3s ease;
+}
+.benefit-item:hover .benefit-icon {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 8px 20px rgba(0, 115, 209, 0.3);
 }
 .benefit-content h4 {
     font-size: 18px;
@@ -219,17 +262,33 @@
     left: 0;
     right: 0;
     height: 5px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, #0073d1 0%, #005bb5 50%, #004a94 100%);
     transform: scaleX(0);
     transition: transform 0.3s ease;
+    z-index: 1;
+}
+.position-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 115, 209, 0.05) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
 }
 .position-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 50px rgba(102, 126, 234, 0.15);
-    border-color: #667eea;
+    box-shadow: 0 20px 50px rgba(0, 115, 209, 0.2);
+    border-color: #0073d1;
 }
 .position-card:hover::before {
     transform: scaleX(1);
+}
+.position-card:hover::after {
+    opacity: 1;
 }
 .position-header {
     display: flex;
@@ -250,7 +309,7 @@
     display: inline-block;
     padding: 4px 12px;
     background: #f0f7ff;
-    color: #667eea;
+    color: #0073d1;
     border-radius: 6px;
     font-size: 13px;
     font-weight: 500;
@@ -278,7 +337,7 @@
     font-size: 15px;
 }
 .position-detail-item i {
-    color: #667eea;
+    color: #0073d1;
     font-size: 18px;
 }
 .position-description {
@@ -316,7 +375,7 @@
     right: -20%;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0, 115, 209, 0.1) 0%, transparent 70%);
     border-radius: 50%;
 }
 .culture-content {
@@ -334,7 +393,7 @@
 }
 .culture-item i {
     font-size: 48px;
-    color: #667eea;
+    color: #0073d1;
     margin-bottom: 20px;
     display: block;
 }
@@ -371,7 +430,7 @@
     right: -20px;
     top: 40px;
     font-size: 32px;
-    color: #667eea;
+    color: #0073d1;
     font-weight: 300;
 }
 .process-step:last-child::after {
@@ -381,7 +440,7 @@
     width: 80px;
     height: 80px;
     margin: 0 auto 25px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 50%, #004a94 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -389,7 +448,12 @@
     font-size: 32px;
     font-weight: 700;
     color: #fff;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 115, 209, 0.3);
+    transition: all 0.3s ease;
+}
+.process-step:hover .step-circle {
+    transform: scale(1.1);
+    box-shadow: 0 12px 30px rgba(0, 115, 209, 0.4);
 }
 .process-step h3 {
     font-size: 20px;
@@ -406,13 +470,24 @@
 
 /* CTA Section */
 .careers-cta {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 50%, #004a94 100%);
     border-radius: 30px;
     padding: 60px 50px;
     text-align: center;
     color: #fff;
     position: relative;
     overflow: hidden;
+}
+.careers-cta::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
 }
 .careers-cta::before {
     content: '';
@@ -454,7 +529,7 @@
     display: inline-block;
     padding: 16px 40px;
     background: #fff;
-    color: #667eea;
+    color: #0073d1;
     border-radius: 50px;
     font-size: 16px;
     font-weight: 600;
@@ -467,6 +542,7 @@
     transform: translateY(-2px);
     box-shadow: 0 12px 30px rgba(255, 255, 255, 0.3);
     background: #f8fafc;
+    color: black;
 }
 .btn-outline-custom {
     display: inline-block;
@@ -488,7 +564,7 @@
 .btn-apply {
     display: inline-block;
     padding: 12px 30px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 50%, #004a94 100%);
     color: #fff;
     border-radius: 50px;
     font-size: 14px;
@@ -499,7 +575,7 @@
 }
 .btn-apply:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 115, 209, 0.3);
     color: #fff;
 }
 
@@ -546,7 +622,7 @@
                 </p>
                 <div class="hero-cta">
                     <a href="#open-positions" class="btn-primary-custom">View Open Positions</a>
-                    <a href="{{ route('public.contact') }}" class="btn-outline-custom">Get in Touch</a>
+                    <a href="/contact" class="btn-outline-custom">Get in Touch</a>
                 </div>
             </div>
         </div>
@@ -720,7 +796,7 @@
                     </p>
                     <div class="position-footer">
                         <span class="position-salary">Competitive</span>
-                        <a href="{{ route('public.contact') }}" class="btn-apply">Apply Now</a>
+                        <a href="/contact" class="btn-apply">Apply Now</a>
                     </div>
                 </div>
 
@@ -752,7 +828,7 @@
                     </p>
                     <div class="position-footer">
                         <span class="position-salary">Competitive</span>
-                        <a href="{{ route('public.contact') }}" class="btn-apply">Apply Now</a>
+                        <a href="/contact" class="btn-apply">Apply Now</a>
                     </div>
                 </div>
 
@@ -784,7 +860,7 @@
                     </p>
                     <div class="position-footer">
                         <span class="position-salary">Competitive</span>
-                        <a href="{{ route('public.contact') }}" class="btn-apply">Apply Now</a>
+                        <a href="/contact" class="btn-apply">Apply Now</a>
                     </div>
                 </div>
             </div>
@@ -858,7 +934,7 @@
                 <h2>Ready to Join Our Team?</h2>
                 <p>If you don't see a position that matches your skills, we'd still love to hear from you. Send us your resume and we'll keep you in mind for future opportunities.</p>
                 <div class="cta-buttons">
-                    <a href="{{ route('public.contact') }}" class="btn-primary-custom">Contact Us</a>
+                    <a href="/contact" class="btn-primary-custom">Contact Us</a>
                     <a href="#open-positions" class="btn-outline-custom">View All Positions</a>
                 </div>
             </div>

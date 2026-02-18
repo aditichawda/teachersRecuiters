@@ -87,6 +87,46 @@ class PageService
 
         do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, PAGE_MODULE_SCREEN_NAME, $page);
 
+        // Check if candidates page - only allow employers
+        $isCandidatesPage = $page->slug === 'candidates' || str_contains($page->content ?? '', '[job-board-candidates');
+        if ($isCandidatesPage && function_exists('auth')) {
+            try {
+                $account = auth('account')->user();
+                if (!$account || !method_exists($account, 'isEmployer') || !$account->isEmployer()) {
+                    // Prevent redirect loop - if already on login page or has redirect parameter, just return 403
+                    $currentPath = request()->path();
+                    $hasRedirectParam = request()->has('redirect');
+                    $loginPath = 'login';
+                    
+                    if (str_contains($currentPath, $loginPath) || request()->routeIs('public.account.login') || $hasRedirectParam) {
+                        abort(403, __('Only employers can view candidates. Please login as an employer.'));
+                    }
+                    
+                    // Return special flag for controller to handle redirect
+                    $redirectUrl = route('public.account.login');
+                    $currentUrl = request()->url(); // Use url() instead of fullUrl() to avoid query string issues
+                    
+                    // Only add redirect parameter if current URL is different and doesn't already have redirect param
+                    if ($currentUrl && $currentUrl !== $redirectUrl && !$hasRedirectParam) {
+                        // Clean the URL to remove any existing query parameters to avoid nested redirects
+                        $cleanUrl = strtok($currentUrl, '?');
+                        if ($cleanUrl) {
+                            $redirectUrl .= '?redirect=' . urlencode($cleanUrl);
+                        }
+                    }
+                    
+                    return [
+                        'redirect' => true,
+                        'url' => $redirectUrl,
+                    ];
+                }
+            } catch (\Exception $e) {
+                // If there's any error in auth check, log it but don't break the page
+                \Log::warning('Error checking candidates page access: ' . $e->getMessage());
+                // Continue to show the page - the shortcode will handle the access check
+            }
+        }
+
         return [
             'view' => 'page',
             'default_view' => 'packages/page::themes.page',
