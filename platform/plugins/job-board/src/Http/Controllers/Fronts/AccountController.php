@@ -290,6 +290,11 @@ class AccountController extends BaseController
             }, $data['work_location_preferences'], array_keys($data['work_location_preferences']))));
         }
 
+        // Keep full_name in sync with first_name (registration saves full_name; settings form uses first_name)
+        if (!empty($data['first_name'])) {
+            $data['full_name'] = $data['first_name'];
+        }
+
         AccountSettingForm::createFromModel($account)
             ->saving(function (AccountSettingForm $form) use ($data): void {
                 $model = $form->getModel();

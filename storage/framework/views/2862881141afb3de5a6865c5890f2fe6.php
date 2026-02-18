@@ -480,10 +480,10 @@
         <div class="profile-section-body">
             <p class="form-text"><?php echo e(__('We collect these details to verify your profile, connect you with schools/institutions, and share relevant job opportunities.')); ?></p>
             <div class="row">
-                <!-- 1. Full Name -->
+                <!-- 1. Full Name (show first_name; fallback to full_name from registration) -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label"><?php echo e(__('Full Name')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Help us to create your verified candidate profile and ensure accurate identification.')); ?>"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="text" class="form-control" name="first_name" value="<?php echo e(old('first_name', $account->first_name)); ?>" placeholder="<?php echo e(__('Enter your full name')); ?>" required>
+                    <input type="text" class="form-control" name="first_name" value="<?php echo e(old('first_name', $account->first_name ?: $account->full_name ?? '')); ?>" placeholder="<?php echo e(__('Enter your full name')); ?>" required>
                 </div>
 
                 <!-- 2. Email Address -->
@@ -495,7 +495,7 @@
                 <!-- 3. Mobile Number -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label"><?php echo e(__('Phone Number')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('For recruiters and schools to contact you directly regarding interviews and job opportunities and also help us to send you job alerts and updates on WhatsApp.')); ?>"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="tel" class="form-control" name="phone" value="<?php echo e(old('phone', $account->phone)); ?>" placeholder="<?php echo e(__('Enter mobile number with country code')); ?>">
+                    <input type="tel" class="form-control" name="phone" value="<?php echo e(old('phone', $account->phone ?? '')); ?>" placeholder="<?php echo e(__('Enter mobile number with country code')); ?>">
                     <div class="form-check mt-2">
                         <input type="hidden" name="is_whatsapp_available" value="0">
                         <input type="checkbox" class="form-check-input" name="is_whatsapp_available" value="1" id="is_whatsapp_available" <?php if(old('is_whatsapp_available', $account->is_whatsapp_available)): echo 'checked'; endif; ?>>
@@ -696,8 +696,19 @@ Recruiters often read this section before downloading resumes.
                                 if (is_object($instTypes)) {
                                     $instTypes = method_exists($instTypes, 'toArray') ? $instTypes->toArray() : (array)$instTypes;
                                 }
+                                // Show institution type selected at registration in Preferred Institution Type
                                 if (empty($instTypes) && !empty($account->institution_type)) {
-                                    $instTypes = [$account->institution_type];
+                                    $regType = $account->institution_type;
+                                    $normalized = str_replace('-', '_', $regType);
+                                    $allowedValues = ['cbse_school','icse_school','cambridge_school','ib_school','state_board_school','play_school','engineering_college','medical_college','nursing_college','edtech_company','coaching_institute','university'];
+                                    $map = ['school' => 'state_board_school', 'college' => 'engineering_college', 'online_education_platform' => 'university', 'book_publishing_company' => 'university', 'non_profit_organization' => 'university'];
+                                    if (in_array($normalized, $allowedValues)) {
+                                        $instTypes = [$normalized];
+                                    } elseif (isset($map[$normalized])) {
+                                        $instTypes = [$map[$normalized]];
+                                    } else {
+                                        $instTypes = [$normalized];
+                                    }
                                 }
                                 $instTypes = array_values(array_filter((array)$instTypes));
                             ?>
@@ -1883,11 +1894,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!data.error) {
                     window.location.reload();
                 } else {
-                    alert(data.message || 'Failed to remove photo');
+                    if (typeof window.showDialogAlert === 'function') {
+                        window.showDialogAlert('error', data.message || 'Failed to remove photo', 'Error');
+                    } else {
+                        alert(data.message || 'Failed to remove photo');
+                    }
                 }
             })
             .catch(function() {
-                alert('Something went wrong. Please try again.');
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('error', 'Something went wrong. Please try again.', 'Error');
+                } else {
+                    alert('Something went wrong. Please try again.');
+                }
             });
         });
     }
@@ -1968,7 +1987,11 @@ var isSpeechActive = false;
 
 function toggleSpeechToText() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        alert('<?php echo e(__("Speech-to-Text is not supported in your browser. Please use Chrome or Edge.")); ?>');
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('error', '<?php echo e(__("Speech-to-Text is not supported in your browser. Please use Chrome or Edge.")); ?>', 'Browser Not Supported');
+        } else {
+            alert('<?php echo e(__("Speech-to-Text is not supported in your browser. Please use Chrome or Edge.")); ?>');
+        }
         return;
     }
 
@@ -2013,7 +2036,11 @@ function startSpeechToText() {
     speechRecognition.onerror = function(event) {
         console.error('Speech recognition error:', event.error);
         if (event.error === 'not-allowed') {
-            alert('<?php echo e(__("Microphone access was denied. Please allow microphone access in your browser settings.")); ?>');
+            if (typeof window.showDialogAlert === 'function') {
+                window.showDialogAlert('error', '<?php echo e(__("Microphone access was denied. Please allow microphone access in your browser settings.")); ?>', 'Permission Denied');
+            } else {
+                alert('<?php echo e(__("Microphone access was denied. Please allow microphone access in your browser settings.")); ?>');
+            }
         }
         stopSpeechToText();
     };
@@ -2028,7 +2055,11 @@ function startSpeechToText() {
     try {
         speechRecognition.start();
     } catch(e) {
-        alert('<?php echo e(__("Could not start speech recognition. Please try again.")); ?>');
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('error', '<?php echo e(__("Could not start speech recognition. Please try again.")); ?>', 'Error');
+        } else {
+            alert('<?php echo e(__("Could not start speech recognition. Please try again.")); ?>');
+        }
     }
 }
 

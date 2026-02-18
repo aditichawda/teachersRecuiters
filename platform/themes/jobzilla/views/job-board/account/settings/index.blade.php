@@ -480,10 +480,10 @@
         <div class="profile-section-body">
             <p class="form-text">{{ __('We collect these details to verify your profile, connect you with schools/institutions, and share relevant job opportunities.') }}</p>
             <div class="row">
-                <!-- 1. Full Name -->
+                <!-- 1. Full Name (show first_name; fallback to full_name from registration) -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Full Name') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Help us to create your verified candidate profile and ensure accurate identification.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $account->first_name) }}" placeholder="{{ __('Enter your full name') }}" required>
+                    <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $account->first_name ?: $account->full_name ?? '') }}" placeholder="{{ __('Enter your full name') }}" required>
                 </div>
 
                 <!-- 2. Email Address -->
@@ -495,7 +495,7 @@
                 <!-- 3. Mobile Number -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('Phone Number') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('For recruiters and schools to contact you directly regarding interviews and job opportunities and also help us to send you job alerts and updates on WhatsApp.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="tel" class="form-control" name="phone" value="{{ old('phone', $account->phone) }}" placeholder="{{ __('Enter mobile number with country code') }}">
+                    <input type="tel" class="form-control" name="phone" value="{{ old('phone', $account->phone ?? '') }}" placeholder="{{ __('Enter mobile number with country code') }}">
                     <div class="form-check mt-2">
                         <input type="hidden" name="is_whatsapp_available" value="0">
                         <input type="checkbox" class="form-check-input" name="is_whatsapp_available" value="1" id="is_whatsapp_available" @checked(old('is_whatsapp_available', $account->is_whatsapp_available))>
@@ -691,8 +691,19 @@ Recruiters often read this section before downloading resumes.
                                 if (is_object($instTypes)) {
                                     $instTypes = method_exists($instTypes, 'toArray') ? $instTypes->toArray() : (array)$instTypes;
                                 }
+                                // Show institution type selected at registration in Preferred Institution Type
                                 if (empty($instTypes) && !empty($account->institution_type)) {
-                                    $instTypes = [$account->institution_type];
+                                    $regType = $account->institution_type;
+                                    $normalized = str_replace('-', '_', $regType);
+                                    $allowedValues = ['cbse_school','icse_school','cambridge_school','ib_school','state_board_school','play_school','engineering_college','medical_college','nursing_college','edtech_company','coaching_institute','university'];
+                                    $map = ['school' => 'state_board_school', 'college' => 'engineering_college', 'online_education_platform' => 'university', 'book_publishing_company' => 'university', 'non_profit_organization' => 'university'];
+                                    if (in_array($normalized, $allowedValues)) {
+                                        $instTypes = [$normalized];
+                                    } elseif (isset($map[$normalized])) {
+                                        $instTypes = [$map[$normalized]];
+                                    } else {
+                                        $instTypes = [$normalized];
+                                    }
                                 }
                                 $instTypes = array_values(array_filter((array)$instTypes));
                             @endphp
