@@ -316,7 +316,7 @@
     <div class="jobseeker-register-container">
         <div class="jobseeker-register-header">
             <h2>Educator Registration</h2>
-            <p id="step-subtitle">Step 1 of 4 - Basic Details</p>
+            <p id="step-subtitle">Step 1 of 4 - Create your profile and explore school jobs</p>
         </div>
         
         <div class="jobseeker-register-body">
@@ -450,7 +450,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.href = '<?php echo e(route("public.account.register.verifyEmailPage")); ?>';
                             } else {
                     // Error - show message
-                    alert(data.message || 'An error occurred. Please try again.');
+                    if (typeof window.showDialogAlert === 'function') {
+                        window.showDialogAlert('error', data.message || 'An error occurred. Please try again.', 'Error');
+                    } else {
+                        alert(data.message || 'An error occurred. Please try again.');
+                    }
                     if (submitBtn) {
                         submitBtn.disabled = false;
                         submitBtn.textContent = 'Next Step';
@@ -464,7 +468,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('error', 'An error occurred. Please try again.', 'Error');
+                } else {
+                    alert('An error occurred. Please try again.');
+                }
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Next Step';

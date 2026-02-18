@@ -493,19 +493,22 @@
 .btn-outline-custom {
     display: inline-block;
     padding: 16px 40px;
-    background: transparent;
-    color: #fff;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: #fff;
+    color: #0073d1;
+    border: 2px solid #0073d1;
     border-radius: 50px;
     font-size: 16px;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 115, 209, 0.2);
 }
 .btn-outline-custom:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: #fff;
+    background: #0073d1;
+    color: #fff;
+    border-color: #0073d1;
     transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 115, 209, 0.3);
 }
 
 /* Responsive */

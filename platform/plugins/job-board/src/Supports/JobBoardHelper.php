@@ -312,12 +312,40 @@ class JobBoardHelper
 
     public function filterCandidates(array $params): LengthAwarePaginator
     {
+        // Normalize array parameters - handle both array and comma-separated string formats
+        if (isset($params['candidate_skills'])) {
+            if (is_string($params['candidate_skills'])) {
+                $params['candidate_skills'] = array_filter(array_map('trim', explode(',', $params['candidate_skills'])));
+            }
+            if (!is_array($params['candidate_skills'])) {
+                $params['candidate_skills'] = [];
+            }
+        }
+        
+        if (isset($params['candidate_experiences'])) {
+            if (is_string($params['candidate_experiences'])) {
+                $params['candidate_experiences'] = array_filter(array_map('trim', explode(',', $params['candidate_experiences'])));
+            }
+            if (!is_array($params['candidate_experiences'])) {
+                $params['candidate_experiences'] = [];
+            }
+        }
+
         $data = Validator::validate($params, [
             'keyword' => ['nullable', 'string', 'max:200'],
             'sort_by' => ['nullable', Rule::in(array_keys($this->getSortByParams()))],
             'order_by' => ['nullable', Rule::in(array_keys($this->getSortByParams()))],
             'page' => ['nullable', 'numeric', 'min:1'],
             'per_page' => ['nullable', 'numeric', 'min:1'],
+            'city_id' => ['nullable', 'numeric'],
+            'state_id' => ['nullable', 'numeric'],
+            'country_id' => ['nullable', 'numeric'],
+            'expected_salary_from' => ['nullable', 'numeric'],
+            'expected_salary_to' => ['nullable', 'numeric'],
+            'candidate_skills' => ['nullable', 'array'],
+            'candidate_skills.*' => ['nullable', 'numeric'],
+            'candidate_experiences' => ['nullable', 'array'],
+            'candidate_experiences.*' => ['nullable', 'numeric'],
         ]);
 
         $with = [
@@ -332,6 +360,7 @@ class JobBoardHelper
             $with = array_merge($with, [
                 'country',
                 'state',
+                'city',
             ]);
         }
 
@@ -361,6 +390,7 @@ class JobBoardHelper
             $candidates = $candidates->whereNotNull('confirmed_at');
         }
 
+        // Filter by keyword
         if (isset($data['keyword']) && $keyword = $data['keyword']) {
             if (strlen($keyword) === 1) {
                 $candidates = $candidates->where('first_name', 'LIKE', $keyword . '%');
@@ -369,6 +399,70 @@ class JobBoardHelper
                     $query
                         ->addSearch('first_name', $keyword, false, false)
                         ->addSearch('last_name', $keyword, false);
+                });
+            }
+        }
+
+        // Filter by city
+        if (isset($data['city_id']) && $data['city_id']) {
+            $candidates = $candidates->where('city_id', $data['city_id']);
+        }
+
+        // Filter by state
+        if (isset($data['state_id']) && $data['state_id']) {
+            $candidates = $candidates->where('state_id', $data['state_id']);
+        }
+
+        // Filter by country
+        if (isset($data['country_id']) && $data['country_id']) {
+            $candidates = $candidates->where('country_id', $data['country_id']);
+        }
+
+        // Filter by expected salary
+        if (isset($data['expected_salary_from']) && $data['expected_salary_from'] > 0) {
+            $candidates = $candidates->where(function ($query) use ($data): void {
+                $query
+                    ->whereNull('expected_salary')
+                    ->orWhere('expected_salary', '>=', $data['expected_salary_from']);
+            });
+        }
+
+        if (isset($data['expected_salary_to']) && $data['expected_salary_to'] > 0) {
+            $candidates = $candidates->where(function ($query) use ($data): void {
+                $query
+                    ->whereNull('expected_salary')
+                    ->orWhere('expected_salary', '<=', $data['expected_salary_to']);
+            });
+        }
+
+        // Filter by skills
+        if (isset($data['candidate_skills']) && is_array($data['candidate_skills']) && count($data['candidate_skills']) > 0) {
+            $skillIds = array_map('intval', array_filter($data['candidate_skills']));
+            if (count($skillIds) > 0) {
+                $candidates = $candidates->whereHas('favoriteSkills', function ($query) use ($skillIds): void {
+                    $query->whereIn('jb_job_skills.id', $skillIds);
+                });
+            }
+        }
+
+        // Filter by experience (based on total_experience field or experiences relationship)
+        if (isset($data['candidate_experiences']) && is_array($data['candidate_experiences']) && count($data['candidate_experiences']) > 0) {
+            $experienceIds = array_map('intval', array_filter($data['candidate_experiences']));
+            if (count($experienceIds) > 0) {
+                // Get experience names from JobExperience model
+                $experiences = \Botble\JobBoard\Models\JobExperience::whereIn('id', $experienceIds)->pluck('name', 'id');
+                
+                $candidates = $candidates->where(function ($query) use ($experiences): void {
+                    foreach ($experiences as $expId => $expName) {
+                        // Match by total_experience field or by experiences relationship
+                        $query->orWhere(function ($q) use ($expName): void {
+                            $q->where('total_experience', 'LIKE', "%{$expName}%")
+                              ->orWhereHas('experiences', function ($expQuery) use ($expName): void {
+                                  $expQuery->where('position', 'LIKE', "%{$expName}%")
+                                           ->orWhere('company', 'LIKE', "%{$expName}%");
+                              });
+                        });
+                    }
                 });
             }
         }

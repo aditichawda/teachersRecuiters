@@ -14,6 +14,7 @@ use Botble\JobBoard\Models\Account;
 use Botble\JsValidation\Facades\JsValidator;
 use Botble\Media\Facades\RvMedia;
 use Botble\SeoHelper\Facades\SeoHelper;
+use Botble\Slug\Facades\SlugHelper;
 use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
 use Exception;
@@ -399,6 +400,12 @@ class RegisterController extends BaseController
             'phone_country_code' => $phoneCountryCode,
         ]);
         
+        // Set confirmed_at if email verification is disabled
+        $confirmedAt = null;
+        if (!setting('verify_account_email', 0)) {
+            $confirmedAt = Carbon::now();
+        }
+        
         // Create temporary account record for draft registration
         $tempAccount = Account::create([
             'email' => $email,
@@ -415,6 +422,8 @@ class RegisterController extends BaseController
             'verification_code_expires_at' => $expiresAt,
             'email_verification_token' => Str::random(64),
             'email_verification_token_expires_at' => $expiresAt,
+            'is_public_profile' => true, // Set public profile for candidates
+            'confirmed_at' => $confirmedAt, // Set confirmed_at if email verification is disabled
         ]);
 
         // Handle resume upload if file is provided
@@ -607,6 +616,12 @@ class RegisterController extends BaseController
                     'is_email_verified' => true,
                     // Keep verification_code and verification_code_expires_at for reference
                 ];
+                
+                // Set confirmed_at when email is verified (for candidates to show in listing)
+                if ($tempAccount->type === AccountTypeEnum::JOB_SEEKER) {
+                    $updateData['confirmed_at'] = Carbon::now();
+                    $updateData['is_public_profile'] = true;
+                }
                 
                 // If institution_type is provided in request, save it too
                 if ($request->has('institution_type') && $request->input('institution_type')) {
@@ -1366,6 +1381,17 @@ class RegisterController extends BaseController
 
         event(new Registered($account));
 
+        // Create slug for job seekers to ensure public URL is available
+        if ($account->isJobSeeker() && !JobBoardHelper::isDisabledPublicProfile()) {
+            try {
+                if (!SlugHelper::getSlug($account->id, Account::class)) {
+                    SlugHelper::createSlug($account);
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to create slug for account: ' . $account->id, ['error' => $e->getMessage()]);
+            }
+        }
+
         $request->merge(['slug' => $account->name, 'is_slug_editable' => 1]);
 
         event(new CreatedContentEvent(ACCOUNT_MODULE_SCREEN_NAME, $request, $account));
@@ -1488,6 +1514,17 @@ class RegisterController extends BaseController
                 }
                 
                 $account->update($updateData);
+                
+                // Create slug for job seekers to ensure public URL
+                if ($account->isJobSeeker() && !JobBoardHelper::isDisabledPublicProfile()) {
+                    try {
+                        if (!SlugHelper::getSlug($account->id, Account::class)) {
+                            SlugHelper::createSlug($account);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to create slug for account: ' . $account->id, ['error' => $e->getMessage()]);
+                    }
+                }
 
                 return $account;
             }

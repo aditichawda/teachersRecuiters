@@ -12,6 +12,7 @@ use Botble\JobBoard\Notifications\ConfirmEmailNotification;
 use Botble\JobBoard\Notifications\ResetPasswordNotification;
 use Botble\Media\Facades\RvMedia;
 use Botble\Media\Models\MediaFile;
+use Botble\Slug\Facades\SlugHelper;
 use Exception;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\MustVerifyEmail;
@@ -311,6 +312,38 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         return Attribute::get(fn () => $this->resume ? basename($this->resume_url) : '');
     }
 
+    protected function url(): Attribute
+    {
+        return Attribute::get(function () {
+            if (! $this->isJobSeeker() || JobBoardHelper::isDisabledPublicProfile()) {
+                return '';
+            }
+
+            // Load slugable if not already loaded
+            if (! $this->relationLoaded('slugable')) {
+                $this->load('slugable');
+            }
+
+            $slug = $this->slugable?->key;
+
+            if (! $slug) {
+                // If no slug exists, return empty or generate a fallback
+                return '';
+            }
+
+            try {
+                return route('public.candidate', ['slug' => $slug]);
+            } catch (\Exception $e) {
+                return '';
+            }
+        });
+    }
+
+    protected function slug(): Attribute
+    {
+        return Attribute::get(fn () => $this->slugable?->key ?? '');
+    }
+
     public function canPost(): bool
     {
         return $this->credits > 0 || ! JobBoardHelper::isEnabledCreditsSystem();
@@ -451,6 +484,19 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
 
     protected static function booted(): void
     {
+        // Auto-create slug for job seekers when saved
+        static::saved(function (Account $account): void {
+            if ($account->isJobSeeker() 
+                && $account->is_public_profile 
+                && !JobBoardHelper::isDisabledPublicProfile()
+                && SlugHelper::isSupportedModel(Account::class)) {
+                // Check if slug doesn't exist
+                if (!SlugHelper::getSlug($account->id, Account::class)) {
+                    SlugHelper::createSlug($account);
+                }
+            }
+        });
+
         static::deleting(function (Account $account): void {
             $account->companies()->detach();
             $account->activityLogs()->delete();

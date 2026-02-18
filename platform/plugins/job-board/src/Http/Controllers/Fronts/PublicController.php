@@ -1125,7 +1125,9 @@ class PublicController extends BaseController
             abort(403, __('Only employers can view candidates'));
         }
 
-        $candidates = JobBoardHelper::filterCandidates(request()->input());
+        // Get all input parameters including arrays
+        $input = $request->all();
+        $candidates = JobBoardHelper::filterCandidates($input);
 
         return $this
             ->httpResponse()
