@@ -65,6 +65,9 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'description',
         'bio',
         'career_aspiration',
+        'interests',
+        'activities',
+        'achievements',
         
         // Account type & package
         'package_id',

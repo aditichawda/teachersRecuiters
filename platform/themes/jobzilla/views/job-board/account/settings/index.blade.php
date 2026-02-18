@@ -555,7 +555,7 @@
     <!-- Section 2: Profile Visibility & Work Status -->
     <div class="profile-section">
         <div class="profile-section-header">
-            <i class="fa fa-eye"></i> {{ __('Profile Visibility, Work Availability, & Salary') }}
+            <i class="fa fa-eye"></i> {{ __('Security Tab') }}
         </div>
         <div class="profile-section-body">
             <p class="form-text mb-3">{{ __('Control who can view your profile and update your current job availability and salary to receive relevant opportunities.') }}</p>
@@ -568,7 +568,6 @@
                         <option value="0" @selected(old('profile_visibility', $account->profile_visibility ?? 1) == 0)>{{ __('No - Hide my profile') }}</option>
                     </select>
                 </div>
-
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Additional Privacy Options') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To give you flexibility while exploring opportunities confidentially.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div class="form-check mb-2">
@@ -581,8 +580,19 @@
                         <input type="checkbox" class="form-check-input" name="hide_name_for_employer" value="1" id="hide_name_for_employer" @checked(old('hide_name_for_employer', $account->hide_name_for_employer ?? false))>
                         <label class="form-check-label" for="hide_name_for_employer">{{ __('Hide only name for Employer/School') }}</label>
                     </div>
-                </div>
-
+                </div>   
+            </div>
+        </div>
+    </div>
+      <!-- Section 2: Profile Visibility & Work Status -->
+      <div class="profile-section">
+        <div class="profile-section-header">
+            <i class="fa fa-eye"></i> {{ __('Work Status') }}
+        </div>
+        <div class="profile-section-body">
+            <p class="form-text mb-3">{{ __('Control who can view your profile and update your current job availability and salary to receive relevant opportunities.') }}</p>
+            <div class="row">
+              
                 <!-- 10. Current Work Status -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Current Work Status') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Recruiters prioritize candidates based on immediate availability.') }}"><i class="fa fa-question-circle"></i></span></label>
@@ -655,6 +665,11 @@
                     @endphp
                     {!! Form::customEditor('bio', old('bio', $account->bio), ['data-placeholder' => $bioPlaceholder]) !!}
                 </div>
+               
+                <small class="form-text text-muted">This helps schools quickly understand: Your teaching strengths, Classroom approach & methodology, Career aspirations, Suitability for their institution.
+Recruiters often read this section before downloading resumes.
+</small>
+
             </div>
         </div>
     </div>
@@ -669,7 +684,7 @@
                     <!-- 23. Institution Type Preferences -->
                     <div class="col-md-6 mb-3">
                         <label class="form-label">{{ __('Preferred Institution Type') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To match your profile with the right category of schools/institutions.') }}"><i class="fa fa-question-circle"></i></span></label>
-                        <select id="ts-institution-types" name="institution_types[]" multiple placeholder="{{ __('Search & select up to 3...') }}">
+                        <select id="ts-institution-types" name="institution_types[]" multiple placeholder="{{ __('Search & select institution types...') }}">
                             @php
                                 $instTypes = old('institution_types', $account->institution_types ?? []);
                                 $instTypes = is_array($instTypes) ? $instTypes : (is_string($instTypes) ? (json_decode($instTypes, true) ?? []) : []);
@@ -697,7 +712,7 @@
                                 @endforeach
                             </optgroup>
                         </select>
-                        <div class="ts-max-info"><span class="count" id="inst-count">0</span>/3 {{ __('selected') }}</div>
+                        <div class="ts-max-info"><span class="count" id="inst-count">0</span> {{ __('selected') }}</div>
                     </div>
 
                     <!-- 24. Position Type -->
@@ -717,8 +732,8 @@
 
                     <!-- 25. Teaching Subjects (shown when Teaching is selected) -->
                     <div class="col-md-6 mb-3" id="teaching_subjects_wrapper">
-                        <label class="form-label">{{ __('Preferred Teaching Subject & Level') }} ({{ __('Select up to 3') }}) <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select subjects you can teach. Schools filter candidates by subject and level.') }}"><i class="fa fa-question-circle"></i></span></label>
-                        <select id="ts-teaching-subjects" name="teaching_subjects[]" multiple placeholder="{{ __('Search & select up to 3 subjects...') }}">
+                        <label class="form-label">{{ __('Preferred Teaching Subject & Level') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select subjects you can teach. Schools filter candidates by subject and level.') }}"><i class="fa fa-question-circle"></i></span></label>
+                        <select id="ts-teaching-subjects" name="teaching_subjects[]" multiple placeholder="{{ __('Search & select subjects...') }}">
                             @php $teachingSubjects = old('teaching_subjects', $account->teaching_subjects ?? []); @endphp
                             <optgroup label="Primary Level">
                                 @foreach([
@@ -778,13 +793,13 @@
                                 @endforeach
                             </optgroup>
                         </select>
-                        <div class="ts-max-info"><span class="count" id="subj-count">0</span>/3 {{ __('selected') }}</div>
+                        <div class="ts-max-info"><span class="count" id="subj-count">0</span> {{ __('selected') }}</div>
                     </div>
 
                     <!-- Non-Teaching Positions (shown when Non-Teaching is selected) -->
                     <div class="col-md-6 mb-3" id="non_teaching_positions_wrapper" style="display: none;">
-                        <label class="form-label">{{ __('Preferred Non-Teaching Role') }} ({{ __('Select up to 3') }}) <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the non-teaching roles you are interested in. It helps to match you with suitable administrative or support positions.') }}"><i class="fa fa-question-circle"></i></span></label>
-                        <select id="ts-non-teaching" name="non_teaching_positions[]" multiple placeholder="{{ __('Search & select up to 3 positions...') }}">
+                        <label class="form-label">{{ __('Preferred Non-Teaching Role') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the non-teaching roles you are interested in. It helps to match you with suitable administrative or support positions.') }}"><i class="fa fa-question-circle"></i></span></label>
+                        <select id="ts-non-teaching" name="non_teaching_positions[]" multiple placeholder="{{ __('Search & select positions...') }}">
                             @php $nonTeachingPositions = old('non_teaching_positions', $account->non_teaching_positions ?? []); @endphp
                             @foreach([
                                 'principal' => 'School Principal',
@@ -801,7 +816,7 @@
                                 <option value="{{ $val }}" @selected(in_array($val, (array)$nonTeachingPositions))>{{ $lbl }}</option>
                             @endforeach
                         </select>
-                        <div class="ts-max-info"><span class="count" id="nt-count">0</span>/3 {{ __('selected') }}</div>
+                        <div class="ts-max-info"><span class="count" id="nt-count">0</span> {{ __('selected') }}</div>
                     </div>
 
                     <!-- 26. Employment Type -->
@@ -989,7 +1004,7 @@
             <input type="hidden" id="js-default-country-id" value="{{ $account->country_id ?? '' }}">
             <input type="hidden" id="js-use-location-dropdowns" value="{{ $useLocationDropdowns ? '1' : '0' }}">
             <div id="work_location_preferences_wrapper" class="mb-3" style="display: {{ $workLocationPreferenceType == 'other' ? 'block' : 'none' }};">
-                <label class="form-label">{{ __('Add up to 3 preferred locations (set priority)') }}</label>
+                <label class="form-label">{{ __('Add preferred locations (set priority)') }}</label>
                 <p class="form-text">{{ $useLocationDropdowns ? __('Default country is same as current location; you can select other countries.') : __('Enter Country, State, City and Locality for each preferred location.') }}</p>
                 <div id="work-locations-container">
                     @foreach($workLocations as $index => $loc)
@@ -1073,10 +1088,12 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4 mb-2">
-                                                    <div class="specialization-autocomplete-wrapper">
-                                                        <input type="text" class="form-control specialization-input" name="qualifications[{{ $index }}][specialization]" value="{{ $qual['specialization'] ?? '' }}" placeholder="{{ __('Specialization/Subject') }}" autocomplete="off">
-                                                        <div class="specialization-suggestions"></div>
-                                                    </div>
+                                                    <select class="form-select" name="qualifications[{{ $index }}][specialization]">
+                                                        <option value="">{{ __('-- Select Specialization --') }}</option>
+                                                        @foreach($specializationsList ?? [] as $spec)
+                                                        <option value="{{ is_object($spec) ? $spec->name : $spec['name'] ?? '' }}" @selected(($qual['specialization'] ?? '') == (is_object($spec) ? $spec->name : $spec['name'] ?? ''))>{{ is_object($spec) ? $spec->name : $spec['name'] ?? '' }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 <div class="col-md-4 mb-2">
                                                     <input type="text" class="form-control" name="qualifications[{{ $index }}][institution]" value="{{ $qual['institution'] ?? '' }}" placeholder="{{ __('Institution Name') }}">
@@ -1165,10 +1182,10 @@
             <div class="row">
                 <!-- 21. Languages -->
                 <div class="col-12 mb-4">
-                    <label class="form-label">{{ __('Languages Known') }} ({{ __('Max 3') }}) <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select up to 3 languages you can confidently use for communication and teaching. Schools often filter candidates based on communication skills, especially English proficiency and regional language requirement.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    <label class="form-label">{{ __('Languages Known') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add languages you can confidently use for communication and teaching. Schools often filter candidates based on communication skills.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div id="languages-container">
                         @php $languages = old('languages', $account->languages ?? [['language' => '', 'proficiency' => '']]); @endphp
-                        @foreach(array_slice($languages, 0, 3) as $index => $lang)
+                        @foreach($languages as $index => $lang)
                         <div class="removable-item language-item">
                             @if($index > 0)<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>@endif
                             <div class="row">
@@ -1176,7 +1193,16 @@
                                     <span class="priority-badge">{{ $index + 1 }}</span>
                                 </div>
                                 <div class="col-md-5 mb-2">
+                                    @if(isset($languagesList))
+                                    <select class="form-select" name="languages[{{ $index }}][language]">
+                                        <option value="">{{ __('-- Select language --') }}</option>
+                                        @foreach($languagesList as $opt)
+                                        <option value="{{ $opt->name }}" @selected(($lang['language'] ?? '') == $opt->name)>{{ $opt->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @else
                                     <input type="text" class="form-control" name="languages[{{ $index }}][language]" value="{{ $lang['language'] ?? '' }}" placeholder="{{ __('Language (e.g., English)') }}">
+                                    @endif
                                 </div>
                                 <div class="col-md-5 mb-2">
                                     <select class="form-select" name="languages[{{ $index }}][proficiency]">
@@ -1196,8 +1222,8 @@
                 <!-- 22. Skills -->
                 @if ($account->isJobSeeker() && (count($jobSkills ?? []) || count($selectedJobSkills ?? [])))
                 <div class="col-12 mb-3">
-                    <label class="form-label">{{ __('Key Skills & Competencies') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add your core teaching or professional skills relevant to your role. You can add up to 10 skills.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="text" class="tags form-control list-tagify" style="padding:0px;" id="favorite_skills" name="favorite_skills" value="{{ implode(',', $selectedJobSkills ?? []) }}" data-keep-invalid-tags="false" data-list="{{ $jobSkills ?? '' }}" data-user-input="false" data-max-tags="10" placeholder="{{ __('Select from the list') }}"/>
+                    <label class="form-label">{{ __('Key Skills & Competencies') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add your core teaching or professional skills relevant to your role.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    <input type="text" class="tags form-control list-tagify" style="padding:0px;" id="favorite_skills" name="favorite_skills" value="{{ implode(',', $selectedJobSkills ?? []) }}" data-keep-invalid-tags="false" data-list="{{ $jobSkills ?? '' }}" data-user-input="false" placeholder="{{ __('Select from the list') }}"/>
                 </div>
                 @endif
             </div>
@@ -1323,11 +1349,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Institution Types (max 3)
+    // Institution Types
     if (document.getElementById('ts-institution-types')) {
         var tsInst = new TomSelect('#ts-institution-types', {
             plugins: ['remove_button', 'optgroup_columns'],
-            maxItems: 3,
             searchField: ['text'],
             render: {
                 no_results: function() { return '<div class="no-results">No institution type found</div>'; }
@@ -1341,12 +1366,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (ic) ic.textContent = tsInst.items.length;
     }
 
-    // Teaching Subjects (max 3)
+    // Teaching Subjects
     var tsSubjectsInstance = null;
     if (document.getElementById('ts-teaching-subjects')) {
         tsSubjectsInstance = new TomSelect('#ts-teaching-subjects', {
             plugins: ['remove_button', 'optgroup_columns'],
-            maxItems: 3,
             searchField: ['text'],
             render: {
                 no_results: function() { return '<div class="no-results">No subject found</div>'; }
@@ -1360,12 +1384,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sc) sc.textContent = tsSubjectsInstance.items.length;
     }
 
-    // Non-Teaching Positions (max 3)
+    // Non-Teaching Positions
     var tsNonTeachingInstance = null;
     if (document.getElementById('ts-non-teaching')) {
         tsNonTeachingInstance = new TomSelect('#ts-non-teaching', {
             plugins: ['remove_button'],
-            maxItems: 3,
             searchField: ['text'],
             render: {
                 no_results: function() { return '<div class="no-results">No position found</div>'; }
@@ -1379,11 +1402,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (nc) nc.textContent = tsNonTeachingInstance.items.length;
     }
 
-    // Job Type (max 2)
+    // Job Type
     if (document.getElementById('ts-job-type')) {
         new TomSelect('#ts-job-type', {
             plugins: ['remove_button'],
-            maxItems: 2,
             searchField: ['text'],
             render: {
                 no_results: function() { return '<div class="no-results">No job type found</div>'; }
@@ -1700,10 +1722,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Add qualification
+// Add qualification (specialization always as dropdown from jb_specializations)
+var specializationsListForSelect = @json(isset($specializationsList) ? $specializationsList->map(function($o) { return ['name' => $o->name]; })->values()->all() : []);
 let qualificationIndex = {{ count($qualifications ?? [1]) }};
 function addQualification() {
     const container = document.getElementById('qualifications-container');
+    var opts = (specializationsListForSelect || []).map(function(o) { return '<option value="' + (o.name || '') + '">' + (o.name || '') + '</option>'; }).join('');
+    var specializationSelectHtml = '<select class="form-select" name="qualifications[' + qualificationIndex + '][specialization]"><option value="">{{ __("-- Select Specialization --") }}</option>' + opts + '</select>';
     const html = `
         <div class="removable-item qualification-item">
             <button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>
@@ -1718,10 +1743,7 @@ function addQualification() {
                     </select>
                 </div>
                 <div class="col-md-4 mb-2">
-                    <div class="specialization-autocomplete-wrapper">
-                        <input type="text" class="form-control specialization-input" name="qualifications[${qualificationIndex}][specialization]" placeholder="Specialization/Subject" autocomplete="off">
-                        <div class="specialization-suggestions"></div>
-                    </div>
+                    ${specializationSelectHtml}
                 </div>
                 <div class="col-md-4 mb-2">
                     <input type="text" class="form-control" name="qualifications[${qualificationIndex}][institution]" placeholder="Institution Name">
@@ -1733,14 +1755,18 @@ function addQualification() {
     qualificationIndex++;
 }
 
-// Add language (max 3)
+// Add language (uses dropdown from DB when languagesListOptions is set)
+var languagesListOptions = @json(isset($languagesList) && $languagesList->isNotEmpty() ? $languagesList->map(fn($o) => ['value' => $o->name, 'label' => $o->name])->values() : []);
 let languageIndex = {{ count($languages ?? [1]) }};
 function addLanguage() {
-    if (document.querySelectorAll('.language-item').length >= 3) {
-        alert('Maximum 3 languages allowed');
-        return;
-    }
     const container = document.getElementById('languages-container');
+    var languageFieldHtml;
+    if (languagesListOptions && languagesListOptions.length > 0) {
+        var opts = languagesListOptions.map(function(o) { return '<option value="' + (o.value || o.label || '') + '">' + (o.label || o.value || '') + '</option>'; }).join('');
+        languageFieldHtml = '<select class="form-select" name="languages[' + languageIndex + '][language]"><option value="">{{ __("-- Select language --") }}</option>' + opts + '</select>';
+    } else {
+        languageFieldHtml = '<input type="text" class="form-control" name="languages[' + languageIndex + '][language]" placeholder="{{ __("Language (e.g., English)") }}">';
+    }
     const html = `
         <div class="removable-item language-item">
             <button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>
@@ -1748,12 +1774,10 @@ function addLanguage() {
                 <div class="col-md-1 d-flex align-items-center">
                     <span class="priority-badge">${languageIndex + 1}</span>
                 </div>
-                <div class="col-md-5 mb-2">
-                    <input type="text" class="form-control" name="languages[${languageIndex}][language]" placeholder="Language (e.g., English)">
-                </div>
+                <div class="col-md-5 mb-2">` + languageFieldHtml + `</div>
                 <div class="col-md-5 mb-2">
                     <select class="form-select" name="languages[${languageIndex}][proficiency]">
-                        <option value="">Proficiency</option>
+                        <option value="">{{ __("Proficiency") }}</option>
                         <option value="basic">Basic</option>
                         <option value="intermediate">Intermediate</option>
                         <option value="fluent">Fluent</option>
@@ -1767,16 +1791,12 @@ function addLanguage() {
     languageIndex++;
 }
 
-// Add work location preference (max 3)
+// Add work location preference
 let workLocationIndex = {{ count($workLocations) }};
 var defaultCountryId = document.getElementById('js-default-country-id') ? document.getElementById('js-default-country-id').value : '';
 var useLocationDropdowns = document.getElementById('js-use-location-dropdowns') && document.getElementById('js-use-location-dropdowns').value === '1';
 var countriesData = @json($countries ?? []);
 function addWorkLocation() {
-    if (document.querySelectorAll('.work-location-item').length >= 3) {
-        alert('{{ __("Maximum 3 location preferences allowed") }}');
-        return;
-    }
     var idx = document.querySelectorAll('.work-location-item').length;
     var html;
     if (useLocationDropdowns) {
@@ -2043,40 +2063,9 @@ function insertTextIntoEditor(text) {
 }
 
 // ==========================================
-// Specialization/Subject Autocomplete
+// Specialization/Subject Autocomplete (from DB: jb_specializations)
 // ==========================================
-var specializationsList = [
-    // Sciences
-    'Physics', 'Chemistry', 'Biology', 'Mathematics', 'Computer Science',
-    'Environmental Science', 'Biotechnology', 'Microbiology', 'Zoology', 'Botany',
-    'Geology', 'Astronomy', 'Statistics', 'Biochemistry',
-    // Arts & Humanities
-    'English', 'Hindi', 'Sanskrit', 'History', 'Geography', 'Political Science',
-    'Economics', 'Sociology', 'Psychology', 'Philosophy', 'Music', 'Fine Arts',
-    'Performing Arts', 'Journalism', 'Mass Communication', 'Library Science',
-    // Commerce & Management
-    'Commerce', 'Accountancy', 'Business Studies', 'Management', 'Finance',
-    'Marketing', 'Human Resource Management', 'Banking', 'Insurance',
-    // Engineering & Technology
-    'Mechanical Engineering', 'Civil Engineering', 'Electrical Engineering',
-    'Electronics Engineering', 'Computer Engineering', 'Chemical Engineering',
-    'Information Technology', 'Automobile Engineering', 'Aeronautical Engineering',
-    // Education
-    'Education (B.Ed)', 'Special Education', 'Physical Education', 'Montessori Education',
-    'Early Childhood Education', 'Curriculum Development',
-    // Medical & Health
-    'Medicine', 'Nursing', 'Pharmacy', 'Physiotherapy', 'Dental Science',
-    'Ayurveda', 'Homeopathy', 'Public Health', 'Nutrition & Dietetics',
-    // Law
-    'Law', 'Criminal Law', 'Corporate Law', 'International Law',
-    // Languages
-    'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Bengali', 'Gujarati',
-    'Punjabi', 'Urdu', 'French', 'German', 'Spanish', 'Japanese', 'Chinese',
-    // Others
-    'Yoga', 'Sports Science', 'Agriculture', 'Veterinary Science',
-    'Hotel Management', 'Fashion Design', 'Interior Design', 'Architecture',
-    'Social Work', 'Defense Studies', 'Home Science'
-];
+var specializationsList = @json(isset($specializationsList) ? $specializationsList->pluck('name')->values() : []);
 
 function initSpecializationAutocomplete() {
     document.addEventListener('input', function(e) {

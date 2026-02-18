@@ -181,6 +181,43 @@
         display: block;
     }
 
+    /* In-form success message (form ke sath, upar alag toast nahi) */
+    .verify-inline-success {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+    }
+    .verify-inline-success .msg-icon {
+        color: #059669;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    .verify-inline-success .msg-text {
+        color: #047857;
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 0;
+        flex: 1;
+    }
+    .verify-inline-success .msg-close {
+        background: none;
+        border: none;
+        color: #059669;
+        cursor: pointer;
+        padding: 0 4px;
+        font-size: 18px;
+        line-height: 1;
+        opacity: 0.8;
+    }
+    .verify-inline-success .msg-close:hover {
+        opacity: 1;
+    }
+
     /* Verify Button */
     .verify-btn {
         width: 100%;
@@ -325,6 +362,13 @@
                     <span class="step-number">4</span>
                     <span>Location</span>
                 </div>
+            </div>
+
+            <!-- Success message form ke andar (toast upar alag nahi) -->
+            <div id="verify-form-success-msg" class="verify-inline-success" style="display: none;" role="alert">
+                <span class="msg-icon"><i class="ti ti-circle-check" style="font-size: 22px;"></i></span>
+                <p class="msg-text" id="verify-form-success-text"></p>
+                <button type="button" class="msg-close" id="verify-form-success-close" aria-label="Close">&times;</button>
             </div>
 
             <!-- Email/WhatsApp Display Box -->
@@ -556,19 +600,31 @@
             .then(res => res.json())
             .then(data => {
                 if (data.error === false) {
-                    @if(!empty($isWhatsappAvailable) && !empty($phone))
-                        showToast('text-success', 'Verification code resent successfully to your WhatsApp ({{ $phone }}) and Email ({{ $email }})!');
+                    successTextEl.textContent = @if(!empty($isWhatsappAvailable) && !empty($phone))
+                        'Verification code resent successfully to your WhatsApp & Email. Please enter the new 6-digit code below.';
                     @else
-                        showToast('text-success', 'Verification code resent successfully to your Email ({{ $email }})!');
+                        'Verification code resent successfully to your Email. Please enter the new 6-digit code below.';
                     @endif
+                    successMsgEl.style.display = 'flex';
+                    successMsgEl.style.background = '#ecfdf5';
+                    successMsgEl.style.borderColor = '#a7f3d0';
+                    successTextEl.style.color = '#047857';
                     startTimer();
                 } else {
-                    showToast('text-danger', data.message || 'Failed to resend code');
+                    successTextEl.textContent = data.message || 'Failed to resend code';
+                    successMsgEl.style.display = 'flex';
+                    successMsgEl.style.background = '#fef2f2';
+                    successMsgEl.style.borderColor = '#fecaca';
+                    successTextEl.style.color = '#b91c1c';
                     resendBtn.disabled = false;
                 }
             })
             .catch(err => {
-                showToast('text-danger', 'Failed to resend code');
+                successTextEl.textContent = 'Failed to resend code';
+                successMsgEl.style.display = 'flex';
+                successMsgEl.style.background = '#fef2f2';
+                successMsgEl.style.borderColor = '#fecaca';
+                successTextEl.style.color = '#b91c1c';
                 resendBtn.disabled = false;
             });
         });
@@ -583,12 +639,19 @@
             errorDiv.classList.remove('show');
         }
 
-        // Success toast when user lands on verification page (OTP already sent)
+        // Success message form ke andar dikhao (toast upar alag nahi)
+        var successMsgEl = document.getElementById('verify-form-success-msg');
+        var successTextEl = document.getElementById('verify-form-success-text');
+        var successCloseBtn = document.getElementById('verify-form-success-close');
         @if(!empty($isWhatsappAvailable) && !empty($phone))
-            showToast('text-success', 'Verification code sent to your WhatsApp & Email. Please enter the 6-digit code below.');
+            successTextEl.textContent = 'Verification code sent to your WhatsApp & Email. Please enter the 6-digit code below.';
         @else
-            showToast('text-success', 'Verification code sent to your email. Please enter the 6-digit code below.');
+            successTextEl.textContent = 'Verification code sent to your email. Please enter the 6-digit code below.';
         @endif
+        successMsgEl.style.display = 'flex';
+        successCloseBtn.addEventListener('click', function() {
+            successMsgEl.style.display = 'none';
+        });
         
         function startTimer() {
             let seconds = 60;

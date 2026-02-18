@@ -10,16 +10,25 @@
         overflow: visible;
     }
     .emp-section-header {
-        background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
+        display: flex;
+        align-items: center;
+        background: #0073d1;
         color: #fff;
         padding: 15px 20px;
         font-size: 16px;
         font-weight: 600;
         border-radius: 12px 12px 0 0;
     }
-    .emp-section-header i {
+    .emp-section-header .emp-section-icon {
+        background: transparent;
+        color: #fff;
         margin-right: 10px;
     }
+  h5 {
+  font-size: 15px;
+  
+  margin-top: 5px;
+  }
     .emp-section-body {
         padding: 20px;
     }
@@ -35,7 +44,8 @@
     .form-control, .form-select {
         border: 1.5px solid #e2e8f0;
         border-radius: 8px;
-        padding: 10px 14px;
+        padding: 8px 14px;
+        height: 40px;
         font-size: 14px;
         transition: all 0.2s;
         background-color: #fff !important;
@@ -129,8 +139,62 @@
     .btn-add-entry:hover {
         background: #e0efff;
     }
+
+    /* ? Help icon - hover & click show tooltip (same as job seeker profile) */
+    .field-help-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: help;
+        margin-left: 4px;
+        vertical-align: middle;
+        transition: background 0.2s, color 0.2s;
+    }
+    .field-help-icon:hover,
+    .field-help-icon:focus {
+        background: #0073d1;
+        color: #fff;
+        outline: none;
+    }
+    .field-help-icon i {
+        font-size: 11px;
+    }
+    .emp-section-header .field-help-icon {
+        margin-left: auto;
+        background: rgba(255,255,255,0.3);
+        color: #fff;
+    }
+    .emp-section-header .field-help-icon:hover,
+    .emp-section-header .field-help-icon:focus {
+        background: rgba(255,255,255,0.5);
+        color: #fff;
+    }
+    .tooltip .tooltip-inner {
+        max-width: 340px;
+        min-width: 200px;
+        padding: 12px 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        text-align: left;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    @media (max-width: 576px) {
+        .tooltip .tooltip-inner {
+            max-width: min(320px, calc(100vw - 32px));
+            min-width: 240px;
+            padding: 14px 18px;
+            font-size: 14px;
+        }
+    }
     
-    /* TomSelect overrides - white background for dropdown */
+    /* TomSelect overrides - white background for dropdown + down arrow like form-select */
     .ts-wrapper { margin-bottom: 0 !important; }
     .ts-control { border: 1.5px solid #e2e8f0 !important; border-radius: 8px !important; padding: 6px 10px !important; min-height: 42px !important; background-color: #fff !important; padding-right: 2.5rem !important; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important; background-repeat: no-repeat !important; background-position: right 0.75rem center !important; background-size: 16px 12px !important; }
     .ts-control:focus, .ts-wrapper.focus .ts-control { border-color: #0073d1 !important; box-shadow: 0 0 0 3px rgba(0,115,209,0.1) !important; }
@@ -141,8 +205,14 @@
     @media (max-width: 768px) {
         .emp-section-body { padding: 15px; }
         .logo-upload-area { flex-direction: column; align-items: flex-start; }
-    }
+    } 
 </style>
+
+<!-- Page header - same as dashboard -->
+<div class="emp-settings-header">
+    <h2><?php echo e(__('School/Institution Profile')); ?></h2>
+    <a href="<?php echo e(route('public.account.dashboard')); ?>"><?php echo e(__('Dashboard')); ?> &rarr;</a>
+</div>
 
 
 <?php if($errors->any()): ?>
@@ -166,12 +236,13 @@
 
 <form id="employer-profile-form" action="<?php echo e(route('public.account.employer.settings.update')); ?>" method="POST" enctype="multipart/form-data">
     <?php echo csrf_field(); ?>
-    
+
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-image"></i> <?php echo e(__('Institution Logo')); ?>
-
+            <span class="emp-section-icon blue"><i class="fa fa-image"></i></span>
+            <h5><?php echo e(__('School / Institution Logo')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Upload your official institution logo to enhance credibility and brand visibility.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <div class="logo-upload-area">
@@ -179,11 +250,11 @@
                     <?php if($company && $company->logo): ?>
                         <img src="<?php echo e(RvMedia::getImageUrl($company->logo)); ?>" alt="Logo" id="logo-img">
                     <?php else: ?>
-                        <i class="fa fa-camera" style="font-size: 24px; color: #ccc;"></i>
+                        <span class="text-muted">TR</span>
                     <?php endif; ?>
                 </div>
                 <div>
-                    <input type="file" name="logo" id="logo-input" class="form-control" accept="image/*">
+                    <input type="file" name="logo" id="logo-input" class="form-control" accept="image/jpeg,image/png,image/webp">
                     <small class="form-text text-muted"><?php echo e(__('Institution/School logo. Recommended: 200x200px. JPG, PNG. Max 2MB.')); ?></small>
                 </div>
             </div>
@@ -193,28 +264,35 @@
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-user"></i> <?php echo e(__('Your Details')); ?>
-
+            <span class="emp-section-icon blue"><i class="fa fa-user"></i></span>
+            <h5><?php echo e(__('Profile Manage Details')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Provide details of the authorized person managing this account.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <div class="row">
                 <!-- Full Name -->
-                <div class="col-md-6 mb-lg-0 mb-sm-3">
-                    <label class="form-label"><?php echo e(__('Full Name')); ?> <span class="required">*</span></label>
+                <div class="col-md-6 mb-sm-3">
+                    <label class="form-label"><?php echo e(__('Full Name')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Enter the full name of the authorized person managing this school account.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="text" name="full_name" class="form-control" value="<?php echo e(old('full_name', $account->full_name ?? ($account->first_name . ' ' . $account->last_name))); ?>" required placeholder="<?php echo e(__('Enter your full name')); ?>">
                 </div>
                 
                 <!-- Account Email (read-only) -->
-                <div class="col-md-6 mb-lg-0 mb-sm-3">
-                    <label class="form-label"><?php echo e(__('Login Email')); ?></label>
+                <div class="col-md-6 mb-sm-3">
+                    <label class="form-label"><?php echo e(__('Login Email')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('This email will be used for login, job alerts, and official communication.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="email" class="form-control" value="<?php echo e($account->email); ?>" readonly disabled style="background: #f1f5f9;">
                     <small class="form-text text-muted"><?php echo e(__('This is your login email and cannot be changed here')); ?></small>
                 </div>
-                
+                    
                 <!-- Personal Mobile -->
-                <div class="col-md-6 mb-lg-0 mb-sm-3">
-                    <label class="form-label"><?php echo e(__('Mobile Number')); ?> <span class="required">*</span></label>
+                <div class="col-md-6 mb-sm-3">
+                    <label class="form-label"><?php echo e(__('Mobile Number')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Provide a valid mobile number for important updates and communication.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="tel" name="account_phone" class="form-control" value="<?php echo e(old('account_phone', $account->phone ?? '')); ?>" required placeholder="<?php echo e(__('Enter your mobile number')); ?>">
+                </div>
+                
+                <!-- Designation -->
+                <div class="col-md-6 mb-sm-3">
+                    <label class="form-label"><?php echo e(__('Designation')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Specify your role within the institution (e.g., Principal, HR Manager, Director).')); ?>"><i class="fa fa-question-circle"></i></span></label>
+                    <input type="text" name="designation" class="form-control" value="<?php echo e(old('designation', $account->designation ?? '')); ?>" placeholder="<?php echo e(__('e.g. Principal, HR Manager, Admin')); ?>">
                 </div>
             </div>
         </div>
@@ -222,101 +300,102 @@
 
     
     <?php
-        $instType = old('institution_type', $company->institution_type ?? $account->institution_type ?? '');
+        $instTypeRaw = old('institution_type', $company->institution_type ?? $account->institution_type ?? '');
+        $instTypes = is_array($instTypeRaw) ? $instTypeRaw : (is_string($instTypeRaw) && $instTypeRaw !== '' ? array_map('trim', explode(',', $instTypeRaw)) : []);
     ?>
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-building"></i> <?php echo e(__('Institution Information')); ?>
-
+            <span class="emp-section-icon blue"><i class="fa fa-building"></i></span>
+            <h5><?php echo e(__('School / Institution Information')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Share essential information about your institution to help candidates understand your school\'s identity and background.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <div class="row">
                 <!-- School/Institution Name -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('School/Institution Name')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('School/Institution Name')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Enter the full registered name of your institution.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="text" name="name" class="form-control" value="<?php echo e(old('name', $company->name ?? $account->institution_name ?? '')); ?>" required placeholder="<?php echo e(__('Enter institution name')); ?>">
                 </div>
                 
                 <!-- Institution Type -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('Type of Institution')); ?> <span class="required">*</span></label>
-                    <select name="institution_type" id="institution_type" class="form-select" required>
-                        <option value=""><?php echo e(__('Select type')); ?></option>
-                        <optgroup label="School">
-                            <option value="cbse-school" <?php if($instType == 'cbse-school'): echo 'selected'; endif; ?>>CBSE School</option>
-                            <option value="icse-school" <?php if($instType == 'icse-school'): echo 'selected'; endif; ?>>ICSE School</option>
-                            <option value="cambridge-school" <?php if($instType == 'cambridge-school'): echo 'selected'; endif; ?>>Cambridge School</option>
-                            <option value="ib-school" <?php if($instType == 'ib-school'): echo 'selected'; endif; ?>>IB School</option>
-                            <option value="igcse-school" <?php if($instType == 'igcse-school'): echo 'selected'; endif; ?>>IGCSE School</option>
-                            <option value="primary-school" <?php if($instType == 'primary-school'): echo 'selected'; endif; ?>>Primary School</option>
-                            <option value="play-school" <?php if($instType == 'play-school'): echo 'selected'; endif; ?>>Play School</option>
-                            <option value="state-board-school" <?php if($instType == 'state-board-school'): echo 'selected'; endif; ?>>State Board School</option>
+                    <label class="form-label"><?php echo e(__('Type of Institution')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Select the category/affiliations that best describes your institution.')); ?>"><i class="fa fa-question-circle"></i></span></label>
+                    <select name="institution_type[]" id="institution_type" class="form-select" multiple required>
+                        <optgroup label="🏫 School">
+                            <option value="cbse-school" <?php if(in_array('cbse-school', $instTypes)): echo 'selected'; endif; ?>>CBSE School</option>
+                            <option value="icse-school" <?php if(in_array('icse-school', $instTypes)): echo 'selected'; endif; ?>>ICSE School</option>
+                            <option value="cambridge-school" <?php if(in_array('cambridge-school', $instTypes)): echo 'selected'; endif; ?>>Cambridge School</option>
+                            <option value="ib-school" <?php if(in_array('ib-school', $instTypes)): echo 'selected'; endif; ?>>IB School</option>
+                            <option value="igcse-school" <?php if(in_array('igcse-school', $instTypes)): echo 'selected'; endif; ?>>IGCSE School</option>
+                            <option value="primary-school" <?php if(in_array('primary-school', $instTypes)): echo 'selected'; endif; ?>>Primary School</option>
+                            <option value="play-school" <?php if(in_array('play-school', $instTypes)): echo 'selected'; endif; ?>>Play School</option>
+                            <option value="state-board-school" <?php if(in_array('state-board-school', $instTypes)): echo 'selected'; endif; ?>>State Board School</option>
                         </optgroup>
-                        <optgroup label="College">
-                            <option value="engineering-college" <?php if($instType == 'engineering-college'): echo 'selected'; endif; ?>>Engineering College</option>
-                            <option value="medical-college" <?php if($instType == 'medical-college'): echo 'selected'; endif; ?>>Medical College</option>
-                            <option value="nursing-college" <?php if($instType == 'nursing-college'): echo 'selected'; endif; ?>>Nursing College</option>
-                            <option value="pharmacy-college" <?php if($instType == 'pharmacy-college'): echo 'selected'; endif; ?>>Pharmacy College</option>
-                            <option value="science-college" <?php if($instType == 'science-college'): echo 'selected'; endif; ?>>Science College</option>
-                            <option value="management-college" <?php if($instType == 'management-college'): echo 'selected'; endif; ?>>Management College</option>
-                            <option value="degree-college" <?php if($instType == 'degree-college'): echo 'selected'; endif; ?>>Degree College</option>
+                        <optgroup label="🎓 College">
+                            <option value="engineering-college" <?php if(in_array('engineering-college', $instTypes)): echo 'selected'; endif; ?>>Engineering College</option>
+                            <option value="medical-college" <?php if(in_array('medical-college', $instTypes)): echo 'selected'; endif; ?>>Medical College</option>
+                            <option value="nursing-college" <?php if(in_array('nursing-college', $instTypes)): echo 'selected'; endif; ?>>Nursing College</option>
+                            <option value="pharmacy-college" <?php if(in_array('pharmacy-college', $instTypes)): echo 'selected'; endif; ?>>Pharmacy College</option>
+                            <option value="science-college" <?php if(in_array('science-college', $instTypes)): echo 'selected'; endif; ?>>Science College</option>
+                            <option value="management-college" <?php if(in_array('management-college', $instTypes)): echo 'selected'; endif; ?>>Management College</option>
+                            <option value="degree-college" <?php if(in_array('degree-college', $instTypes)): echo 'selected'; endif; ?>>Degree College</option>
                         </optgroup>
-                        <optgroup label="Coaching Institute">
-                            <option value="jee-neet-institute" <?php if($instType == 'jee-neet-institute'): echo 'selected'; endif; ?>>JEE & NEET Institute</option>
-                            <option value="banking-institute" <?php if($instType == 'banking-institute'): echo 'selected'; endif; ?>>Banking Institute</option>
-                            <option value="civil-services-institute" <?php if($instType == 'civil-services-institute'): echo 'selected'; endif; ?>>Civil Services Institute</option>
-                            <option value="it-training-institute" <?php if($instType == 'it-training-institute'): echo 'selected'; endif; ?>>IT Training Institute</option>
+                        <optgroup label="📚 Coaching Institute">
+                            <option value="jee-neet-institute" <?php if(in_array('jee-neet-institute', $instTypes)): echo 'selected'; endif; ?>>JEE & NEET Institute</option>
+                            <option value="banking-institute" <?php if(in_array('banking-institute', $instTypes)): echo 'selected'; endif; ?>>Banking Institute</option>
+                            <option value="civil-services-institute" <?php if(in_array('civil-services-institute', $instTypes)): echo 'selected'; endif; ?>>Civil Services Institute</option>
+                            <option value="it-training-institute" <?php if(in_array('it-training-institute', $instTypes)): echo 'selected'; endif; ?>>IT Training Institute</option>
                         </optgroup>
-                        <optgroup label="EdTech & Online">
-                            <option value="edtech-company" <?php if($instType == 'edtech-company'): echo 'selected'; endif; ?>>EdTech Company</option>
-                            <option value="online-education-platform" <?php if($instType == 'online-education-platform'): echo 'selected'; endif; ?>>Online Education Platform</option>
+                        <optgroup label="💻 EdTech & Online">
+                            <option value="edtech-company" <?php if(in_array('edtech-company', $instTypes)): echo 'selected'; endif; ?>>EdTech Company</option>
+                            <option value="online-education-platform" <?php if(in_array('online-education-platform', $instTypes)): echo 'selected'; endif; ?>>Online Education Platform</option>
                         </optgroup>
-                        <optgroup label="University & Academy">
-                            <option value="university" <?php if($instType == 'university'): echo 'selected'; endif; ?>>University</option>
-                            <option value="sport-academy" <?php if($instType == 'sport-academy'): echo 'selected'; endif; ?>>Sport Academy</option>
-                            <option value="music-academy" <?php if($instType == 'music-academy'): echo 'selected'; endif; ?>>Music Academy</option>
+                        <optgroup label="🏛️ University & Academy">
+                            <option value="university" <?php if(in_array('university', $instTypes)): echo 'selected'; endif; ?>>University</option>
+                            <option value="sport-academy" <?php if(in_array('sport-academy', $instTypes)): echo 'selected'; endif; ?>>Sport Academy</option>
+                            <option value="music-academy" <?php if(in_array('music-academy', $instTypes)): echo 'selected'; endif; ?>>Music Academy</option>
                         </optgroup>
-                        <optgroup label="Other">
-                            <option value="non-profit-organization" <?php if($instType == 'non-profit-organization'): echo 'selected'; endif; ?>>Non-Profit Organization</option>
-                            <option value="book-publishing-company" <?php if($instType == 'book-publishing-company'): echo 'selected'; endif; ?>>Book Publishing Company</option>
+                        <optgroup label="📋 Other">
+                            <option value="non-profit-organization" <?php if(in_array('non-profit-organization', $instTypes)): echo 'selected'; endif; ?>>Non-Profit Organization</option>
+                            <option value="book-publishing-company" <?php if(in_array('book-publishing-company', $instTypes)): echo 'selected'; endif; ?>>Book Publishing Company</option>
                         </optgroup>
                     </select>
                 </div>
                 
                 <!-- About Us -->
                 <div class="col-12 mb-3">
-                    <label class="form-label"><?php echo e(__('About Us')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('About School / Institution')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Provide a brief overview of your institution, including vision, values, and key highlights.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <textarea name="description" class="form-control" rows="4" required placeholder="<?php echo e(__('Tell about your institution...')); ?>"><?php echo e(old('description', $company->description ?? '')); ?></textarea>
                 </div>
                 
                 <!-- Institution Email -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('Institution Email')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('Institution Email')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Enter your institution\'s official email for communication & updates.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="email" name="email" class="form-control" value="<?php echo e(old('email', $company->email ?? $account->email)); ?>" required placeholder="<?php echo e(__('contact@school.com')); ?>">
                     <small class="form-text text-muted"><?php echo e(__('This email will be used for job posting communications')); ?></small>
                 </div>
                 
                 <!-- Institution Phone -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('Institution Phone')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('Institution Phone')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Provide the primary contact number.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="tel" name="phone" class="form-control" value="<?php echo e(old('phone', $company->phone ?? $account->phone ?? '')); ?>" required placeholder="<?php echo e(__('Enter institution phone number')); ?>">
                 </div>
                 
                 <!-- Website -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('Website')); ?></label>
+                    <label class="form-label"><?php echo e(__('Website')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Enter your school\'s official website link.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="url" name="website" class="form-control" value="<?php echo e(old('website', $company->website ?? '')); ?>" placeholder="<?php echo e(__('https://www.yourschool.com')); ?>">
                 </div>
                 
                 <!-- Established Year -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('Established Year')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('Established Year')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Specify the year your institution was officially established.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="number" name="year_founded" class="form-control" value="<?php echo e(old('year_founded', $company->year_founded ?? '')); ?>" required min="1800" max="<?php echo e(date('Y')); ?>" placeholder="<?php echo e(__('e.g. 1995')); ?>">
                 </div>
-
+            
                 <!-- Total Staff -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('Total Number of Staff')); ?></label>
+                    <label class="form-label"><?php echo e(__('Total Number of Staff')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Enter the total number of employees, including teaching and non-teaching staff.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="number" name="total_staff" class="form-control" value="<?php echo e(old('total_staff', $company->total_staff ?? '')); ?>" min="0" max="999" placeholder="<?php echo e(__('e.g. 50')); ?>">
                     <small class="form-text text-muted"><?php echo e(__('Max 3 digits')); ?></small>
                 </div>
@@ -327,25 +406,26 @@
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-school"></i> <?php echo e(__('Campus & Facilities')); ?>
-
+            <span class="emp-section-icon blue"><i class="fa fa-school"></i></span>
+            <h5><?php echo e(__('Campus, Infrastructure & Facilities')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Highlight your campus environment and staff facilities to attract candidates.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <div class="row">
                 <!-- Campus Type -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('Campus Type')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('Campus Type')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Select whether your institution operates as a Day School, Boarding School, or Both.')); ?> · Day Campus · Boarding Campus"><i class="fa fa-question-circle"></i></span></label>
                     <select name="campus_type" class="form-select" required>
                         <option value=""><?php echo e(__('Select campus type')); ?></option>
-                        <option value="boarding" <?php if(old('campus_type', $company->campus_type ?? '') == 'boarding'): echo 'selected'; endif; ?>><?php echo e(__('Boarding / Residential Campus')); ?></option>
-                        <option value="day" <?php if(old('campus_type', $company->campus_type ?? '') == 'day'): echo 'selected'; endif; ?>><?php echo e(__('Non-Boarding / Day Campus')); ?></option>
+                        <option value="day" <?php if(old('campus_type', $company->campus_type ?? '') == 'day'): echo 'selected'; endif; ?>><?php echo e(__('Day Campus')); ?></option>
+                        <option value="boarding" <?php if(old('campus_type', $company->campus_type ?? '') == 'boarding'): echo 'selected'; endif; ?>><?php echo e(__('Boarding Campus')); ?></option>
                         <option value="both" <?php if(old('campus_type', $company->campus_type ?? '') == 'both'): echo 'selected'; endif; ?>><?php echo e(__('Both Boarding & Day Campus')); ?></option>
                     </select>
                 </div>
                 
-                <!-- Standard Level -->
+                <!-- Academic Levels Offered -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('School/Institution Standard Level')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('Academic Levels Offered')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Choose the grade range available at your school.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <?php $selectedLevels = old('standard_level', $company->standard_level ?? []); ?>
                     <select id="ts-standard-level" name="standard_level[]" multiple placeholder="<?php echo e(__('Select levels...')); ?>">
                         <?php $__currentLoopData = ['pre_primary' => 'Pre-Primary', 'primary' => 'Primary', 'upper_primary' => 'Upper Primary', 'secondary' => 'Secondary', 'higher_secondary' => 'Higher Secondary', 'degree' => 'Degree College', 'post_graduate' => 'Post Graduate', 'research' => 'Research']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $val => $lbl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -354,15 +434,73 @@
                     </select>
                 </div>
                 
-                <!-- Staff Facilities -->
+                <!-- Staff Facilities & Benefits -->
                 <div class="col-12 mb-3">
-                    <label class="form-label"><?php echo e(__('Facilities Available for Staff/Teacher')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('Staff Facilities & Benefits')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Select the facilities and benefits provided to staff.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <?php $selectedFacilities = old('staff_facilities', $company->staff_facilities ?? []); ?>
                     <select id="ts-staff-facilities" name="staff_facilities[]" multiple placeholder="<?php echo e(__('Select facilities...')); ?>">
-                        <?php $__currentLoopData = ['residence' => 'Residence / Accommodation', 'food' => 'Food / Meals', 'electricity' => 'Electricity', 'pf' => 'Provident Fund (PF)', 'medical' => 'Medical / Health Insurance', 'transport' => 'Transport', 'child_education' => 'Children Education', 'gratuity' => 'Gratuity', 'bonus' => 'Annual Bonus', 'leave_encash' => 'Leave Encashment', 'wifi' => 'WiFi / Internet', 'library' => 'Library Access', 'gym' => 'Gym / Sports', 'professional_dev' => 'Professional Development']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $val => $lbl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php $__currentLoopData = ['accommodation' => __('Accommodation'), 'transportation_facility' => __('Transportation Facility'), 'meals' => __('Free/Discounted Meals'), 'medical_insurance' => __('Medical Insurance'), 'pf_esic' => __('PF / ESIC'), 'professional_development' => __('Professional Development Programs'), 'on_campus_housing' => __('On-campus Housing'), 'child_education' => __('Child Education Benefits')]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $val => $lbl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <option value="<?php echo e($val); ?>" <?php if(is_array($selectedFacilities) && in_array($val, $selectedFacilities)): echo 'selected'; endif; ?>><?php echo e($lbl); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
+                </div>
+
+                <!-- Working Days & Timings -->
+                <div class="col-12 mb-3">
+                    <label class="form-label"><?php echo e(__('Working Days & Timings')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Specify your regular working hours & days. You can select working days and time here.')); ?>"><i class="fa fa-question-circle"></i></span></label>
+                    <div class="row align-items-end">
+                        <div class="col-md-5 mb-2">
+                            <?php $workingDays = old('working_days', $company->working_days ?? []); ?>
+                            <select id="ts-working-days" name="working_days[]" multiple placeholder="<?php echo e(__('Select working days...')); ?>">
+                                <?php $__currentLoopData = ['mon' => __('Monday'), 'tue' => __('Tuesday'), 'wed' => __('Wednesday'), 'thu' => __('Thursday'), 'fri' => __('Friday'), 'sat' => __('Saturday'), 'sun' => __('Sunday')]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $val => $lbl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($val); ?>" <?php if(is_array($workingDays) && in_array($val, $workingDays)): echo 'selected'; endif; ?>><?php echo e($lbl); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label small text-muted"><?php echo e(__('Start time')); ?></label>
+                            <input type="time" name="working_hours_start" class="form-control" value="<?php echo e(old('working_hours_start', $company->working_hours_start ?? '')); ?>" placeholder="09:00">
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label small text-muted"><?php echo e(__('End time')); ?></label>
+                            <input type="time" name="working_hours_end" class="form-control" value="<?php echo e(old('working_hours_end', $company->working_hours_end ?? '')); ?>" placeholder="17:00">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campus Photos -->
+                <div class="col-12 mb-3">
+                    <label class="form-label"><?php echo e(__('Campus Photos')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Upload your campus photos.')); ?>"><i class="fa fa-question-circle"></i></span></label>
+                    <p class="text-muted mb-2" style="font-size: 13px;"><?php echo e(__('Add campus photos with optional captions (max 5)')); ?></p>
+                    <div id="campus-photos-container">
+                        <?php $campusPhotos = old('campus_photos', $company->campus_photos ?? []); ?>
+                        <?php if(is_array($campusPhotos) && count($campusPhotos) > 0): ?>
+                            <?php $__currentLoopData = $campusPhotos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $cp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <div class="dynamic-entry campus-photo-entry">
+                                <button type="button" class="btn-remove-entry" onclick="this.closest('.campus-photo-entry').remove(); updateCampusPhotoCount();">✕</button>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label"><?php echo e(__('Photo')); ?></label>
+                                        <input type="file" name="campus_photos_photos[<?php echo e($i); ?>]" class="form-control" accept="image/*">
+                                        <?php if(!empty($cp['photo'])): ?>
+                                            <small class="text-success"><?php echo e(__('Photo uploaded')); ?></small>
+                                            <input type="hidden" name="campus_photos[<?php echo e($i); ?>][photo]" value="<?php echo e($cp['photo']); ?>">
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label"><?php echo e(__('Caption')); ?></label>
+                                        <input type="text" name="campus_photos[<?php echo e($i); ?>][caption]" class="form-control" value="<?php echo e($cp['caption'] ?? ''); ?>" placeholder="<?php echo e(__('Optional caption')); ?>">
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        <?php endif; ?>
+                    </div>
+                    <button type="button" class="btn-add-entry mt-2" id="btn-add-campus-photo" onclick="addCampusPhoto()">
+                        <i class="fa fa-plus me-1"></i> <?php echo e(__('Add Campus Photo')); ?>
+
+                    </button>
+                    <small class="form-text text-muted ms-2" id="campus-photo-count"><?php echo e(is_array($campusPhotos) ? count($campusPhotos) : 0); ?>/5</small>
                 </div>
             </div>
         </div>
@@ -371,8 +509,9 @@
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-map-marker-alt"></i> <?php echo e(__('Location')); ?>
-
+            <span class="emp-section-icon blue"><i class="fa fa-map-marker-alt"></i></span>
+            <h5><?php echo e(__('Location')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Provide accurate location details for better candidate reach and search visibility.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <div class="row">
@@ -380,37 +519,26 @@
                     $empCityName = old('city_search_display', $locationCityName ?? '');
                     $empStateName = old('state_display', $locationStateName ?? '');
                     $empCountryName = old('country_display', $locationCountryName ?? '');
-                    if (is_plugin_active('location')) {
-                        if (empty($empCityName) && $company && $company->city_id) {
-                            try { $empCityName = \Botble\Location\Models\City::find($company->city_id)->name ?? ''; } catch (\Throwable $e) {}
-                        }
-                        if (empty($empStateName) && $company && $company->state_id) {
-                            try { $empStateName = \Botble\Location\Models\State::find($company->state_id)->name ?? ''; } catch (\Throwable $e) {}
-                        }
-                        if (empty($empCountryName) && $company && $company->country_id) {
-                            try { $empCountryName = \Botble\Location\Models\Country::find($company->country_id)->name ?? ''; } catch (\Throwable $e) {}
-                        }
-                    }
                 ?>
                 <?php if(is_plugin_active('location')): ?>
                 
                 <div class="col-md-4 mb-3">
-                    <label class="form-label"><?php echo e(__('City')); ?></label>
+                    <label class="form-label"><?php echo e(__('City')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Type city name to search. State and Country will auto-fill.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <div style="position:relative;">
                         <input type="text" id="emp-city-search" class="form-control" value="<?php echo e($empCityName); ?>" placeholder="<?php echo e(__('Type city name to search...')); ?>" autocomplete="off">
                         <div id="emp-city-suggestions" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:100; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
                     </div>
-                    <small class="text-muted"><?php echo e(__('Type city first; State and Country will auto-fill.')); ?></small>
+                    <small class="text-muted"><?php echo e(__('Type city name to search. State and Country will auto-fill.')); ?></small>
                     <input type="hidden" name="city_id" id="emp-city-id" value="<?php echo e(old('city_id', $company->city_id ?? '')); ?>">
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label"><?php echo e(__('State')); ?></label>
-                    <input type="text" id="emp-state-display" class="form-control" readonly value="<?php echo e($empStateName); ?>" style="background:#f8f9fa;" placeholder="<?php echo e(__('Select city first')); ?>">
+                    <input type="text" id="emp-state-display" class="form-control" readonly value="<?php echo e($empStateName); ?>" style="background:#f8f9fa;">
                     <input type="hidden" name="state_id" id="emp-state-id" value="<?php echo e(old('state_id', $company->state_id ?? '')); ?>">
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label"><?php echo e(__('Country')); ?></label>
-                    <input type="text" id="emp-country-display" class="form-control" readonly value="<?php echo e($empCountryName); ?>" style="background:#f8f9fa;" placeholder="<?php echo e(__('Select city first')); ?>">
+                    <input type="text" id="emp-country-display" class="form-control" readonly value="<?php echo e($empCountryName); ?>" style="background:#f8f9fa;">
                     <input type="hidden" name="country_id" id="emp-country-id" value="<?php echo e(old('country_id', $company->country_id ?? '')); ?>">
                 </div>
                 <?php else: ?>
@@ -418,15 +546,15 @@
                 <input type="hidden" name="state_id" value="">
                 <input type="hidden" name="city_id" value="">
                 <div class="col-12 mb-3">
-                    <p class="text-muted small"><?php echo e(__('Enable Location plugin for City / State / Country.')); ?></p>
+                    <p class="text-muted small"><?php echo e(__('Enable Location plugin for City / State / Country selection.')); ?></p>
                 </div>
                 <?php endif; ?>
                 <div class="col-md-8 mb-3">
-                    <label class="form-label"><?php echo e(__('Address')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('Address')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Enter the full address of your institution.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="text" name="address" class="form-control" value="<?php echo e(old('address', $company->address ?? '')); ?>" required placeholder="<?php echo e(__('Full address')); ?>">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label"><?php echo e(__('Postal Code')); ?> <span class="required">*</span></label>
+                    <label class="form-label"><?php echo e(__('Postal Code')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Enter the postal/pin code of your institution.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="text" name="postal_code" class="form-control" value="<?php echo e(old('postal_code', $company->postal_code ?? '')); ?>" required placeholder="<?php echo e(__('e.g. 110001')); ?>" maxlength="10">
                 </div>
             </div>
@@ -436,8 +564,9 @@
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-share-alt"></i> <?php echo e(__('Social Links & Video')); ?>
-
+            <span class="emp-section-icon blue"><i class="fa fa-share-alt"></i></span>
+            <h5><?php echo e(__('Social Links & Video')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Add your official social media profiles to strengthen your institution\'s online presence.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <div class="row">
@@ -461,8 +590,9 @@
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-trophy"></i> <?php echo e(__('Awards')); ?>
-
+            <span class="emp-section-icon blue"><i class="fa fa-trophy"></i></span>
+            <h5><?php echo e(__('Awards')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Showcase awards and recognitions earned by your institution to build credibility and trust.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <p class="text-muted mb-3" style="font-size: 13px;"><?php echo e(__('Add awards received by your institution (max 5)')); ?></p>
@@ -505,8 +635,9 @@
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-handshake"></i> <?php echo e(__('Affiliations')); ?>
-
+            <span class="emp-section-icon blue"><i class="fa fa-handshake"></i></span>
+            <h5><?php echo e(__('Affiliations')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Mention your official board affiliations and accreditations.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <p class="text-muted mb-3" style="font-size: 13px;"><?php echo e(__('Add affiliations and accreditations')); ?></p>
@@ -544,8 +675,9 @@
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-users"></i> <?php echo e(__('Team Members')); ?>
-
+            <span class="emp-section-icon blue"><i class="fa fa-users"></i></span>
+            <h5><?php echo e(__('Team Members')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Introduce key members of your institution to build transparency and trust with potential candidates.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <p class="text-muted mb-3" style="font-size: 13px;"><?php echo e(__('Add key team members with their details')); ?></p>
@@ -589,14 +721,24 @@
     </div>
 </form>
 
+<!-- TomSelect JS -->
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // TomSelect: Institution Type
+    // Bootstrap tooltips (hover + click for mobile) - same as job seeker profile
+    const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    if (typeof bootstrap !== 'undefined' && tooltipEls.length) {
+        tooltipEls.forEach(function(el) {
+            new bootstrap.Tooltip(el, { trigger: 'hover focus click' });
+        });
+    }
+
+    // TomSelect: Institution Type (max 4, no validation message)
     if (document.getElementById('institution_type')) {
         new TomSelect('#institution_type', {
-            allowEmptyOption: true,
-            maxItems: 1,
+            plugins: ['remove_button'],
+            maxItems: 4,
         });
     }
 
@@ -616,6 +758,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // TomSelect: Working Days
+    if (document.getElementById('ts-working-days')) {
+        new TomSelect('#ts-working-days', {
+            plugins: ['remove_button'],
+            maxItems: 7,
+        });
+    }
+
     // Logo preview
     const logoInput = document.getElementById('logo-input');
     if (logoInput) {
@@ -632,7 +782,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // City first: type to search city, then State and Country auto-fill
+    // City-first: search city then auto-fill State & Country
     const empCitySearch = document.getElementById('emp-city-search');
     const empCitySuggestions = document.getElementById('emp-city-suggestions');
     const empCityId = document.getElementById('emp-city-id');
@@ -700,7 +850,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Dynamic Awards
-let awardIndex = <?php echo e(is_array($awards ?? []) ? count($awards ?? []) : 0); ?>;
+let awardIndex = <?php echo e(is_array($awards) ? count($awards) : 0); ?>;
 function addAward() {
     const container = document.getElementById('awards-container');
     if (container.querySelectorAll('.award-entry').length >= 5) {
@@ -737,8 +887,46 @@ function updateAwardCount() {
     else document.getElementById('btn-add-award').style.display = '';
 }
 
+// Dynamic Campus Photos
+let campusPhotoIndex = <?php echo e(is_array($campusPhotos ?? []) ? count($campusPhotos ?? []) : 0); ?>;
+function addCampusPhoto() {
+    const container = document.getElementById('campus-photos-container');
+    if (container.querySelectorAll('.campus-photo-entry').length >= 5) {
+        alert('<?php echo e(__("Maximum 5 campus photos allowed")); ?>');
+        return;
+    }
+    const html = `
+        <div class="dynamic-entry campus-photo-entry">
+            <button type="button" class="btn-remove-entry" onclick="this.closest('.campus-photo-entry').remove(); updateCampusPhotoCount();">✕</button>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label"><?php echo e(__('Photo')); ?></label>
+                    <input type="file" name="campus_photos_photos[${campusPhotoIndex}]" class="form-control" accept="image/*">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label"><?php echo e(__('Caption')); ?></label>
+                    <input type="text" name="campus_photos[${campusPhotoIndex}][caption]" class="form-control" placeholder="<?php echo e(__('Optional caption')); ?>">
+                </div>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    campusPhotoIndex++;
+    updateCampusPhotoCount();
+}
+function updateCampusPhotoCount() {
+    const count = document.querySelectorAll('.campus-photo-entry').length;
+    const el = document.getElementById('campus-photo-count');
+    if (el) el.textContent = count + '/5';
+    const btn = document.getElementById('btn-add-campus-photo');
+    if (btn) {
+        if (count >= 5) btn.style.display = 'none';
+        else btn.style.display = '';
+    }
+}
+
 // Dynamic Affiliations
-let affIndex = <?php echo e(is_array($affiliations ?? []) ? count($affiliations ?? []) : 0); ?>;
+let affIndex = <?php echo e(is_array($affiliations) ? count($affiliations) : 0); ?>;
 function addAffiliation() {
     const container = document.getElementById('affiliations-container');
     const html = `
@@ -761,7 +949,7 @@ function addAffiliation() {
 }
 
 // Dynamic Team Members
-let teamIndex = <?php echo e(is_array($teamMembers ?? []) ? count($teamMembers ?? []) : 0); ?>;
+let teamIndex = <?php echo e(is_array($teamMembers) ? count($teamMembers) : 0); ?>;
 function addTeamMember() {
     const container = document.getElementById('team-container');
     const html = `
@@ -787,7 +975,35 @@ function addTeamMember() {
     teamIndex++;
 }
 
+// Remove Avatar Button
+const removeAvatarBtn = document.getElementById('remove-avatar-btn');
+if (removeAvatarBtn) {
+    removeAvatarBtn.addEventListener('click', function() {
+        if (confirm('<?php echo e(__("Are you sure you want to remove your profile photo?")); ?>')) {
+            fetch('<?php echo e(route("public.account.avatar.destroy")); ?>', {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error === false) {
+                    // Reload to reflect changes
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Failed to remove photo');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to remove photo');
+            });
+        }
+    });
+}
 </script>
 <?php $__env->stopSection(); ?>
-
 <?php echo $__env->make(JobBoardHelper::viewPath('dashboard.layouts.master'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Aditi\platform\plugins\job-board\/resources/views/themes/dashboard/employer-settings.blade.php ENDPATH**/ ?>

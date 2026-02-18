@@ -357,13 +357,13 @@
                         <h5 class="emp-name">Hello, {{ $account->first_name ?? $account->name }}</h5>
                         <p class="emp-date">Joined {{ $account->created_at->format('M d, Y') }}</p>
                         <p class="emp-updated">Last Updated: {{ $account->updated_at->format('M d, Y') }}</p>
-                        <button type="button" class="emp-view-profile-btn" onclick="document.getElementById('empProfileModal').style.display='flex'">
+                        <!-- <button type="button" class="emp-view-profile-btn" onclick="document.getElementById('empProfileModal').style.display='flex'">
                             <i class="fa fa-eye"></i> {{ __('View Profile') }}
-                        </button>
+                        </button> -->
                     </div>
                     
                     <!-- Credits Badge -->
-                    <div class="emp-credits-badge">
+                    <div class="emp-credits-badge" onclick="document.getElementById('empProfileModal').style.display='flex'">>
                         <i class="fa fa-coins"></i>
                         <span>Credits:</span>
                         <span class="emp-credits-points">{{ $account->credits ?? 0 }}</span>

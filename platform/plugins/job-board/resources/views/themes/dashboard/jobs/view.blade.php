@@ -7,12 +7,21 @@
         </a>
     </div>
 
-    {{-- Job Title & Basic Info --}}
+    @php
+        $fullDescription = $job->description || $job->content ? trim(($job->description ?? '') . "\n" . ($job->content ? strip_tags(BaseHelper::clean($job->content)) : '')) : '';
+        $hasLongDescription = strlen($fullDescription) > 150;
+    @endphp
+    {{-- Job Title, Basic Info & Description (single card) --}}
     <x-core::card class="mb-4">
         <x-core::card.header>
             <x-core::card.title>
                 {{ $job->name }}
             </x-core::card.title>
+            @if($hasLongDescription)
+                <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#jobDescriptionModal">
+                    {{ __('View full description') }}
+                </button>
+            @endif
         </x-core::card.header>
         <x-core::card.body>
             <div class="row g-3">
@@ -55,25 +64,48 @@
                     {{ number_format($job->views ?? 0) }}
                 </div>
             </div>
+            @if($job->description || $job->content)
+            <div class="mt-4 pt-3 border-top">
+                <strong class="d-block mb-2">{{ __('Description') }}</strong>
+                <div class="job-description-wrap text-muted" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; font-size: 14px;">
+                    @if($job->description)
+                        <p class="mb-2">{{ $job->description }}</p>
+                    @endif
+                    @if($job->content)
+                        <div class="job-content">
+                            {!! BaseHelper::clean($job->content) !!}
+                        </div>
+                    @endif
+                </div>
+                @if($hasLongDescription)
+                    <button type="button" class="btn btn-sm btn-link text-primary px-0 mt-2" data-bs-toggle="modal" data-bs-target="#jobDescriptionModal">
+                        {{ __('View more') }}
+                    </button>
+                @endif
+            </div>
+            @endif
         </x-core::card.body>
     </x-core::card>
 
-    @if($job->description || $job->content)
-    <x-core::card class="mb-4">
-        <x-core::card.header>
-            <x-core::card.title>{{ __('Description') }}</x-core::card.title>
-        </x-core::card.header>
-        <x-core::card.body>
-            @if($job->description)
-                <p class="text-muted mb-2">{{ $job->description }}</p>
-            @endif
-            @if($job->content)
-                <div class="job-content">
-                    {!! BaseHelper::clean($job->content) !!}
+    @if($hasLongDescription)
+    <div class="modal fade" id="jobDescriptionModal" tabindex="-1" aria-labelledby="jobDescriptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="jobDescriptionModalLabel">{{ __('Description') }} - {{ $job->name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            @endif
-        </x-core::card.body>
-    </x-core::card>
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    @if($job->description)
+                        <p class="text-muted mb-3">{{ $job->description }}</p>
+                    @endif
+                    @if($job->content)
+                        <div class="job-content">{!! BaseHelper::clean($job->content) !!}</div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
     @endif
 
     {{-- Applicants List --}}
@@ -95,6 +127,7 @@
                                 <th>{{ trans('plugins/job-board::job-application.tables.email') }}</th>
                                 <th>{{ trans('plugins/job-board::messages.phone_label') }}</th>
                                 <th>{{ trans('core/base::tables.created_at') }}</th>
+                                <th>{{ trans('plugins/job-board::job-application.tables.status') }}</th>
                                 <th>{{ trans('core/base::tables.operations') }}</th>
                             </tr>
                         </thead>
@@ -107,8 +140,30 @@
                                     <td>{{ $application->phone ?: '—' }}</td>
                                     <td>{{ $application->created_at?->format('Y-m-d H:i') }}</td>
                                     <td>
-                                        <a href="{{ route('public.account.applicants.edit', $application->id) }}" class="btn btn-sm btn-primary">
-                                            <i class="ti ti-eye"></i> {{ trans('plugins/job-board::messages.view') }}
+                                        @php
+                                            $statusVal = $application->status?->getValue() ?? 'pending';
+                                            $statusLabels = [
+                                                'pending' => trans('plugins/job-board::job-application.statuses.pending'),
+                                                'short_list' => trans('plugins/job-board::job-application.statuses.short_list'),
+                                                'hired' => trans('plugins/job-board::job-application.statuses.hired'),
+                                                'rejected' => trans('plugins/job-board::job-application.statuses.rejected'),
+                                            ];
+                                            $statusLabel = $statusLabels[$statusVal] ?? 'Pending';
+                                            if (strpos($statusLabel, 'plugins/job-board::') === 0) {
+                                                $statusLabel = ucfirst(str_replace('_', ' ', $statusVal));
+                                            }
+                                            $badgeClass = match($statusVal) {
+                                                'hired' => 'bg-success',
+                                                'rejected' => 'bg-danger',
+                                                'short_list' => 'bg-info',
+                                                default => 'bg-secondary',
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $badgeClass }} text-white">{{ $statusLabel }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('public.account.applicants.edit', $application->id) }}" class="btn btn-sm btn-primary" title="{{ trans('plugins/job-board::messages.view') }}">
+                                            <i class="fa fa-eye"></i>
                                         </a>
                                     </td>
                                 </tr>
@@ -127,4 +182,33 @@
             @endif
         </x-core::card.body>
     </x-core::card>
+
+    @if($applications->isNotEmpty())
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('change', function(e) {
+            var el = e.target;
+            if (el.classList && el.classList.contains('applicant-status-select')) {
+                var url = el.getAttribute('data-url');
+                var status = el.value;
+                var formData = new FormData();
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                formData.append('status', status);
+                fetch(url, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (typeof Botble !== 'undefined' && data.error === false) {
+                            Botble.showSuccess(data.message || '{{ __("Updated successfully") }}');
+                        } else if (data.error) {
+                            Botble.showError(data.message || '{{ __("Update failed") }}');
+                        }
+                    })
+                    .catch(function() {
+                        if (typeof Botble !== 'undefined') Botble.showError('{{ __("Update failed") }}');
+                    });
+            }
+        });
+    });
+    </script>
+    @endif
 @stop

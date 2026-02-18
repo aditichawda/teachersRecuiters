@@ -323,44 +323,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Template 3: Minimal -->
-    <div class="rb-template-card" data-template="minimal" onclick="selectTemplate(this)">
-        <div class="rb-template-preview">
-            <div class="preview-inner">
-                @include(Theme::getThemeNamespace('views.job-board.account.resume-templates.minimal'), ['account' => $account, 'educations' => $educations, 'experiences' => $experiences, 'skills' => $skills])
-            </div>
-            <div class="preview-fade"></div>
-        </div>
-        <div class="rb-template-info">
-            <h5>{{ __('Minimal') }}</h5>
-            <p>{{ __('Simple and elegant — lets content speak for itself') }}</p>
-            <div class="rb-template-tags">
-                <span class="rb-template-tag tag-free">Free</span>
-                <span class="rb-template-tag">Simple</span>
-                <span class="rb-template-tag">ATS Friendly</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Template 4: Elegant -->
-    <div class="rb-template-card" data-template="elegant" onclick="selectTemplate(this)">
-        <div class="rb-template-preview">
-            <div class="preview-inner">
-                @include(Theme::getThemeNamespace('views.job-board.account.resume-templates.elegant'), ['account' => $account, 'educations' => $educations, 'experiences' => $experiences, 'skills' => $skills])
-            </div>
-            <div class="preview-fade"></div>
-        </div>
-        <div class="rb-template-info">
-            <h5>{{ __('Elegant') }}</h5>
-            <p>{{ __('Sophisticated design with timeline layout') }}</p>
-            <div class="rb-template-tags">
-                <span class="rb-template-tag tag-free">Free</span>
-                <span class="rb-template-tag">Elegant</span>
-                <span class="rb-template-tag">Timeline</span>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Sticky Action Bar -->

@@ -7,7 +7,6 @@ use Botble\Base\Facades\Html;
 use Botble\JobBoard\Models\Job;
 use Botble\Table\Abstracts\TableAbstract;
 use Botble\Table\Actions\Action;
-use Botble\Table\Actions\DeleteAction;
 use Botble\Table\Actions\EditAction;
 use Botble\Table\Columns\CreatedAtColumn;
 use Botble\Table\Columns\EnumColumn;
@@ -33,7 +32,6 @@ class JobTable extends TableAbstract
                     ->icon('ti ti-eye')
                     ->color('primary'),
                 EditAction::make()->route('public.account.jobs.edit'),
-                DeleteAction::make()->route('public.account.jobs.destroy'),
             ]);
     }
 
@@ -53,9 +51,7 @@ class JobTable extends TableAbstract
                 'never_expired',
                 'application_closing_date',
                 'views',
-                'number_of_applied',
             ])
-            ->withCount('applicants')
             ->byAccount(auth('account')->id());
 
         return $this->applyScopes($query);
@@ -86,21 +82,6 @@ class JobTable extends TableAbstract
                     }
 
                     return $item->expire_date->toDateString();
-                }),
-            FormattedColumn::make('applicants_count')
-                ->title(trans('plugins/job-board::job.applicants'))
-                ->width(100)
-                ->orderable(false)
-                ->searchable(false)
-                ->getValueUsing(function (FormattedColumn $column) {
-                    $item = $column->getItem();
-                    $count = (int) ($item->applicants_count ?? $item->number_of_applied ?? 0);
-
-                    return Html::link(
-                        route('public.account.jobs.view', $item->id),
-                        (string) $count,
-                        ['class' => 'text-primary text-decoration-none fw-semibold']
-                    )->toHtml();
                 }),
             FormattedColumn::make('views')
                 ->title(trans('plugins/job-board::general.views'))

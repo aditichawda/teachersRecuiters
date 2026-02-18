@@ -109,6 +109,22 @@
         color: #0073d1;
     }
 
+    .employer-verify-inline-success {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    .employer-verify-inline-success .msg-icon { color: #059669; font-size: 20px; flex-shrink: 0; }
+    .employer-verify-inline-success .msg-text { color: #047857; font-size: 14px; line-height: 1.5; margin: 0; flex: 1; }
+    .employer-verify-inline-success .msg-close { background: none; border: none; color: #059669; cursor: pointer; padding: 0 4px; font-size: 18px; opacity: 0.8; }
+    .employer-verify-inline-success .msg-close:hover { opacity: 1; }
+
     .resend-link {
         color: #0073d1;
         text-decoration: none;
@@ -212,6 +228,13 @@
                     <span class="step-number">4</span>
                     <span>Location</span>
                 </div>
+            </div>
+
+            <!-- Success message form ke andar (toast upar alag nahi) -->
+            <div id="employer-verify-form-success-msg" class="employer-verify-inline-success" style="display: none;" role="alert">
+                <span class="msg-icon"><i class="ti ti-circle-check" style="font-size: 22px;"></i></span>
+                <p class="msg-text" id="employer-verify-form-success-text"></p>
+                <button type="button" class="msg-close" id="employer-verify-form-success-close" aria-label="Close">&times;</button>
             </div>
 
             <!-- Verification Code Sent To -->
@@ -444,10 +467,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    var successMsgEl = document.getElementById('employer-verify-form-success-msg');
+    var successTextEl = document.getElementById('employer-verify-form-success-text');
+    var successCloseBtn = document.getElementById('employer-verify-form-success-close');
     @if(!empty($isWhatsappAvailable) && !empty($phone))
-        showToast('text-success', 'Verification code sent to your WhatsApp & Email. Please enter the 6-digit code below.');
+        successTextEl.textContent = 'Verification code sent to your WhatsApp & Email. Please enter the 6-digit code below.';
     @else
-        showToast('text-success', 'Verification code sent to your email. Please enter the 6-digit code below.');
+        successTextEl.textContent = 'Verification code sent to your email. Please enter the 6-digit code below.';
     @endif
+    successMsgEl.style.display = 'flex';
+    successCloseBtn.addEventListener('click', function() { successMsgEl.style.display = 'none'; });
 });
 </script>

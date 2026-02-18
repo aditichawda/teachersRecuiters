@@ -40,13 +40,26 @@
         color: #dc3545;
     }
     .form-control, .form-select {
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid #e2e8f0;.enl-row
         border-radius: 8px;
         padding: 8px 14px;
-        height: 40px;
         font-size: 14px;
         transition: all 0.2s;
         background-color: #fff !important;
+    }
+    .emp-section-body input.form-control:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+    .emp-section-body select.form-select {
+        min-height: 40px;
+        height: 40px;
+    }
+    .emp-section-body textarea.form-control {
+        min-height: 100px;
+        height: auto;
+        resize: vertical;
+    }
+    .emp-section-body input.form-control[type="file"] {
+        height: auto;
+        padding: 10px 14px;
     }
     .form-control:focus, .form-select:focus {
         border-color: #0073d1;
@@ -77,11 +90,23 @@
         transform: translateY(-1px);
     }
     
-    /* Logo upload */
+    /* Logo upload - match 2nd screenshot layout */
     .logo-upload-area {
         display: flex;
-        align-items: center;
-        gap: 20px;
+        align-items: flex-start;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+    .logo-upload-area > div:last-child {
+        flex: 1;
+        min-width: 200px;
+    }
+    .logo-upload-area .form-text {
+        display: block;
+        margin-top: 8px;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.4;
     }
     .logo-preview {
         width: 100px;
@@ -177,7 +202,7 @@
     {{-- ===== SECTION 1: Institution Logo (stored in jb_companies.logo). Left side = profile/avatar, unchanged. ===== --}}
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-image"></i> {{ __('School/Institution Logo') }}
+            <i class="fa fa-image"></i> {{ __('Institution Logo') }}
         </div>
         <div class="emp-section-body">
             <div class="logo-upload-area">
@@ -189,7 +214,7 @@
                     @endif
                 </div>
                 <div>
-                    <input type="file" name="logo" id="logo-input" class="form-control" accept="image/jpeg,image/png,image/webp" maxlength="2097152">
+                    <input type="file" name="logo" id="logo-input" class="form-control" accept="image/jpeg,image/png,image/webp">
                     <small class="form-text text-muted">{{ __('Institution/School logo. Recommended: 200x200px. JPG, PNG. Max 2MB.') }}</small>
                 </div>
             </div>
@@ -199,31 +224,29 @@
     {{-- ===== SECTION 2: Your Details ===== --}}
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <i class="fa fa-user"></i> {{ __('Profile Manage Details') }}
+            <i class="fa fa-user"></i> {{ __('Your Details') }}
         </div>
         <div class="emp-section-body">
-            <div class="row">
+            <div class="row g-3">
                 <!-- Full Name -->
-                <div class="col-md-6 mb-sm-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('Full Name') }} <span class="required">*</span></label>
                     <input type="text" name="full_name" class="form-control" value="{{ old('full_name', $account->full_name ?? ($account->first_name . ' ' . $account->last_name)) }}" required placeholder="{{ __('Enter your full name') }}">
                 </div>
                 
                 <!-- Account Email (read-only) -->
-                <div class="col-md-6 mb-sm-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('Login Email') }}</label>
                     <input type="email" class="form-control" value="{{ $account->email }}" readonly disabled style="background: #f1f5f9;">
                     <small class="form-text text-muted">{{ __('This is your login email and cannot be changed here') }}</small>
                 </div>
-                    
                 <!-- Personal Mobile -->
-                <div class="col-md-6 mb-sm-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('Mobile Number') }} <span class="required">*</span></label>
                     <input type="tel" name="account_phone" class="form-control" value="{{ old('account_phone', $account->phone ?? '') }}" required placeholder="{{ __('Enter your mobile number') }}">
                 </div>
-                
                 <!-- Designation -->
-                <div class="col-md-6 mb-sm-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('Designation') }}</label>
                     <input type="text" name="designation" class="form-control" value="{{ old('designation', $account->designation ?? '') }}" placeholder="{{ __('e.g. Principal, HR Manager, Admin') }}">
                 </div>
@@ -241,15 +264,14 @@
             <i class="fa fa-building"></i> {{ __('Institution Information') }}
         </div>
         <div class="emp-section-body">
-            <div class="row">
+            <div class="row g-3">
                 <!-- School/Institution Name -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('School/Institution Name') }} <span class="required">*</span></label>
                     <input type="text" name="name" class="form-control" value="{{ old('name', $company->name ?? $account->institution_name ?? '') }}" required placeholder="{{ __('Enter institution name') }}">
                 </div>
-                
                 <!-- Institution Type -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('Type of Institution') }} <span class="required">*</span></label>
                     <select name="institution_type[]" id="institution_type" class="form-select" multiple required>
                         <optgroup label="🏫 School">
@@ -294,32 +316,29 @@
                 </div>
                 
                 <!-- About Us -->
-                <div class="col-12 mb-3">
-                    <label class="form-label">{{ __('About School/Institution') }} <span class="required">*</span></label>
+                <div class="col-12">
+                    <label class="form-label">{{ __('About Us') }} <span class="required">*</span></label>
                     <textarea name="description" class="form-control" rows="4" required placeholder="{{ __('Tell about your institution...') }}">{{ old('description', $company->description ?? '') }}</textarea>
                 </div>
                 
                 <!-- Institution Email -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('Institution Email') }} <span class="required">*</span></label>
                     <input type="email" name="email" class="form-control" value="{{ old('email', $company->email ?? $account->email) }}" required placeholder="{{ __('contact@school.com') }}">
                     <small class="form-text text-muted">{{ __('This email will be used for job posting communications') }}</small>
                 </div>
-                
                 <!-- Institution Phone -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('Institution Phone') }} <span class="required">*</span></label>
                     <input type="tel" name="phone" class="form-control" value="{{ old('phone', $company->phone ?? $account->phone ?? '') }}" required placeholder="{{ __('Enter institution phone number') }}">
                 </div>
-                
                 <!-- Website -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('Website') }}</label>
                     <input type="url" name="website" class="form-control" value="{{ old('website', $company->website ?? '') }}" placeholder="{{ __('https://www.yourschool.com') }}">
                 </div>
-                
                 <!-- Established Year -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label class="form-label">{{ __('Established Year') }} <span class="required">*</span></label>
                     <input type="number" name="year_founded" class="form-control" value="{{ old('year_founded', $company->year_founded ?? '') }}" required min="1800" max="{{ date('Y') }}" placeholder="{{ __('e.g. 1995') }}">
                 </div>

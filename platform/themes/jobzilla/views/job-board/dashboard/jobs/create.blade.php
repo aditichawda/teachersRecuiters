@@ -600,7 +600,7 @@
     {{-- ====== SECTION 6: Application Settings ====== --}}
     <div class="jp-card jp-card-collapsible" data-section="6">
         <div class="jp-card-header">
-            <div class="jp-card-title"><i class="fa fa-paper-plane"></i> Application Settings</div>
+            <div class="jp-card-title"><i class="fa fa-paper-plane"></i>Receive Application By</div>
         </div>
         <div class="jp-card-body" style="padding-top: 20px;">
         <div class="jp-group">
@@ -609,7 +609,7 @@
             <div class="jp-option-cards">
                 <label class="jp-option-card {{ $applyType === 'internal' ? 'selected' : '' }}" onclick="selectOption(this, 'apply_type')">
                     <input type="radio" name="apply_type" value="internal" {{ $applyType === 'internal' ? 'checked' : '' }}>
-                    <i class="fa fa-inbox"></i> Internal & Registered Email (Default)
+                    <i class="fa fa-inbox"></i>  Registered Email
                 </label>
                 <label class="jp-option-card {{ $applyType === 'external' ? 'selected' : '' }}" onclick="selectOption(this, 'apply_type')">
                     <input type="radio" name="apply_type" value="external" {{ $applyType === 'external' ? 'checked' : '' }}>
@@ -624,14 +624,19 @@
         </div>
 
         <div class="jp-group" id="internal-emails-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
-            <label class="jp-label">Additional internal/registered emails <span class="hint">(optional, up to 3)</span></label>
+            @php $registeredEmail = $account->email ?? auth('account')->user()->email ?? ''; @endphp
+            <div class="jp-registered-email-info" style="margin-bottom:16px; padding:12px 14px; background:#f0f7ff; border-radius:8px; border:1px solid #cce5ff;">
+                <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i>{{ __('Your registered email') }}</label>
+                <p class="mb-0" style="font-size:14px; color:#333;"><strong>{{ $registeredEmail }}</strong> — {{ __('Applications will always be sent to this email.') }}</p>
+            </div>
+            <label class="jp-label">{{ __('Additional emails to receive applications') }} <span class="hint">({{ __('optional, up to 3') }})</span></label>
             <div id="internal-emails-list">
                 @php
                     $internalEmails = old('apply_internal_emails', optional($job)->apply_internal_emails ?? []);
                     if (!is_array($internalEmails)) $internalEmails = $internalEmails ? [$internalEmails] : [];
                     $internalEmails = array_slice($internalEmails, 0, 3);
                 @endphp
-                @foreach(array_slice($internalEmails, 0, 3) as $idx => $email)
+                @foreach($internalEmails as $idx => $email)
                 <div class="jp-internal-email-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
                     <input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" value="{{ is_string($email) ? $email : '' }}" style="flex:1;">
                     <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>
@@ -639,7 +644,27 @@
                 @endforeach
             </div>
             <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-email-btn" style="border-radius:8px;">
-                <i class="fa fa-plus"></i> Add email
+                <i class="fa fa-plus"></i> {{ __('Add email') }}
+            </button>
+        </div>
+
+        <div class="jp-group" id="internal-phones-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
+            <label class="jp-label">{{ __('Additional phone numbers to receive applications') }} <span class="hint">({{ __('optional, up to 3') }})</span></label>
+            <div id="internal-phones-list">
+                @php
+                    $internalPhones = old('apply_internal_phones', optional($job)->apply_internal_phones ?? []);
+                    if (!is_array($internalPhones)) $internalPhones = $internalPhones ? [$internalPhones] : [];
+                    $internalPhones = array_slice($internalPhones, 0, 3);
+                @endphp
+                @foreach($internalPhones as $idx => $phone)
+                <div class="jp-internal-phone-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                    <input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" value="{{ is_string($phone) ? $phone : '' }}" style="flex:1;">
+                    <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>
+                </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-phone-btn" style="border-radius:8px;">
+                <i class="fa fa-plus"></i> {{ __('Add phone') }}
             </button>
         </div>
 
@@ -717,7 +742,7 @@
                             <label for="sq_req_{{ $sq->id }}" class="sq-required-label">{{ __('Required') }}</label>
                         </span>
                     </div>
-                    <div class="sq-item-expand" style="display:none; margin-top:12px; padding:16px; background:#f9f9f9; border-radius:8px; border:1px solid #eee;">
+                    <div class="sq-item-expand" style="display:none;width:100%;margin-top:12px; padding:16px; background:#f9f9f9; border-radius:8px; border:1px solid #eee;">
                         <div class="mb-2">
                             <label class="form-label small">{{ __('Question (editable)') }}</label>
                             <textarea name="screening_question_question[{{ $sq->id }}]" class="form-control sq-edit-question" rows="2" placeholder="{{ $sq->question }}">{{ $override['question'] }}</textarea>
@@ -788,13 +813,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'Computer Teacher Certification', 'Yoga Teacher Certification'
     ];
 
-    // ===== LANGUAGES DATABASE =====
-    const languages = [
-        'Hindi', 'English', 'Bengali', 'Telugu', 'Marathi', 'Tamil', 'Urdu',
-        'Gujarati', 'Kannada', 'Malayalam', 'Odia', 'Punjabi', 'Assamese',
-        'Sanskrit', 'French', 'German', 'Spanish', 'Japanese', 'Chinese',
-        'Korean', 'Arabic', 'Portuguese', 'Russian'
-    ];
+    // ===== LANGUAGES (from jb_languages table) =====
+    const languages = @json($languagesList ?? []);
 
     // ===== SKILLS (from DB) =====
     const allSkills = @json($skills);
@@ -812,23 +832,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== AUTO-SUGGEST HELPER =====
     function setupAutoSuggest(inputEl, listEl, items, onSelect, isObject, clearInputOnSelect) {
         isObject = isObject || false;
-        clearInputOnSelect = clearInputOnSelect !== false; // default true for skills/certs/langs
-        inputEl.addEventListener('input', function() {
-            var val = this.value.toLowerCase().trim();
+        clearInputOnSelect = clearInputOnSelect !== false;
+        function showList(val) {
+            val = (val || '').toLowerCase().trim();
             listEl.innerHTML = '';
-            if (val.length < 1) { listEl.classList.remove('show'); return; }
-
             var filtered;
-            if (isObject) {
+            if (val.length < 1) {
+                filtered = isObject ? Object.entries(items).slice(0, 15) : items.slice(0, 15);
+            } else if (isObject) {
                 filtered = Object.entries(items).filter(function(entry) {
                     return entry[1].toLowerCase().includes(val);
                 }).slice(0, 15);
             } else {
                 filtered = items.filter(function(i) { return i.toLowerCase().includes(val); }).slice(0, 15);
             }
-
             if (filtered.length === 0) { listEl.classList.remove('show'); return; }
-
             filtered.forEach(function(item) {
                 var div = document.createElement('div');
                 div.className = 'jp-suggest-item';
@@ -845,8 +863,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 listEl.appendChild(div);
             });
             listEl.classList.add('show');
-        });
-
+        }
+        inputEl.addEventListener('input', function() { showList(this.value); });
+        inputEl.addEventListener('focus', function() { showList(this.value); });
         inputEl.addEventListener('blur', function() {
             setTimeout(function() { listEl.classList.remove('show'); }, 200);
         });
@@ -1051,6 +1070,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var val2 = el.querySelector('input').value;
             document.getElementById('external-url-wrap').style.display = val2 === 'external' ? 'block' : 'none';
             document.getElementById('internal-emails-wrap').style.display = val2 === 'internal' ? 'block' : 'none';
+            var phonesWrap = document.getElementById('internal-phones-wrap');
+            if (phonesWrap) phonesWrap.style.display = val2 === 'internal' ? 'block' : 'none';
         }
     };
 
@@ -1121,6 +1142,27 @@ document.addEventListener('DOMContentLoaded', function() {
         internalEmailsList.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.jp-remove-internal-email');
             if (removeBtn) removeBtn.closest('.jp-internal-email-row').remove();
+        });
+    }
+
+    // ===== INTERNAL PHONES (up to 3) - Add phone button =====
+    var addPhoneBtn = document.getElementById('add-internal-phone-btn');
+    var internalPhonesList = document.getElementById('internal-phones-list');
+    if (addPhoneBtn && internalPhonesList) {
+        addPhoneBtn.addEventListener('click', function() {
+            var rows = internalPhonesList.querySelectorAll('.jp-internal-phone-row');
+            if (rows.length >= 3) return;
+            var row = document.createElement('div');
+            row.className = 'jp-internal-phone-row';
+            row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
+            row.innerHTML = '<input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" style="flex:1;">' +
+                '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
+            internalPhonesList.appendChild(row);
+            row.querySelector('.jp-remove-internal-phone').addEventListener('click', function() { row.remove(); });
+        });
+        internalPhonesList.addEventListener('click', function(e) {
+            var removeBtn = e.target.closest('.jp-remove-internal-phone');
+            if (removeBtn) removeBtn.closest('.jp-internal-phone-row').remove();
         });
     }
 

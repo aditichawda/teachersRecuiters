@@ -20,6 +20,7 @@ use Botble\JobBoard\Forms\Fronts\JobForm;
 use Botble\JobBoard\Http\Requests\AccountJobRequest;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\AccountActivityLog;
+use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\Currency;
 use Botble\JobBoard\Models\CustomFieldValue;
 use Botble\JobBoard\Models\DegreeLevel;
@@ -40,6 +41,7 @@ use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class AccountJobController extends BaseController
 {
@@ -74,11 +76,27 @@ class AccountJobController extends BaseController
         $canPost = $account->canPost();
 
         if (JobBoardHelper::employerManageCompanyInfo() && ! $account->companies()->exists()) {
-            return $this
-                ->httpResponse()
-                ->setError()
-                ->setNextUrl(route('public.account.companies.create'))
-                ->setMessage(trans('plugins/job-board::messages.please_update_company_info'));
+            // Auto-create company from registration data so "Are you hiring" dropdown shows school
+            $companyName = $account->institution_name ?: trim($account->first_name . ' ' . $account->last_name);
+            if ($companyName) {
+                $company = Company::create([
+                    'name' => $companyName,
+                    'email' => $account->email,
+                    'phone' => $account->phone,
+                    'institution_type' => $account->institution_type,
+                    'country_id' => $account->country_id,
+                    'state_id' => $account->state_id,
+                    'city_id' => $account->city_id,
+                    'status' => 'published',
+                ]);
+                $account->companies()->attach($company->id);
+            } else {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setNextUrl(route('public.account.companies.create'))
+                    ->setMessage(trans('plugins/job-board::messages.please_update_company_info'));
+            }
         }
 
         $this->pageTitle(trans('plugins/job-board::messages.post_job'));
@@ -147,6 +165,13 @@ class AccountJobController extends BaseController
             ->select('name', 'id')->get()
             ->mapWithKeys(fn ($item) => [$item->id => $item->name])->all();
 
+        $languagesList = [];
+        if (Schema::hasTable('languages')) {
+            $languagesList = \Illuminate\Support\Facades\DB::table('languages')
+                ->orderBy('lang_order')->orderBy('lang_name')
+                ->pluck('lang_name')->values()->all();
+        }
+
         $currencies = Currency::query()->oldest('order')->oldest('title')
             ->pluck('title', 'id')->all();
 
@@ -154,11 +179,12 @@ class AccountJobController extends BaseController
 
         $job = null;
         $editJobData = null;
+        $defaultCompanyId = count($companies) === 1 ? array_key_first($companies) : null;
 
         return JobBoardHelper::view('dashboard.jobs.create', compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
-            'jobShifts', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData'
+            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData', 'defaultCompanyId'
         ));
     }
 
@@ -449,6 +475,13 @@ class AccountJobController extends BaseController
             ->select('name', 'id')->get()
             ->mapWithKeys(fn ($item) => [$item->id => $item->name])->all();
 
+        $languagesList = [];
+        if (Schema::hasTable('languages')) {
+            $languagesList = \Illuminate\Support\Facades\DB::table('languages')
+                ->orderBy('lang_order')->orderBy('lang_name')
+                ->pluck('lang_name')->values()->all();
+        }
+
         $currencies = Currency::query()->oldest('order')->oldest('title')
             ->pluck('title', 'id')->all();
 
@@ -485,7 +518,7 @@ class AccountJobController extends BaseController
         return JobBoardHelper::view('dashboard.jobs.create', compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
-            'jobShifts', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData'
+            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData'
         ));
     }
 

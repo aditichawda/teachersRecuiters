@@ -6,6 +6,7 @@ use Botble\Base\Casts\SafeContent;
 use Botble\Base\Models\BaseModel;
 use Botble\JobBoard\Enums\JobApplicationStatusEnum;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\HtmlString;
 
 class JobApplication extends BaseModel
 {
@@ -60,5 +61,17 @@ class JobApplication extends BaseModel
         }
 
         return $url;
+    }
+
+    /**
+     * Status badge HTML; defaults to Pending when status is null or empty.
+     */
+    public function getStatusHtmlAttribute(): HtmlString|string
+    {
+        if ($this->status && $this->status->getValue()) {
+            return $this->status->toHtml();
+        }
+
+        return JobApplicationStatusEnum::PENDING()->toHtml();
     }
 }

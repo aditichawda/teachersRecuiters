@@ -452,15 +452,19 @@ class Job extends BaseModel
     {
         $emails = [];
 
-        if ($this->author->email) {
+        if ($this->author && $this->author->email) {
             $emails[] = $this->author->email;
         }
 
         if (! empty($this->employer_colleagues)) {
-            $emails = array_merge($emails, $this->employer_colleagues);
+            $emails = array_merge($emails, (array) $this->employer_colleagues);
         }
 
-        return $emails;
+        if (! empty($this->apply_internal_emails)) {
+            $emails = array_merge($emails, array_filter((array) $this->apply_internal_emails));
+        }
+
+        return array_values(array_unique(array_filter($emails)));
     }
 
     public function getLocationAttribute(): ?string

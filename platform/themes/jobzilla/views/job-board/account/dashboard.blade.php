@@ -346,12 +346,14 @@
     font-weight: 500;
     margin: 0 0 10px 0;
     opacity: 0.9;
+    color:white;
 }
 
 .js-stat-card h2 {
     font-size: 36px;
     font-weight: 700;
     margin: 0;
+    color:white;
 }
 
 .js-stat-card .js-stat-icon {
@@ -785,7 +787,10 @@
                         <li><a href="{{ route('public.account.jobs.applied-jobs') }}"><i class="fa fa-file-alt"></i> Applied Jobs</a></li>
                         <li><a href="{{ route('public.account.experiences.index') }}"><i class="fa fa-briefcase"></i> Experience</a></li>
                         <li><a href="{{ route('public.account.educations.index') }}"><i class="fa fa-graduation-cap"></i> Education</a></li>
+                        <li><a href="{{ route('public.account.interests-achievements') }}"><i class="fa fa-star"></i> Interests & Achievements</a></li>
                         <li><a href="#"><i class="fa fa-wallet"></i> Wallet <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $walletPoints }}</span></a></li>
+                        <li><a href="{{ route('public.account.resume-builder') }}"><i class="fa fa-file-pdf"></i> Resume Builder</a></li>
+                        <li><a href="{{ route('public.account.security') }}"><i class="fa fa-lock"></i> Security</a></li>
                     </ul>
                 </div>
             </div>
@@ -800,7 +805,9 @@
                     
                     <!-- Alert for incomplete profile with reward message -->
                     @if($completion < 100)
-                    <div class="alert alert-warning d-flex align-items-center mb-4" style="border-radius: 8px; background: linear-gradient(135deg, #fff3e0, #ffe0b2); border-color: #ffcc80; color: #e65100;">
+                    <div class="alert alert-warning d-flex align-items-center mb-4" style="border-radius: 8px; background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-color: #90caf9;
+            color: #0d47a1;">
                         <i class="fa fa-gift me-2" style="font-size: 20px;"></i>
                         <span>
                             <strong>Complete your profile and earn {{ $totalPoints - $earnedPoints }} reward points!</strong><br>

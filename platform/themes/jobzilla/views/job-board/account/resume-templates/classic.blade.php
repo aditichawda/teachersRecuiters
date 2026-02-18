@@ -11,6 +11,9 @@
     $displayEmail = $account->email ?: 'your.email@example.com';
     $displayPhone = $account->phone ?: __('Your Phone');
     $displayLocation = $account->address ?: (($account->city_name || $account->state_name) ? implode(', ', array_filter([$account->city_name, $account->state_name])) : __('Your City, State'));
+    $displayInterests = $account->interests ?: __('e.g. Reading, Educational workshops, Student mentoring');
+    $displayActivities = $account->activities ?: __('e.g. School club coordinator, Annual day organizer');
+    $displayAchievements = $account->achievements ?: __('e.g. Best Teacher Award, Workshop presenter');
 @endphp
 <div style="font-family: 'Georgia', 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 44px 40px; background: #fff; color: #333;">
     <!-- Header -->
@@ -104,6 +107,30 @@
             <span style="background: #f0f4ff; color: #1967d2; padding: 5px 14px; border-radius: 16px; font-size: 12px; font-weight: 500;">{{ is_string($skill) ? $skill : $skill->name ?? '' }}</span>
             @endforeach
         </div>
+    </div>
+
+    <!-- Interests -->
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            {{ __('Interests') }}
+        </h2>
+        <p style="font-size: 13px; line-height: 1.65; color: #444; margin: 0;">{{ $displayInterests }}</p>
+    </div>
+
+    <!-- Activities -->
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            {{ __('Activities') }}
+        </h2>
+        <p style="font-size: 13px; line-height: 1.65; color: #444; margin: 0;">{{ $displayActivities }}</p>
+    </div>
+
+    <!-- Achievements -->
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            {{ __('Achievements') }}
+        </h2>
+        <p style="font-size: 13px; line-height: 1.65; color: #444; margin: 0;">{{ $displayAchievements }}</p>
     </div>
 
     <!-- Languages -->

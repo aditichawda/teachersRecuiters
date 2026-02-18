@@ -274,6 +274,17 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'uses' => 'deleteAvatar',
                     ]);
 
+                    Route::get('interests-achievements', [
+                        'as' => 'interests-achievements',
+                        'uses' => 'getInterestsAchievements',
+                        'middleware' => ['account:' . AccountTypeEnum::JOB_SEEKER],
+                    ]);
+                    Route::post('interests-achievements', [
+                        'as' => 'post.interests-achievements',
+                        'uses' => 'postInterestsAchievements',
+                        'middleware' => ['account:' . AccountTypeEnum::JOB_SEEKER],
+                    ]);
+
                     Route::controller('AccountJobController')->group(function (): void {
                         Route::group([
                             'middleware' => ['account:' . AccountTypeEnum::JOB_SEEKER],
@@ -378,7 +389,7 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             ], function (): void {
                 Route::resource('', 'ApplicantController')
                     ->parameters(['' => 'applicant'])
-                    ->only(['index', 'edit', 'update', 'destroy']);
+                    ->only(['index', 'edit', 'update']);
             });
 
             Route::get('applicants/download-cv/{application}', [JobApplicationController::class, 'downloadCv'])
