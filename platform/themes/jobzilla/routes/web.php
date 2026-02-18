@@ -14,6 +14,15 @@ Route::group(['controller' => JobzillaController::class, 'middleware' => ['web',
         // Premium Service Page
         Route::get('premium-service', 'premiumService')->name('public.premium-service');
         
+        // For Teachers Page
+        Route::get('for-teachers', 'forTeachers')->name('public.for-teachers');
+        
+        // For Schools Page
+        Route::get('for-schools', 'forSchools')->name('public.for-schools');
+        
+        // Careers Page
+        Route::get('careers', 'careers')->name('public.careers');
+        
         // Notifications Page
         Route::get('notifications', 'notifications')->name('public.notifications');
     });
