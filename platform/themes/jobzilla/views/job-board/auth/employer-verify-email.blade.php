@@ -389,6 +389,13 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showToast(type, msg) {
+    // Use showDialogAlert if available, otherwise fall back to showAlert or toast
+    if (typeof window.showDialogAlert === 'function') {
+        var alertType = type === 'text-success' ? 'success' : 'error';
+        var title = type === 'text-success' ? 'Success' : 'Error';
+        window.showDialogAlert(alertType, msg, title);
+        return;
+    }
     if (typeof window.showAlert === 'function') {
         window.showAlert(type, msg);
         return;
@@ -418,6 +425,7 @@ function showToast(type, msg) {
         setTimeout(function() { el.remove(); }, 5000);
     }
 }
+
 document.addEventListener('DOMContentLoaded', function() {
     var successMsgEl = document.getElementById('employer-verify-form-success-msg');
     var successTextEl = document.getElementById('employer-verify-form-success-text');

@@ -309,6 +309,9 @@
 
 
 
+<script src="<?php echo e(asset('themes/jobzilla/js/dialog-alert.js')); ?>?v=<?php echo e(time()); ?>"></script>
+
+
 <script>
 (function() {
     function equalizeTestimonialHeights() {

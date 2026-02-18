@@ -732,7 +732,11 @@ let awardIndex = {{ is_array($awards) ? count($awards) : 0 }};
 function addAward() {
     const container = document.getElementById('awards-container');
     if (container.querySelectorAll('.award-entry').length >= 5) {
-        alert('Maximum 5 awards allowed');
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('error', 'Maximum 5 awards allowed', 'Limit Reached');
+        } else {
+            alert('Maximum 5 awards allowed');
+        }
         return;
     }
     const html = `
@@ -834,12 +838,20 @@ if (removeAvatarBtn) {
                     // Reload to reflect changes
                     window.location.reload();
                 } else {
-                    alert(data.message || 'Failed to remove photo');
+                    if (typeof window.showDialogAlert === 'function') {
+                        window.showDialogAlert('error', data.message || 'Failed to remove photo', 'Error');
+                    } else {
+                        alert(data.message || 'Failed to remove photo');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to remove photo');
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('error', 'Failed to remove photo', 'Error');
+                } else {
+                    alert('Failed to remove photo');
+                }
             });
         }
     });

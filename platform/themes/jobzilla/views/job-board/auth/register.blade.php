@@ -445,7 +445,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.href = '{{ route("public.account.register.verifyEmailPage") }}';
                             } else {
                     // Error - show message
-                    alert(data.message || 'An error occurred. Please try again.');
+                    if (typeof window.showDialogAlert === 'function') {
+                        window.showDialogAlert('error', data.message || 'An error occurred. Please try again.', 'Error');
+                    } else {
+                        alert(data.message || 'An error occurred. Please try again.');
+                    }
                     if (submitBtn) {
                         submitBtn.disabled = false;
                         submitBtn.textContent = 'Next Step';
@@ -459,7 +463,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                if (typeof window.showDialogAlert === 'function') {
+                    window.showDialogAlert('error', 'An error occurred. Please try again.', 'Error');
+                } else {
+                    alert('An error occurred. Please try again.');
+                }
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Next Step';

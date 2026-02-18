@@ -385,7 +385,11 @@ function previewResume() {
         })
         .catch(err => {
             console.error(err);
-            alert('Failed to load preview');
+            if (typeof window.showDialogAlert === 'function') {
+                window.showDialogAlert('error', 'Failed to load preview', 'Error');
+            } else {
+                alert('Failed to load preview');
+            }
         });
 }
 
@@ -423,7 +427,11 @@ function downloadResume() {
         })
         .catch(err => {
             console.error(err);
-            alert('Failed to generate resume');
+            if (typeof window.showDialogAlert === 'function') {
+                window.showDialogAlert('error', 'Failed to generate resume', 'Error');
+            } else {
+                alert('Failed to generate resume');
+            }
         });
 }
 </script>
