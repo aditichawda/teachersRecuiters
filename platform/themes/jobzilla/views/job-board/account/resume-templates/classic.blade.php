@@ -167,4 +167,9 @@
         </ul>
     </div>
     @endif
+
+    <!-- Footer -->
+    <div style="text-align: center; padding-top: 20px; margin-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #999;">
+        {{ __('Powered by TeachersRecruiters') }}
+    </div>
 </div>

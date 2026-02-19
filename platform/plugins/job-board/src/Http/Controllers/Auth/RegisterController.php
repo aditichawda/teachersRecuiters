@@ -1451,43 +1451,46 @@ class RegisterController extends BaseController
         }
 
         if ($tempAccountId) {
-            // Update existing temporary account
+            // Update existing temporary account (preserve full_name & phone from step 1 if not in request)
             $account = Account::find($tempAccountId);
             if ($account) {
-                // Handle full_name - split into first_name and last_name for backward compatibility
-                $fullName = Arr::get($data, 'full_name', '');
+                // Full name: use request data, else keep existing (from registration step 1)
+                $fullName = trim(Arr::get($data, 'full_name', ''));
+                if ($fullName === '') {
+                    $fullName = trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) ?: ($account->full_name ?? $account->name ?? '');
+                }
                 $nameParts = explode(' ', $fullName, 2);
                 $firstName = $nameParts[0] ?? '';
                 $lastName = $nameParts[1] ?? $firstName;
 
-                // Map phone_display to phone if phone is null
+                // Phone: use request data, else keep existing (from registration step 1)
                 $phone = Arr::get($data, 'phone') ?: Arr::get($data, 'phone_display', '');
-                // Get phone_country_code from data, or preserve from existing account if not provided
-                $phoneCountryCode = Arr::get($data, 'phone_country_code', '') ?: $account->phone_country_code;
-                
+                $phoneCountryCode = trim(Arr::get($data, 'phone_country_code', ''));
+                if ($phone === '' || $phone === null) {
+                    $phone = $account->phone ?? '';
+                    $phoneCountryCode = $phoneCountryCode !== '' ? $phoneCountryCode : ($account->phone_country_code ?? '');
+                }
+                if ($phoneCountryCode === '' && $account->phone_country_code) {
+                    $phoneCountryCode = $account->phone_country_code;
+                }
+
                 \Log::info('Phone data in create (update temp account):', [
                     'phone' => $phone,
                     'phone_display' => Arr::get($data, 'phone_display', 'not set'),
-                    'phone_country_code_from_data' => Arr::get($data, 'phone_country_code', 'not set'),
-                    'phone_country_code_from_account' => $account->phone_country_code ?? 'not set',
                     'phone_country_code_final' => $phoneCountryCode,
                 ]);
-                
-                // Format phone with country code: "+919340193449" (no space)
+
+                // Format phone with country code
                 if ($phone && strpos($phone, '+') === 0) {
-                    // Phone already has country code, just clean spaces
                     $phone = '+' . preg_replace('/[^0-9]/', '', $phone);
                 } elseif ($phone && $phoneCountryCode) {
-                    // Add country code to phone
                     $phoneCountryCode = preg_replace('/[^0-9]/', '', $phoneCountryCode);
                     $phone = preg_replace('/[^0-9]/', '', $phone);
                     $phone = '+' . $phoneCountryCode . $phone;
                 } elseif ($phone) {
-                    // Clean phone number (remove spaces, dashes)
                     $phone = preg_replace('/[^0-9]/', '', $phone);
                 }
 
-                // Set confirmed_at if email verification is disabled
                 $updateData = [
                     'type' => $data['type'],
                     'first_name' => $firstName,
@@ -1495,9 +1498,8 @@ class RegisterController extends BaseController
                     'full_name' => $fullName,
                     'phone' => $phone,
                     'phone_country_code' => $phoneCountryCode,
-                    'is_whatsapp_available' => Arr::get($data, 'is_whatsapp_available', false),
+                    'is_whatsapp_available' => Arr::get($data, 'is_whatsapp_available', $account->is_whatsapp_available ?? false),
                     'institution_type' => Arr::get($data, 'institution_type'),
-                    // Map institution_name to institution_name column (for employer)
                     'institution_name' => Arr::get($data, 'institution_name') ?: Arr::get($data, 'institution_name'),
                     'country_id' => Arr::get($data, 'country_id'),
                     'state_id' => Arr::get($data, 'state_id'),
@@ -1505,7 +1507,6 @@ class RegisterController extends BaseController
                     'location_type' => Arr::get($data, 'location_type'),
                     'password' => Hash::make($data['password']),
                     'is_public_profile' => true,
-                    // Email verification fields are already set
                 ];
                 
                 // Set confirmed_at if email verification is disabled

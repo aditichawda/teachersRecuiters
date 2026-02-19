@@ -187,5 +187,11 @@
         </ul>
     </div>
     <?php endif; ?>
+
+    <!-- Footer -->
+    <div style="text-align: center; padding-top: 20px; margin-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #999;">
+        <?php echo e(__('Powered by TeachersRecruiters')); ?>
+
+    </div>
 </div>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/account/resume-templates/classic.blade.php ENDPATH**/ ?>

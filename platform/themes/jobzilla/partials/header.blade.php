@@ -2,7 +2,7 @@
 <html {!! Theme::htmlAttributes() !!}>
     <head>
         {!! Theme::partial('header-meta') !!}
-        {{-- Dialog Alert CSS - Load in header for immediate availability - v2.0 Screenshot Match --}}
+        {{-- Dialog Alert CSS --}}
         <link rel="stylesheet" href="{{ asset('themes/jobzilla/css/dialog-alert.css') }}?v=2.0.{{ time() }}">
         {{-- Immediately override alert() and confirm() before any scripts load --}}
         <script>

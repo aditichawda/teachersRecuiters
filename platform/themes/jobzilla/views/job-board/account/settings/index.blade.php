@@ -117,6 +117,19 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(0,115,209,0.3);
     }
+    /* Validation: red border and error text below field */
+    .profile-section .form-control.is-invalid,
+    .profile-section .form-select.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+    }
+    .profile-section .invalid-feedback,
+    .profile-section .field-error-text {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
     .add-more-btn {
         background: #f0f7ff;
         color: #0073d1;
@@ -472,6 +485,18 @@
 
     {!! Form::open(['route' => 'public.account.post.settings', 'method' => 'POST', 'files' => true, 'id' => 'profile-form']) !!}
 
+    @if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <strong>{{ __('Please fix the errors below.') }}</strong>
+        <ul class="mb-0 mt-2 ps-3">
+            @foreach($errors->all() as $err)
+            <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <!-- Section 1: Personal Details -->
     <div class="profile-section">
         <div class="profile-section-header">
@@ -483,7 +508,8 @@
                 <!-- 1. Full Name (show first_name; fallback to full_name from registration) -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Full Name') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Help us to create your verified candidate profile and ensure accurate identification.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $account->first_name ?: $account->full_name ?? '') }}" placeholder="{{ __('Enter your full name') }}" required>
+                    <input type="text" class="form-control @error('first_name') is-invalid @enderror" name="first_name" value="{{ old('first_name', $account->first_name ?: $account->full_name ?? '') }}" placeholder="{{ __('Enter your full name') }}" required>
+                    @error('first_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
 
                 <!-- 2. Email Address -->
@@ -495,7 +521,8 @@
                 <!-- 3. Mobile Number -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('Phone Number') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('For recruiters and schools to contact you directly regarding interviews and job opportunities and also help us to send you job alerts and updates on WhatsApp.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="tel" class="form-control" name="phone" value="{{ old('phone', $account->phone ?? '') }}" placeholder="{{ __('Enter mobile number with country code') }}">
+                    <input type="tel" class="form-control @error('phone') is-invalid @enderror" name="phone" value="{{ old('phone', $account->phone ?? '') }}" placeholder="{{ __('Enter mobile number with country code') }}">
+                    @error('phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     <div class="form-check mt-2">
                         <input type="hidden" name="is_whatsapp_available" value="0">
                         <input type="checkbox" class="form-check-input" name="is_whatsapp_available" value="1" id="is_whatsapp_available" @checked(old('is_whatsapp_available', $account->is_whatsapp_available))>
@@ -516,11 +543,12 @@
                 <!-- 7. DOB -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('Date of Birth') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To verify eligibility criteria, age requirements, and ensure compliance with school policies.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="date" class="form-control" name="dob" value="{{ old('dob', $account->dob ? $account->dob->format('Y-m-d') : '') }}" max="{{ now()->subYears(16)->format('Y-m-d') }}">
+                    <input type="date" class="form-control @error('dob') is-invalid @enderror" name="dob" value="{{ old('dob', $account->dob ? $account->dob->format('Y-m-d') : '') }}" max="{{ now()->subYears(16)->format('Y-m-d') }}">
+                    @error('dob')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
                 
                 <!-- 5. Gender -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3 @error('gender') is-invalid @enderror">
                     <label class="form-label">{{ __('Gender') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Some institutions may have role-specific preferences or accommodation arrangements.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div class="d-flex gap-3 mt-2">
                         <div class="form-check">
@@ -532,6 +560,7 @@
                             <label class="form-check-label" for="gender_female">{{ __('Female') }}</label>
                         </div>
                     </div>
+                    @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
 
                 <!-- 6. Marital Status -->
@@ -727,15 +756,19 @@ Recruiters often read this section before downloading resumes.
                     </div>
 
                     <!-- 24. Position Type -->
+                    @php
+                        $positionTypeVal = old('position_type', $account->position_type ?? '');
+                        $positionTypeStr = is_array($positionTypeVal) ? implode(',', $positionTypeVal) : (string)$positionTypeVal;
+                    @endphp
                     <div class="col-md-6 mb-3">
                         <label class="form-label">{{ __('Role Category') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Choose the type of role you are interested in. It helps schools filter candidates by job role.') }}"><i class="fa fa-question-circle"></i></span></label>
                         <div class="d-flex gap-3 mt-2">
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="teaching" id="position_teaching" @checked(str_contains(old('position_type', $account->position_type ?? ''), 'teaching'))>
+                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="teaching" id="position_teaching" @checked(str_contains($positionTypeStr, 'teaching'))>
                                 <label class="form-check-label" for="position_teaching">{{ __('Teaching') }}</label>
                             </div>
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="non_teaching" id="position_non_teaching" @checked(str_contains(old('position_type', $account->position_type ?? ''), 'non_teaching'))>
+                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="non_teaching" id="position_non_teaching" @checked(str_contains($positionTypeStr, 'non_teaching'))>
                                 <label class="form-check-label" for="position_non_teaching">{{ __('Non-Teaching') }}</label>
                             </div>
                         </div>
@@ -865,6 +898,9 @@ Recruiters often read this section before downloading resumes.
                 ->orderBy('name')
                 ->pluck('name', 'id')
                 ->toArray();
+            if (empty($countries)) {
+                $countries = \Botble\Location\Models\Country::query()->orderBy('name')->pluck('name', 'id')->toArray();
+            }
             $cid = old('country_id', $account->country_id);
             if ($cid) {
                 $currentStates = \Botble\Location\Models\State::query()
@@ -906,6 +942,33 @@ Recruiters often read this section before downloading resumes.
         $workLocations = old('work_location_preferences', $account->work_location_preferences ?? []);
         if (!is_array($workLocations)) $workLocations = [];
         $workLocations = array_slice(array_values($workLocations), 0, 3);
+        if (empty($workLocations)) {
+            $workLocations = [['country_id' => '', 'state_id' => '', 'city_id' => '', 'locality' => '']];
+        }
+        $workLocationStates = [];
+        $workLocationCities = [];
+        if (is_plugin_active('location')) {
+            foreach ($workLocations as $idx => $loc) {
+                $cid = $loc['country_id'] ?? null;
+                if ($cid) {
+                    $workLocationStates[$idx] = \Botble\Location\Models\State::query()
+                        ->where('country_id', $cid)
+                        ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                }
+                $sid = $loc['state_id'] ?? null;
+                if ($sid) {
+                    $workLocationCities[$idx] = \Botble\Location\Models\City::query()
+                        ->where('state_id', $sid)
+                        ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                }
+            }
+        }
         $useLocationDropdowns = is_plugin_active('location');
         $currentCountryName = old('country_name', $account->country_name ?? '');
         $currentStateName = old('state_name', $account->state_name ?? '');
@@ -960,7 +1023,8 @@ Recruiters often read this section before downloading resumes.
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label">{{ __('Address') }}</label>
-                    <input type="text" class="form-control" name="address" value="{{ old('address', $account->address) }}" placeholder="{{ __('Enter your address') }}">
+                    <input type="text" class="form-control @error('address') is-invalid @enderror" name="address" value="{{ old('address', $account->address) }}" placeholder="{{ __('Enter your address') }}">
+                    @error('address')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label">{{ __('Pin Code') }}</label>
@@ -1039,12 +1103,18 @@ Recruiters often read this section before downloading resumes.
                                 <label class="form-label small">{{ __('State') }}</label>
                                 <select class="form-select form-select-sm work-pref-state" name="work_location_preferences[{{ $index }}][state_id]" data-index="{{ $index }}">
                                     <option value="">{{ __('Select') }}</option>
+                                    @foreach($workLocationStates[$index] ?? [] as $sid => $sname)
+                                        <option value="{{ $sid }}" @selected(($loc['state_id'] ?? '') == $sid)>{{ $sname }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <label class="form-label small">{{ __('City') }}</label>
                                 <select class="form-select form-select-sm work-pref-city" name="work_location_preferences[{{ $index }}][city_id]" data-index="{{ $index }}">
                                     <option value="">{{ __('Select') }}</option>
+                                    @foreach($workLocationCities[$index] ?? [] as $cid => $cname)
+                                        <option value="{{ $cid }}" @selected(($loc['city_id'] ?? '') == $cid)>{{ $cname }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             @else
@@ -1164,11 +1234,7 @@ Recruiters often read this section before downloading resumes.
                                             </div>
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('public.account.experiences.edit', $exp->id) }}" class="btn btn-sm btn-outline-primary" target="_blank">{{ __('Edit') }}</a>
-                                                <form method="post" action="{{ route('public.account.experiences.destroy', $exp->id) }}" style="margin:0;" onsubmit="return confirm('{{ __('Are you sure?') }}');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Delete') }}</button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-exp-delete" data-url="{{ route('public.account.experiences.destroy', $exp->id) }}" data-csrf="{{ csrf_token() }}">{{ __('Delete') }}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1252,7 +1318,8 @@ Recruiters often read this section before downloading resumes.
                 <!-- 27. Resume -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Resume / CV Upload') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Upload your latest updated resume with complete academic and experience details. Schools review resumes before shortlisting candidates for interviews. PDF/Word files only. Max 2MB') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="file" class="form-control" name="resume" accept=".pdf,.doc,.docx">
+                    <input type="file" class="form-control @error('resume') is-invalid @enderror" name="resume" accept=".pdf,.doc,.docx">
+                    @error('resume')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     @if ($account->resume)
                         <small class="form-text mt-1">
                             <i class="fa fa-file me-1"></i>
@@ -1290,14 +1357,16 @@ Recruiters often read this section before downloading resumes.
                         </button> -->
                         <span class="text-muted small align-self-center" id="record-status"></span>
                     </div>
-                    <input type="file" class="form-control" name="introductory_audio" id="introductory_audio_file" accept="audio/*,.mp4,video/mp4,.webm">
+                    <input type="file" class="form-control @error('introductory_audio') is-invalid @enderror" name="introductory_audio" id="introductory_audio_file" accept="audio/*,.mp4,video/mp4,.webm,.mp3,.m4a,.wav,.ogg">
+                    <span class="text-muted small mt-1" id="intro_audio_hint">{{ __('Upload an audio file (max 1.5 MB). Allowed: mp3, m4a, wav, ogg, webm.') }}</span>
+                    @error('introductory_audio')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
 
-                <!-- Teaching Demo YouTube -->
-                <!-- <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Teaching Demo / Introduction Video Link (YouTube)') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Paste the link to your YouTube teaching demo or self-introduction video (3–10 minutes recommended).') }}"><i class="fa fa-question-circle"></i></span></label>
+                <!-- Teaching Demo / YouTube Link -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ __('YouTube Video Link') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Paste the link to your YouTube teaching demo or self-introduction video (e.g. https://www.youtube.com/watch?v=...)') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="url" class="form-control" name="introductory_video_url" value="{{ old('introductory_video_url', $account->introductory_video_url ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
-                </div> -->
+                </div>
             </div>
             <p class="form-text text-muted mt-3 mb-0 p-3 rounded" style="background:#f8f9fa;"><i class="fa fa-lock me-2"></i>{{ __('Your documents are securely stored and shared only with schools/institutions based on your profile visibility settings.') }}</p>
         </div>
@@ -1338,11 +1407,118 @@ Recruiters often read this section before downloading resumes.
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Scroll to first validation error (field with red border)
+    var firstInvalid = document.querySelector('#profile-form .form-control.is-invalid, #profile-form .form-select.is-invalid');
+    if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ---------- Client-side validation before save (show errors under fields, red line) ----------
+    var profileForm = document.getElementById('profile-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            // Remove previous client-side error messages and red border
+            document.querySelectorAll('#profile-form .js-field-error').forEach(function(el) { el.remove(); });
+            document.querySelectorAll('#profile-form .form-control.is-invalid, #profile-form .form-select.is-invalid').forEach(function(el) { el.classList.remove('is-invalid'); });
+            var firstErrorEl = null;
+            var hasError = false;
+
+            function showFieldError(inputOrWrap, message) {
+                hasError = true;
+                var el = inputOrWrap;
+                if (el && el.classList && el.classList.contains('form-control')) {
+                    el.classList.add('is-invalid');
+                    if (!firstErrorEl) firstErrorEl = el;
+                }
+                var wrap = el && el.closest ? el.closest('.mb-3') : (el && el.parentElement);
+                if (!wrap) wrap = el && el.parentElement;
+                if (wrap) {
+                    var errDiv = document.createElement('div');
+                    errDiv.className = 'invalid-feedback d-block js-field-error';
+                    errDiv.style.color = '#dc3545';
+                    errDiv.style.fontSize = '12px';
+                    errDiv.style.marginTop = '4px';
+                    errDiv.textContent = message;
+                    wrap.appendChild(errDiv);
+                    if (!firstErrorEl) firstErrorEl = wrap;
+                }
+            }
+
+            var firstName = document.querySelector('#profile-form input[name="first_name"]');
+            if (firstName && !String(firstName.value || '').trim()) {
+                showFieldError(firstName, '{{ __("Full name is required.") }}');
+            }
+
+            var phoneInput = document.querySelector('#profile-form input[name="phone"]');
+            if (phoneInput) {
+                var phone = String(phoneInput.value || '').replace(/\D/g, '');
+                if (phone.length === 0) {
+                    showFieldError(phoneInput, '{{ __("Please enter your phone number.") }}');
+                } else if (phone.length < 10) {
+                    showFieldError(phoneInput, '{{ __("Please enter a valid 10-digit phone number.") }}');
+                }
+            }
+
+            var dobInput = document.querySelector('#profile-form input[name="dob"]');
+            if (dobInput && dobInput.hasAttribute('required') && !dobInput.value) {
+                showFieldError(dobInput, '{{ __("Date of birth is required.") }}');
+            }
+
+            var genderChecked = document.querySelector('#profile-form input[name="gender"]:checked');
+            if (!genderChecked) {
+                var genderInput = document.querySelector('#profile-form input[name="gender"]');
+                if (genderInput) showFieldError(genderInput.closest('.mb-3') || genderInput, '{{ __("Please select gender.") }}');
+            }
+
+            var audioInput = document.querySelector('#profile-form input[name="introductory_audio"]');
+            if (audioInput && audioInput.files && audioInput.files.length > 0) {
+                var file = audioInput.files[0];
+                var allowed = ['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/x-m4a', 'audio/m4a', 'audio/wav', 'audio/ogg', 'audio/webm', 'video/mp4', 'video/webm'];
+                var ext = (file.name || '').split('.').pop().toLowerCase();
+                var ok = allowed.indexOf(file.type) !== -1 || ['mp3', 'mpeg', 'mpga', 'm4a', 'wav', 'ogg', 'webm', 'mp4'].indexOf(ext) !== -1;
+                if (!ok) {
+                    showFieldError(audioInput, '{{ __("Allowed formats: mp4, wav, ogg, m4a, webm, mp3.") }}');
+                } else if (file.size > 1.5 * 1024 * 1024) {
+                    showFieldError(audioInput, '{{ __("Audio file must be 1.5 MB or less.") }}');
+                }
+            }
+
+            if (hasError && firstErrorEl) {
+                e.preventDefault();
+                firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+        });
+    }
+
     // Bootstrap tooltips (hover + click for mobile)
     const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     if (typeof bootstrap !== 'undefined' && tooltipEls.length) {
         tooltipEls.forEach(el => new bootstrap.Tooltip(el, { trigger: 'hover focus click' }));
     }
+
+    // Experience Delete (no nested form – so main profile form stays valid)
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-exp-delete');
+        if (!btn) return;
+        e.preventDefault();
+        if (!confirm('{{ __("Are you sure?") }}')) return;
+        var url = btn.getAttribute('data-url');
+        var csrf = btn.getAttribute('data-csrf');
+        if (!url) return;
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.style.display = 'none';
+        var tok = document.createElement('input');
+        tok.type = 'hidden'; tok.name = '_token'; tok.value = csrf || '';
+        form.appendChild(tok);
+        var method = document.createElement('input');
+        method.type = 'hidden'; method.name = '_method'; method.value = 'DELETE';
+        form.appendChild(method);
+        document.body.appendChild(form);
+        form.submit();
+    });
 
     // ==========================================
     // TomSelect Dropdowns Initialization
@@ -1674,6 +1850,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     })();
 
+    var ajaxHeaders = { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+    var getStatesCities = function(data) {
+        var arr = data && data.data;
+        if (Array.isArray(arr)) return arr;
+        if (data && Array.isArray(data)) return data;
+        return [];
+    };
+
     // Work preference rows: load states/cities for existing rows on page load
     document.querySelectorAll('.work-location-item').forEach(function(row) {
         var countrySel = row.querySelector('.work-pref-country');
@@ -1681,56 +1865,69 @@ document.addEventListener('DOMContentLoaded', function() {
         var citySel = row.querySelector('.work-pref-city');
         var stateId = row.getAttribute('data-state-id');
         var cityId = row.getAttribute('data-city-id');
-        if (countrySel && countrySel.value) {
-            fetch('{{ route("ajax.states-by-country") }}?country_id=' + countrySel.value)
+        if (countrySel && countrySel.value && stateSel) {
+            fetch('{{ route("ajax.states-by-country") }}?country_id=' + countrySel.value, { headers: ajaxHeaders })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
+                    var list = getStatesCities(data);
                     var html = '<option value="">{{ __("Select") }}</option>';
-                    if (data.data) data.data.forEach(function(s) { html += '<option value="' + s.id + '"' + (s.id == stateId ? ' selected' : '') + '>' + s.name + '</option>'; });
+                    list.forEach(function(s) { if (s && s.id && s.id != 0) html += '<option value="' + s.id + '"' + (s.id == stateId ? ' selected' : '') + '>' + (s.name || '') + '</option>'; });
                     stateSel.innerHTML = html;
-                    if (stateId && stateSel.value) {
-                        fetch('{{ route("ajax.cities-by-state") }}?state_id=' + stateSel.value)
+                    if (stateId && stateSel.value && citySel) {
+                        fetch('{{ route("ajax.cities-by-state") }}?state_id=' + stateSel.value, { headers: ajaxHeaders })
                             .then(function(r2) { return r2.json(); })
                             .then(function(data2) {
+                                var list2 = getStatesCities(data2);
                                 var html2 = '<option value="">{{ __("Select") }}</option>';
-                                if (data2.data) data2.data.forEach(function(c) { html2 += '<option value="' + c.id + '"' + (c.id == cityId ? ' selected' : '') + '>' + c.name + '</option>'; });
+                                list2.forEach(function(c) { if (c && c.id && c.id != 0) html2 += '<option value="' + c.id + '"' + (c.id == cityId ? ' selected' : '') + '>' + (c.name || '') + '</option>'; });
                                 citySel.innerHTML = html2;
-                            });
+                            })
+                            .catch(function() {});
                     }
-                });
+                })
+                .catch(function() {});
         }
     });
 
     // Work preference: country/state change for dynamic rows
-    document.getElementById('work-locations-container').addEventListener('change', function(e) {
-        if (e.target.classList.contains('work-pref-country')) {
-            var stateSel = e.target.closest('.work-location-item').querySelector('.work-pref-state');
-            var citySel = e.target.closest('.work-location-item').querySelector('.work-pref-city');
-            stateSel.innerHTML = '<option value="">{{ __("Select") }}</option>';
-            citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
-            if (e.target.value) {
-                fetch('{{ route("ajax.states-by-country") }}?country_id=' + e.target.value)
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        var html = '<option value="">{{ __("Select") }}</option>';
-                        if (data.data) data.data.forEach(function(s) { html += '<option value="' + s.id + '">' + s.name + '</option>'; });
-                        stateSel.innerHTML = html;
-                    });
+    var workLocContainer = document.getElementById('work-locations-container');
+    if (workLocContainer) {
+        workLocContainer.addEventListener('change', function(e) {
+            if (e.target.classList.contains('work-pref-country')) {
+                var row = e.target.closest('.work-location-item');
+                var stateSel = row ? row.querySelector('.work-pref-state') : null;
+                var citySel = row ? row.querySelector('.work-pref-city') : null;
+                if (stateSel) stateSel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+                if (citySel) citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+                if (e.target.value && stateSel) {
+                    fetch('{{ route("ajax.states-by-country") }}?country_id=' + e.target.value, { headers: ajaxHeaders })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var list = getStatesCities(data);
+                            var html = '<option value="">{{ __("Select") }}</option>';
+                            list.forEach(function(s) { if (s && s.id && s.id != 0) html += '<option value="' + s.id + '">' + (s.name || '') + '</option>'; });
+                            stateSel.innerHTML = html;
+                        })
+                        .catch(function() {});
+                }
+            } else if (e.target.classList.contains('work-pref-state')) {
+                var row = e.target.closest('.work-location-item');
+                var citySel = row ? row.querySelector('.work-pref-city') : null;
+                if (citySel) citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+                if (e.target.value && citySel) {
+                    fetch('{{ route("ajax.cities-by-state") }}?state_id=' + e.target.value, { headers: ajaxHeaders })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var list = getStatesCities(data);
+                            var html = '<option value="">{{ __("Select") }}</option>';
+                            list.forEach(function(c) { if (c && c.id && c.id != 0) html += '<option value="' + c.id + '">' + (c.name || '') + '</option>'; });
+                            citySel.innerHTML = html;
+                        })
+                        .catch(function() {});
+                }
             }
-        } else if (e.target.classList.contains('work-pref-state')) {
-            var citySel = e.target.closest('.work-location-item').querySelector('.work-pref-city');
-            citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
-            if (e.target.value) {
-                fetch('{{ route("ajax.cities-by-state") }}?state_id=' + e.target.value)
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        var html = '<option value="">{{ __("Select") }}</option>';
-                        if (data.data) data.data.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
-                        citySel.innerHTML = html;
-                    });
-            }
-        }
-    });
+        });
+    }
 });
 
 // Add qualification (specialization always as dropdown from jb_specializations)
@@ -1832,15 +2029,17 @@ function addWorkLocation() {
         document.getElementById('work-locations-container').insertAdjacentHTML('beforeend', html);
         if (defaultCountryId) {
             var newRow = document.getElementById('work-locations-container').lastElementChild;
-            var stateSel = newRow.querySelector('.work-pref-state');
+            var stateSel = newRow ? newRow.querySelector('.work-pref-state') : null;
             if (stateSel) {
-                fetch('{{ route("ajax.states-by-country") }}?country_id=' + defaultCountryId)
+                fetch('{{ route("ajax.states-by-country") }}?country_id=' + defaultCountryId, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
+                        var list = (data && data.data) ? data.data : (Array.isArray(data) ? data : []);
                         var h = '<option value="">{{ __("Select") }}</option>';
-                        if (data.data) data.data.forEach(function(s) { h += '<option value="' + s.id + '">' + s.name + '</option>'; });
+                        list.forEach(function(s) { if (s && s.id && s.id != 0) h += '<option value="' + s.id + '">' + (s.name || '') + '</option>'; });
                         stateSel.innerHTML = h;
-                    });
+                    })
+                    .catch(function() {});
             }
         }
     } else {

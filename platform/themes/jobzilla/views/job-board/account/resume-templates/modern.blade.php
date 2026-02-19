@@ -178,5 +178,10 @@
             </h2>
             <p style="font-size: 13px; line-height: 1.65; color: #555; margin: 0;">{{ $displayAchievements }}</p>
         </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; padding-top: 20px; margin-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #999;">
+            {{ __('Powered by TeachersRecruiters') }}
+        </div>
     </div>
 </div>

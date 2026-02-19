@@ -488,6 +488,62 @@ class Job extends BaseModel
         )->withPivot('order', 'is_required', 'question_override', 'options_override', 'correct_answer')->orderByPivot('order');
     }
 
+    /**
+     * Job-specific screening questions (employer-added for this job only, not in admin pool).
+     */
+    public function jobScreeningQuestions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(JobScreeningQuestion::class, 'job_id')->orderBy('order')->orderBy('id');
+    }
+
+    /**
+     * All screening questions for this job (admin pool + job-specific) for apply flow.
+     * Each item: id (e.g. sq_1 or jq_5), question, question_type, options, is_required, correct_answer.
+     */
+    public function getAllScreeningQuestionsForApply(): \Illuminate\Support\Collection
+    {
+        $this->loadMissing(['screeningQuestions', 'jobScreeningQuestions']);
+$replacements = \Botble\JobBoard\Support\ScreeningQuestionPlaceholder::jobToReplacements($this);
+            $list = collect();
+
+        foreach ($this->screeningQuestions->sortBy('pivot.order') as $q) {
+            $questionText = $q->pivot->question_override
+                ?: \Botble\JobBoard\Support\ScreeningQuestionPlaceholder::resolve($q->question, $replacements);
+            $opts = $q->pivot->options_override;
+            if ($opts !== null && $opts !== '') {
+                $optsArray = array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $opts))));
+            } else {
+                $resolved = \Botble\JobBoard\Support\ScreeningQuestionPlaceholder::resolve(
+                    implode("\n", $q->options_array),
+                    $replacements
+                );
+                $optsArray = array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $resolved))));
+            }
+            $list->push((object) [
+                'id' => 'sq_' . $q->id,
+                'question' => $questionText,
+                'question_type' => $q->question_type,
+                'options' => $optsArray,
+                'is_required' => (bool) ($q->pivot->is_required ?? false),
+                'correct_answer' => $q->pivot->correct_answer ?: $q->correct_answer,
+            ]);
+        }
+
+        foreach ($this->jobScreeningQuestions as $jq) {
+            $optsArray = $jq->options_array;
+            $list->push((object) [
+                'id' => 'jq_' . $jq->id,
+                'question' => $jq->question,
+                'question_type' => $jq->question_type,
+                'options' => $optsArray,
+                'is_required' => (bool) $jq->is_required,
+                'correct_answer' => $jq->correct_answer,
+            ]);
+        }
+
+        return $list;
+    }
+
     public function customFields(): MorphMany
     {
         return $this->morphMany(CustomFieldValue::class, 'reference', 'reference_type', 'reference_id')->with('customField.options');
@@ -514,6 +570,7 @@ class Job extends BaseModel
             $job->tags()->detach();
             $job->customFields()->delete();
             $job->screeningQuestions()->detach();
+            $job->jobScreeningQuestions()->delete();
         });
 
         self::updating(function (): void {

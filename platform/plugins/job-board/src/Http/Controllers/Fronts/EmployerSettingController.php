@@ -148,7 +148,6 @@ class EmployerSettingController extends BaseController
             'phone' => 'required|string|max:30',
             'website' => 'nullable|url|max:120',
             'year_founded' => 'required|integer|min:1800|max:' . date('Y'),
-            'principal_name' => 'nullable|string|max:120',
             'total_staff' => 'nullable|integer|min:0|max:999',
             'campus_type' => 'required|string|in:boarding,day,both',
             'standard_level' => 'required|array|min:1',
@@ -213,7 +212,7 @@ class EmployerSettingController extends BaseController
 
         $data = $request->only([
             'name', 'description', 'email', 'phone',
-            'website', 'year_founded', 'principal_name', 'total_staff',
+            'website', 'year_founded', 'total_staff',
             'campus_type', 'standard_level', 'staff_facilities',
             'working_days', 'working_hours_start', 'working_hours_end',
             'country_id', 'state_id', 'city_id', 'address', 'postal_code',

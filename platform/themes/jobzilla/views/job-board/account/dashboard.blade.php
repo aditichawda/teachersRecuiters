@@ -55,10 +55,11 @@
         // Silent fail
     }
 
-    // Get suggested jobs (based on teaching subjects / institution type preferences)
+    // Get suggested jobs (with company for logo & name)
     $suggestedJobs = [];
     try {
         $suggestedJobs = \Botble\JobBoard\Models\Job::query()
+            ->with(['company', 'country', 'city', 'state'])
             ->where('status', 'published')
             ->where('moderation_status', 'approved')
             ->where(function($q) {
@@ -70,14 +71,30 @@
             ->get();
     } catch (\Exception $e) {}
 
-    // Get featured companies/schools
+    // Get featured companies/schools (is_featured = true, published); fallback to latest if none featured
     $featuredcompanies = [];
+    $featuredCompanyUrls = [];
     try {
         $featuredcompanies = \Botble\JobBoard\Models\Company::query()
-            ->where('status', 'approved')
+            ->where('status', 'published')
+            ->where('is_featured', true)
+            ->latest('is_featured')
             ->latest()
             ->limit(6)
             ->get();
+        if ($featuredcompanies->isEmpty()) {
+            $featuredcompanies = \Botble\JobBoard\Models\Company::query()
+                ->where('status', 'published')
+                ->latest()
+                ->limit(6)
+                ->get();
+        }
+        // Build detail page URL for each company (click -> redirect to institution detail)
+        $companyPrefix = \Botble\Slug\Facades\SlugHelper::getPrefix(\Botble\JobBoard\Models\Company::class, 'companies');
+        foreach ($featuredcompanies as $c) {
+            $slug = \Botble\Slug\Facades\SlugHelper::getSlug(null, $companyPrefix, \Botble\JobBoard\Models\Company::class, $c->id);
+            $featuredCompanyUrls[$c->id] = $slug ? url(ltrim($slug->prefix . '/' . $slug->key, '/')) : null;
+        }
     } catch (\Exception $e) {}
 
     // Get recent blog posts
@@ -203,12 +220,13 @@
     display: inline-block;
     background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
     color: #fff;
-    padding: 7px 18px;
-    border-radius: 6px;
+    padding: 8px 20px;
+    border-radius: 8px;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     transition: all 0.2s;
+    margin-top: 12px;
     margin-bottom: 20px;
     border: none;
     cursor: pointer;
@@ -218,6 +236,15 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,115,209,0.3);
     color: #fff;
+}
+
+.js-view-profile-btn.js-view-profile-edit {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+}
+
+.js-view-profile-btn.js-view-profile-edit:hover {
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3);
 }
 
 .js-view-profile-btn i {
@@ -419,13 +446,19 @@
     margin: 0;
 }
 
-/* Application List */
+/* Application List - job cards (Suggested / Recent) */
 .js-application-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid #f5f5f5;
+    gap: 14px;
+    padding: 14px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.js-application-item:hover {
+    background: #f8fafc;
 }
 
 .js-application-item:last-child {
@@ -441,6 +474,58 @@
     align-items: center;
     justify-content: center;
     color: #0073d1;
+    flex-shrink: 0;
+}
+
+/* Company logo in job cards (Suggested Jobs / Recent Jobs) */
+.js-job-company-logo {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #e8f4fc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.js-job-company-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Default placeholder when no logo: background + initials (company/job name) */
+.js-job-logo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.js-job-company-logo .js-application-icon {
+    width: 100%;
+    height: 100%;
+}
+
+.js-job-company-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0073d1 !important;
+    margin: 0 0 2px 0 !important;
+}
+
+.js-job-meta {
+    font-size: 11px;
+    color: #888;
+    margin: 0 !important;
 }
 
 .js-application-info h6 {
@@ -604,60 +689,95 @@
     color: #999;
 }
 
-/* Featured School Card */
+/* Featured School / Institution Card - attractive UI */
 .js-school-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
+    gap: 18px;
+}
+
+.js-school-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.js-school-card-link:hover {
+    color: inherit;
 }
 
 .js-school-card {
-    background: #f8f9fa;
-    border-radius: 10px;
-    padding: 15px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 14px;
+    padding: 20px 16px;
     text-align: center;
-    transition: all 0.2s;
-    border: 1px solid #e9ecef;
+    transition: all 0.25s ease;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
-.js-school-card:hover {
+.js-school-card-link:hover .js-school-card {
     border-color: #0073d1;
-    box-shadow: 0 4px 12px rgba(0,115,209,0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,115,209,0.15);
+    transform: translateY(-3px);
 }
 
-.js-school-card img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 8px;
-}
-
-.js-school-card .school-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #e8f4fc;
+/* Institution logo - default image from theme when no logo */
+.js-school-card-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    overflow: hidden;
+    margin: 0 auto 12px;
+    background: linear-gradient(135deg, #e8f4fc 0%, #bbdefb 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 8px;
+}
+
+.js-school-card-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.js-school-card .school-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #e8f4fc 0%, #bbdefb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
     color: #0073d1;
-    font-size: 20px;
+    font-size: 24px;
 }
 
 .js-school-card h6 {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
-    color: #333;
-    margin: 0 0 3px 0;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+    line-height: 1.3;
 }
 
 .js-school-card p {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0 0 10px 0;
+}
+
+.js-school-card-view {
     font-size: 11px;
-    color: #888;
-    margin: 0;
+    font-weight: 600;
+    color: #0073d1;
+    display: inline-flex;
+    align-items: center;
+}
+
+.js-school-card-link:hover .js-school-card-view {
+    color: #005bb5;
 }
 
 /* Blog Card */
@@ -762,14 +882,16 @@
                             </div>
                             <div class="js-completion-text">{{ $completion }}% {{ __('complete') }}</div>
                         </div>
-                        @php
-                            $candidateSlug = \Botble\Slug\Models\Slug::where('reference_type', \Botble\JobBoard\Models\Account::class)
-                                ->where('reference_id', $account->id)
-                                ->value('key');
-                        @endphp
-                        <button type="button" class="js-view-profile-btn" onclick="document.getElementById('profileModal').style.display='flex'" style="display: none;">
-                            <i class="fa fa-eye"></i> {{ __('View Profile') }}
-                        </button>
+                        @php $myPublicProfileUrl = $account->isJobSeeker() ? $account->url : ''; @endphp
+                        @if($myPublicProfileUrl)
+                            <a href="{{ $myPublicProfileUrl }}" target="_blank" class="js-view-profile-btn" title="{{ __('View your public profile as others see it') }}">
+                                <i class="fa fa-external-link-alt"></i> {{ __('View Profile') }}
+                            </a>
+                        @else
+                            <a href="{{ route('public.account.settings') }}" class="js-view-profile-btn js-view-profile-edit">
+                                <i class="fa fa-user-edit"></i> {{ __('Complete profile for public link') }}
+                            </a>
+                        @endif
                     </div>
                     
                     <!-- Wallet -->
@@ -799,8 +921,14 @@
             <div class="col-lg-9 col-md-8">
                 <div class="js-dashboard-content">
                     <!-- Header -->
-                    <div class="js-dash-header">
-                        <h2>Dashboard</h2>
+                    <div class="js-dash-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <h2 class="mb-0">Dashboard</h2>
+                        @php $myPublicProfileUrl = $account->isJobSeeker() ? $account->url : ''; @endphp
+                        @if($myPublicProfileUrl)
+                            <a href="{{ $myPublicProfileUrl }}" target="_blank" class="btn btn-primary btn-sm d-md-none" style="background: linear-gradient(135deg, #0073d1, #005bb5); border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+                                <i class="fa fa-external-link-alt me-1"></i>{{ __('View Profile') }}
+                            </a>
+                        @endif
                     </div>
                     
                     <!-- Alert for incomplete profile with reward message -->
@@ -845,13 +973,23 @@
                             <div class="js-content-card-body">
                                 @if(count($suggestedJobs) > 0)
                                     @foreach($suggestedJobs as $job)
+                                        @php
+                                            $company = $job->company;
+                                            $logoPlaceholder = $company && $company->name ? strtoupper(mb_substr($company->name, 0, 2)) : strtoupper(mb_substr($job->name, 0, 2));
+                                            if ($logoPlaceholder === '') { $logoPlaceholder = 'JD'; }
+                                        @endphp
                                         <div class="js-application-item">
-                                            <div class="js-application-icon" style="background: #fff3e0; color: #f57c00;">
-                                                <i class="fa fa-star"></i>
+                                            <div class="js-job-company-logo">
+                                                @if($company && $company->logo)
+                                                    <img src="{{ RvMedia::getImageUrl($company->logo, 'thumb') }}" alt="{{ $company->name ?? 'Company' }}">
+                                                @else
+                                                    <span class="js-job-logo-placeholder" title="{{ $company->name ?? $job->name }}">{{ $logoPlaceholder }}</span>
+                                                @endif
                                             </div>
                                             <div class="js-application-info">
                                                 <h6><a href="{{ $job->url }}" style="color: #333; text-decoration: none;">{{ Str::limit($job->name, 35) }}</a></h6>
-                                                <p>{{ $job->company->name ?? 'Company' }}{!! ($job->location ?? $job->address) ? ' • ' . e(Str::limit($job->location ?? $job->address ?? '', 25)) : '' !!} • {{ $job->created_at->diffForHumans() }}</p>
+                                                <p class="js-job-company-name">{{ $company->name ?? __('Company') }}</p>
+                                                <p class="js-job-meta">{!! ($job->location ?? $job->address) ? e(Str::limit($job->location ?? $job->address ?? '', 30)) . ' • ' : '' !!}{{ $job->created_at->diffForHumans() }}</p>
                                             </div>
                                         </div>
                                     @endforeach
@@ -873,13 +1011,23 @@
                             <div class="js-content-card-body">
                                 @if(count($recentJobs) > 0)
                                     @foreach($recentJobs as $job)
+                                        @php
+                                            $company = $job->company;
+                                            $logoPlaceholder = $company && $company->name ? strtoupper(mb_substr($company->name, 0, 2)) : strtoupper(mb_substr($job->name, 0, 2));
+                                            if ($logoPlaceholder === '') { $logoPlaceholder = 'JD'; }
+                                        @endphp
                                         <div class="js-application-item">
-                                            <div class="js-application-icon">
-                                                <i class="fa fa-briefcase"></i>
+                                            <div class="js-job-company-logo">
+                                                @if($company && $company->logo)
+                                                    <img src="{{ RvMedia::getImageUrl($company->logo, 'thumb') }}" alt="{{ $company->name ?? 'Company' }}">
+                                                @else
+                                                    <span class="js-job-logo-placeholder" title="{{ $company->name ?? $job->name }}">{{ $logoPlaceholder }}</span>
+                                                @endif
                                             </div>
                                             <div class="js-application-info">
                                                 <h6><a href="{{ $job->url }}" style="color: #333; text-decoration: none;">{{ Str::limit($job->name, 35) }}</a></h6>
-                                                <p>{{ $job->company->name ?? 'Company' }}{!! ($job->location ?? $job->address) ? ' • ' . e(Str::limit($job->location ?? $job->address ?? '', 25)) : '' !!} • {{ $job->created_at->diffForHumans() }}</p>
+                                                <p class="js-job-company-name">{{ $company->name ?? __('Company') }}</p>
+                                                <p class="js-job-meta">{!! ($job->location ?? $job->address) ? e(Str::limit($job->location ?? $job->address ?? '', 30)) . ' • ' : '' !!}{{ $job->created_at->diffForHumans() }}</p>
                                             </div>
                                         </div>
                                     @endforeach
@@ -986,15 +1134,17 @@
                                 @if(count($featuredcompanies) > 0)
                                     <div class="js-school-grid">
                                         @foreach($featuredcompanies as $company)
-                                            <div class="js-school-card">
-                                                @if($company->logo)
-                                                    <img src="{{ RvMedia::getImageUrl($company->logo, 'thumb') }}" alt="{{ $company->name }}">
-                                                @else
-                                                    <div class="school-icon"><i class="fa fa-school"></i></div>
-                                                @endif
-                                                <h6>{{ Str::limit($company->name, 25) }}</h6>
-                                                <p>{{ $company->state->name ?? $company->city->name ?? 'India' }}</p>
-                                            </div>
+                                            @php $companyDetailUrl = $featuredCompanyUrls[$company->id] ?? '#'; @endphp
+                                            <a href="{{ $companyDetailUrl }}" class="js-school-card-link" title="{{ $company->name }} - {{ __('View details') }}">
+                                                <div class="js-school-card">
+                                                    <div class="js-school-card-logo">
+                                                        <img src="{{ $company->logo_thumb }}" alt="{{ $company->name }}">
+                                                    </div>
+                                                    <h6>{{ Str::limit($company->name, 25) }}</h6>
+                                                    <p>{{ isset($company->state) ? $company->state->name : (isset($company->city) ? $company->city->name : ($company->address ? Str::limit($company->address, 20) : '—')) }}</p>
+                                                    <span class="js-school-card-view">{{ __('View details') }} <i class="fa fa-arrow-right ms-1"></i></span>
+                                                </div>
+                                            </a>
                                         @endforeach
                                     </div>
                                 @else

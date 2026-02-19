@@ -131,6 +131,15 @@
     color: #fff;
 }
 
+.js-view-profile-btn.js-view-profile-edit {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+}
+
+.js-view-profile-btn.js-view-profile-edit:hover {
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3);
+}
+
 .js-view-profile-btn i {
     margin-right: 5px;
 }
@@ -397,15 +406,28 @@
                         <h5 class="js-profile-name">Hello, <?php echo e($account->first_name ?? $account->name); ?></h5>
                         <p class="js-profile-date">Joined <?php echo e($account->created_at->format('M d, Y')); ?></p>
                         <p class="js-profile-updated">Last Updated: <?php echo e($account->updated_at->format('M d, Y')); ?></p>
-                        <?php
-                            $candidateSlug = \Botble\Slug\Models\Slug::where('reference_type', \Botble\JobBoard\Models\Account::class)
-                                ->where('reference_id', $account->id)
-                                ->value('key');
-                        ?>
-                        <!-- <button type="button" class="js-view-profile-btn" onclick="document.getElementById('profileModal').style.display='flex'">
-                            <i class="fa fa-eye"></i> <?php echo e(__('View Profile')); ?>
+                        
+                        <div class="js-profile-completion">
+                            <h6><?php echo e(__('Profile Completion')); ?></h6>
+                            <div class="js-completion-bar">
+                                <div class="js-completion-fill" style="width: <?php echo e($completion); ?>%;"></div>
+                            </div>
+                            <div class="js-completion-text"><?php echo e($completion); ?>% <?php echo e(__('complete')); ?></div>
+                        </div>
+                        <?php $myPublicProfileUrl = $account->isJobSeeker() ? $account->url : ''; ?>
+                        <?php if($account->isJobSeeker()): ?>
+                            <?php if($myPublicProfileUrl): ?>
+                                <a href="<?php echo e($myPublicProfileUrl); ?>" target="_blank" class="js-view-profile-btn" title="<?php echo e(__('View your public profile as others see it')); ?>">
+                                    <i class="fa fa-external-link-alt"></i> <?php echo e(__('View Profile')); ?>
 
-                        </button> -->
+                                </a>
+                            <?php else: ?>
+                                <a href="<?php echo e(route('public.account.settings')); ?>" class="js-view-profile-btn js-view-profile-edit">
+                                    <i class="fa fa-user-edit"></i> <?php echo e(__('Complete profile for public link')); ?>
+
+                                </a>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                     
                     <!-- Wallet -->

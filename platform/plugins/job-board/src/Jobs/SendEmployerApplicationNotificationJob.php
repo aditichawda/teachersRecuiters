@@ -119,16 +119,14 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
             return '<p style="color: #666; font-style: italic;">No screening questions answered.</p>';
         }
 
-        // Load screening questions
-        $this->job->loadMissing('screeningQuestions');
-        $questions = $this->job->screeningQuestions->keyBy('id');
+        $questionsMap = $this->job->getAllScreeningQuestionsForApply()->keyBy('id');
 
         $html = '<div style="margin-top: 15px;">';
         $html .= '<h4 style="color: #1967d2; margin-bottom: 10px;">Screening Questions & Answers:</h4>';
 
         foreach ($screeningAnswers as $questionId => $answer) {
-            $question = $questions->get($questionId);
-            $questionText = $question ? $question->question : "Question #{$questionId}";
+            $q = $questionsMap->get($questionId) ?? $questionsMap->get('sq_' . $questionId);
+            $questionText = $q ? $q->question : "Question #{$questionId}";
             
             // Decode JSON answers (for checkboxes, etc.)
             $decodedAnswer = json_decode($answer, true);

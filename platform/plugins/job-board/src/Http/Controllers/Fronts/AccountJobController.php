@@ -27,6 +27,7 @@ use Botble\JobBoard\Models\DegreeLevel;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\JobExperience;
+use Botble\JobBoard\Models\JobScreeningQuestion;
 use Botble\JobBoard\Models\ScreeningQuestion;
 use Botble\JobBoard\Models\JobShift;
 use Botble\JobBoard\Models\JobSkill;
@@ -320,6 +321,9 @@ class AccountJobController extends BaseController
         }
         $job->screeningQuestions()->sync($syncData);
 
+        // Job-specific screening questions (employer-added for this job only)
+        $this->syncJobScreeningQuestions($job, $request->input('job_screening_questions', []));
+
         $storeTagService->execute($request, $job);
 
         event(new CreatedContentEvent(JOB_MODULE_SCREEN_NAME, $request, $job));
@@ -411,7 +415,7 @@ class AccountJobController extends BaseController
         $this->pageTitle(trans('core/base::forms.edit_item', ['name' => $job->name]));
         SeoHelper::setTitle(trans('core/base::forms.edit_item', ['name' => $job->name]));
 
-        $job->load(['screeningQuestions', 'skills', 'jobTypes', 'company']);
+        $job->load(['screeningQuestions', 'jobScreeningQuestions', 'skills', 'jobTypes', 'company']);
 
         // Use same form as create (theme) for consistency - same fields, same names
         $account = auth('account')->user();
@@ -512,6 +516,14 @@ class AccountJobController extends BaseController
                 'city_name' => $cityName,
                 'state_name' => $stateName,
                 'country_name' => $countryName,
+                'job_screening_questions' => $job->jobScreeningQuestions->map(fn ($q) => [
+                    'id' => $q->id,
+                    'question' => $q->question,
+                    'question_type' => $q->question_type,
+                    'options' => is_array($q->options_array) ? implode("\n", $q->options_array) : (string) $q->options,
+                    'is_required' => $q->is_required,
+                    'correct_answer' => $q->correct_answer,
+                ])->values()->all(),
             ];
         }
 
@@ -537,6 +549,41 @@ class AccountJobController extends BaseController
         }
 
         return $account->id == $job->author_id && $job->author_type == Account::class;
+    }
+
+    /**
+     * Sync job-specific screening questions (employer-added per job, not in admin pool).
+     *
+     * @param  array<int, array{id?: int, question?: string, question_type?: string, options?: string, is_required?: bool, correct_answer?: string}>  $rows
+     */
+    protected function syncJobScreeningQuestions(Job $job, array $rows): void
+    {
+        $rows = array_values($rows);
+        $keepIds = collect($rows)->pluck('id')->filter()->values()->all();
+
+        $job->jobScreeningQuestions()->whereNotIn('id', $keepIds)->delete();
+
+        foreach ($rows as $order => $row) {
+            $question = trim((string) ($row['question'] ?? ''));
+            if ($question === '') {
+                continue;
+            }
+            $data = [
+                'question' => $question,
+                'question_type' => in_array($row['question_type'] ?? '', ['text', 'textarea', 'dropdown', 'checkbox'], true)
+                    ? $row['question_type'] : 'text',
+                'options' => $row['options'] ?? null,
+                'is_required' => ! empty($row['is_required']),
+                'correct_answer' => isset($row['correct_answer']) ? trim((string) $row['correct_answer']) : null,
+                'order' => $order,
+            ];
+            $id = isset($row['id']) ? (int) $row['id'] : 0;
+            if ($id && $job->jobScreeningQuestions()->where('id', $id)->exists()) {
+                $job->jobScreeningQuestions()->where('id', $id)->update($data);
+            } else {
+                $job->jobScreeningQuestions()->create(array_merge($data, ['job_id' => $job->id]));
+            }
+        }
     }
 
     public function update(Job $job, AccountJobRequest $request, StoreTagService $storeTagService)
@@ -593,6 +640,8 @@ class AccountJobController extends BaseController
             ];
         }
         $job->screeningQuestions()->sync($syncData);
+
+        $this->syncJobScreeningQuestions($job, $request->input('job_screening_questions', []));
 
         $storeTagService->execute($request, $job);
 

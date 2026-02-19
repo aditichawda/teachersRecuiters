@@ -115,6 +115,19 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(0,115,209,0.3);
     }
+    /* Validation: red border and error text below field */
+    .profile-section .form-control.is-invalid,
+    .profile-section .form-select.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+    }
+    .profile-section .invalid-feedback,
+    .profile-section .field-error-text {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
     .add-more-btn {
         background: #f0f7ff;
         color: #0073d1;
@@ -471,6 +484,18 @@
     <?php echo Form::open(['route' => 'public.account.post.settings', 'method' => 'POST', 'files' => true, 'id' => 'profile-form']); ?>
 
 
+    <?php if($errors->any()): ?>
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <strong><?php echo e(__('Please fix the errors below.')); ?></strong>
+        <ul class="mb-0 mt-2 ps-3">
+            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $err): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <li><?php echo e($err); ?></li>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php endif; ?>
+
     <!-- Section 1: Personal Details -->
     <div class="profile-section">
         <div class="profile-section-header">
@@ -483,7 +508,22 @@
                 <!-- 1. Full Name (show first_name; fallback to full_name from registration) -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label"><?php echo e(__('Full Name')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Help us to create your verified candidate profile and ensure accurate identification.')); ?>"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="text" class="form-control" name="first_name" value="<?php echo e(old('first_name', $account->first_name ?: $account->full_name ?? '')); ?>" placeholder="<?php echo e(__('Enter your full name')); ?>" required>
+                    <input type="text" class="form-control <?php $__errorArgs = ['first_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="first_name" value="<?php echo e(old('first_name', $account->first_name ?: $account->full_name ?? '')); ?>" placeholder="<?php echo e(__('Enter your full name')); ?>" required>
+                    <?php $__errorArgs = ['first_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <!-- 2. Email Address -->
@@ -495,7 +535,22 @@
                 <!-- 3. Mobile Number -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label"><?php echo e(__('Phone Number')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('For recruiters and schools to contact you directly regarding interviews and job opportunities and also help us to send you job alerts and updates on WhatsApp.')); ?>"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="tel" class="form-control" name="phone" value="<?php echo e(old('phone', $account->phone ?? '')); ?>" placeholder="<?php echo e(__('Enter mobile number with country code')); ?>">
+                    <input type="tel" class="form-control <?php $__errorArgs = ['phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="phone" value="<?php echo e(old('phone', $account->phone ?? '')); ?>" placeholder="<?php echo e(__('Enter mobile number with country code')); ?>">
+                    <?php $__errorArgs = ['phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     <div class="form-check mt-2">
                         <input type="hidden" name="is_whatsapp_available" value="0">
                         <input type="checkbox" class="form-check-input" name="is_whatsapp_available" value="1" id="is_whatsapp_available" <?php if(old('is_whatsapp_available', $account->is_whatsapp_available)): echo 'checked'; endif; ?>>
@@ -516,11 +571,33 @@
                 <!-- 7. DOB -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label"><?php echo e(__('Date of Birth')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('To verify eligibility criteria, age requirements, and ensure compliance with school policies.')); ?>"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="date" class="form-control" name="dob" value="<?php echo e(old('dob', $account->dob ? $account->dob->format('Y-m-d') : '')); ?>" max="<?php echo e(now()->subYears(16)->format('Y-m-d')); ?>">
+                    <input type="date" class="form-control <?php $__errorArgs = ['dob'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="dob" value="<?php echo e(old('dob', $account->dob ? $account->dob->format('Y-m-d') : '')); ?>" max="<?php echo e(now()->subYears(16)->format('Y-m-d')); ?>">
+                    <?php $__errorArgs = ['dob'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
                 
                 <!-- 5. Gender -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3 <?php $__errorArgs = ['gender'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
                     <label class="form-label"><?php echo e(__('Gender')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Some institutions may have role-specific preferences or accommodation arrangements.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <div class="d-flex gap-3 mt-2">
                         <div class="form-check">
@@ -532,6 +609,14 @@
                             <label class="form-check-label" for="gender_female"><?php echo e(__('Female')); ?></label>
                         </div>
                     </div>
+                    <?php $__errorArgs = ['gender'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <!-- 6. Marital Status -->
@@ -732,15 +817,19 @@ Recruiters often read this section before downloading resumes.
                     </div>
 
                     <!-- 24. Position Type -->
+                    <?php
+                        $positionTypeVal = old('position_type', $account->position_type ?? '');
+                        $positionTypeStr = is_array($positionTypeVal) ? implode(',', $positionTypeVal) : (string)$positionTypeVal;
+                    ?>
                     <div class="col-md-6 mb-3">
                         <label class="form-label"><?php echo e(__('Role Category')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Choose the type of role you are interested in. It helps schools filter candidates by job role.')); ?>"><i class="fa fa-question-circle"></i></span></label>
                         <div class="d-flex gap-3 mt-2">
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="teaching" id="position_teaching" <?php if(str_contains(old('position_type', $account->position_type ?? ''), 'teaching')): echo 'checked'; endif; ?>>
+                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="teaching" id="position_teaching" <?php if(str_contains($positionTypeStr, 'teaching')): echo 'checked'; endif; ?>>
                                 <label class="form-check-label" for="position_teaching"><?php echo e(__('Teaching')); ?></label>
                             </div>
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="non_teaching" id="position_non_teaching" <?php if(str_contains(old('position_type', $account->position_type ?? ''), 'non_teaching')): echo 'checked'; endif; ?>>
+                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="non_teaching" id="position_non_teaching" <?php if(str_contains($positionTypeStr, 'non_teaching')): echo 'checked'; endif; ?>>
                                 <label class="form-check-label" for="position_non_teaching"><?php echo e(__('Non-Teaching')); ?></label>
                             </div>
                         </div>
@@ -870,6 +959,9 @@ Recruiters often read this section before downloading resumes.
                 ->orderBy('name')
                 ->pluck('name', 'id')
                 ->toArray();
+            if (empty($countries)) {
+                $countries = \Botble\Location\Models\Country::query()->orderBy('name')->pluck('name', 'id')->toArray();
+            }
             $cid = old('country_id', $account->country_id);
             if ($cid) {
                 $currentStates = \Botble\Location\Models\State::query()
@@ -911,6 +1003,33 @@ Recruiters often read this section before downloading resumes.
         $workLocations = old('work_location_preferences', $account->work_location_preferences ?? []);
         if (!is_array($workLocations)) $workLocations = [];
         $workLocations = array_slice(array_values($workLocations), 0, 3);
+        if (empty($workLocations)) {
+            $workLocations = [['country_id' => '', 'state_id' => '', 'city_id' => '', 'locality' => '']];
+        }
+        $workLocationStates = [];
+        $workLocationCities = [];
+        if (is_plugin_active('location')) {
+            foreach ($workLocations as $idx => $loc) {
+                $cid = $loc['country_id'] ?? null;
+                if ($cid) {
+                    $workLocationStates[$idx] = \Botble\Location\Models\State::query()
+                        ->where('country_id', $cid)
+                        ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                }
+                $sid = $loc['state_id'] ?? null;
+                if ($sid) {
+                    $workLocationCities[$idx] = \Botble\Location\Models\City::query()
+                        ->where('state_id', $sid)
+                        ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                }
+            }
+        }
         $useLocationDropdowns = is_plugin_active('location');
         $currentCountryName = old('country_name', $account->country_name ?? '');
         $currentStateName = old('state_name', $account->state_name ?? '');
@@ -965,7 +1084,22 @@ Recruiters often read this section before downloading resumes.
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label"><?php echo e(__('Address')); ?></label>
-                    <input type="text" class="form-control" name="address" value="<?php echo e(old('address', $account->address)); ?>" placeholder="<?php echo e(__('Enter your address')); ?>">
+                    <input type="text" class="form-control <?php $__errorArgs = ['address'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="address" value="<?php echo e(old('address', $account->address)); ?>" placeholder="<?php echo e(__('Enter your address')); ?>">
+                    <?php $__errorArgs = ['address'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label"><?php echo e(__('Pin Code')); ?></label>
@@ -1044,12 +1178,18 @@ Recruiters often read this section before downloading resumes.
                                 <label class="form-label small"><?php echo e(__('State')); ?></label>
                                 <select class="form-select form-select-sm work-pref-state" name="work_location_preferences[<?php echo e($index); ?>][state_id]" data-index="<?php echo e($index); ?>">
                                     <option value=""><?php echo e(__('Select')); ?></option>
+                                    <?php $__currentLoopData = $workLocationStates[$index] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sid => $sname): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($sid); ?>" <?php if(($loc['state_id'] ?? '') == $sid): echo 'selected'; endif; ?>><?php echo e($sname); ?></option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <label class="form-label small"><?php echo e(__('City')); ?></label>
                                 <select class="form-select form-select-sm work-pref-city" name="work_location_preferences[<?php echo e($index); ?>][city_id]" data-index="<?php echo e($index); ?>">
                                     <option value=""><?php echo e(__('Select')); ?></option>
+                                    <?php $__currentLoopData = $workLocationCities[$index] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cid => $cname): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($cid); ?>" <?php if(($loc['city_id'] ?? '') == $cid): echo 'selected'; endif; ?>><?php echo e($cname); ?></option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
                             <?php else: ?>
@@ -1170,11 +1310,7 @@ Recruiters often read this section before downloading resumes.
                                             </div>
                                             <div class="d-flex gap-2">
                                                 <a href="<?php echo e(route('public.account.experiences.edit', $exp->id)); ?>" class="btn btn-sm btn-outline-primary" target="_blank"><?php echo e(__('Edit')); ?></a>
-                                                <form method="post" action="<?php echo e(route('public.account.experiences.destroy', $exp->id)); ?>" style="margin:0;" onsubmit="return confirm('<?php echo e(__('Are you sure?')); ?>');">
-                                                    <?php echo csrf_field(); ?>
-                                                    <?php echo method_field('DELETE'); ?>
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><?php echo e(__('Delete')); ?></button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-exp-delete" data-url="<?php echo e(route('public.account.experiences.destroy', $exp->id)); ?>" data-csrf="<?php echo e(csrf_token()); ?>"><?php echo e(__('Delete')); ?></button>
                                             </div>
                                         </div>
                                     </div>
@@ -1261,7 +1397,22 @@ Recruiters often read this section before downloading resumes.
                 <!-- 27. Resume -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label"><?php echo e(__('Resume / CV Upload')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Upload your latest updated resume with complete academic and experience details. Schools review resumes before shortlisting candidates for interviews. PDF/Word files only. Max 2MB')); ?>"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="file" class="form-control" name="resume" accept=".pdf,.doc,.docx">
+                    <input type="file" class="form-control <?php $__errorArgs = ['resume'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="resume" accept=".pdf,.doc,.docx">
+                    <?php $__errorArgs = ['resume'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     <?php if($account->resume): ?>
                         <small class="form-text mt-1">
                             <i class="fa fa-file me-1"></i>
@@ -1301,14 +1452,30 @@ Recruiters often read this section before downloading resumes.
                         </button> -->
                         <span class="text-muted small align-self-center" id="record-status"></span>
                     </div>
-                    <input type="file" class="form-control" name="introductory_audio" id="introductory_audio_file" accept="audio/*,.mp4,video/mp4,.webm">
+                    <input type="file" class="form-control <?php $__errorArgs = ['introductory_audio'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="introductory_audio" id="introductory_audio_file" accept="audio/*,.mp4,video/mp4,.webm,.mp3,.m4a,.wav,.ogg">
+                    <span class="text-muted small mt-1" id="intro_audio_hint"><?php echo e(__('Upload an audio file (max 1.5 MB). Allowed: mp3, m4a, wav, ogg, webm.')); ?></span>
+                    <?php $__errorArgs = ['introductory_audio'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
-                <!-- Teaching Demo YouTube -->
-                <!-- <div class="col-md-6 mb-3">
-                    <label class="form-label"><?php echo e(__('Teaching Demo / Introduction Video Link (YouTube)')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Paste the link to your YouTube teaching demo or self-introduction video (3–10 minutes recommended).')); ?>"><i class="fa fa-question-circle"></i></span></label>
+                <!-- Teaching Demo / YouTube Link -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label"><?php echo e(__('YouTube Video Link')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Paste the link to your YouTube teaching demo or self-introduction video (e.g. https://www.youtube.com/watch?v=...)')); ?>"><i class="fa fa-question-circle"></i></span></label>
                     <input type="url" class="form-control" name="introductory_video_url" value="<?php echo e(old('introductory_video_url', $account->introductory_video_url ?? '')); ?>" placeholder="https://www.youtube.com/watch?v=...">
-                </div> -->
+                </div>
             </div>
             <p class="form-text text-muted mt-3 mb-0 p-3 rounded" style="background:#f8f9fa;"><i class="fa fa-lock me-2"></i><?php echo e(__('Your documents are securely stored and shared only with schools/institutions based on your profile visibility settings.')); ?></p>
         </div>
@@ -1352,11 +1519,118 @@ Recruiters often read this section before downloading resumes.
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Scroll to first validation error (field with red border)
+    var firstInvalid = document.querySelector('#profile-form .form-control.is-invalid, #profile-form .form-select.is-invalid');
+    if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ---------- Client-side validation before save (show errors under fields, red line) ----------
+    var profileForm = document.getElementById('profile-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            // Remove previous client-side error messages and red border
+            document.querySelectorAll('#profile-form .js-field-error').forEach(function(el) { el.remove(); });
+            document.querySelectorAll('#profile-form .form-control.is-invalid, #profile-form .form-select.is-invalid').forEach(function(el) { el.classList.remove('is-invalid'); });
+            var firstErrorEl = null;
+            var hasError = false;
+
+            function showFieldError(inputOrWrap, message) {
+                hasError = true;
+                var el = inputOrWrap;
+                if (el && el.classList && el.classList.contains('form-control')) {
+                    el.classList.add('is-invalid');
+                    if (!firstErrorEl) firstErrorEl = el;
+                }
+                var wrap = el && el.closest ? el.closest('.mb-3') : (el && el.parentElement);
+                if (!wrap) wrap = el && el.parentElement;
+                if (wrap) {
+                    var errDiv = document.createElement('div');
+                    errDiv.className = 'invalid-feedback d-block js-field-error';
+                    errDiv.style.color = '#dc3545';
+                    errDiv.style.fontSize = '12px';
+                    errDiv.style.marginTop = '4px';
+                    errDiv.textContent = message;
+                    wrap.appendChild(errDiv);
+                    if (!firstErrorEl) firstErrorEl = wrap;
+                }
+            }
+
+            var firstName = document.querySelector('#profile-form input[name="first_name"]');
+            if (firstName && !String(firstName.value || '').trim()) {
+                showFieldError(firstName, '<?php echo e(__("Full name is required.")); ?>');
+            }
+
+            var phoneInput = document.querySelector('#profile-form input[name="phone"]');
+            if (phoneInput) {
+                var phone = String(phoneInput.value || '').replace(/\D/g, '');
+                if (phone.length === 0) {
+                    showFieldError(phoneInput, '<?php echo e(__("Please enter your phone number.")); ?>');
+                } else if (phone.length < 10) {
+                    showFieldError(phoneInput, '<?php echo e(__("Please enter a valid 10-digit phone number.")); ?>');
+                }
+            }
+
+            var dobInput = document.querySelector('#profile-form input[name="dob"]');
+            if (dobInput && dobInput.hasAttribute('required') && !dobInput.value) {
+                showFieldError(dobInput, '<?php echo e(__("Date of birth is required.")); ?>');
+            }
+
+            var genderChecked = document.querySelector('#profile-form input[name="gender"]:checked');
+            if (!genderChecked) {
+                var genderInput = document.querySelector('#profile-form input[name="gender"]');
+                if (genderInput) showFieldError(genderInput.closest('.mb-3') || genderInput, '<?php echo e(__("Please select gender.")); ?>');
+            }
+
+            var audioInput = document.querySelector('#profile-form input[name="introductory_audio"]');
+            if (audioInput && audioInput.files && audioInput.files.length > 0) {
+                var file = audioInput.files[0];
+                var allowed = ['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/x-m4a', 'audio/m4a', 'audio/wav', 'audio/ogg', 'audio/webm', 'video/mp4', 'video/webm'];
+                var ext = (file.name || '').split('.').pop().toLowerCase();
+                var ok = allowed.indexOf(file.type) !== -1 || ['mp3', 'mpeg', 'mpga', 'm4a', 'wav', 'ogg', 'webm', 'mp4'].indexOf(ext) !== -1;
+                if (!ok) {
+                    showFieldError(audioInput, '<?php echo e(__("Allowed formats: mp4, wav, ogg, m4a, webm, mp3.")); ?>');
+                } else if (file.size > 1.5 * 1024 * 1024) {
+                    showFieldError(audioInput, '<?php echo e(__("Audio file must be 1.5 MB or less.")); ?>');
+                }
+            }
+
+            if (hasError && firstErrorEl) {
+                e.preventDefault();
+                firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+        });
+    }
+
     // Bootstrap tooltips (hover + click for mobile)
     const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     if (typeof bootstrap !== 'undefined' && tooltipEls.length) {
         tooltipEls.forEach(el => new bootstrap.Tooltip(el, { trigger: 'hover focus click' }));
     }
+
+    // Experience Delete (no nested form – so main profile form stays valid)
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-exp-delete');
+        if (!btn) return;
+        e.preventDefault();
+        if (!confirm('<?php echo e(__("Are you sure?")); ?>')) return;
+        var url = btn.getAttribute('data-url');
+        var csrf = btn.getAttribute('data-csrf');
+        if (!url) return;
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.style.display = 'none';
+        var tok = document.createElement('input');
+        tok.type = 'hidden'; tok.name = '_token'; tok.value = csrf || '';
+        form.appendChild(tok);
+        var method = document.createElement('input');
+        method.type = 'hidden'; method.name = '_method'; method.value = 'DELETE';
+        form.appendChild(method);
+        document.body.appendChild(form);
+        form.submit();
+    });
 
     // ==========================================
     // TomSelect Dropdowns Initialization
@@ -1688,6 +1962,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     })();
 
+    var ajaxHeaders = { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+    var getStatesCities = function(data) {
+        var arr = data && data.data;
+        if (Array.isArray(arr)) return arr;
+        if (data && Array.isArray(data)) return data;
+        return [];
+    };
+
     // Work preference rows: load states/cities for existing rows on page load
     document.querySelectorAll('.work-location-item').forEach(function(row) {
         var countrySel = row.querySelector('.work-pref-country');
@@ -1695,56 +1977,69 @@ document.addEventListener('DOMContentLoaded', function() {
         var citySel = row.querySelector('.work-pref-city');
         var stateId = row.getAttribute('data-state-id');
         var cityId = row.getAttribute('data-city-id');
-        if (countrySel && countrySel.value) {
-            fetch('<?php echo e(route("ajax.states-by-country")); ?>?country_id=' + countrySel.value)
+        if (countrySel && countrySel.value && stateSel) {
+            fetch('<?php echo e(route("ajax.states-by-country")); ?>?country_id=' + countrySel.value, { headers: ajaxHeaders })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
+                    var list = getStatesCities(data);
                     var html = '<option value=""><?php echo e(__("Select")); ?></option>';
-                    if (data.data) data.data.forEach(function(s) { html += '<option value="' + s.id + '"' + (s.id == stateId ? ' selected' : '') + '>' + s.name + '</option>'; });
+                    list.forEach(function(s) { if (s && s.id && s.id != 0) html += '<option value="' + s.id + '"' + (s.id == stateId ? ' selected' : '') + '>' + (s.name || '') + '</option>'; });
                     stateSel.innerHTML = html;
-                    if (stateId && stateSel.value) {
-                        fetch('<?php echo e(route("ajax.cities-by-state")); ?>?state_id=' + stateSel.value)
+                    if (stateId && stateSel.value && citySel) {
+                        fetch('<?php echo e(route("ajax.cities-by-state")); ?>?state_id=' + stateSel.value, { headers: ajaxHeaders })
                             .then(function(r2) { return r2.json(); })
                             .then(function(data2) {
+                                var list2 = getStatesCities(data2);
                                 var html2 = '<option value=""><?php echo e(__("Select")); ?></option>';
-                                if (data2.data) data2.data.forEach(function(c) { html2 += '<option value="' + c.id + '"' + (c.id == cityId ? ' selected' : '') + '>' + c.name + '</option>'; });
+                                list2.forEach(function(c) { if (c && c.id && c.id != 0) html2 += '<option value="' + c.id + '"' + (c.id == cityId ? ' selected' : '') + '>' + (c.name || '') + '</option>'; });
                                 citySel.innerHTML = html2;
-                            });
+                            })
+                            .catch(function() {});
                     }
-                });
+                })
+                .catch(function() {});
         }
     });
 
     // Work preference: country/state change for dynamic rows
-    document.getElementById('work-locations-container').addEventListener('change', function(e) {
-        if (e.target.classList.contains('work-pref-country')) {
-            var stateSel = e.target.closest('.work-location-item').querySelector('.work-pref-state');
-            var citySel = e.target.closest('.work-location-item').querySelector('.work-pref-city');
-            stateSel.innerHTML = '<option value=""><?php echo e(__("Select")); ?></option>';
-            citySel.innerHTML = '<option value=""><?php echo e(__("Select")); ?></option>';
-            if (e.target.value) {
-                fetch('<?php echo e(route("ajax.states-by-country")); ?>?country_id=' + e.target.value)
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        var html = '<option value=""><?php echo e(__("Select")); ?></option>';
-                        if (data.data) data.data.forEach(function(s) { html += '<option value="' + s.id + '">' + s.name + '</option>'; });
-                        stateSel.innerHTML = html;
-                    });
+    var workLocContainer = document.getElementById('work-locations-container');
+    if (workLocContainer) {
+        workLocContainer.addEventListener('change', function(e) {
+            if (e.target.classList.contains('work-pref-country')) {
+                var row = e.target.closest('.work-location-item');
+                var stateSel = row ? row.querySelector('.work-pref-state') : null;
+                var citySel = row ? row.querySelector('.work-pref-city') : null;
+                if (stateSel) stateSel.innerHTML = '<option value=""><?php echo e(__("Select")); ?></option>';
+                if (citySel) citySel.innerHTML = '<option value=""><?php echo e(__("Select")); ?></option>';
+                if (e.target.value && stateSel) {
+                    fetch('<?php echo e(route("ajax.states-by-country")); ?>?country_id=' + e.target.value, { headers: ajaxHeaders })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var list = getStatesCities(data);
+                            var html = '<option value=""><?php echo e(__("Select")); ?></option>';
+                            list.forEach(function(s) { if (s && s.id && s.id != 0) html += '<option value="' + s.id + '">' + (s.name || '') + '</option>'; });
+                            stateSel.innerHTML = html;
+                        })
+                        .catch(function() {});
+                }
+            } else if (e.target.classList.contains('work-pref-state')) {
+                var row = e.target.closest('.work-location-item');
+                var citySel = row ? row.querySelector('.work-pref-city') : null;
+                if (citySel) citySel.innerHTML = '<option value=""><?php echo e(__("Select")); ?></option>';
+                if (e.target.value && citySel) {
+                    fetch('<?php echo e(route("ajax.cities-by-state")); ?>?state_id=' + e.target.value, { headers: ajaxHeaders })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var list = getStatesCities(data);
+                            var html = '<option value=""><?php echo e(__("Select")); ?></option>';
+                            list.forEach(function(c) { if (c && c.id && c.id != 0) html += '<option value="' + c.id + '">' + (c.name || '') + '</option>'; });
+                            citySel.innerHTML = html;
+                        })
+                        .catch(function() {});
+                }
             }
-        } else if (e.target.classList.contains('work-pref-state')) {
-            var citySel = e.target.closest('.work-location-item').querySelector('.work-pref-city');
-            citySel.innerHTML = '<option value=""><?php echo e(__("Select")); ?></option>';
-            if (e.target.value) {
-                fetch('<?php echo e(route("ajax.cities-by-state")); ?>?state_id=' + e.target.value)
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        var html = '<option value=""><?php echo e(__("Select")); ?></option>';
-                        if (data.data) data.data.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
-                        citySel.innerHTML = html;
-                    });
-            }
-        }
-    });
+        });
+    }
 });
 
 // Add qualification (specialization always as dropdown from jb_specializations)
@@ -1846,15 +2141,17 @@ function addWorkLocation() {
         document.getElementById('work-locations-container').insertAdjacentHTML('beforeend', html);
         if (defaultCountryId) {
             var newRow = document.getElementById('work-locations-container').lastElementChild;
-            var stateSel = newRow.querySelector('.work-pref-state');
+            var stateSel = newRow ? newRow.querySelector('.work-pref-state') : null;
             if (stateSel) {
-                fetch('<?php echo e(route("ajax.states-by-country")); ?>?country_id=' + defaultCountryId)
+                fetch('<?php echo e(route("ajax.states-by-country")); ?>?country_id=' + defaultCountryId, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
+                        var list = (data && data.data) ? data.data : (Array.isArray(data) ? data : []);
                         var h = '<option value=""><?php echo e(__("Select")); ?></option>';
-                        if (data.data) data.data.forEach(function(s) { h += '<option value="' + s.id + '">' + s.name + '</option>'; });
+                        list.forEach(function(s) { if (s && s.id && s.id != 0) h += '<option value="' + s.id + '">' + (s.name || '') + '</option>'; });
                         stateSel.innerHTML = h;
-                    });
+                    })
+                    .catch(function() {});
             }
         }
     } else {

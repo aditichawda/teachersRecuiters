@@ -768,6 +768,55 @@
             <p class="sq-empty-msg">{{ __('No screening questions available. Admin can add them in Job Board → Job Attributes → Screening Questions.') }}</p>
             @endforelse
         </div>
+
+        {{-- Job-specific screening questions (employer adds per job, not stored in admin) --}}
+        <div class="mt-4 pt-4 border-top">
+            <h6 class="mb-3 fw-semibold"><i class="fa fa-plus-circle"></i> {{ __('Your screening questions for this job') }}</h6>
+            <p class="text-muted small mb-3">{{ __('Add questions only for this job. Candidates will answer these when applying.') }}</p>
+            <div id="job-screening-questions-list">
+                @php
+                    $jobScreeningQuestions = old('job_screening_questions', $editJobData['job_screening_questions'] ?? []);
+                    if (!is_array($jobScreeningQuestions)) $jobScreeningQuestions = [];
+                @endphp
+                @foreach($jobScreeningQuestions as $idx => $jsq)
+                <div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="{{ $idx }}">
+                    <input type="hidden" name="job_screening_questions[{{ $idx }}][id]" value="{{ $jsq['id'] ?? '' }}">
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <label class="form-label small mb-0">{{ __('Question') }}</label>
+                            <textarea name="job_screening_questions[{{ $idx }}][question]" class="form-control form-control-sm" rows="2" placeholder="{{ __('e.g. Do you have B.Ed?') }}">{{ $jsq['question'] ?? '' }}</textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">{{ __('Type') }}</label>
+                            <select name="job_screening_questions[{{ $idx }}][question_type]" class="form-select form-select-sm jsq-type">
+                                <option value="text" {{ ($jsq['question_type'] ?? 'text') === 'text' ? 'selected' : '' }}>Text</option>
+                                <option value="textarea" {{ ($jsq['question_type'] ?? '') === 'textarea' ? 'selected' : '' }}>Textarea</option>
+                                <option value="dropdown" {{ ($jsq['question_type'] ?? '') === 'dropdown' ? 'selected' : '' }}>Dropdown</option>
+                                <option value="checkbox" {{ ($jsq['question_type'] ?? '') === 'checkbox' ? 'selected' : '' }}>Checkbox</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">
+                                <input type="checkbox" name="job_screening_questions[{{ $idx }}][is_required]" value="1" {{ !empty($jsq['is_required']) ? 'checked' : '' }}> {{ __('Required') }}
+                            </label>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="{{ __('Remove') }}"><i class="fa fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="jsq-options-wrap mb-2" style="display:{{ in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none' }};">
+                        <label class="form-label small mb-0">{{ __('Options (one per line)') }}</label>
+                        <textarea name="job_screening_questions[{{ $idx }}][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No">{{ is_array($jsq['options'] ?? null) ? implode("\n", $jsq['options']) : ($jsq['options'] ?? '') }}</textarea>
+                    </div>
+                    <div class="jsq-correct-wrap" style="display:{{ in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none' }};">
+                        <label class="form-label small mb-0">{{ __('Correct answer (candidate must select this to apply)') }}</label>
+                        <input type="text" name="job_screening_questions[{{ $idx }}][correct_answer]" class="form-control form-control-sm" placeholder="{{ __('Optional') }}" value="{{ $jsq['correct_answer'] ?? '' }}">
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="jsq-add-btn"><i class="fa fa-plus"></i> {{ __('Add question') }}</button>
+        </div>
         </div>
     </div>
 
@@ -1291,6 +1340,62 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateJobDescription(title) {
         return 'We are looking for a dedicated and passionate ' + title + ' to join our educational institution.\n\nKey Responsibilities:\n• Plan, prepare, and deliver high-quality lessons in accordance with the curriculum\n• Create a positive and engaging learning environment for students\n• Assess and evaluate student progress and provide constructive feedback\n• Collaborate with fellow teachers and staff to enhance the educational experience\n• Participate in professional development activities and staff meetings\n• Maintain accurate records of student attendance, grades, and performance\n• Communicate effectively with parents/guardians regarding student progress\n\nWhat We Offer:\n• Competitive salary package\n• Professional development opportunities\n• Supportive and collaborative work environment\n• Modern teaching facilities and resources\n\nIf you are passionate about education and want to make a meaningful impact on students\' lives, we encourage you to apply.';
     }
+
+    // ===== JOB-SPECIFIC SCREENING QUESTIONS (add/remove/toggle) =====
+    var jsqList = document.getElementById('job-screening-questions-list');
+    var jsqAddBtn = document.getElementById('jsq-add-btn');
+    function getJsqNextIndex() {
+        var rows = jsqList.querySelectorAll('.jsq-row');
+        var max = -1;
+        rows.forEach(function(r) {
+            var idx = parseInt(r.getAttribute('data-index'), 10);
+            if (!isNaN(idx) && idx > max) max = idx;
+        });
+        return max + 1;
+    }
+    function toggleJsqOptions(row) {
+        var typeSel = row.querySelector('.jsq-type');
+        var type = typeSel ? typeSel.value : '';
+        var optsWrap = row.querySelector('.jsq-options-wrap');
+        var correctWrap = row.querySelector('.jsq-correct-wrap');
+        if (optsWrap) optsWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
+        if (correctWrap) correctWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
+    }
+    if (jsqAddBtn) {
+        jsqAddBtn.addEventListener('click', function() {
+            var idx = getJsqNextIndex();
+            var html = '<div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="' + idx + '">' +
+                '<input type="hidden" name="job_screening_questions[' + idx + '][id]" value="">' +
+                '<div class="row g-2 mb-2">' +
+                '<div class="col-12"><label class="form-label small mb-0">{{ __("Question") }}</label>' +
+                '<textarea name="job_screening_questions[' + idx + '][question]" class="form-control form-control-sm" rows="2" placeholder="{{ __("e.g. Do you have B.Ed?") }}"></textarea></div>' +
+                '<div class="col-md-4"><label class="form-label small mb-0">{{ __("Type") }}</label>' +
+                '<select name="job_screening_questions[' + idx + '][question_type]" class="form-select form-select-sm jsq-type">' +
+                '<option value="text" selected>Text</option><option value="textarea">Textarea</option><option value="dropdown">Dropdown</option><option value="checkbox">Checkbox</option></select></div>' +
+                '<div class="col-md-4"><label class="form-label small mb-0"><input type="checkbox" name="job_screening_questions[' + idx + '][is_required]" value="1"> {{ __("Required") }}</label></div>' +
+                '<div class="col-md-4 text-end"><button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="{{ __("Remove") }}"><i class="fa fa-times"></i></button></div></div>' +
+                '<div class="jsq-options-wrap mb-2" style="display:none;"><label class="form-label small mb-0">{{ __("Options (one per line)") }}</label>' +
+                '<textarea name="job_screening_questions[' + idx + '][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No"></textarea></div>' +
+                '<div class="jsq-correct-wrap" style="display:none;"><label class="form-label small mb-0">{{ __("Correct answer (candidate must select this to apply)") }}</label>' +
+                '<input type="text" name="job_screening_questions[' + idx + '][correct_answer]" class="form-control form-control-sm" placeholder="{{ __("Optional") }}"></div></div>';
+            jsqList.insertAdjacentHTML('beforeend', html);
+            var newRow = jsqList.querySelector('.jsq-row[data-index="' + idx + '"]');
+            if (newRow) {
+                var sel = newRow.querySelector('.jsq-type');
+                if (sel) sel.addEventListener('change', function() { toggleJsqOptions(newRow); });
+                var rm = newRow.querySelector('.jsq-remove');
+                if (rm) rm.addEventListener('click', function() { newRow.remove(); });
+            }
+        });
+    }
+    jsqList.querySelectorAll('.jsq-row').forEach(function(row) {
+        row.querySelectorAll('.jsq-type').forEach(function(sel) {
+            sel.addEventListener('change', function() { toggleJsqOptions(row); });
+        });
+        row.querySelectorAll('.jsq-remove').forEach(function(btn) {
+            btn.addEventListener('click', function() { row.remove(); });
+        });
+    });
 
     // ===== FORM VALIDATION =====
     document.getElementById('jobPostForm').addEventListener('submit', function(e) {

@@ -53,6 +53,14 @@ class AccountJobRequest extends JobRequest
             'screening_question_options.*' => ['nullable', 'string', 'max:2000'],
             'screening_question_correct' => ['nullable', 'array'],
             'screening_question_correct.*' => ['nullable', 'string', 'max:500'],
+            // Job-specific screening questions (employer adds per job, not stored in admin)
+            'job_screening_questions' => ['nullable', 'array'],
+            'job_screening_questions.*.id' => ['nullable', 'integer', 'exists:jb_job_screening_questions,id'],
+            'job_screening_questions.*.question' => ['required_with:job_screening_questions.*', 'nullable', 'string', 'max:2000'],
+            'job_screening_questions.*.question_type' => ['required_with:job_screening_questions.*', 'nullable', 'string', 'in:text,textarea,dropdown,checkbox'],
+            'job_screening_questions.*.options' => ['nullable', 'string', 'max:2000'],
+            'job_screening_questions.*.is_required' => ['nullable', 'boolean'],
+            'job_screening_questions.*.correct_answer' => ['nullable', 'string', 'max:500'],
         ]);
     }
 

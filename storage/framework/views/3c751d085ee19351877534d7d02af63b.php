@@ -308,7 +308,7 @@
 
 
 
-<script src="<?php echo e(asset('themes/jobzilla/js/dialog-alert.js')); ?>?v=<?php echo e(time()); ?>"></script>
+<script src="<?php echo e(asset('themes/jobzilla/js/dialog-alert.js')); ?>?v=2.0.<?php echo e(time()); ?>"></script>
 
 
 <script>

@@ -305,7 +305,7 @@
 
 {!! Theme::footer() !!}
 
-{{-- Dialog Alert JS - Load directly to ensure it works - v2.0 Screenshot Match --}}
+{{-- Dialog Alert JS --}}
 <script src="{{ asset('themes/jobzilla/js/dialog-alert.js') }}?v=2.0.{{ time() }}"></script>
 
 {{-- Fix Testimonials Equal Height --}}

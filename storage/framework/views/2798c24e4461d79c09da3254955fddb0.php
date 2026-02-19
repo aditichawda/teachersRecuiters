@@ -770,6 +770,56 @@
             <p class="sq-empty-msg"><?php echo e(__('No screening questions available. Admin can add them in Job Board → Job Attributes → Screening Questions.')); ?></p>
             <?php endif; ?>
         </div>
+
+        
+        <div class="mt-4 pt-4 border-top">
+            <h6 class="mb-3 fw-semibold"><i class="fa fa-plus-circle"></i> <?php echo e(__('Your screening questions for this job')); ?></h6>
+            <p class="text-muted small mb-3"><?php echo e(__('Add questions only for this job. Candidates will answer these when applying.')); ?></p>
+            <div id="job-screening-questions-list">
+                <?php
+                    $jobScreeningQuestions = old('job_screening_questions', $editJobData['job_screening_questions'] ?? []);
+                    if (!is_array($jobScreeningQuestions)) $jobScreeningQuestions = [];
+                ?>
+                <?php $__currentLoopData = $jobScreeningQuestions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $jsq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="<?php echo e($idx); ?>">
+                    <input type="hidden" name="job_screening_questions[<?php echo e($idx); ?>][id]" value="<?php echo e($jsq['id'] ?? ''); ?>">
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <label class="form-label small mb-0"><?php echo e(__('Question')); ?></label>
+                            <textarea name="job_screening_questions[<?php echo e($idx); ?>][question]" class="form-control form-control-sm" rows="2" placeholder="<?php echo e(__('e.g. Do you have B.Ed?')); ?>"><?php echo e($jsq['question'] ?? ''); ?></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0"><?php echo e(__('Type')); ?></label>
+                            <select name="job_screening_questions[<?php echo e($idx); ?>][question_type]" class="form-select form-select-sm jsq-type">
+                                <option value="text" <?php echo e(($jsq['question_type'] ?? 'text') === 'text' ? 'selected' : ''); ?>>Text</option>
+                                <option value="textarea" <?php echo e(($jsq['question_type'] ?? '') === 'textarea' ? 'selected' : ''); ?>>Textarea</option>
+                                <option value="dropdown" <?php echo e(($jsq['question_type'] ?? '') === 'dropdown' ? 'selected' : ''); ?>>Dropdown</option>
+                                <option value="checkbox" <?php echo e(($jsq['question_type'] ?? '') === 'checkbox' ? 'selected' : ''); ?>>Checkbox</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">
+                                <input type="checkbox" name="job_screening_questions[<?php echo e($idx); ?>][is_required]" value="1" <?php echo e(!empty($jsq['is_required']) ? 'checked' : ''); ?>> <?php echo e(__('Required')); ?>
+
+                            </label>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="<?php echo e(__('Remove')); ?>"><i class="fa fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="jsq-options-wrap mb-2" style="display:<?php echo e(in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none'); ?>;">
+                        <label class="form-label small mb-0"><?php echo e(__('Options (one per line)')); ?></label>
+                        <textarea name="job_screening_questions[<?php echo e($idx); ?>][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No"><?php echo e(is_array($jsq['options'] ?? null) ? implode("\n", $jsq['options']) : ($jsq['options'] ?? '')); ?></textarea>
+                    </div>
+                    <div class="jsq-correct-wrap" style="display:<?php echo e(in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none'); ?>;">
+                        <label class="form-label small mb-0"><?php echo e(__('Correct answer (candidate must select this to apply)')); ?></label>
+                        <input type="text" name="job_screening_questions[<?php echo e($idx); ?>][correct_answer]" class="form-control form-control-sm" placeholder="<?php echo e(__('Optional')); ?>" value="<?php echo e($jsq['correct_answer'] ?? ''); ?>">
+                    </div>
+                </div>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="jsq-add-btn"><i class="fa fa-plus"></i> <?php echo e(__('Add question')); ?></button>
+        </div>
         </div>
     </div>
 
@@ -1272,7 +1322,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== AI GENERATE DESCRIPTION =====
     document.getElementById('aiGenerateBtn').addEventListener('click', function() {
         var title = document.getElementById('job_title').value;
-        if (!title) { alert('Please enter a job title first.'); return; }
+        if (!title) { 
+            if (typeof window.showDialogAlert === 'function') {
+                window.showDialogAlert('error', 'Please enter a job title first.', 'Validation Error');
+            } else {
+                alert('Please enter a job title first.');
+            }
+            return; 
+        }
 
         this.disabled = true;
         this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
@@ -1287,6 +1344,62 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateJobDescription(title) {
         return 'We are looking for a dedicated and passionate ' + title + ' to join our educational institution.\n\nKey Responsibilities:\n• Plan, prepare, and deliver high-quality lessons in accordance with the curriculum\n• Create a positive and engaging learning environment for students\n• Assess and evaluate student progress and provide constructive feedback\n• Collaborate with fellow teachers and staff to enhance the educational experience\n• Participate in professional development activities and staff meetings\n• Maintain accurate records of student attendance, grades, and performance\n• Communicate effectively with parents/guardians regarding student progress\n\nWhat We Offer:\n• Competitive salary package\n• Professional development opportunities\n• Supportive and collaborative work environment\n• Modern teaching facilities and resources\n\nIf you are passionate about education and want to make a meaningful impact on students\' lives, we encourage you to apply.';
     }
+
+    // ===== JOB-SPECIFIC SCREENING QUESTIONS (add/remove/toggle) =====
+    var jsqList = document.getElementById('job-screening-questions-list');
+    var jsqAddBtn = document.getElementById('jsq-add-btn');
+    function getJsqNextIndex() {
+        var rows = jsqList.querySelectorAll('.jsq-row');
+        var max = -1;
+        rows.forEach(function(r) {
+            var idx = parseInt(r.getAttribute('data-index'), 10);
+            if (!isNaN(idx) && idx > max) max = idx;
+        });
+        return max + 1;
+    }
+    function toggleJsqOptions(row) {
+        var typeSel = row.querySelector('.jsq-type');
+        var type = typeSel ? typeSel.value : '';
+        var optsWrap = row.querySelector('.jsq-options-wrap');
+        var correctWrap = row.querySelector('.jsq-correct-wrap');
+        if (optsWrap) optsWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
+        if (correctWrap) correctWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
+    }
+    if (jsqAddBtn) {
+        jsqAddBtn.addEventListener('click', function() {
+            var idx = getJsqNextIndex();
+            var html = '<div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="' + idx + '">' +
+                '<input type="hidden" name="job_screening_questions[' + idx + '][id]" value="">' +
+                '<div class="row g-2 mb-2">' +
+                '<div class="col-12"><label class="form-label small mb-0"><?php echo e(__("Question")); ?></label>' +
+                '<textarea name="job_screening_questions[' + idx + '][question]" class="form-control form-control-sm" rows="2" placeholder="<?php echo e(__("e.g. Do you have B.Ed?")); ?>"></textarea></div>' +
+                '<div class="col-md-4"><label class="form-label small mb-0"><?php echo e(__("Type")); ?></label>' +
+                '<select name="job_screening_questions[' + idx + '][question_type]" class="form-select form-select-sm jsq-type">' +
+                '<option value="text" selected>Text</option><option value="textarea">Textarea</option><option value="dropdown">Dropdown</option><option value="checkbox">Checkbox</option></select></div>' +
+                '<div class="col-md-4"><label class="form-label small mb-0"><input type="checkbox" name="job_screening_questions[' + idx + '][is_required]" value="1"> <?php echo e(__("Required")); ?></label></div>' +
+                '<div class="col-md-4 text-end"><button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="<?php echo e(__("Remove")); ?>"><i class="fa fa-times"></i></button></div></div>' +
+                '<div class="jsq-options-wrap mb-2" style="display:none;"><label class="form-label small mb-0"><?php echo e(__("Options (one per line)")); ?></label>' +
+                '<textarea name="job_screening_questions[' + idx + '][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No"></textarea></div>' +
+                '<div class="jsq-correct-wrap" style="display:none;"><label class="form-label small mb-0"><?php echo e(__("Correct answer (candidate must select this to apply)")); ?></label>' +
+                '<input type="text" name="job_screening_questions[' + idx + '][correct_answer]" class="form-control form-control-sm" placeholder="<?php echo e(__("Optional")); ?>"></div></div>';
+            jsqList.insertAdjacentHTML('beforeend', html);
+            var newRow = jsqList.querySelector('.jsq-row[data-index="' + idx + '"]');
+            if (newRow) {
+                var sel = newRow.querySelector('.jsq-type');
+                if (sel) sel.addEventListener('change', function() { toggleJsqOptions(newRow); });
+                var rm = newRow.querySelector('.jsq-remove');
+                if (rm) rm.addEventListener('click', function() { newRow.remove(); });
+            }
+        });
+    }
+    jsqList.querySelectorAll('.jsq-row').forEach(function(row) {
+        row.querySelectorAll('.jsq-type').forEach(function(sel) {
+            sel.addEventListener('change', function() { toggleJsqOptions(row); });
+        });
+        row.querySelectorAll('.jsq-remove').forEach(function(btn) {
+            btn.addEventListener('click', function() { row.remove(); });
+        });
+    });
 
     // ===== FORM VALIDATION =====
     document.getElementById('jobPostForm').addEventListener('submit', function(e) {

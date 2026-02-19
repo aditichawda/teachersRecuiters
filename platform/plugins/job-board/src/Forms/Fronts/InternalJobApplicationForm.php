@@ -81,7 +81,7 @@ class InternalJobApplicationForm extends FormFront
             ->add('full_name_col', HtmlField::class, HtmlFieldOption::make()->content('<div class="col-md-6">'))
             ->add('full_name', TextField::class, TextFieldOption::make()
                 ->label(trans('plugins/job-board::messages.full_name_label'))
-                ->value(old('full_name', ($account ? trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) : '')))
+                ->value(old('full_name', $account ? trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) ?: ($account->full_name ?? $account->name ?? '') : ''))
                 ->placeholder(trans('plugins/job-board::messages.enter_full_name'))
                 ->required()
                 ->addAttribute('id', 'full_name_apply_now')

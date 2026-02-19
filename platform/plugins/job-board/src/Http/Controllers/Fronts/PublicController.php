@@ -52,48 +52,34 @@ class PublicController extends BaseController
 
     /**
      * Get screening questions for a job (for apply form).
-     * Uses question_override/options_override from pivot, or resolves template with job data.
-     * Includes correct_answer for restriction validation.
+     * Includes admin-pool questions (id: sq_X) and job-specific questions (id: jq_X).
      */
     public function getJobScreeningQuestions(int $id)
     {
-        $job = JobModel::with('screeningQuestions')->find($id);
+        $job = JobModel::find($id);
         if (! $job) {
             return response()->json(['questions' => []], 200);
         }
-        $replacements = ScreeningQuestionPlaceholder::jobToReplacements($job);
-        $questions = $job->screeningQuestions->sortBy('pivot.order')->values()->map(function ($q) use ($replacements) {
-            $questionText = $q->pivot->question_override
-                ?: ScreeningQuestionPlaceholder::resolve($q->question, $replacements);
-            $opts = $q->pivot->options_override;
-            if ($opts !== null && $opts !== '') {
-                $optsArray = array_filter(array_map('trim', preg_split('/[\r\n]+/', $opts)));
-            } else {
-                $resolved = ScreeningQuestionPlaceholder::resolve(
-                    implode("\n", $q->options_array),
-                    $replacements
-                );
-                $optsArray = array_filter(array_map('trim', preg_split('/[\r\n]+/', $resolved)));
-            }
-
+        $all = $job->getAllScreeningQuestionsForApply();
+        $questions = $all->map(function ($q) {
             return [
                 'id' => $q->id,
-                'question' => $questionText,
+                'question' => $q->question,
                 'question_type' => $q->question_type,
-                'options' => array_values($optsArray),
-                'is_required' => (bool) ($q->pivot->is_required ?? false),
+                'options' => $q->options,
+                'is_required' => $q->is_required,
             ];
-        });
+        })->values()->all();
         return response()->json(['questions' => $questions]);
     }
 
     /**
      * Validate screening answers before showing resume step.
-     * Returns { valid: true } or { valid: false, message: "..." }.
+     * Uses merged questions (admin pool + job-specific). Returns { valid: true } or { valid: false, message: "..." }.
      */
     public function validateScreening(Request $request, int $id)
     {
-        $job = JobModel::with('screeningQuestions')->find($id);
+        $job = JobModel::find($id);
         if (! $job) {
             return response()->json(['valid' => false, 'message' => 'Job not found.'], 404);
         }
@@ -106,24 +92,24 @@ class PublicController extends BaseController
                 $screeningAnswers[$qId] = json_encode(array_values($val));
             }
         }
-        foreach ($job->screeningQuestions as $sq) {
-            $correctAnswer = $sq->pivot->correct_answer ?: $sq->correct_answer;
-            if (! $correctAnswer || ! ($sq->pivot->is_required ?? false)) {
+        $all = $job->getAllScreeningQuestionsForApply();
+        foreach ($all as $q) {
+            if (! $q->correct_answer || ! $q->is_required) {
                 continue;
             }
-            $answer = $screeningAnswers[$sq->id] ?? null;
+            $answer = $screeningAnswers[$q->id] ?? null;
             if ($answer === null || $answer === '') {
                 return response()->json([
                     'valid' => false,
-                    'message' => trans('plugins/job-board::messages.screening_answer_required', ['question' => $sq->question]),
+                    'message' => trans('plugins/job-board::messages.screening_answer_required', ['question' => $q->question]),
                 ]);
             }
             $matches = false;
             if (is_string($answer) && str_starts_with(trim($answer), '[')) {
                 $decoded = json_decode($answer, true);
-                $matches = is_array($decoded) && in_array(trim($correctAnswer), array_map('trim', $decoded));
+                $matches = is_array($decoded) && in_array(trim($q->correct_answer), array_map('trim', $decoded));
             } else {
-                $matches = trim((string) $answer) === trim($correctAnswer);
+                $matches = trim((string) $answer) === trim($q->correct_answer);
             }
             if (! $matches) {
                 return response()->json([
@@ -512,9 +498,14 @@ class PublicController extends BaseController
 
             $request->merge(['job_id' => $job->id]);
 
-            // Full name → first_name + last_name
+            // Full name: use request or fallback to account name (fix 422 when profile name empty)
             $fullName = $request->input('full_name');
-            if (is_string($fullName) && $fullName !== '') {
+            if ((! is_string($fullName) || trim($fullName) === '') && $account) {
+                $fullName = trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) ?: ($account->full_name ?? $account->name ?? '');
+                $request->merge(['full_name' => $fullName]);
+            }
+            $fullName = $request->input('full_name');
+            if (is_string($fullName) && trim($fullName) !== '') {
                 $parts = preg_split('/\s+/', trim($fullName), 2, PREG_SPLIT_NO_EMPTY);
                 $request->merge([
                     'first_name' => $parts[0] ?? '',
@@ -568,11 +559,10 @@ class PublicController extends BaseController
                     $screeningAnswers[$qId] = json_encode(array_values($val));
                 }
             }
-            // Validate correct_answer restriction: if question has correct_answer + is_required, candidate must match
-            $job->load('screeningQuestions');
-            foreach ($job->screeningQuestions as $sq) {
-                $correctAnswer = $sq->pivot->correct_answer ?: $sq->correct_answer;
-                if (! $correctAnswer || ! ($sq->pivot->is_required ?? false)) {
+            // Validate correct_answer restriction using merged questions (admin pool + job-specific)
+            $allSq = $job->getAllScreeningQuestionsForApply();
+            foreach ($allSq as $sq) {
+                if (! $sq->correct_answer || ! $sq->is_required) {
                     continue;
                 }
                 $answer = $screeningAnswers[$sq->id] ?? null;
@@ -585,9 +575,9 @@ class PublicController extends BaseController
                 $matches = false;
                 if (is_string($answer) && str_starts_with(trim($answer), '[')) {
                     $decoded = json_decode($answer, true);
-                    $matches = is_array($decoded) && in_array(trim($correctAnswer), array_map('trim', $decoded));
+                    $matches = is_array($decoded) && in_array(trim($sq->correct_answer), array_map('trim', $decoded));
                 } else {
-                    $matches = trim((string) $answer) === trim($correctAnswer);
+                    $matches = trim((string) $answer) === trim($sq->correct_answer);
                 }
                 if (! $matches) {
                     return $this
@@ -1042,12 +1032,6 @@ class PublicController extends BaseController
     {
         abort_if(JobBoardHelper::isDisabledPublicProfile(), 404);
 
-        // Check if user is authenticated and is an employer
-        $account = Auth::guard('account')->user();
-        if (!$account || !$account->isEmployer()) {
-            abort(403, __('Only employers can view candidate profiles'));
-        }
-
         $slug = SlugHelper::getSlug($slug, SlugHelper::getPrefix(Account::class));
 
         abort_unless($slug, 404);
@@ -1068,6 +1052,13 @@ class PublicController extends BaseController
         $candidate = Account::query()
             ->where($condition)
             ->firstOrFail();
+
+        // Allow employers to view any candidate profile; allow job seeker to view their own profile
+        $account = Auth::guard('account')->user();
+        $canView = $account && ($account->isEmployer() || $account->id === $candidate->id);
+        if (!$canView) {
+            abort(403, __('Only employers can view candidate profiles'));
+        }
 
         $candidate->setRelation('slugable', $slug);
 
