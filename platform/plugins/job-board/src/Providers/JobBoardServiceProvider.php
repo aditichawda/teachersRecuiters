@@ -640,6 +640,14 @@ class JobBoardServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-star',
                 ]))
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
+                    'id' => 'cms-account-wallet',
+                    'priority' => 6,
+                    'parent_id' => null,
+                    'name' => 'plugins/job-board::dashboard.menu.wallet',
+                    'url' => fn () => route('public.account.wallet'),
+                    'icon' => 'ti ti-wallet',
+                ]))
+                ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
                     'id' => 'cms-account-invoices',
                     'priority' => 7,
                     'parent_id' => null,

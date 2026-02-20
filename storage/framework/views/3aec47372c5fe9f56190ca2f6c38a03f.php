@@ -821,6 +821,12 @@
                     <ul class="enl-nav">
                         <?php $__currentLoopData = $menuItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php if(! $item['name']) continue; ?>
+                            <?php
+                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages', 'cms-account-invoices'];
+                                if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
+                                    continue;
+                                }
+                            ?>
                             <li>
                                 <a href="<?php echo e($item['url']); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $item['active']]); ?>">
                                     <?php if(str_contains($item['icon'] ?? '', 'ti ')): ?>

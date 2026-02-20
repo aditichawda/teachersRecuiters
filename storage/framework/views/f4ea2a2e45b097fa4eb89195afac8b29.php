@@ -608,6 +608,7 @@
                         <div class="cdt-personal-info">
                             <div class="cdt-personal-name"><?php echo e($candidate->name ?? 'Candidate'); ?></div>
                             <div class="cdt-personal-role"><?php echo e($firstRole); ?></div>
+                            <?php if($candidate->gender ?? null): ?><div class="text-muted small"><?php echo e(__('Gender')); ?>: <?php echo e(ucfirst($candidate->gender)); ?></div><?php endif; ?>
                             <?php if(is_array($teachSubjects) && !empty($teachSubjects)): ?>
                                 <div class="cdt-skill-tags">
                                     <?php $__currentLoopData = array_slice($teachSubjects, 0, 10); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sub): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -721,14 +722,46 @@
                         </div>
 
                         <div id="cdt-pane-other" class="cdt-tab-pane" role="tabpanel">
+                            <?php if(!empty(trim($candidate->interests ?? ''))): ?>
+                                <div class="mb-4">
+                                    <div class="cdt-section-title mb-2"><?php echo e(__('Interests')); ?></div>
+                                    <div class="cdt-text-block"><?php echo nl2br(e($candidate->interests)); ?></div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if(!empty(trim($candidate->achievements ?? ''))): ?>
+                                <div class="mb-4">
+                                    <div class="cdt-section-title mb-2"><?php echo e(__('Achievements')); ?></div>
+                                    <div class="cdt-text-block"><?php echo nl2br(e($candidate->achievements)); ?></div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if(!empty(trim($candidate->activities ?? ''))): ?>
+                                <div class="mb-4">
+                                    <div class="cdt-section-title mb-2"><?php echo e(__('Activities')); ?></div>
+                                    <div class="cdt-text-block"><?php echo nl2br(e($candidate->activities)); ?></div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if(!empty($youtubeUrl ?? null)): ?>
+                                <div class="mb-4">
+                                    <div class="cdt-section-title mb-2"><?php echo e(__('YouTube Link')); ?></div>
+                                    <a href="<?php echo e($youtubeUrl); ?>" target="_blank" rel="noopener noreferrer" class="cdt-link-yt"><i class="fab fa-youtube"></i> <?php echo e(__('Watch on YouTube')); ?></a>
+                                </div>
+                            <?php endif; ?>
                             <div class="cdt-detail-list mb-4">
                                 <div class="cdt-section-title mb-3"><?php echo e(__('Job Preferences')); ?></div>
                                 <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Preferred Institution Type')); ?></span><span class="cdt-detail-value"><?php echo e($instTypesDisplay); ?></span></div>
                                 <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Position Type')); ?></span><span class="cdt-detail-value"><?php echo e($positionTypeStr ? str_replace(['teaching', 'non_teaching'], [__('Teaching'), __('Non-Teaching')], $positionTypeStr) : '—'); ?></span></div>
                                 <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Teaching Subjects')); ?></span><span class="cdt-detail-value"><?php echo e($teachSubjectsDisplay); ?></span></div>
                                 <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Job Type')); ?></span><span class="cdt-detail-value"><?php echo e($jobTypeDisplay); ?></span></div>
+                                <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Notice Period')); ?></span><span class="cdt-detail-value"><?php echo e($noticeDisplay); ?></span></div>
+                                <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Total Experience')); ?></span><span class="cdt-detail-value"><?php echo e($totalExpDisplay); ?></span></div>
+                                <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Expected Salary')); ?></span><span class="cdt-detail-value"><?php echo e($candidate->expected_salary ?? '—'); ?><?php echo ($candidate->expected_salary_period ?? null) ? ' / ' . e($candidate->expected_salary_period) : ''; ?></span></div>
                             </div>
-                            <p class="small text-muted mb-3"><?php echo e(__('Notice Period, Experience, Salary & Location are in Profile Info on the right.')); ?></p>
+                            <div class="cdt-detail-list mb-4">
+                                <div class="cdt-section-title mb-3"><?php echo e(__('Location')); ?></div>
+                                <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Current Location')); ?></span><span class="cdt-detail-value"><?php echo e($currentLocStr ?: '—'); ?></span></div>
+                                <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Native Location')); ?></span><span class="cdt-detail-value"><?php echo e($nativeLocStr); ?></span></div>
+                                <div class="cdt-detail-row"><span class="cdt-detail-label"><?php echo e(__('Work Location Preference')); ?></span><span class="cdt-detail-value"><?php echo e($workPrefLabel); ?></span></div>
+                            </div>
                             <?php if(is_array($candidate->qualifications ?? null) && !empty($candidate->qualifications)): ?>
                                 <div class="mb-4">
                                     <div class="cdt-section-title mb-3"><?php echo e(__('Qualifications')); ?></div>
@@ -792,6 +825,68 @@
                             <?php if($candidate->phone ?? null): ?><li><span class="cdt-info-icon"><i class="fas fa-mobile-alt"></i></span><div class="cdt-info-text"><div class="cdt-info-label"><?php echo e(__('Phone')); ?></div><div class="cdt-info-value"><?php echo e($candidate->phone); ?></div></div></li><?php endif; ?>
                             <?php if($candidate->email ?? null): ?><li><span class="cdt-info-icon"><i class="fas fa-at"></i></span><div class="cdt-info-text"><div class="cdt-info-label"><?php echo e(__('Email')); ?></div><div class="cdt-info-value"><?php echo e($candidate->email); ?></div></div></li><?php endif; ?>
                             <?php if($candidate->address ?? $candidate->city_name ?? $candidate->state_name ?? null): ?><li><span class="cdt-info-icon"><i class="fas fa-map-marker-alt"></i></span><div class="cdt-info-text"><div class="cdt-info-label"><?php echo e(__('Location')); ?></div><div class="cdt-info-value"><?php echo e($candidate->address ?? ''); ?><?php echo e(($candidate->city_name ?? null) ? ', ' . $candidate->city_name : ''); ?><?php echo e(($candidate->state_name ?? null) ? ', ' . $candidate->state_name : ''); ?><?php echo e(($candidate->country_name ?? null) ? ', ' . $candidate->country_name : ''); ?></div></div></li><?php endif; ?>
+                        </ul>
+                    </div>
+
+                    
+                    <div class="cdt-sidebar-card">
+                        <h4><?php echo e(__('Interests')); ?></h4>
+                        <ul class="cdt-info-list">
+                            <li>
+                                <span class="cdt-info-icon"><i class="fas fa-star"></i></span>
+                                <div class="cdt-info-text">
+                                    <div class="cdt-info-label"><?php echo e(__('Interests')); ?></div>
+                                    <div class="cdt-info-value cdt-info-value-block"><?php echo e(!empty(trim($candidate->interests ?? '')) ? Str::limit(strip_tags($candidate->interests), 120) : '—'); ?></div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    
+                    <div class="cdt-sidebar-card">
+                        <h4><?php echo e(__('Achievements')); ?></h4>
+                        <ul class="cdt-info-list">
+                            <li>
+                                <span class="cdt-info-icon"><i class="fas fa-trophy"></i></span>
+                                <div class="cdt-info-text">
+                                    <div class="cdt-info-label"><?php echo e(__('Achievements')); ?></div>
+                                    <div class="cdt-info-value cdt-info-value-block"><?php echo e(!empty(trim($candidate->achievements ?? '')) ? Str::limit(strip_tags($candidate->achievements), 120) : '—'); ?></div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    
+                    <div class="cdt-sidebar-card">
+                        <h4><?php echo e(__('Activities')); ?></h4>
+                        <ul class="cdt-info-list">
+                            <li>
+                                <span class="cdt-info-icon"><i class="fas fa-tasks"></i></span>
+                                <div class="cdt-info-text">
+                                    <div class="cdt-info-label"><?php echo e(__('Activities')); ?></div>
+                                    <div class="cdt-info-value cdt-info-value-block"><?php echo e(!empty(trim($candidate->activities ?? '')) ? Str::limit(strip_tags($candidate->activities), 120) : '—'); ?></div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    
+                    <div class="cdt-sidebar-card">
+                        <h4><?php echo e(__('YouTube Link')); ?></h4>
+                        <ul class="cdt-info-list">
+                            <li>
+                                <span class="cdt-info-icon"><i class="fab fa-youtube"></i></span>
+                                <div class="cdt-info-text">
+                                    <div class="cdt-info-label"><?php echo e(__('YouTube')); ?></div>
+                                    <div class="cdt-info-value">
+                                        <?php if(!empty($youtubeUrl)): ?>
+                                            <a href="<?php echo e($youtubeUrl); ?>" target="_blank" rel="noopener noreferrer" class="text-decoration-none"><?php echo e(__('Watch on YouTube')); ?></a>
+                                        <?php else: ?>
+                                            —
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                     </div>

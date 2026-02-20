@@ -29,6 +29,7 @@ use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\JobExperience;
 use Botble\JobBoard\Models\JobScreeningQuestion;
 use Botble\JobBoard\Models\ScreeningQuestion;
+use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Models\JobShift;
 use Botble\JobBoard\Models\JobSkill;
 use Botble\JobBoard\Models\JobType;
@@ -337,6 +338,12 @@ class AccountJobController extends BaseController
         if (JobBoardHelper::isEnabledCreditsSystem() && $account->credits > 0) {
             $account->credits--;
             $account->save();
+            Transaction::query()->create([
+                'account_id' => $account->getKey(),
+                'credits' => 1,
+                'type' => Transaction::TYPE_DEBIT,
+                'description' => trans('plugins/job-board::messages.credits_used_job_post', ['job' => $job->name]),
+            ]);
         }
 
         // Check if job is published (use the model instance, not query again)
@@ -733,6 +740,12 @@ class AccountJobController extends BaseController
         if (JobBoardHelper::isEnabledCreditsSystem() && $account->credits > 0) {
             $account->credits--;
             $account->save();
+            Transaction::query()->create([
+                'account_id' => $account->getKey(),
+                'credits' => 1,
+                'type' => Transaction::TYPE_DEBIT,
+                'description' => trans('plugins/job-board::messages.credits_used_job_renew', ['job' => $job->name]),
+            ]);
         }
 
         AccountActivityLog::query()->create([

@@ -456,6 +456,20 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             });
 
             Route::group([
+                'prefix' => 'wallet',
+                'middleware' => [
+                    'account:' . AccountTypeEnum::EMPLOYER,
+                    'enable-credits',
+                    LocaleMiddleware::class,
+                ],
+            ], function (): void {
+                Route::get('/', [
+                    'as' => 'wallet',
+                    'uses' => 'WalletController@index',
+                ]);
+            });
+
+            Route::group([
                 'prefix' => 'invoices',
                 'as' => 'invoices.',
             ], function (): void {

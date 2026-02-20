@@ -39,6 +39,12 @@
 <ul class="menu">
     @foreach ($menuItems as $item)
         @continue(! $item['name'])
+        @php
+            $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages', 'cms-account-invoices'];
+            if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
+                continue;
+            }
+        @endphp
         <li>
             <a
                 href="{{ $item['url']  }}"

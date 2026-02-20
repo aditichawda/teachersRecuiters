@@ -260,6 +260,9 @@ return [
     // Transaction
     'added_credits_by_admin' => 'Added :credits credit(s) by admin ":name"',
     'purchased_credits' => 'You have purchased :credits credit(s)',
+    'credits_used' => ':credits credit(s) used',
+    'credits_used_job_post' => '1 credit used for job post: :job',
+    'credits_used_job_renew' => '1 credit used for job renewal: :job',
     'via_payment' => ' via :payment',
 
     // External job application

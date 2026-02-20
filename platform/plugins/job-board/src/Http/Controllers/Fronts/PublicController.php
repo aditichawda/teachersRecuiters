@@ -52,34 +52,48 @@ class PublicController extends BaseController
 
     /**
      * Get screening questions for a job (for apply form).
-     * Includes admin-pool questions (id: sq_X) and job-specific questions (id: jq_X).
+     * Uses question_override/options_override from pivot, or resolves template with job data.
+     * Includes correct_answer for restriction validation.
      */
     public function getJobScreeningQuestions(int $id)
     {
-        $job = JobModel::find($id);
+        $job = JobModel::with('screeningQuestions')->find($id);
         if (! $job) {
             return response()->json(['questions' => []], 200);
         }
-        $all = $job->getAllScreeningQuestionsForApply();
-        $questions = $all->map(function ($q) {
+        $replacements = ScreeningQuestionPlaceholder::jobToReplacements($job);
+        $questions = $job->screeningQuestions->sortBy('pivot.order')->values()->map(function ($q) use ($replacements) {
+            $questionText = $q->pivot->question_override
+                ?: ScreeningQuestionPlaceholder::resolve($q->question, $replacements);
+            $opts = $q->pivot->options_override;
+            if ($opts !== null && $opts !== '') {
+                $optsArray = array_filter(array_map('trim', preg_split('/[\r\n]+/', $opts)));
+            } else {
+                $resolved = ScreeningQuestionPlaceholder::resolve(
+                    implode("\n", $q->options_array),
+                    $replacements
+                );
+                $optsArray = array_filter(array_map('trim', preg_split('/[\r\n]+/', $resolved)));
+            }
+
             return [
                 'id' => $q->id,
-                'question' => $q->question,
+                'question' => $questionText,
                 'question_type' => $q->question_type,
-                'options' => $q->options,
-                'is_required' => $q->is_required,
+                'options' => array_values($optsArray),
+                'is_required' => (bool) ($q->pivot->is_required ?? false),
             ];
-        })->values()->all();
+        });
         return response()->json(['questions' => $questions]);
     }
 
     /**
      * Validate screening answers before showing resume step.
-     * Uses merged questions (admin pool + job-specific). Returns { valid: true } or { valid: false, message: "..." }.
+     * Returns { valid: true } or { valid: false, message: "..." }.
      */
     public function validateScreening(Request $request, int $id)
     {
-        $job = JobModel::find($id);
+        $job = JobModel::with('screeningQuestions')->find($id);
         if (! $job) {
             return response()->json(['valid' => false, 'message' => 'Job not found.'], 404);
         }
@@ -92,24 +106,24 @@ class PublicController extends BaseController
                 $screeningAnswers[$qId] = json_encode(array_values($val));
             }
         }
-        $all = $job->getAllScreeningQuestionsForApply();
-        foreach ($all as $q) {
-            if (! $q->correct_answer || ! $q->is_required) {
+        foreach ($job->screeningQuestions as $sq) {
+            $correctAnswer = $sq->pivot->correct_answer ?: $sq->correct_answer;
+            if (! $correctAnswer || ! ($sq->pivot->is_required ?? false)) {
                 continue;
             }
-            $answer = $screeningAnswers[$q->id] ?? null;
+            $answer = $screeningAnswers[$sq->id] ?? null;
             if ($answer === null || $answer === '') {
                 return response()->json([
                     'valid' => false,
-                    'message' => trans('plugins/job-board::messages.screening_answer_required', ['question' => $q->question]),
+                    'message' => trans('plugins/job-board::messages.screening_answer_required', ['question' => $sq->question]),
                 ]);
             }
             $matches = false;
             if (is_string($answer) && str_starts_with(trim($answer), '[')) {
                 $decoded = json_decode($answer, true);
-                $matches = is_array($decoded) && in_array(trim($q->correct_answer), array_map('trim', $decoded));
+                $matches = is_array($decoded) && in_array(trim($correctAnswer), array_map('trim', $decoded));
             } else {
-                $matches = trim((string) $answer) === trim($q->correct_answer);
+                $matches = trim((string) $answer) === trim($correctAnswer);
             }
             if (! $matches) {
                 return response()->json([
@@ -559,10 +573,11 @@ class PublicController extends BaseController
                     $screeningAnswers[$qId] = json_encode(array_values($val));
                 }
             }
-            // Validate correct_answer restriction using merged questions (admin pool + job-specific)
-            $allSq = $job->getAllScreeningQuestionsForApply();
-            foreach ($allSq as $sq) {
-                if (! $sq->correct_answer || ! $sq->is_required) {
+            // Validate correct_answer restriction: if question has correct_answer + is_required, candidate must match
+            $job->load('screeningQuestions');
+            foreach ($job->screeningQuestions as $sq) {
+                $correctAnswer = $sq->pivot->correct_answer ?: $sq->correct_answer;
+                if (! $correctAnswer || ! ($sq->pivot->is_required ?? false)) {
                     continue;
                 }
                 $answer = $screeningAnswers[$sq->id] ?? null;
@@ -575,9 +590,9 @@ class PublicController extends BaseController
                 $matches = false;
                 if (is_string($answer) && str_starts_with(trim($answer), '[')) {
                     $decoded = json_decode($answer, true);
-                    $matches = is_array($decoded) && in_array(trim($sq->correct_answer), array_map('trim', $decoded));
+                    $matches = is_array($decoded) && in_array(trim($correctAnswer), array_map('trim', $decoded));
                 } else {
-                    $matches = trim((string) $answer) === trim($sq->correct_answer);
+                    $matches = trim((string) $answer) === trim($correctAnswer);
                 }
                 if (! $matches) {
                     return $this

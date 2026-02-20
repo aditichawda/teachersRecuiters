@@ -112,33 +112,53 @@
     }
     .applied-job-meta span {
         font-size: 12px;
-        color: #888;
+        color: #000;
         display: inline-flex;
         align-items: center;
         gap: 4px;
     }
     .applied-status-badge {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        border-radius: 24px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        text-transform: capitalize;
+        border: 1.5px solid transparent;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .applied-status-badge:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.12);
     }
     .status-pending {
-        background: #fff3e0;
+        background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
         color: #e65100;
+        border-color: #ffb74d;
     }
     .status-hired {
-        background: #e6f9ee;
-        color: #1a9c4a;
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        color: #1b5e20;
+        border-color: #66bb6a;
     }
     .status-short_list {
-        background: #e3f2fd;
-        color: #1565c0;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        color: #0d47a1;
+        border-color: #42a5f5;
     }
     .status-rejected {
-        background: #ffebee;
-        color: #c62828;
+        background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+        color: #b71c1c;
+        border-color: #ef5350;
+    }
+    .status-checked {
+        background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+        color: #4a148c;
+        border-color: #ab47bc;
     }
     .applied-job-actions {
         display: flex;
@@ -231,8 +251,14 @@
             </div>
             <div class="applied-job-info">
                 <h5><a href="{{ $application->job->url }}">{{ $application->job->name }}</a></h5>
-                @if(!$application->job->hide_company && $application->job->company)
-                    <p class="applied-job-company"><a href="{{ $application->job->company->url }}">{{ $application->job->company->name }}</a></p>
+                @if($application->job->company)
+                    <p class="applied-job-company">
+                        @if(!$application->job->hide_company)
+                            <a href="{{ $application->job->company->url }}">{{ $application->job->company->name }}</a>
+                        @else
+                            <span>{{ $application->job->company->name }}</span>
+                        @endif
+                    </p>
                 @endif
                 <div class="applied-job-meta">
                     <span><i class="fa fa-calendar-alt"></i> {{ __('Applied') }}: {{ $application->created_at->format('M d, Y') }}</span>
@@ -241,8 +267,18 @@
                     @endif
                     @php
                         $statusValue = $application->status ? $application->status->getValue() : 'pending';
+                        $statusIcon = match($statusValue) {
+                            'hired' => 'fa-check-circle',
+                            'short_list' => 'fa-star',
+                            'rejected' => 'fa-times-circle',
+                            'checked' => 'fa-eye',
+                            default => 'fa-hourglass-half',
+                        };
                     @endphp
-                    <span class="applied-status-badge status-{{ $statusValue }}">{{ $application->status ? $application->status->label() : __('Pending') }}</span>
+                    <span class="applied-status-badge status-{{ $statusValue }}">
+                        <i class="fa {{ $statusIcon }}"></i>
+                        {{ $application->status ? $application->status->label() : __('Pending') }}
+                    </span>
                 </div>
             </div>
             <div class="applied-job-actions">

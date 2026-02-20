@@ -931,19 +931,6 @@
                         @endif
                     </div>
                     
-                    <!-- Alert for incomplete profile with reward message -->
-                    @if($completion < 100)
-                    <div class="alert alert-warning d-flex align-items-center mb-4" style="border-radius: 8px; background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-            border-color: #90caf9;
-            color: #0d47a1;">
-                        <i class="fa fa-gift me-2" style="font-size: 20px;"></i>
-                        <span>
-                            <strong>Complete your profile and earn {{ $totalPoints - $earnedPoints }} reward points!</strong><br>
-                            <small>Fill in missing fields to boost your profile visibility. <a href="{{ route('public.account.settings') }}" style="color: #e65100; font-weight: 600;">Complete Profile →</a></small>
-                        </span>
-                    </div>
-                    @endif
-                    
                     <!-- Stats Cards -->
                     <div class="js-stats-row">
                         <div class="js-stat-card blue">
@@ -1078,17 +1065,6 @@
                                 <h5><i class="fa fa-bell me-2" style="color: #dc3545;"></i>Notifications</h5>
                             </div>
                             <div class="js-content-card-body">
-                                @if($completion < 100)
-                                    <div class="js-notification-item">
-                                        <div class="js-notification-icon warning">
-                                            <i class="fa fa-exclamation-triangle"></i>
-                                        </div>
-                                        <div class="js-notification-text">
-                                            <p>Your profile is <strong>{{ $completion }}%</strong> complete. Fill in missing fields to earn <strong>{{ $totalPoints - $earnedPoints }}</strong> reward points!</p>
-                                            <small>Profile Completion</small>
-                                        </div>
-                                    </div>
-                                @endif
                                 @if(empty($account->resume))
                                     <div class="js-notification-item">
                                         <div class="js-notification-icon info">
