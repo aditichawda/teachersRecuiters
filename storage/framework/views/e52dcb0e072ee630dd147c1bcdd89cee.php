@@ -1,4 +1,4 @@
-<?php if(! $account->id || ! $account->isEmployer()): ?>
+<?php if(auth('account')->check() && $account && ! $account->isEmployer()): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var applyNow = document.getElementById('applyNow');

@@ -187,6 +187,16 @@ class Company extends BaseModel
             ->where('status', BaseStatusEnum::PUBLISHED);
     }
 
+    public function admission(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CompanyAdmission::class, 'company_id');
+    }
+
+    public function admissionEnquiries(): HasMany
+    {
+        return $this->hasMany(AdmissionEnquiry::class, 'company_id');
+    }
+
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
@@ -211,6 +221,8 @@ class Company extends BaseModel
             $company->jobs()->delete();
             $company->reviews()->delete();
             $company->accounts()->detach();
+            $company->admission()->delete();
+            $company->admissionEnquiries()->delete();
         });
     }
 }

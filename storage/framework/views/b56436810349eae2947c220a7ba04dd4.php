@@ -476,8 +476,8 @@
                     <?php if($job->canShowApplyJob()): ?>
                         <?php if($job->is_applied): ?>
                             <span class="jd-apply-btn disabled"><?php echo e(__('Applied')); ?></span>
-                        <?php elseif(! auth('account')->check() && ! JobBoardHelper::isGuestApplyEnabled()): ?>
-                            <a href="<?php echo e(route('public.account.login')); ?>" class="jd-apply-btn"><?php echo e(__('Apply Now')); ?> →</a>
+                        <?php elseif(! auth('account')->check()): ?>
+                            <a href="#signupLoginModal" data-bs-toggle="modal" class="jd-apply-btn"><?php echo e(__('Apply Now')); ?> →</a>
                         <?php else: ?>
                             <?php if($job->apply_url && $job->shouldOpenExternalApplyUrlDirectly()): ?>
                                 <a href="<?php echo e($job->apply_url); ?>" target="<?php echo e($job->getExternalApplyUrlTarget()); ?>" class="jd-apply-btn"><?php echo e(__('Apply Now')); ?> →</a>

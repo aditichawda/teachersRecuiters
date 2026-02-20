@@ -810,6 +810,11 @@
                     <a href="{{ route('public.account.jobs.create') }}" class="enl-postjob">
                         <i class="fa fa-plus-circle"></i> Post Job
                     </a>
+
+                    <!-- Admission Button (employer only) -->
+                    <a href="{{ route('public.account.admission.edit') }}" class="enl-postjob" style="background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;">
+                        <i class="fa fa-graduation-cap"></i> {{ __('Admission') }}
+                    </a>
                     
                     <!-- Navigation -->
                     <ul class="enl-nav">

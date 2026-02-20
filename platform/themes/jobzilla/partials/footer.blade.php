@@ -298,6 +298,7 @@
 
 @if (is_plugin_active('job-board'))
     @include(Theme::getThemeNamespace('views.job-board.partials.apply-modal'))
+    @include(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'))
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">
             @include(Theme::getThemeNamespace('views.job-board.partials.map'))
         </script>

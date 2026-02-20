@@ -35,6 +35,12 @@
 <a href="{{ route('public.account.jobs.create') }}" class="ps-postjob-btn">
     <i class="fa fa-plus-circle"></i> {{ __('Post Job') }}
 </a>
+@if(optional(auth('account')->user())->isEmployer())
+{{-- Admission Button --}}
+<a href="{{ route('public.account.admission.edit') }}" class="ps-postjob-btn" style="background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;">
+    <i class="fa fa-graduation-cap"></i> {{ __('Admission') }}
+</a>
+@endif
 
 <ul class="menu">
     @foreach ($menuItems as $item)

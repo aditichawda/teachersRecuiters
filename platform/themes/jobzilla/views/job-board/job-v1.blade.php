@@ -473,8 +473,8 @@
                     @if ($job->canShowApplyJob())
                         @if ($job->is_applied)
                             <span class="jd-apply-btn disabled">{{ __('Applied') }}</span>
-                        @elseif (! auth('account')->check() && ! JobBoardHelper::isGuestApplyEnabled())
-                            <a href="{{ route('public.account.login') }}" class="jd-apply-btn">{{ __('Apply Now') }} →</a>
+                        @elseif (! auth('account')->check())
+                            <a href="#signupLoginModal" data-bs-toggle="modal" class="jd-apply-btn">{{ __('Apply Now') }} →</a>
                         @else
                             @if ($job->apply_url && $job->shouldOpenExternalApplyUrlDirectly())
                                 <a href="{{ $job->apply_url }}" target="{{ $job->getExternalApplyUrlTarget() }}" class="jd-apply-btn">{{ __('Apply Now') }} →</a>

@@ -456,6 +456,20 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             });
 
             Route::group([
+                'prefix' => 'admission',
+                'middleware' => [LocaleMiddleware::class],
+            ], function (): void {
+                Route::get('/', [
+                    'as' => 'admission.edit',
+                    'uses' => 'AdmissionAccountController@edit',
+                ]);
+                Route::put('/', [
+                    'as' => 'admission.update',
+                    'uses' => 'AdmissionAccountController@update',
+                ]);
+            });
+
+            Route::group([
                 'prefix' => 'wallet',
                 'middleware' => [
                     'account:' . AccountTypeEnum::EMPLOYER,

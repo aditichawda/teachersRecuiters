@@ -4,8 +4,8 @@
             <a href="{{ $job->url }}" class="site-button disabled">
                 <span>{{ __('Applied') }}</span>
             </a>
-        @elseif (! auth('account')->check() && ! JobBoardHelper::isGuestApplyEnabled())
-            <a href="{{ route('public.account.login') }}" class="site-button">
+        @elseif (! auth('account')->check())
+            <a href="#signupLoginModal" data-bs-toggle="modal" class="site-button">
                 <span>{{ __('Apply Now') }}</span>
             </a>
         @else
