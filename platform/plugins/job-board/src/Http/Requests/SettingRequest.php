@@ -26,6 +26,9 @@ class SettingRequest extends Request
             'description' => 'nullable|max:4000',
             'bio' => 'nullable',
             'career_aspiration' => 'nullable|max:10000',
+            'interests' => 'nullable|string|max:2000',
+            'activities' => 'nullable|string|max:2000',
+            'achievements' => 'nullable|string|max:2000',
             'country_id' => 'nullable|numeric',
             'state_id' => 'nullable|numeric',
             'city_id' => 'nullable|numeric',
@@ -78,7 +81,7 @@ class SettingRequest extends Request
                 'resume' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx|max:2048',
                 'resume_parsing_allowed' => Rule::in([0, 1]),
                 'cover_letter' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx|max:2048',
-                'introductory_audio' => 'nullable|file|mimes:mp4,wav,ogg,m4a,webm|max:1536',
+                'introductory_audio' => 'nullable|file|mimes:mp4,wav,ogg,m4a,webm,mp3,mpeg,mpga|mimetypes:video/mp4,audio/mp4,audio/mpeg,audio/mp3,audio/x-m4a,audio/m4a,audio/wav,audio/ogg,audio/webm,video/webm|max:1536',
                 'introductory_video_url' => 'nullable|url|max:500',
                 
                 // Qualifications & Experience
@@ -100,7 +103,7 @@ class SettingRequest extends Request
                 'native_locality' => 'nullable|string|max:255',
                 'native_pin_code' => 'nullable|string|max:20',
                 'work_location_preference_type' => 'nullable|in:current_only,relocation_india,other',
-                'work_location_preferences' => 'nullable|array|max:3',
+                'work_location_preferences' => 'nullable|array',
                 'work_location_preferences.*.country_id' => 'nullable|numeric',
                 'work_location_preferences.*.state_id' => 'nullable|numeric',
                 'work_location_preferences.*.city_id' => 'nullable|numeric',
@@ -112,7 +115,7 @@ class SettingRequest extends Request
                 // Skills & Languages
                 'favorite_skills' => 'nullable|string|max:5000',
                 'favorite_tags' => 'nullable|string|max:5000',
-                'languages' => 'nullable|array|max:3',
+                'languages' => 'nullable|array',
                 'languages.*.language' => 'nullable|string|max:100',
                 'languages.*.proficiency' => 'nullable|in:basic,intermediate,fluent,native',
                 'skills' => 'nullable|array',

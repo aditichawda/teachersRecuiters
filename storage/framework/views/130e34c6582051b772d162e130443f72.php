@@ -11,6 +11,9 @@
     $displayEmail = $account->email ?: 'your.email@example.com';
     $displayPhone = $account->phone ?: __('Your Phone');
     $displayLocation = $account->address ?: (($account->city_name || $account->state_name) ? implode(', ', array_filter([$account->city_name, $account->state_name])) : __('Your City, State'));
+    $displayInterests = $account->interests ?: __('e.g. Reading, Educational workshops, Student mentoring');
+    $displayActivities = $account->activities ?: __('e.g. School club coordinator, Annual day organizer');
+    $displayAchievements = $account->achievements ?: __('e.g. Best Teacher Award, Workshop presenter');
 ?>
 <div style="font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; max-width: 900px; margin: 0 auto; display: flex; background: #fff; min-height: 920px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
     <!-- Left Sidebar -->
@@ -25,7 +28,7 @@
 
                 <?php endif; ?>
             </div>
-            <h1 style="font-size: 20px; font-weight: 700; margin: 0 0 6px 0; letter-spacing: 0.5px; line-height: 1.3;">
+            <h1 style="font-size: 20px;color:white; font-weight: 700; margin: 0 0 6px 0; letter-spacing: 0.5px; line-height: 1.3;">
                 <?php echo e($displayName); ?>
 
             </h1>
@@ -38,7 +41,7 @@
 
         <!-- Contact -->
         <div style="margin-bottom: 24px;">
-            <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 2.5px; border-bottom: 1px solid rgba(255,255,255,0.35); padding-bottom: 8px; margin: 0 0 12px 0; opacity: 0.95;">
+            <h3 style="font-size: 11px;color:white; text-transform: uppercase; letter-spacing: 2.5px; border-bottom: 1px solid rgba(255,255,255,0.35); padding-bottom: 8px; margin: 0 0 12px 0; opacity: 0.95;">
                 <?php echo e(__('Contact')); ?>
 
             </h3>
@@ -51,7 +54,7 @@
 
         <!-- Skills -->
         <div style="margin-bottom: 24px;">
-            <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 2.5px; border-bottom: 1px solid rgba(255,255,255,0.35); padding-bottom: 8px; margin: 0 0 12px 0; opacity: 0.95;">
+            <h3 style="font-size: 11px;color:white; text-transform: uppercase; letter-spacing: 2.5px; border-bottom: 1px solid rgba(255,255,255,0.35); padding-bottom: 8px; margin: 0 0 12px 0; opacity: 0.95;">
                 <?php echo e(__('Skills')); ?>
 
             </h3>
@@ -164,6 +167,39 @@
                 </span>
             </div>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </div>
+
+        <!-- Interests -->
+        <div style="margin-bottom: 28px;">
+            <h2 style="font-size: 16px; font-weight: 700; color: #0d47a1; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #e3f2fd;">
+                <?php echo e(__('Interests')); ?>
+
+            </h2>
+            <p style="font-size: 13px; line-height: 1.65; color: #555; margin: 0;"><?php echo e($displayInterests); ?></p>
+        </div>
+
+        <!-- Activities -->
+        <div style="margin-bottom: 28px;">
+            <h2 style="font-size: 16px; font-weight: 700; color: #0d47a1; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #e3f2fd;">
+                <?php echo e(__('Activities')); ?>
+
+            </h2>
+            <p style="font-size: 13px; line-height: 1.65; color: #555; margin: 0;"><?php echo e($displayActivities); ?></p>
+        </div>
+
+        <!-- Achievements -->
+        <div style="margin-bottom: 28px;">
+            <h2 style="font-size: 16px; font-weight: 700; color: #0d47a1; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #e3f2fd;">
+                <?php echo e(__('Achievements')); ?>
+
+            </h2>
+            <p style="font-size: 13px; line-height: 1.65; color: #555; margin: 0;"><?php echo e($displayAchievements); ?></p>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; padding-top: 20px; margin-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #999;">
+            <?php echo e(__('Powered by TeachersRecruiters')); ?>
+
         </div>
     </div>
 </div>

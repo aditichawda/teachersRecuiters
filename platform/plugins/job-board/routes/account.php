@@ -274,6 +274,17 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'uses' => 'deleteAvatar',
                     ]);
 
+                    Route::get('interests-achievements', [
+                        'as' => 'interests-achievements',
+                        'uses' => 'getInterestsAchievements',
+                        'middleware' => ['account:' . AccountTypeEnum::JOB_SEEKER],
+                    ]);
+                    Route::post('interests-achievements', [
+                        'as' => 'post.interests-achievements',
+                        'uses' => 'postInterestsAchievements',
+                        'middleware' => ['account:' . AccountTypeEnum::JOB_SEEKER],
+                    ]);
+
                     Route::controller('AccountJobController')->group(function (): void {
                         Route::group([
                             'middleware' => ['account:' . AccountTypeEnum::JOB_SEEKER],
@@ -378,7 +389,7 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             ], function (): void {
                 Route::resource('', 'ApplicantController')
                     ->parameters(['' => 'applicant'])
-                    ->only(['index', 'edit', 'update', 'destroy']);
+                    ->only(['index', 'edit', 'update']);
             });
 
             Route::get('applicants/download-cv/{application}', [JobApplicationController::class, 'downloadCv'])
@@ -442,6 +453,34 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'uses' => 'subscribePackage',
                     ]);
                 });
+            });
+
+            Route::group([
+                'prefix' => 'admission',
+                'middleware' => [LocaleMiddleware::class],
+            ], function (): void {
+                Route::get('/', [
+                    'as' => 'admission.edit',
+                    'uses' => 'AdmissionAccountController@edit',
+                ]);
+                Route::put('/', [
+                    'as' => 'admission.update',
+                    'uses' => 'AdmissionAccountController@update',
+                ]);
+            });
+
+            Route::group([
+                'prefix' => 'wallet',
+                'middleware' => [
+                    'account:' . AccountTypeEnum::EMPLOYER,
+                    'enable-credits',
+                    LocaleMiddleware::class,
+                ],
+            ], function (): void {
+                Route::get('/', [
+                    'as' => 'wallet',
+                    'uses' => 'WalletController@index',
+                ]);
             });
 
             Route::group([

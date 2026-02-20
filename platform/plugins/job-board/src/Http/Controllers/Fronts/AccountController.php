@@ -16,7 +16,10 @@ use Botble\JobBoard\Models\AccountActivityLog;
 use Botble\JobBoard\Models\AccountEducation;
 use Botble\JobBoard\Models\AccountExperience;
 use Botble\JobBoard\Models\JobSkill;
+use Botble\JobBoard\Models\Language;
+use Botble\JobBoard\Models\Specialization;
 use Botble\JobBoard\Models\Tag;
+use Illuminate\Support\Facades\Schema;
 use Botble\Media\Facades\RvMedia;
 use Botble\Media\Models\MediaFile;
 use Botble\Media\Services\ThumbnailService;
@@ -119,9 +122,27 @@ class AccountController extends BaseController
             ->orderByDesc('started_at')
             ->get();
 
+        // Languages from core `languages` table; specializations from jb_specializations
+        $languagesList = collect();
+        $specializationsList = collect();
+        if (Schema::hasTable('languages')) {
+            $rows = \Illuminate\Support\Facades\DB::table('languages')
+                ->orderBy('lang_order')->orderBy('lang_name')
+                ->get(['lang_id', 'lang_name']);
+            $languagesList = $rows->map(fn ($r) => (object) ['id' => $r->lang_id, 'name' => $r->lang_name]);
+        }
+        if (Schema::hasTable('jb_specializations')) {
+            // Include both 'published' and 1 so dropdown gets data (DB may store status as 1)
+            $specializationsList = Specialization::query()
+                ->whereIn('status', ['published', 1])
+                ->orderBy('order')
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
+
         return JobBoardHelper::scope(
             'account.settings.index',
-            compact('account', 'jobSkills', 'jobTags', 'selectedJobSkills', 'selectedJobTags', 'languages', 'form', 'languageForm', 'experiences')
+            compact('account', 'jobSkills', 'jobTags', 'selectedJobSkills', 'selectedJobTags', 'languages', 'form', 'languageForm', 'experiences', 'languagesList', 'specializationsList')
         );
     }
 
@@ -267,6 +288,11 @@ class AccountController extends BaseController
                 ];
                 return $entry;
             }, $data['work_location_preferences'], array_keys($data['work_location_preferences']))));
+        }
+
+        // Keep full_name in sync with first_name (registration saves full_name; settings form uses first_name)
+        if (!empty($data['first_name'])) {
+            $data['full_name'] = $data['first_name'];
         }
 
         AccountSettingForm::createFromModel($account)
@@ -429,6 +455,40 @@ class AccountController extends BaseController
         }
     }
 
+    public function getInterestsAchievements()
+    {
+        /**
+         * @var Account $account
+         */
+        $account = auth('account')->user();
+
+        SeoHelper::setTitle(__('Interests & Achievements'));
+        Theme::breadcrumb()
+            ->add(__('Dashboard'), route('public.account.jobseeker.dashboard'))
+            ->add(__('Interests & Achievements'), route('public.account.interests-achievements'));
+
+        return JobBoardHelper::scope('account.interests-achievements.index', compact('account'));
+    }
+
+    public function postInterestsAchievements(Request $request)
+    {
+        $validated = $request->validate([
+            'interests' => ['nullable', 'string', 'max:2000'],
+            'activities' => ['nullable', 'string', 'max:2000'],
+            'achievements' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        /**
+         * @var Account $account
+         */
+        $account = auth('account')->user();
+        $account->fill($validated)->save();
+
+        return redirect()
+            ->route('public.account.interests-achievements')
+            ->with('success', __('Interests & Achievements saved successfully.'));
+    }
+
     public function getActivityLogs()
     {
         $activities = AccountActivityLog::query()
@@ -497,6 +557,9 @@ class AccountController extends BaseController
         $account = auth('account')->user();
 
         $template = $request->input('template', 'classic');
+        if (! in_array($template, ['classic', 'modern'], true)) {
+            $template = 'classic';
+        }
 
         $educations = AccountEducation::query()
             ->where('account_id', $account->id)

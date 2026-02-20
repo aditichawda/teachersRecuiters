@@ -265,26 +265,6 @@
     <p>{{ __('Choose Classic or Modern template. Resume uses your profile details (name, email, experience, education, skills). Empty fields show sample text so the resume always looks complete.') }}</p>
 </div>
 
-@php
-    $missingFields = [];
-    if (!$account->first_name) $missingFields[] = 'Name';
-    if (!$account->email) $missingFields[] = 'Email';
-    if (!$account->phone) $missingFields[] = 'Phone';
-    if ($educations->isEmpty()) $missingFields[] = 'Education';
-    if ($experiences->isEmpty()) $missingFields[] = 'Experience';
-@endphp
-
-@if(count($missingFields) > 0)
-<div class="rb-warning">
-    <i class="fa fa-exclamation-triangle"></i>
-    <span>
-        {{ __('Complete your profile for a better resume.') }}
-        {{ __('Missing:') }} <strong>{{ implode(', ', $missingFields) }}</strong>.
-        <a href="{{ route('public.account.settings') }}">{{ __('Update Profile') }}</a>
-    </span>
-</div>
-@endif
-
 <div class="rb-templates-grid">
     <!-- Template 1: Classic (Recommended) -->
     <div class="rb-template-card selected" data-template="classic" onclick="selectTemplate(this)">
@@ -320,44 +300,6 @@
                 <span class="rb-template-tag tag-free">Free</span>
                 <span class="rb-template-tag">Creative</span>
                 <span class="rb-template-tag">Two Column</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Template 3: Minimal -->
-    <div class="rb-template-card" data-template="minimal" onclick="selectTemplate(this)">
-        <div class="rb-template-preview">
-            <div class="preview-inner">
-                @include(Theme::getThemeNamespace('views.job-board.account.resume-templates.minimal'), ['account' => $account, 'educations' => $educations, 'experiences' => $experiences, 'skills' => $skills])
-            </div>
-            <div class="preview-fade"></div>
-        </div>
-        <div class="rb-template-info">
-            <h5>{{ __('Minimal') }}</h5>
-            <p>{{ __('Simple and elegant — lets content speak for itself') }}</p>
-            <div class="rb-template-tags">
-                <span class="rb-template-tag tag-free">Free</span>
-                <span class="rb-template-tag">Simple</span>
-                <span class="rb-template-tag">ATS Friendly</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Template 4: Elegant -->
-    <div class="rb-template-card" data-template="elegant" onclick="selectTemplate(this)">
-        <div class="rb-template-preview">
-            <div class="preview-inner">
-                @include(Theme::getThemeNamespace('views.job-board.account.resume-templates.elegant'), ['account' => $account, 'educations' => $educations, 'experiences' => $experiences, 'skills' => $skills])
-            </div>
-            <div class="preview-fade"></div>
-        </div>
-        <div class="rb-template-info">
-            <h5>{{ __('Elegant') }}</h5>
-            <p>{{ __('Sophisticated design with timeline layout') }}</p>
-            <div class="rb-template-tags">
-                <span class="rb-template-tag tag-free">Free</span>
-                <span class="rb-template-tag">Elegant</span>
-                <span class="rb-template-tag">Timeline</span>
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-@if (! $account->id || ! $account->isEmployer())
+@if (auth('account')->check() && $account && ! $account->isEmployer())
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var applyNow = document.getElementById('applyNow');
@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (step1) step1.style.display = 'block';
         if (list) list.innerHTML = '';
         if (wrap) wrap.style.display = 'none';
+        var jobIdInput = applyNow.querySelector('input[name="job_id"]') || applyNow.querySelector('.modal-job-id');
+        if (jobIdInput) jobIdInput.value = jobId || '';
         if (!jobId) return;
         fetch(screeningUrl + '/' + jobId, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
             .then(function(r) { return r.json(); })
@@ -114,6 +116,88 @@ document.addEventListener('DOMContentLoaded', function() {
         if (errEl) errEl.remove();
     });
 
+    // Submit apply form via AJAX: on success close modal and update button to "Applied"
+    var applyForm = applyNow.querySelector('form.job-apply-form');
+    if (applyForm) {
+        applyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var form = e.target;
+            var submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            var jobIdInput = form.querySelector('input[name="job_id"]') || form.querySelector('.modal-job-id');
+            var jobId = jobIdInput ? jobIdInput.value : '';
+            var originalLabel = submitBtn ? submitBtn.innerHTML : '';
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = '{{ __("Sending...") }}';
+            }
+
+            var formData = new FormData(form);
+            var applyUrl = form.action || '{{ route("public.job.apply") }}';
+
+            fetch(applyUrl, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+            .then(function(r) {
+                if (!r.ok) return r.json().then(function(d) { throw new Error(d && d.message ? d.message : 'Request failed'); });
+                return r.json();
+            })
+            .then(function(data) {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
+                }
+                if (data && data.error === false) {
+                    var modalEl = document.getElementById('applyNow');
+                    if (modalEl) {
+                        try {
+                            var bsModal = (typeof bootstrap !== 'undefined' && bootstrap.Modal)
+                                ? (bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl))
+                                : null;
+                            if (bsModal) bsModal.hide();
+                            else {
+                                modalEl.classList.remove('show');
+                                modalEl.style.display = 'none';
+                                modalEl.setAttribute('aria-hidden', 'true');
+                                document.body.classList.remove('modal-open');
+                                var backdrop = document.querySelector('.modal-backdrop');
+                                if (backdrop) backdrop.remove();
+                                document.body.style.removeProperty('overflow');
+                                document.body.style.removeProperty('padding-right');
+                            }
+                        } catch (err) {
+                            modalEl.classList.remove('show');
+                            modalEl.style.display = 'none';
+                            document.body.classList.remove('modal-open');
+                            var back = document.querySelector('.modal-backdrop');
+                            if (back) back.remove();
+                        }
+                    }
+                    if (typeof Botble !== 'undefined') Botble.showSuccess(data.message || '{{ __("Application submitted successfully.") }}');
+                    var applyBtn = document.querySelector('a[data-job-id="' + jobId + '"]');
+                    if (applyBtn && !applyBtn.classList.contains('disabled')) {
+                        applyBtn.classList.add('disabled');
+                        applyBtn.removeAttribute('data-bs-toggle');
+                        applyBtn.removeAttribute('href');
+                        applyBtn.setAttribute('href', '#');
+                        var span = applyBtn.querySelector('span');
+                        if (span) span.textContent = '{{ __("Applied") }}'; else applyBtn.textContent = '{{ __("Applied") }}';
+                    }
+                } else {
+                    if (typeof Botble !== 'undefined') Botble.showError((data && data.message) ? data.message : '{{ __("Application failed. Please try again.") }}');
+                }
+            })
+            .catch(function() {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
+                }
+                if (typeof Botble !== 'undefined') Botble.showError('{{ __("Application failed. Please try again.") }}');
+            });
+        });
+    }
 });
 </script>
     <div class="modal fade" id="applyExternalJob" tabindex="-1" aria-labelledby="applyExternalJob" aria-hidden="true">

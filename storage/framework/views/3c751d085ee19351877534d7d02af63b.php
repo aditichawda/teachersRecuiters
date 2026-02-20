@@ -198,14 +198,13 @@
                                 <li><a href="/jobs">Jobs</a></li>
                                 <li><a href="/companies">Institutes</a></li>
                                 <li><a href="/candidates">Candidates</a></li>
-                                <li><a href="/contact">Help & Support</a></li>
                             </ul>
                         </div>
                     </div>
                     <!-- Col 3: About -->
                     <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
-                            <h4 class="footer-title">About</h4>
+                            <h4 class="footer-title">Know Us</h4>
                             <ul class="footer-links">
                                 <li><a href="/about-us">About Us</a></li>
                                 <li><a href="/contact">Contact Us</a></li>
@@ -254,11 +253,11 @@
                 </div>
                 <div class="footer-partners">
                 <div class="footer-partners-inner">
-                    <span class="footer-partners-label">Our Partner:</span>
+                    <span class="footer-partners-label">For You:</span>
                     <div class="footer-partners-list">
-                        <a href="/companies" class="footer-partner-item">Featured Institutions</a>
-                        <a href="/jobs" class="footer-partner-item">Jobs</a>
-                        <a href="/about-us" class="footer-partner-item">About</a>
+                        <a href="<?php echo e(route('public.for-teachers')); ?>" class="footer-partner-item">For Teachers</a>
+                        <a href="<?php echo e(route('public.for-schools')); ?>" class="footer-partner-item">For Schools</a>
+                        <a href="<?php echo e(route('public.careers')); ?>" class="footer-partner-item">Careers</a>
                     </div>
                     <a href="/companies" class="footer-see-all">See All →</a>
                 </div>
@@ -300,6 +299,7 @@
 
 <?php if(is_plugin_active('job-board')): ?>
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.apply-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">
             <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         </script>
@@ -309,7 +309,7 @@
 
 
 
-<script src="<?php echo e(asset('themes/jobzilla/js/dialog-alert.js')); ?>?v=<?php echo e(time()); ?>"></script>
+<script src="<?php echo e(asset('themes/jobzilla/js/dialog-alert.js')); ?>?v=2.0.<?php echo e(time()); ?>"></script>
 
 
 <script>

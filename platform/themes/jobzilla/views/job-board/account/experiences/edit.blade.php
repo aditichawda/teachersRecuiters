@@ -17,6 +17,7 @@
         font-size: 20px;
         font-weight: 600;
         margin: 0;
+        color:white;
     }
     .exp-form-header p {
         font-size: 13px;

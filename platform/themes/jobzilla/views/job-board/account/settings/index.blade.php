@@ -117,6 +117,19 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(0,115,209,0.3);
     }
+    /* Validation: red border and error text below field */
+    .profile-section .form-control.is-invalid,
+    .profile-section .form-select.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+    }
+    .profile-section .invalid-feedback,
+    .profile-section .field-error-text {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
     .add-more-btn {
         background: #f0f7ff;
         color: #0073d1;
@@ -472,6 +485,18 @@
 
     {!! Form::open(['route' => 'public.account.post.settings', 'method' => 'POST', 'files' => true, 'id' => 'profile-form']) !!}
 
+    @if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <strong>{{ __('Please fix the errors below.') }}</strong>
+        <ul class="mb-0 mt-2 ps-3">
+            @foreach($errors->all() as $err)
+            <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <!-- Section 1: Personal Details -->
     <div class="profile-section">
         <div class="profile-section-header">
@@ -480,10 +505,11 @@
         <div class="profile-section-body">
             <p class="form-text">{{ __('We collect these details to verify your profile, connect you with schools/institutions, and share relevant job opportunities.') }}</p>
             <div class="row">
-                <!-- 1. Full Name -->
+                <!-- 1. Full Name (show first_name; fallback to full_name from registration) -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Full Name') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Help us to create your verified candidate profile and ensure accurate identification.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $account->first_name) }}" placeholder="{{ __('Enter your full name') }}" required>
+                    <input type="text" class="form-control @error('first_name') is-invalid @enderror" name="first_name" value="{{ old('first_name', $account->first_name ?: $account->full_name ?? '') }}" placeholder="{{ __('Enter your full name') }}" required>
+                    @error('first_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
 
                 <!-- 2. Email Address -->
@@ -495,7 +521,8 @@
                 <!-- 3. Mobile Number -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('Phone Number') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('For recruiters and schools to contact you directly regarding interviews and job opportunities and also help us to send you job alerts and updates on WhatsApp.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="tel" class="form-control" name="phone" value="{{ old('phone', $account->phone) }}" placeholder="{{ __('Enter mobile number with country code') }}">
+                    <input type="tel" class="form-control @error('phone') is-invalid @enderror" name="phone" value="{{ old('phone', $account->phone ?? '') }}" placeholder="{{ __('Enter mobile number with country code') }}">
+                    @error('phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     <div class="form-check mt-2">
                         <input type="hidden" name="is_whatsapp_available" value="0">
                         <input type="checkbox" class="form-check-input" name="is_whatsapp_available" value="1" id="is_whatsapp_available" @checked(old('is_whatsapp_available', $account->is_whatsapp_available))>
@@ -516,11 +543,12 @@
                 <!-- 7. DOB -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('Date of Birth') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To verify eligibility criteria, age requirements, and ensure compliance with school policies.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="date" class="form-control" name="dob" value="{{ old('dob', $account->dob ? $account->dob->format('Y-m-d') : '') }}" max="{{ now()->subYears(16)->format('Y-m-d') }}">
+                    <input type="date" class="form-control @error('dob') is-invalid @enderror" name="dob" value="{{ old('dob', $account->dob ? $account->dob->format('Y-m-d') : '') }}" max="{{ now()->subYears(16)->format('Y-m-d') }}">
+                    @error('dob')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
                 
                 <!-- 5. Gender -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3 @error('gender') is-invalid @enderror">
                     <label class="form-label">{{ __('Gender') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Some institutions may have role-specific preferences or accommodation arrangements.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div class="d-flex gap-3 mt-2">
                         <div class="form-check">
@@ -532,6 +560,7 @@
                             <label class="form-check-label" for="gender_female">{{ __('Female') }}</label>
                         </div>
                     </div>
+                    @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
 
                 <!-- 6. Marital Status -->
@@ -555,7 +584,7 @@
     <!-- Section 2: Profile Visibility & Work Status -->
     <div class="profile-section">
         <div class="profile-section-header">
-            <i class="fa fa-eye"></i> {{ __('Profile Visibility, Work Availability, & Salary') }}
+            <i class="fa fa-eye"></i> {{ __('Security Tab') }}
         </div>
         <div class="profile-section-body">
             <p class="form-text mb-3">{{ __('Control who can view your profile and update your current job availability and salary to receive relevant opportunities.') }}</p>
@@ -568,7 +597,6 @@
                         <option value="0" @selected(old('profile_visibility', $account->profile_visibility ?? 1) == 0)>{{ __('No - Hide my profile') }}</option>
                     </select>
                 </div>
-
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Additional Privacy Options') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To give you flexibility while exploring opportunities confidentially.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div class="form-check mb-2">
@@ -581,8 +609,19 @@
                         <input type="checkbox" class="form-check-input" name="hide_name_for_employer" value="1" id="hide_name_for_employer" @checked(old('hide_name_for_employer', $account->hide_name_for_employer ?? false))>
                         <label class="form-check-label" for="hide_name_for_employer">{{ __('Hide only name for Employer/School') }}</label>
                     </div>
-                </div>
-
+                </div>   
+            </div>
+        </div>
+    </div>
+      <!-- Section 2: Profile Visibility & Work Status -->
+      <div class="profile-section">
+        <div class="profile-section-header">
+            <i class="fa fa-eye"></i> {{ __('Work Status') }}
+        </div>
+        <div class="profile-section-body">
+            <p class="form-text mb-3">{{ __('Control who can view your profile and update your current job availability and salary to receive relevant opportunities.') }}</p>
+            <div class="row">
+              
                 <!-- 10. Current Work Status -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Current Work Status') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Recruiters prioritize candidates based on immediate availability.') }}"><i class="fa fa-question-circle"></i></span></label>
@@ -655,6 +694,11 @@
                     @endphp
                     {!! Form::customEditor('bio', old('bio', $account->bio), ['data-placeholder' => $bioPlaceholder]) !!}
                 </div>
+               
+                <small class="form-text text-muted">This helps schools quickly understand: Your teaching strengths, Classroom approach & methodology, Career aspirations, Suitability for their institution.
+Recruiters often read this section before downloading resumes.
+</small>
+
             </div>
         </div>
     </div>
@@ -669,15 +713,26 @@
                     <!-- 23. Institution Type Preferences -->
                     <div class="col-md-6 mb-3">
                         <label class="form-label">{{ __('Preferred Institution Type') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('To match your profile with the right category of schools/institutions.') }}"><i class="fa fa-question-circle"></i></span></label>
-                        <select id="ts-institution-types" name="institution_types[]" multiple placeholder="{{ __('Search & select up to 3...') }}">
+                        <select id="ts-institution-types" name="institution_types[]" multiple placeholder="{{ __('Search & select institution types...') }}">
                             @php
                                 $instTypes = old('institution_types', $account->institution_types ?? []);
                                 $instTypes = is_array($instTypes) ? $instTypes : (is_string($instTypes) ? (json_decode($instTypes, true) ?? []) : []);
                                 if (is_object($instTypes)) {
                                     $instTypes = method_exists($instTypes, 'toArray') ? $instTypes->toArray() : (array)$instTypes;
                                 }
+                                // Show institution type selected at registration in Preferred Institution Type
                                 if (empty($instTypes) && !empty($account->institution_type)) {
-                                    $instTypes = [$account->institution_type];
+                                    $regType = $account->institution_type;
+                                    $normalized = str_replace('-', '_', $regType);
+                                    $allowedValues = ['cbse_school','icse_school','cambridge_school','ib_school','state_board_school','play_school','engineering_college','medical_college','nursing_college','edtech_company','coaching_institute','university'];
+                                    $map = ['school' => 'state_board_school', 'college' => 'engineering_college', 'online_education_platform' => 'university', 'book_publishing_company' => 'university', 'non_profit_organization' => 'university'];
+                                    if (in_array($normalized, $allowedValues)) {
+                                        $instTypes = [$normalized];
+                                    } elseif (isset($map[$normalized])) {
+                                        $instTypes = [$map[$normalized]];
+                                    } else {
+                                        $instTypes = [$normalized];
+                                    }
                                 }
                                 $instTypes = array_values(array_filter((array)$instTypes));
                             @endphp
@@ -697,19 +752,23 @@
                                 @endforeach
                             </optgroup>
                         </select>
-                        <div class="ts-max-info"><span class="count" id="inst-count">0</span>/3 {{ __('selected') }}</div>
+                        <div class="ts-max-info"><span class="count" id="inst-count">0</span> {{ __('selected') }}</div>
                     </div>
 
                     <!-- 24. Position Type -->
+                    @php
+                        $positionTypeVal = old('position_type', $account->position_type ?? '');
+                        $positionTypeStr = is_array($positionTypeVal) ? implode(',', $positionTypeVal) : (string)$positionTypeVal;
+                    @endphp
                     <div class="col-md-6 mb-3">
                         <label class="form-label">{{ __('Role Category') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Choose the type of role you are interested in. It helps schools filter candidates by job role.') }}"><i class="fa fa-question-circle"></i></span></label>
                         <div class="d-flex gap-3 mt-2">
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="teaching" id="position_teaching" @checked(str_contains(old('position_type', $account->position_type ?? ''), 'teaching'))>
+                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="teaching" id="position_teaching" @checked(str_contains($positionTypeStr, 'teaching'))>
                                 <label class="form-check-label" for="position_teaching">{{ __('Teaching') }}</label>
                             </div>
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="non_teaching" id="position_non_teaching" @checked(str_contains(old('position_type', $account->position_type ?? ''), 'non_teaching'))>
+                                <input type="checkbox" class="form-check-input position-type-check" name="position_type[]" value="non_teaching" id="position_non_teaching" @checked(str_contains($positionTypeStr, 'non_teaching'))>
                                 <label class="form-check-label" for="position_non_teaching">{{ __('Non-Teaching') }}</label>
                             </div>
                         </div>
@@ -717,8 +776,8 @@
 
                     <!-- 25. Teaching Subjects (shown when Teaching is selected) -->
                     <div class="col-md-6 mb-3" id="teaching_subjects_wrapper">
-                        <label class="form-label">{{ __('Preferred Teaching Subject & Level') }} ({{ __('Select up to 3') }}) <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select subjects you can teach. Schools filter candidates by subject and level.') }}"><i class="fa fa-question-circle"></i></span></label>
-                        <select id="ts-teaching-subjects" name="teaching_subjects[]" multiple placeholder="{{ __('Search & select up to 3 subjects...') }}">
+                        <label class="form-label">{{ __('Preferred Teaching Subject & Level') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select subjects you can teach. Schools filter candidates by subject and level.') }}"><i class="fa fa-question-circle"></i></span></label>
+                        <select id="ts-teaching-subjects" name="teaching_subjects[]" multiple placeholder="{{ __('Search & select subjects...') }}">
                             @php $teachingSubjects = old('teaching_subjects', $account->teaching_subjects ?? []); @endphp
                             <optgroup label="Primary Level">
                                 @foreach([
@@ -778,13 +837,13 @@
                                 @endforeach
                             </optgroup>
                         </select>
-                        <div class="ts-max-info"><span class="count" id="subj-count">0</span>/3 {{ __('selected') }}</div>
+                        <div class="ts-max-info"><span class="count" id="subj-count">0</span> {{ __('selected') }}</div>
                     </div>
 
                     <!-- Non-Teaching Positions (shown when Non-Teaching is selected) -->
                     <div class="col-md-6 mb-3" id="non_teaching_positions_wrapper" style="display: none;">
-                        <label class="form-label">{{ __('Preferred Non-Teaching Role') }} ({{ __('Select up to 3') }}) <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the non-teaching roles you are interested in. It helps to match you with suitable administrative or support positions.') }}"><i class="fa fa-question-circle"></i></span></label>
-                        <select id="ts-non-teaching" name="non_teaching_positions[]" multiple placeholder="{{ __('Search & select up to 3 positions...') }}">
+                        <label class="form-label">{{ __('Preferred Non-Teaching Role') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the non-teaching roles you are interested in. It helps to match you with suitable administrative or support positions.') }}"><i class="fa fa-question-circle"></i></span></label>
+                        <select id="ts-non-teaching" name="non_teaching_positions[]" multiple placeholder="{{ __('Search & select positions...') }}">
                             @php $nonTeachingPositions = old('non_teaching_positions', $account->non_teaching_positions ?? []); @endphp
                             @foreach([
                                 'principal' => 'School Principal',
@@ -801,7 +860,7 @@
                                 <option value="{{ $val }}" @selected(in_array($val, (array)$nonTeachingPositions))>{{ $lbl }}</option>
                             @endforeach
                         </select>
-                        <div class="ts-max-info"><span class="count" id="nt-count">0</span>/3 {{ __('selected') }}</div>
+                        <div class="ts-max-info"><span class="count" id="nt-count">0</span> {{ __('selected') }}</div>
                     </div>
 
                     <!-- 26. Employment Type -->
@@ -839,6 +898,9 @@
                 ->orderBy('name')
                 ->pluck('name', 'id')
                 ->toArray();
+            if (empty($countries)) {
+                $countries = \Botble\Location\Models\Country::query()->orderBy('name')->pluck('name', 'id')->toArray();
+            }
             $cid = old('country_id', $account->country_id);
             if ($cid) {
                 $currentStates = \Botble\Location\Models\State::query()
@@ -880,6 +942,33 @@
         $workLocations = old('work_location_preferences', $account->work_location_preferences ?? []);
         if (!is_array($workLocations)) $workLocations = [];
         $workLocations = array_slice(array_values($workLocations), 0, 3);
+        if (empty($workLocations)) {
+            $workLocations = [['country_id' => '', 'state_id' => '', 'city_id' => '', 'locality' => '']];
+        }
+        $workLocationStates = [];
+        $workLocationCities = [];
+        if (is_plugin_active('location')) {
+            foreach ($workLocations as $idx => $loc) {
+                $cid = $loc['country_id'] ?? null;
+                if ($cid) {
+                    $workLocationStates[$idx] = \Botble\Location\Models\State::query()
+                        ->where('country_id', $cid)
+                        ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                }
+                $sid = $loc['state_id'] ?? null;
+                if ($sid) {
+                    $workLocationCities[$idx] = \Botble\Location\Models\City::query()
+                        ->where('state_id', $sid)
+                        ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                }
+            }
+        }
         $useLocationDropdowns = is_plugin_active('location');
         $currentCountryName = old('country_name', $account->country_name ?? '');
         $currentStateName = old('state_name', $account->state_name ?? '');
@@ -934,7 +1023,8 @@
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label">{{ __('Address') }}</label>
-                    <input type="text" class="form-control" name="address" value="{{ old('address', $account->address) }}" placeholder="{{ __('Enter your address') }}">
+                    <input type="text" class="form-control @error('address') is-invalid @enderror" name="address" value="{{ old('address', $account->address) }}" placeholder="{{ __('Enter your address') }}">
+                    @error('address')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label">{{ __('Pin Code') }}</label>
@@ -989,7 +1079,7 @@
             <input type="hidden" id="js-default-country-id" value="{{ $account->country_id ?? '' }}">
             <input type="hidden" id="js-use-location-dropdowns" value="{{ $useLocationDropdowns ? '1' : '0' }}">
             <div id="work_location_preferences_wrapper" class="mb-3" style="display: {{ $workLocationPreferenceType == 'other' ? 'block' : 'none' }};">
-                <label class="form-label">{{ __('Add up to 3 preferred locations (set priority)') }}</label>
+                <label class="form-label">{{ __('Add preferred locations (set priority)') }}</label>
                 <p class="form-text">{{ $useLocationDropdowns ? __('Default country is same as current location; you can select other countries.') : __('Enter Country, State, City and Locality for each preferred location.') }}</p>
                 <div id="work-locations-container">
                     @foreach($workLocations as $index => $loc)
@@ -1013,12 +1103,18 @@
                                 <label class="form-label small">{{ __('State') }}</label>
                                 <select class="form-select form-select-sm work-pref-state" name="work_location_preferences[{{ $index }}][state_id]" data-index="{{ $index }}">
                                     <option value="">{{ __('Select') }}</option>
+                                    @foreach($workLocationStates[$index] ?? [] as $sid => $sname)
+                                        <option value="{{ $sid }}" @selected(($loc['state_id'] ?? '') == $sid)>{{ $sname }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <label class="form-label small">{{ __('City') }}</label>
                                 <select class="form-select form-select-sm work-pref-city" name="work_location_preferences[{{ $index }}][city_id]" data-index="{{ $index }}">
                                     <option value="">{{ __('Select') }}</option>
+                                    @foreach($workLocationCities[$index] ?? [] as $cid => $cname)
+                                        <option value="{{ $cid }}" @selected(($loc['city_id'] ?? '') == $cid)>{{ $cname }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             @else
@@ -1073,10 +1169,12 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4 mb-2">
-                                                    <div class="specialization-autocomplete-wrapper">
-                                                        <input type="text" class="form-control specialization-input" name="qualifications[{{ $index }}][specialization]" value="{{ $qual['specialization'] ?? '' }}" placeholder="{{ __('Specialization/Subject') }}" autocomplete="off">
-                                                        <div class="specialization-suggestions"></div>
-                                                    </div>
+                                                    <select class="form-select" name="qualifications[{{ $index }}][specialization]">
+                                                        <option value="">{{ __('-- Select Specialization --') }}</option>
+                                                        @foreach($specializationsList ?? [] as $spec)
+                                                        <option value="{{ is_object($spec) ? $spec->name : $spec['name'] ?? '' }}" @selected(($qual['specialization'] ?? '') == (is_object($spec) ? $spec->name : $spec['name'] ?? ''))>{{ is_object($spec) ? $spec->name : $spec['name'] ?? '' }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 <div class="col-md-4 mb-2">
                                                     <input type="text" class="form-control" name="qualifications[{{ $index }}][institution]" value="{{ $qual['institution'] ?? '' }}" placeholder="{{ __('Institution Name') }}">
@@ -1136,11 +1234,7 @@
                                             </div>
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('public.account.experiences.edit', $exp->id) }}" class="btn btn-sm btn-outline-primary" target="_blank">{{ __('Edit') }}</a>
-                                                <form method="post" action="{{ route('public.account.experiences.destroy', $exp->id) }}" style="margin:0;" onsubmit="return confirm('{{ __('Are you sure?') }}');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Delete') }}</button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-exp-delete" data-url="{{ route('public.account.experiences.destroy', $exp->id) }}" data-csrf="{{ csrf_token() }}">{{ __('Delete') }}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1165,10 +1259,10 @@
             <div class="row">
                 <!-- 21. Languages -->
                 <div class="col-12 mb-4">
-                    <label class="form-label">{{ __('Languages Known') }} ({{ __('Max 3') }}) <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select up to 3 languages you can confidently use for communication and teaching. Schools often filter candidates based on communication skills, especially English proficiency and regional language requirement.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    <label class="form-label">{{ __('Languages Known') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add languages you can confidently use for communication and teaching. Schools often filter candidates based on communication skills.') }}"><i class="fa fa-question-circle"></i></span></label>
                     <div id="languages-container">
                         @php $languages = old('languages', $account->languages ?? [['language' => '', 'proficiency' => '']]); @endphp
-                        @foreach(array_slice($languages, 0, 3) as $index => $lang)
+                        @foreach($languages as $index => $lang)
                         <div class="removable-item language-item">
                             @if($index > 0)<button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>@endif
                             <div class="row">
@@ -1176,7 +1270,16 @@
                                     <span class="priority-badge">{{ $index + 1 }}</span>
                                 </div>
                                 <div class="col-md-5 mb-2">
+                                    @if(isset($languagesList))
+                                    <select class="form-select" name="languages[{{ $index }}][language]">
+                                        <option value="">{{ __('-- Select language --') }}</option>
+                                        @foreach($languagesList as $opt)
+                                        <option value="{{ $opt->name }}" @selected(($lang['language'] ?? '') == $opt->name)>{{ $opt->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @else
                                     <input type="text" class="form-control" name="languages[{{ $index }}][language]" value="{{ $lang['language'] ?? '' }}" placeholder="{{ __('Language (e.g., English)') }}">
+                                    @endif
                                 </div>
                                 <div class="col-md-5 mb-2">
                                     <select class="form-select" name="languages[{{ $index }}][proficiency]">
@@ -1196,8 +1299,8 @@
                 <!-- 22. Skills -->
                 @if ($account->isJobSeeker() && (count($jobSkills ?? []) || count($selectedJobSkills ?? [])))
                 <div class="col-12 mb-3">
-                    <label class="form-label">{{ __('Key Skills & Competencies') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add your core teaching or professional skills relevant to your role. You can add up to 10 skills.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="text" class="tags form-control list-tagify" style="padding:0px;" id="favorite_skills" name="favorite_skills" value="{{ implode(',', $selectedJobSkills ?? []) }}" data-keep-invalid-tags="false" data-list="{{ $jobSkills ?? '' }}" data-user-input="false" data-max-tags="10" placeholder="{{ __('Select from the list') }}"/>
+                    <label class="form-label">{{ __('Key Skills & Competencies') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add your core teaching or professional skills relevant to your role.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    <input type="text" class="tags form-control list-tagify" style="padding:0px;" id="favorite_skills" name="favorite_skills" value="{{ implode(',', $selectedJobSkills ?? []) }}" data-keep-invalid-tags="false" data-list="{{ $jobSkills ?? '' }}" data-user-input="false" placeholder="{{ __('Select from the list') }}"/>
                 </div>
                 @endif
             </div>
@@ -1215,7 +1318,8 @@
                 <!-- 27. Resume -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Resume / CV Upload') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Upload your latest updated resume with complete academic and experience details. Schools review resumes before shortlisting candidates for interviews. PDF/Word files only. Max 2MB') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="file" class="form-control" name="resume" accept=".pdf,.doc,.docx">
+                    <input type="file" class="form-control @error('resume') is-invalid @enderror" name="resume" accept=".pdf,.doc,.docx">
+                    @error('resume')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     @if ($account->resume)
                         <small class="form-text mt-1">
                             <i class="fa fa-file me-1"></i>
@@ -1253,14 +1357,16 @@
                         </button> -->
                         <span class="text-muted small align-self-center" id="record-status"></span>
                     </div>
-                    <input type="file" class="form-control" name="introductory_audio" id="introductory_audio_file" accept="audio/*,.mp4,video/mp4,.webm">
+                    <input type="file" class="form-control @error('introductory_audio') is-invalid @enderror" name="introductory_audio" id="introductory_audio_file" accept="audio/*,.mp4,video/mp4,.webm,.mp3,.m4a,.wav,.ogg">
+                    <span class="text-muted small mt-1" id="intro_audio_hint">{{ __('Upload an audio file (max 1.5 MB). Allowed: mp3, m4a, wav, ogg, webm.') }}</span>
+                    @error('introductory_audio')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
 
-                <!-- Teaching Demo YouTube -->
-                <!-- <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Teaching Demo / Introduction Video Link (YouTube)') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Paste the link to your YouTube teaching demo or self-introduction video (3–10 minutes recommended).') }}"><i class="fa fa-question-circle"></i></span></label>
+                <!-- Teaching Demo / YouTube Link -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ __('YouTube Video Link') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Paste the link to your YouTube teaching demo or self-introduction video (e.g. https://www.youtube.com/watch?v=...)') }}"><i class="fa fa-question-circle"></i></span></label>
                     <input type="url" class="form-control" name="introductory_video_url" value="{{ old('introductory_video_url', $account->introductory_video_url ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
-                </div> -->
+                </div>
             </div>
             <p class="form-text text-muted mt-3 mb-0 p-3 rounded" style="background:#f8f9fa;"><i class="fa fa-lock me-2"></i>{{ __('Your documents are securely stored and shared only with schools/institutions based on your profile visibility settings.') }}</p>
         </div>
@@ -1301,11 +1407,118 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Scroll to first validation error (field with red border)
+    var firstInvalid = document.querySelector('#profile-form .form-control.is-invalid, #profile-form .form-select.is-invalid');
+    if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ---------- Client-side validation before save (show errors under fields, red line) ----------
+    var profileForm = document.getElementById('profile-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            // Remove previous client-side error messages and red border
+            document.querySelectorAll('#profile-form .js-field-error').forEach(function(el) { el.remove(); });
+            document.querySelectorAll('#profile-form .form-control.is-invalid, #profile-form .form-select.is-invalid').forEach(function(el) { el.classList.remove('is-invalid'); });
+            var firstErrorEl = null;
+            var hasError = false;
+
+            function showFieldError(inputOrWrap, message) {
+                hasError = true;
+                var el = inputOrWrap;
+                if (el && el.classList && el.classList.contains('form-control')) {
+                    el.classList.add('is-invalid');
+                    if (!firstErrorEl) firstErrorEl = el;
+                }
+                var wrap = el && el.closest ? el.closest('.mb-3') : (el && el.parentElement);
+                if (!wrap) wrap = el && el.parentElement;
+                if (wrap) {
+                    var errDiv = document.createElement('div');
+                    errDiv.className = 'invalid-feedback d-block js-field-error';
+                    errDiv.style.color = '#dc3545';
+                    errDiv.style.fontSize = '12px';
+                    errDiv.style.marginTop = '4px';
+                    errDiv.textContent = message;
+                    wrap.appendChild(errDiv);
+                    if (!firstErrorEl) firstErrorEl = wrap;
+                }
+            }
+
+            var firstName = document.querySelector('#profile-form input[name="first_name"]');
+            if (firstName && !String(firstName.value || '').trim()) {
+                showFieldError(firstName, '{{ __("Full name is required.") }}');
+            }
+
+            var phoneInput = document.querySelector('#profile-form input[name="phone"]');
+            if (phoneInput) {
+                var phone = String(phoneInput.value || '').replace(/\D/g, '');
+                if (phone.length === 0) {
+                    showFieldError(phoneInput, '{{ __("Please enter your phone number.") }}');
+                } else if (phone.length < 10) {
+                    showFieldError(phoneInput, '{{ __("Please enter a valid 10-digit phone number.") }}');
+                }
+            }
+
+            var dobInput = document.querySelector('#profile-form input[name="dob"]');
+            if (dobInput && dobInput.hasAttribute('required') && !dobInput.value) {
+                showFieldError(dobInput, '{{ __("Date of birth is required.") }}');
+            }
+
+            var genderChecked = document.querySelector('#profile-form input[name="gender"]:checked');
+            if (!genderChecked) {
+                var genderInput = document.querySelector('#profile-form input[name="gender"]');
+                if (genderInput) showFieldError(genderInput.closest('.mb-3') || genderInput, '{{ __("Please select gender.") }}');
+            }
+
+            var audioInput = document.querySelector('#profile-form input[name="introductory_audio"]');
+            if (audioInput && audioInput.files && audioInput.files.length > 0) {
+                var file = audioInput.files[0];
+                var allowed = ['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/x-m4a', 'audio/m4a', 'audio/wav', 'audio/ogg', 'audio/webm', 'video/mp4', 'video/webm'];
+                var ext = (file.name || '').split('.').pop().toLowerCase();
+                var ok = allowed.indexOf(file.type) !== -1 || ['mp3', 'mpeg', 'mpga', 'm4a', 'wav', 'ogg', 'webm', 'mp4'].indexOf(ext) !== -1;
+                if (!ok) {
+                    showFieldError(audioInput, '{{ __("Allowed formats: mp4, wav, ogg, m4a, webm, mp3.") }}');
+                } else if (file.size > 1.5 * 1024 * 1024) {
+                    showFieldError(audioInput, '{{ __("Audio file must be 1.5 MB or less.") }}');
+                }
+            }
+
+            if (hasError && firstErrorEl) {
+                e.preventDefault();
+                firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+        });
+    }
+
     // Bootstrap tooltips (hover + click for mobile)
     const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     if (typeof bootstrap !== 'undefined' && tooltipEls.length) {
         tooltipEls.forEach(el => new bootstrap.Tooltip(el, { trigger: 'hover focus click' }));
     }
+
+    // Experience Delete (no nested form – so main profile form stays valid)
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-exp-delete');
+        if (!btn) return;
+        e.preventDefault();
+        if (!confirm('{{ __("Are you sure?") }}')) return;
+        var url = btn.getAttribute('data-url');
+        var csrf = btn.getAttribute('data-csrf');
+        if (!url) return;
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.style.display = 'none';
+        var tok = document.createElement('input');
+        tok.type = 'hidden'; tok.name = '_token'; tok.value = csrf || '';
+        form.appendChild(tok);
+        var method = document.createElement('input');
+        method.type = 'hidden'; method.name = '_method'; method.value = 'DELETE';
+        form.appendChild(method);
+        document.body.appendChild(form);
+        form.submit();
+    });
 
     // ==========================================
     // TomSelect Dropdowns Initialization
@@ -1323,11 +1536,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Institution Types (max 3)
+    // Institution Types
     if (document.getElementById('ts-institution-types')) {
         var tsInst = new TomSelect('#ts-institution-types', {
             plugins: ['remove_button', 'optgroup_columns'],
-            maxItems: 3,
             searchField: ['text'],
             render: {
                 no_results: function() { return '<div class="no-results">No institution type found</div>'; }
@@ -1341,12 +1553,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (ic) ic.textContent = tsInst.items.length;
     }
 
-    // Teaching Subjects (max 3)
+    // Teaching Subjects
     var tsSubjectsInstance = null;
     if (document.getElementById('ts-teaching-subjects')) {
         tsSubjectsInstance = new TomSelect('#ts-teaching-subjects', {
             plugins: ['remove_button', 'optgroup_columns'],
-            maxItems: 3,
             searchField: ['text'],
             render: {
                 no_results: function() { return '<div class="no-results">No subject found</div>'; }
@@ -1360,12 +1571,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sc) sc.textContent = tsSubjectsInstance.items.length;
     }
 
-    // Non-Teaching Positions (max 3)
+    // Non-Teaching Positions
     var tsNonTeachingInstance = null;
     if (document.getElementById('ts-non-teaching')) {
         tsNonTeachingInstance = new TomSelect('#ts-non-teaching', {
             plugins: ['remove_button'],
-            maxItems: 3,
             searchField: ['text'],
             render: {
                 no_results: function() { return '<div class="no-results">No position found</div>'; }
@@ -1379,11 +1589,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (nc) nc.textContent = tsNonTeachingInstance.items.length;
     }
 
-    // Job Type (max 2)
+    // Job Type
     if (document.getElementById('ts-job-type')) {
         new TomSelect('#ts-job-type', {
             plugins: ['remove_button'],
-            maxItems: 2,
             searchField: ['text'],
             render: {
                 no_results: function() { return '<div class="no-results">No job type found</div>'; }
@@ -1641,6 +1850,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     })();
 
+    var ajaxHeaders = { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+    var getStatesCities = function(data) {
+        var arr = data && data.data;
+        if (Array.isArray(arr)) return arr;
+        if (data && Array.isArray(data)) return data;
+        return [];
+    };
+
     // Work preference rows: load states/cities for existing rows on page load
     document.querySelectorAll('.work-location-item').forEach(function(row) {
         var countrySel = row.querySelector('.work-pref-country');
@@ -1648,62 +1865,78 @@ document.addEventListener('DOMContentLoaded', function() {
         var citySel = row.querySelector('.work-pref-city');
         var stateId = row.getAttribute('data-state-id');
         var cityId = row.getAttribute('data-city-id');
-        if (countrySel && countrySel.value) {
-            fetch('{{ route("ajax.states-by-country") }}?country_id=' + countrySel.value)
+        if (countrySel && countrySel.value && stateSel) {
+            fetch('{{ route("ajax.states-by-country") }}?country_id=' + countrySel.value, { headers: ajaxHeaders })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
+                    var list = getStatesCities(data);
                     var html = '<option value="">{{ __("Select") }}</option>';
-                    if (data.data) data.data.forEach(function(s) { html += '<option value="' + s.id + '"' + (s.id == stateId ? ' selected' : '') + '>' + s.name + '</option>'; });
+                    list.forEach(function(s) { if (s && s.id && s.id != 0) html += '<option value="' + s.id + '"' + (s.id == stateId ? ' selected' : '') + '>' + (s.name || '') + '</option>'; });
                     stateSel.innerHTML = html;
-                    if (stateId && stateSel.value) {
-                        fetch('{{ route("ajax.cities-by-state") }}?state_id=' + stateSel.value)
+                    if (stateId && stateSel.value && citySel) {
+                        fetch('{{ route("ajax.cities-by-state") }}?state_id=' + stateSel.value, { headers: ajaxHeaders })
                             .then(function(r2) { return r2.json(); })
                             .then(function(data2) {
+                                var list2 = getStatesCities(data2);
                                 var html2 = '<option value="">{{ __("Select") }}</option>';
-                                if (data2.data) data2.data.forEach(function(c) { html2 += '<option value="' + c.id + '"' + (c.id == cityId ? ' selected' : '') + '>' + c.name + '</option>'; });
+                                list2.forEach(function(c) { if (c && c.id && c.id != 0) html2 += '<option value="' + c.id + '"' + (c.id == cityId ? ' selected' : '') + '>' + (c.name || '') + '</option>'; });
                                 citySel.innerHTML = html2;
-                            });
+                            })
+                            .catch(function() {});
                     }
-                });
+                })
+                .catch(function() {});
         }
     });
 
     // Work preference: country/state change for dynamic rows
-    document.getElementById('work-locations-container').addEventListener('change', function(e) {
-        if (e.target.classList.contains('work-pref-country')) {
-            var stateSel = e.target.closest('.work-location-item').querySelector('.work-pref-state');
-            var citySel = e.target.closest('.work-location-item').querySelector('.work-pref-city');
-            stateSel.innerHTML = '<option value="">{{ __("Select") }}</option>';
-            citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
-            if (e.target.value) {
-                fetch('{{ route("ajax.states-by-country") }}?country_id=' + e.target.value)
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        var html = '<option value="">{{ __("Select") }}</option>';
-                        if (data.data) data.data.forEach(function(s) { html += '<option value="' + s.id + '">' + s.name + '</option>'; });
-                        stateSel.innerHTML = html;
-                    });
+    var workLocContainer = document.getElementById('work-locations-container');
+    if (workLocContainer) {
+        workLocContainer.addEventListener('change', function(e) {
+            if (e.target.classList.contains('work-pref-country')) {
+                var row = e.target.closest('.work-location-item');
+                var stateSel = row ? row.querySelector('.work-pref-state') : null;
+                var citySel = row ? row.querySelector('.work-pref-city') : null;
+                if (stateSel) stateSel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+                if (citySel) citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+                if (e.target.value && stateSel) {
+                    fetch('{{ route("ajax.states-by-country") }}?country_id=' + e.target.value, { headers: ajaxHeaders })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var list = getStatesCities(data);
+                            var html = '<option value="">{{ __("Select") }}</option>';
+                            list.forEach(function(s) { if (s && s.id && s.id != 0) html += '<option value="' + s.id + '">' + (s.name || '') + '</option>'; });
+                            stateSel.innerHTML = html;
+                        })
+                        .catch(function() {});
+                }
+            } else if (e.target.classList.contains('work-pref-state')) {
+                var row = e.target.closest('.work-location-item');
+                var citySel = row ? row.querySelector('.work-pref-city') : null;
+                if (citySel) citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+                if (e.target.value && citySel) {
+                    fetch('{{ route("ajax.cities-by-state") }}?state_id=' + e.target.value, { headers: ajaxHeaders })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var list = getStatesCities(data);
+                            var html = '<option value="">{{ __("Select") }}</option>';
+                            list.forEach(function(c) { if (c && c.id && c.id != 0) html += '<option value="' + c.id + '">' + (c.name || '') + '</option>'; });
+                            citySel.innerHTML = html;
+                        })
+                        .catch(function() {});
+                }
             }
-        } else if (e.target.classList.contains('work-pref-state')) {
-            var citySel = e.target.closest('.work-location-item').querySelector('.work-pref-city');
-            citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
-            if (e.target.value) {
-                fetch('{{ route("ajax.cities-by-state") }}?state_id=' + e.target.value)
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        var html = '<option value="">{{ __("Select") }}</option>';
-                        if (data.data) data.data.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
-                        citySel.innerHTML = html;
-                    });
-            }
-        }
-    });
+        });
+    }
 });
 
-// Add qualification
+// Add qualification (specialization always as dropdown from jb_specializations)
+var specializationsListForSelect = @json(isset($specializationsList) ? $specializationsList->map(function($o) { return ['name' => $o->name]; })->values()->all() : []);
 let qualificationIndex = {{ count($qualifications ?? [1]) }};
 function addQualification() {
     const container = document.getElementById('qualifications-container');
+    var opts = (specializationsListForSelect || []).map(function(o) { return '<option value="' + (o.name || '') + '">' + (o.name || '') + '</option>'; }).join('');
+    var specializationSelectHtml = '<select class="form-select" name="qualifications[' + qualificationIndex + '][specialization]"><option value="">{{ __("-- Select Specialization --") }}</option>' + opts + '</select>';
     const html = `
         <div class="removable-item qualification-item">
             <button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>
@@ -1718,10 +1951,7 @@ function addQualification() {
                     </select>
                 </div>
                 <div class="col-md-4 mb-2">
-                    <div class="specialization-autocomplete-wrapper">
-                        <input type="text" class="form-control specialization-input" name="qualifications[${qualificationIndex}][specialization]" placeholder="Specialization/Subject" autocomplete="off">
-                        <div class="specialization-suggestions"></div>
-                    </div>
+                    ${specializationSelectHtml}
                 </div>
                 <div class="col-md-4 mb-2">
                     <input type="text" class="form-control" name="qualifications[${qualificationIndex}][institution]" placeholder="Institution Name">
@@ -1733,18 +1963,18 @@ function addQualification() {
     qualificationIndex++;
 }
 
-// Add language (max 3)
+// Add language (uses dropdown from DB when languagesListOptions is set)
+var languagesListOptions = @json(isset($languagesList) && $languagesList->isNotEmpty() ? $languagesList->map(fn($o) => ['value' => $o->name, 'label' => $o->name])->values() : []);
 let languageIndex = {{ count($languages ?? [1]) }};
 function addLanguage() {
-    if (document.querySelectorAll('.language-item').length >= 3) {
-        if (typeof window.showDialogAlert === 'function') {
-            window.showDialogAlert('error', 'Maximum 3 languages allowed', 'Limit Reached');
-        } else {
-            alert('Maximum 3 languages allowed');
-        }
-        return;
-    }
     const container = document.getElementById('languages-container');
+    var languageFieldHtml;
+    if (languagesListOptions && languagesListOptions.length > 0) {
+        var opts = languagesListOptions.map(function(o) { return '<option value="' + (o.value || o.label || '') + '">' + (o.label || o.value || '') + '</option>'; }).join('');
+        languageFieldHtml = '<select class="form-select" name="languages[' + languageIndex + '][language]"><option value="">{{ __("-- Select language --") }}</option>' + opts + '</select>';
+    } else {
+        languageFieldHtml = '<input type="text" class="form-control" name="languages[' + languageIndex + '][language]" placeholder="{{ __("Language (e.g., English)") }}">';
+    }
     const html = `
         <div class="removable-item language-item">
             <button type="button" class="remove-item-btn" onclick="this.parentElement.remove()">×</button>
@@ -1752,12 +1982,10 @@ function addLanguage() {
                 <div class="col-md-1 d-flex align-items-center">
                     <span class="priority-badge">${languageIndex + 1}</span>
                 </div>
-                <div class="col-md-5 mb-2">
-                    <input type="text" class="form-control" name="languages[${languageIndex}][language]" placeholder="Language (e.g., English)">
-                </div>
+                <div class="col-md-5 mb-2">` + languageFieldHtml + `</div>
                 <div class="col-md-5 mb-2">
                     <select class="form-select" name="languages[${languageIndex}][proficiency]">
-                        <option value="">Proficiency</option>
+                        <option value="">{{ __("Proficiency") }}</option>
                         <option value="basic">Basic</option>
                         <option value="intermediate">Intermediate</option>
                         <option value="fluent">Fluent</option>
@@ -1771,20 +1999,12 @@ function addLanguage() {
     languageIndex++;
 }
 
-// Add work location preference (max 3)
+// Add work location preference
 let workLocationIndex = {{ count($workLocations) }};
 var defaultCountryId = document.getElementById('js-default-country-id') ? document.getElementById('js-default-country-id').value : '';
 var useLocationDropdowns = document.getElementById('js-use-location-dropdowns') && document.getElementById('js-use-location-dropdowns').value === '1';
 var countriesData = @json($countries ?? []);
 function addWorkLocation() {
-    if (document.querySelectorAll('.work-location-item').length >= 3) {
-        if (typeof window.showDialogAlert === 'function') {
-            window.showDialogAlert('error', '{{ __("Maximum 3 location preferences allowed") }}', 'Limit Reached');
-        } else {
-            alert('{{ __("Maximum 3 location preferences allowed") }}');
-        }
-        return;
-    }
     var idx = document.querySelectorAll('.work-location-item').length;
     var html;
     if (useLocationDropdowns) {
@@ -1809,15 +2029,17 @@ function addWorkLocation() {
         document.getElementById('work-locations-container').insertAdjacentHTML('beforeend', html);
         if (defaultCountryId) {
             var newRow = document.getElementById('work-locations-container').lastElementChild;
-            var stateSel = newRow.querySelector('.work-pref-state');
+            var stateSel = newRow ? newRow.querySelector('.work-pref-state') : null;
             if (stateSel) {
-                fetch('{{ route("ajax.states-by-country") }}?country_id=' + defaultCountryId)
+                fetch('{{ route("ajax.states-by-country") }}?country_id=' + defaultCountryId, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
+                        var list = (data && data.data) ? data.data : (Array.isArray(data) ? data : []);
                         var h = '<option value="">{{ __("Select") }}</option>';
-                        if (data.data) data.data.forEach(function(s) { h += '<option value="' + s.id + '">' + s.name + '</option>'; });
+                        list.forEach(function(s) { if (s && s.id && s.id != 0) h += '<option value="' + s.id + '">' + (s.name || '') + '</option>'; });
                         stateSel.innerHTML = h;
-                    });
+                    })
+                    .catch(function() {});
             }
         }
     } else {
@@ -2071,40 +2293,9 @@ function insertTextIntoEditor(text) {
 }
 
 // ==========================================
-// Specialization/Subject Autocomplete
+// Specialization/Subject Autocomplete (from DB: jb_specializations)
 // ==========================================
-var specializationsList = [
-    // Sciences
-    'Physics', 'Chemistry', 'Biology', 'Mathematics', 'Computer Science',
-    'Environmental Science', 'Biotechnology', 'Microbiology', 'Zoology', 'Botany',
-    'Geology', 'Astronomy', 'Statistics', 'Biochemistry',
-    // Arts & Humanities
-    'English', 'Hindi', 'Sanskrit', 'History', 'Geography', 'Political Science',
-    'Economics', 'Sociology', 'Psychology', 'Philosophy', 'Music', 'Fine Arts',
-    'Performing Arts', 'Journalism', 'Mass Communication', 'Library Science',
-    // Commerce & Management
-    'Commerce', 'Accountancy', 'Business Studies', 'Management', 'Finance',
-    'Marketing', 'Human Resource Management', 'Banking', 'Insurance',
-    // Engineering & Technology
-    'Mechanical Engineering', 'Civil Engineering', 'Electrical Engineering',
-    'Electronics Engineering', 'Computer Engineering', 'Chemical Engineering',
-    'Information Technology', 'Automobile Engineering', 'Aeronautical Engineering',
-    // Education
-    'Education (B.Ed)', 'Special Education', 'Physical Education', 'Montessori Education',
-    'Early Childhood Education', 'Curriculum Development',
-    // Medical & Health
-    'Medicine', 'Nursing', 'Pharmacy', 'Physiotherapy', 'Dental Science',
-    'Ayurveda', 'Homeopathy', 'Public Health', 'Nutrition & Dietetics',
-    // Law
-    'Law', 'Criminal Law', 'Corporate Law', 'International Law',
-    // Languages
-    'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Bengali', 'Gujarati',
-    'Punjabi', 'Urdu', 'French', 'German', 'Spanish', 'Japanese', 'Chinese',
-    // Others
-    'Yoga', 'Sports Science', 'Agriculture', 'Veterinary Science',
-    'Hotel Management', 'Fashion Design', 'Interior Design', 'Architecture',
-    'Social Work', 'Defense Studies', 'Home Science'
-];
+var specializationsList = @json(isset($specializationsList) ? $specializationsList->pluck('name')->values() : []);
 
 function initSpecializationAutocomplete() {
     document.addEventListener('input', function(e) {

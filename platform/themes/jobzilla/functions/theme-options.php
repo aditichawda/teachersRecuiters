@@ -128,6 +128,16 @@ app('events')->listen(RenderingThemeOptionSettings::class, function (): void {
             ],
         ])
         ->setField([
+            'id' => 'signup_login_modal_image',
+            'section_id' => 'opt-text-subsection-page',
+            'type' => 'mediaImage',
+            'label' => __('Sign up / Login popup left image'),
+            'attributes' => [
+                'name' => 'signup_login_modal_image',
+                'value' => '',
+            ],
+        ])
+        ->setField([
             'id' => 'logo_light',
             'section_id' => 'opt-text-subsection-logo',
             'type' => 'mediaImage',

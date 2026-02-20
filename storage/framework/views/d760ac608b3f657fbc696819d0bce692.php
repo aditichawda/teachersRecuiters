@@ -4,7 +4,7 @@
         <?php echo Theme::partial('header-meta'); ?>
 
         
-        <link rel="stylesheet" href="<?php echo e(asset('themes/jobzilla/css/dialog-alert.css')); ?>?v=<?php echo e(time()); ?>">
+        <link rel="stylesheet" href="<?php echo e(asset('themes/jobzilla/css/dialog-alert.css')); ?>?v=2.0.<?php echo e(time()); ?>">
         
         <script>
         (function() {

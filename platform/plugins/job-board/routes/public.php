@@ -86,6 +86,15 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
             sprintf('%s/%s/{slug?}', SlugHelper::getPrefix(Job::class, 'jobs'), SlugHelper::getPrefix(State::class, 'state')),
             'JobByLocationController@state'
         )->name('public.jobs-by-state');
+
+        Route::get('admission', [
+            'as' => 'public.admission',
+            'uses' => 'AdmissionController@index',
+        ]);
+        Route::post('admission/enquiry', [
+            'as' => 'public.admission.enquiry',
+            'uses' => 'AdmissionController@storeEnquiry',
+        ]);
     });
 
     Route::group(['prefix' => 'payments'], function (): void {

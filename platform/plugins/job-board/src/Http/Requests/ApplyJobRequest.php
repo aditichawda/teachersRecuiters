@@ -18,8 +18,12 @@ class ApplyJobRequest extends Request
         ];
 
         if ($this->input('job_type') === 'internal') {
+            $account = auth('account')->user();
+            $fullNameRule = ($account && (trim($account->first_name ?? '') !== '' || trim($account->full_name ?? '') !== '' || trim($account->name ?? '') !== ''))
+                ? 'nullable|max:240|min:2'
+                : 'required|max:240|min:2';
             $internalRules = [
-                'full_name' => 'required|max:240|min:2',
+                'full_name' => $fullNameRule,
                 'email' => 'required|email',
                 'phone' => 'nullable|' . BaseHelper::getPhoneValidationRule(),
                 'screening_answers' => 'nullable|array',
@@ -34,7 +38,6 @@ class ApplyJobRequest extends Request
             }
 
             // Resume field - check if required (only if user doesn't have existing resume)
-            $account = auth('account')->user();
             if (setting('job_board_require_resume_in_apply_job', false) && (! $account || ! $account->resume)) {
                 $internalRules['resume'] = 'required|file';
             } else {

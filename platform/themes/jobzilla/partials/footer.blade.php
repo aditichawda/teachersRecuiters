@@ -298,6 +298,7 @@
 
 @if (is_plugin_active('job-board'))
     @include(Theme::getThemeNamespace('views.job-board.partials.apply-modal'))
+    @include(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'))
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">
             @include(Theme::getThemeNamespace('views.job-board.partials.map'))
         </script>
@@ -305,7 +306,7 @@
 
 {!! Theme::footer() !!}
 
-{{-- Dialog Alert JS - Load directly to ensure it works - v2.0 Screenshot Match --}}
+{{-- Dialog Alert JS --}}
 <script src="{{ asset('themes/jobzilla/js/dialog-alert.js') }}?v=2.0.{{ time() }}"></script>
 
 {{-- Fix Testimonials Equal Height --}}

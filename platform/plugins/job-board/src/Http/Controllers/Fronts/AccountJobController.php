@@ -20,13 +20,16 @@ use Botble\JobBoard\Forms\Fronts\JobForm;
 use Botble\JobBoard\Http\Requests\AccountJobRequest;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\AccountActivityLog;
+use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\Currency;
 use Botble\JobBoard\Models\CustomFieldValue;
 use Botble\JobBoard\Models\DegreeLevel;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\JobExperience;
+use Botble\JobBoard\Models\JobScreeningQuestion;
 use Botble\JobBoard\Models\ScreeningQuestion;
+use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Models\JobShift;
 use Botble\JobBoard\Models\JobSkill;
 use Botble\JobBoard\Models\JobType;
@@ -40,6 +43,7 @@ use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class AccountJobController extends BaseController
 {
@@ -74,11 +78,27 @@ class AccountJobController extends BaseController
         $canPost = $account->canPost();
 
         if (JobBoardHelper::employerManageCompanyInfo() && ! $account->companies()->exists()) {
-            return $this
-                ->httpResponse()
-                ->setError()
-                ->setNextUrl(route('public.account.companies.create'))
-                ->setMessage(trans('plugins/job-board::messages.please_update_company_info'));
+            // Auto-create company from registration data so "Are you hiring" dropdown shows school
+            $companyName = $account->institution_name ?: trim($account->first_name . ' ' . $account->last_name);
+            if ($companyName) {
+                $company = Company::create([
+                    'name' => $companyName,
+                    'email' => $account->email,
+                    'phone' => $account->phone,
+                    'institution_type' => $account->institution_type,
+                    'country_id' => $account->country_id,
+                    'state_id' => $account->state_id,
+                    'city_id' => $account->city_id,
+                    'status' => 'published',
+                ]);
+                $account->companies()->attach($company->id);
+            } else {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setNextUrl(route('public.account.companies.create'))
+                    ->setMessage(trans('plugins/job-board::messages.please_update_company_info'));
+            }
         }
 
         $this->pageTitle(trans('plugins/job-board::messages.post_job'));
@@ -147,6 +167,13 @@ class AccountJobController extends BaseController
             ->select('name', 'id')->get()
             ->mapWithKeys(fn ($item) => [$item->id => $item->name])->all();
 
+        $languagesList = [];
+        if (Schema::hasTable('languages')) {
+            $languagesList = \Illuminate\Support\Facades\DB::table('languages')
+                ->orderBy('lang_order')->orderBy('lang_name')
+                ->pluck('lang_name')->values()->all();
+        }
+
         $currencies = Currency::query()->oldest('order')->oldest('title')
             ->pluck('title', 'id')->all();
 
@@ -154,11 +181,12 @@ class AccountJobController extends BaseController
 
         $job = null;
         $editJobData = null;
+        $defaultCompanyId = count($companies) === 1 ? array_key_first($companies) : null;
 
         return JobBoardHelper::view('dashboard.jobs.create', compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
-            'jobShifts', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData'
+            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData', 'defaultCompanyId'
         ));
     }
 
@@ -294,6 +322,9 @@ class AccountJobController extends BaseController
         }
         $job->screeningQuestions()->sync($syncData);
 
+        // Job-specific screening questions (employer-added for this job only)
+        $this->syncJobScreeningQuestions($job, $request->input('job_screening_questions', []));
+
         $storeTagService->execute($request, $job);
 
         event(new CreatedContentEvent(JOB_MODULE_SCREEN_NAME, $request, $job));
@@ -307,6 +338,12 @@ class AccountJobController extends BaseController
         if (JobBoardHelper::isEnabledCreditsSystem() && $account->credits > 0) {
             $account->credits--;
             $account->save();
+            Transaction::query()->create([
+                'account_id' => $account->getKey(),
+                'credits' => 1,
+                'type' => Transaction::TYPE_DEBIT,
+                'description' => trans('plugins/job-board::messages.credits_used_job_post', ['job' => $job->name]),
+            ]);
         }
 
         // Check if job is published (use the model instance, not query again)
@@ -385,7 +422,7 @@ class AccountJobController extends BaseController
         $this->pageTitle(trans('core/base::forms.edit_item', ['name' => $job->name]));
         SeoHelper::setTitle(trans('core/base::forms.edit_item', ['name' => $job->name]));
 
-        $job->load(['screeningQuestions', 'skills', 'jobTypes', 'company']);
+        $job->load(['screeningQuestions', 'jobScreeningQuestions', 'skills', 'jobTypes', 'company']);
 
         // Use same form as create (theme) for consistency - same fields, same names
         $account = auth('account')->user();
@@ -449,6 +486,13 @@ class AccountJobController extends BaseController
             ->select('name', 'id')->get()
             ->mapWithKeys(fn ($item) => [$item->id => $item->name])->all();
 
+        $languagesList = [];
+        if (Schema::hasTable('languages')) {
+            $languagesList = \Illuminate\Support\Facades\DB::table('languages')
+                ->orderBy('lang_order')->orderBy('lang_name')
+                ->pluck('lang_name')->values()->all();
+        }
+
         $currencies = Currency::query()->oldest('order')->oldest('title')
             ->pluck('title', 'id')->all();
 
@@ -479,13 +523,21 @@ class AccountJobController extends BaseController
                 'city_name' => $cityName,
                 'state_name' => $stateName,
                 'country_name' => $countryName,
+                'job_screening_questions' => $job->jobScreeningQuestions->map(fn ($q) => [
+                    'id' => $q->id,
+                    'question' => $q->question,
+                    'question_type' => $q->question_type,
+                    'options' => is_array($q->options_array) ? implode("\n", $q->options_array) : (string) $q->options,
+                    'is_required' => $q->is_required,
+                    'correct_answer' => $q->correct_answer,
+                ])->values()->all(),
             ];
         }
 
         return JobBoardHelper::view('dashboard.jobs.create', compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
-            'jobShifts', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData'
+            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData'
         ));
     }
 
@@ -504,6 +556,41 @@ class AccountJobController extends BaseController
         }
 
         return $account->id == $job->author_id && $job->author_type == Account::class;
+    }
+
+    /**
+     * Sync job-specific screening questions (employer-added per job, not in admin pool).
+     *
+     * @param  array<int, array{id?: int, question?: string, question_type?: string, options?: string, is_required?: bool, correct_answer?: string}>  $rows
+     */
+    protected function syncJobScreeningQuestions(Job $job, array $rows): void
+    {
+        $rows = array_values($rows);
+        $keepIds = collect($rows)->pluck('id')->filter()->values()->all();
+
+        $job->jobScreeningQuestions()->whereNotIn('id', $keepIds)->delete();
+
+        foreach ($rows as $order => $row) {
+            $question = trim((string) ($row['question'] ?? ''));
+            if ($question === '') {
+                continue;
+            }
+            $data = [
+                'question' => $question,
+                'question_type' => in_array($row['question_type'] ?? '', ['text', 'textarea', 'dropdown', 'checkbox'], true)
+                    ? $row['question_type'] : 'text',
+                'options' => $row['options'] ?? null,
+                'is_required' => ! empty($row['is_required']),
+                'correct_answer' => isset($row['correct_answer']) ? trim((string) $row['correct_answer']) : null,
+                'order' => $order,
+            ];
+            $id = isset($row['id']) ? (int) $row['id'] : 0;
+            if ($id && $job->jobScreeningQuestions()->where('id', $id)->exists()) {
+                $job->jobScreeningQuestions()->where('id', $id)->update($data);
+            } else {
+                $job->jobScreeningQuestions()->create(array_merge($data, ['job_id' => $job->id]));
+            }
+        }
     }
 
     public function update(Job $job, AccountJobRequest $request, StoreTagService $storeTagService)
@@ -560,6 +647,8 @@ class AccountJobController extends BaseController
             ];
         }
         $job->screeningQuestions()->sync($syncData);
+
+        $this->syncJobScreeningQuestions($job, $request->input('job_screening_questions', []));
 
         $storeTagService->execute($request, $job);
 
@@ -651,6 +740,12 @@ class AccountJobController extends BaseController
         if (JobBoardHelper::isEnabledCreditsSystem() && $account->credits > 0) {
             $account->credits--;
             $account->save();
+            Transaction::query()->create([
+                'account_id' => $account->getKey(),
+                'credits' => 1,
+                'type' => Transaction::TYPE_DEBIT,
+                'description' => trans('plugins/job-board::messages.credits_used_job_renew', ['job' => $job->name]),
+            ]);
         }
 
         AccountActivityLog::query()->create([

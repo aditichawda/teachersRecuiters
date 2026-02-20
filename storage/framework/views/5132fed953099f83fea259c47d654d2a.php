@@ -11,6 +11,9 @@
     $displayEmail = $account->email ?: 'your.email@example.com';
     $displayPhone = $account->phone ?: __('Your Phone');
     $displayLocation = $account->address ?: (($account->city_name || $account->state_name) ? implode(', ', array_filter([$account->city_name, $account->state_name])) : __('Your City, State'));
+    $displayInterests = $account->interests ?: __('e.g. Reading, Educational workshops, Student mentoring');
+    $displayActivities = $account->activities ?: __('e.g. School club coordinator, Annual day organizer');
+    $displayAchievements = $account->achievements ?: __('e.g. Best Teacher Award, Workshop presenter');
 ?>
 <div style="font-family: 'Georgia', 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 44px 40px; background: #fff; color: #333;">
     <!-- Header -->
@@ -120,6 +123,33 @@
         </div>
     </div>
 
+    <!-- Interests -->
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            <?php echo e(__('Interests')); ?>
+
+        </h2>
+        <p style="font-size: 13px; line-height: 1.65; color: #444; margin: 0;"><?php echo e($displayInterests); ?></p>
+    </div>
+
+    <!-- Activities -->
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            <?php echo e(__('Activities')); ?>
+
+        </h2>
+        <p style="font-size: 13px; line-height: 1.65; color: #444; margin: 0;"><?php echo e($displayActivities); ?></p>
+    </div>
+
+    <!-- Achievements -->
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1967d2; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 12px 0;">
+            <?php echo e(__('Achievements')); ?>
+
+        </h2>
+        <p style="font-size: 13px; line-height: 1.65; color: #444; margin: 0;"><?php echo e($displayAchievements); ?></p>
+    </div>
+
     <!-- Languages -->
     <?php if($account->languages && count($account->languages) > 0): ?>
     <div style="margin-bottom: 24px;">
@@ -157,5 +187,11 @@
         </ul>
     </div>
     <?php endif; ?>
+
+    <!-- Footer -->
+    <div style="text-align: center; padding-top: 20px; margin-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #999;">
+        <?php echo e(__('Powered by TeachersRecruiters')); ?>
+
+    </div>
 </div>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/account/resume-templates/classic.blade.php ENDPATH**/ ?>

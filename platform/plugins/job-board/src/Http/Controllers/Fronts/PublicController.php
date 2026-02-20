@@ -512,9 +512,14 @@ class PublicController extends BaseController
 
             $request->merge(['job_id' => $job->id]);
 
-            // Full name → first_name + last_name
+            // Full name: use request or fallback to account name (fix 422 when profile name empty)
             $fullName = $request->input('full_name');
-            if (is_string($fullName) && $fullName !== '') {
+            if ((! is_string($fullName) || trim($fullName) === '') && $account) {
+                $fullName = trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) ?: ($account->full_name ?? $account->name ?? '');
+                $request->merge(['full_name' => $fullName]);
+            }
+            $fullName = $request->input('full_name');
+            if (is_string($fullName) && trim($fullName) !== '') {
                 $parts = preg_split('/\s+/', trim($fullName), 2, PREG_SPLIT_NO_EMPTY);
                 $request->merge([
                     'first_name' => $parts[0] ?? '',
@@ -1042,12 +1047,6 @@ class PublicController extends BaseController
     {
         abort_if(JobBoardHelper::isDisabledPublicProfile(), 404);
 
-        // Check if user is authenticated and is an employer
-        $account = Auth::guard('account')->user();
-        if (!$account || !$account->isEmployer()) {
-            abort(403, __('Only employers can view candidate profiles'));
-        }
-
         $slug = SlugHelper::getSlug($slug, SlugHelper::getPrefix(Account::class));
 
         abort_unless($slug, 404);
@@ -1068,6 +1067,13 @@ class PublicController extends BaseController
         $candidate = Account::query()
             ->where($condition)
             ->firstOrFail();
+
+        // Allow employers to view any candidate profile; allow job seeker to view their own profile
+        $account = Auth::guard('account')->user();
+        $canView = $account && ($account->isEmployer() || $account->id === $candidate->id);
+        if (!$canView) {
+            abort(403, __('Only employers can view candidate profiles'));
+        }
 
         $candidate->setRelation('slugable', $slug);
 

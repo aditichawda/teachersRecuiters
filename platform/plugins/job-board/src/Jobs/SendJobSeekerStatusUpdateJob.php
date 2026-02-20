@@ -22,7 +22,7 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
 
     public function __construct(
         public JobApplication $application,
-        public Job $job,
+        public Job $jobModel,
         public JobApplicationStatusEnum $oldStatus,
         public JobApplicationStatusEnum $newStatus
     ) {
@@ -33,8 +33,9 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
     {
         try {
             // Only send emails for shortlisted and rejected statuses
-            if ($this->newStatus->getValue() !== JobApplicationStatusEnum::SHORTLISTED && 
-                $this->newStatus->getValue() !== JobApplicationStatusEnum::REJECTED) {
+            $newStatusValue = $this->newStatus->getValue();
+            if ($newStatusValue !== JobApplicationStatusEnum::SHORT_LIST->getValue() &&
+                $newStatusValue !== JobApplicationStatusEnum::REJECTED->getValue()) {
                 return;
             }
 
@@ -49,18 +50,18 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
             }
 
             $jobSeekerName = $this->application->full_name;
-            $jobUrl = $this->job->url;
+            $jobUrl = $this->jobModel->url;
             if (!filter_var($jobUrl, FILTER_VALIDATE_URL)) {
                 $jobUrl = url($jobUrl);
             }
 
-            $isShortlisted = $this->newStatus->getValue() === JobApplicationStatusEnum::SHORTLISTED;
-            $isRejected = $this->newStatus->getValue() === JobApplicationStatusEnum::REJECTED;
+            $isShortlisted = $newStatusValue === JobApplicationStatusEnum::SHORT_LIST->getValue();
+            $isRejected = $newStatusValue === JobApplicationStatusEnum::REJECTED->getValue();
 
             $emailContent = $this->buildEmailContent([
                 'job_seeker_name' => $jobSeekerName,
-                'job_name' => $this->job->name,
-                'company_name' => $this->job->company->name ?? 'N/A',
+                'job_name' => $this->jobModel->name,
+                'company_name' => $this->jobModel->company->name ?? 'N/A',
                 'job_url' => $jobUrl,
                 'is_shortlisted' => $isShortlisted,
                 'is_rejected' => $isRejected,
@@ -69,7 +70,7 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
 
             $emailSubject = $isShortlisted 
                 ? 'Congratulations! You\'ve been Shortlisted - ' . $this->job->name
-                : 'Update on Your Application - ' . $this->job->name;
+                : 'Update on Your Application - ' . $this->jobModel->name;
 
             Mail::send([], [], function ($message) use ($emailSubject, $emailContent, $jobSeekerEmail) {
                 $message->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'TeachersRecruiter'))
@@ -80,7 +81,7 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
 
             Log::info('Job seeker status update email sent', [
                 'application_id' => $this->application->id,
-                'job_id' => $this->job->id,
+                'job_id' => $this->jobModel->id,
                 'old_status' => $this->oldStatus->getValue(),
                 'new_status' => $this->newStatus->getValue(),
                 'email' => $jobSeekerEmail,
@@ -89,7 +90,7 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::error('Failed to send job seeker status update email', [
                 'application_id' => $this->application->id,
-                'job_id' => $this->job->id,
+                'job_id' => $this->jobModel->id,
                 'error' => $e->getMessage(),
             ]);
 

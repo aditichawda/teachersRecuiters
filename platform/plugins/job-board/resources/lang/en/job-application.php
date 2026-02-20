@@ -7,6 +7,7 @@ return [
         'email' => 'Email',
         'phone' => 'Phone',
         'name' => 'Name',
+        'status' => 'Status',
         'first_name' => 'First name',
         'last_name' => 'Last name',
         'time' => 'Time',
@@ -36,6 +37,8 @@ return [
         'pending' => 'Pending',
         'checked' => 'Checked',
         'shortlisted' => 'Shortlisted',
+        'short_list' => 'Shortlisted',
+        'hired' => 'Hired',
         'rejected' => 'Rejected',
     ],
     'notifications' => [

@@ -131,6 +131,15 @@
     color: #fff;
 }
 
+.js-view-profile-btn.js-view-profile-edit {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+}
+
+.js-view-profile-btn.js-view-profile-edit:hover {
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3);
+}
+
 .js-view-profile-btn i {
     margin-right: 5px;
 }
@@ -397,14 +406,26 @@
                         <h5 class="js-profile-name">Hello, {{ $account->first_name ?? $account->name }}</h5>
                         <p class="js-profile-date">Joined {{ $account->created_at->format('M d, Y') }}</p>
                         <p class="js-profile-updated">Last Updated: {{ $account->updated_at->format('M d, Y') }}</p>
-                        @php
-                            $candidateSlug = \Botble\Slug\Models\Slug::where('reference_type', \Botble\JobBoard\Models\Account::class)
-                                ->where('reference_id', $account->id)
-                                ->value('key');
-                        @endphp
-                        <!-- <button type="button" class="js-view-profile-btn" onclick="document.getElementById('profileModal').style.display='flex'">
-                            <i class="fa fa-eye"></i> {{ __('View Profile') }}
-                        </button> -->
+                        {{-- Profile Completion + View Profile (job seeker) --}}
+                        <div class="js-profile-completion">
+                            <h6>{{ __('Profile Completion') }}</h6>
+                            <div class="js-completion-bar">
+                                <div class="js-completion-fill" style="width: {{ $completion }}%;"></div>
+                            </div>
+                            <div class="js-completion-text">{{ $completion }}% {{ __('complete') }}</div>
+                        </div>
+                        @php $myPublicProfileUrl = $account->isJobSeeker() ? $account->url : ''; @endphp
+                        @if($account->isJobSeeker())
+                            @if($myPublicProfileUrl)
+                                <a href="{{ $myPublicProfileUrl }}" target="_blank" class="js-view-profile-btn" title="{{ __('View your public profile as others see it') }}">
+                                    <i class="fa fa-external-link-alt"></i> {{ __('View Profile') }}
+                                </a>
+                            @else
+                                <a href="{{ route('public.account.settings') }}" class="js-view-profile-btn js-view-profile-edit">
+                                    <i class="fa fa-user-edit"></i> {{ __('Complete profile for public link') }}
+                                </a>
+                            @endif
+                        @endif
                     </div>
                     
                     <!-- Wallet -->
@@ -425,6 +446,7 @@
                         <li><a href="{{ route('public.account.jobs.applied-jobs') }}" @class(['active' => $currentUrl == route('public.account.jobs.applied-jobs')])><i class="fa fa-file-alt"></i> Applied Jobs</a></li>
                         <li><a href="{{ route('public.account.experiences.index') }}" @class(['active' => str_contains($currentUrl, 'experience')])><i class="fa fa-briefcase"></i> Experience</a></li>
                         <li><a href="{{ route('public.account.educations.index') }}" @class(['active' => str_contains($currentUrl, 'education')])><i class="fa fa-graduation-cap"></i> Education</a></li>
+                        <li><a href="{{ route('public.account.interests-achievements') }}" @class(['active' => str_contains($currentUrl, 'interests-achievements')])><i class="fa fa-star"></i> Interests & Achievements</a></li>
                         <li><a href="#" @class(['active' => false])><i class="fa fa-wallet"></i> Wallet <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $walletPoints }}</span></a></li>
                         <li><a href="{{ route('public.account.resume-builder') }}" @class(['active' => str_contains($currentUrl, 'resume-builder')])><i class="fa fa-file-pdf"></i> Resume Builder</a></li>
                         <li><a href="{{ route('public.account.security') }}" @class(['active' => $currentUrl == route('public.account.security')])><i class="fa fa-lock"></i> Security</a></li>

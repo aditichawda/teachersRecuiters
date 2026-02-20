@@ -324,44 +324,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Template 3: Minimal -->
-    <div class="rb-template-card" data-template="minimal" onclick="selectTemplate(this)">
-        <div class="rb-template-preview">
-            <div class="preview-inner">
-                <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.account.resume-templates.minimal'), ['account' => $account, 'educations' => $educations, 'experiences' => $experiences, 'skills' => $skills], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-            </div>
-            <div class="preview-fade"></div>
-        </div>
-        <div class="rb-template-info">
-            <h5><?php echo e(__('Minimal')); ?></h5>
-            <p><?php echo e(__('Simple and elegant — lets content speak for itself')); ?></p>
-            <div class="rb-template-tags">
-                <span class="rb-template-tag tag-free">Free</span>
-                <span class="rb-template-tag">Simple</span>
-                <span class="rb-template-tag">ATS Friendly</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Template 4: Elegant -->
-    <div class="rb-template-card" data-template="elegant" onclick="selectTemplate(this)">
-        <div class="rb-template-preview">
-            <div class="preview-inner">
-                <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.account.resume-templates.elegant'), ['account' => $account, 'educations' => $educations, 'experiences' => $experiences, 'skills' => $skills], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-            </div>
-            <div class="preview-fade"></div>
-        </div>
-        <div class="rb-template-info">
-            <h5><?php echo e(__('Elegant')); ?></h5>
-            <p><?php echo e(__('Sophisticated design with timeline layout')); ?></p>
-            <div class="rb-template-tags">
-                <span class="rb-template-tag tag-free">Free</span>
-                <span class="rb-template-tag">Elegant</span>
-                <span class="rb-template-tag">Timeline</span>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Sticky Action Bar -->
@@ -427,7 +389,11 @@ function previewResume() {
         })
         .catch(err => {
             console.error(err);
-            alert('Failed to load preview');
+            if (typeof window.showDialogAlert === 'function') {
+                window.showDialogAlert('error', 'Failed to load preview', 'Error');
+            } else {
+                alert('Failed to load preview');
+            }
         });
 }
 
@@ -465,7 +431,11 @@ function downloadResume() {
         })
         .catch(err => {
             console.error(err);
-            alert('Failed to generate resume');
+            if (typeof window.showDialogAlert === 'function') {
+                window.showDialogAlert('error', 'Failed to generate resume', 'Error');
+            } else {
+                alert('Failed to generate resume');
+            }
         });
 }
 </script>

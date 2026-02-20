@@ -26,6 +26,7 @@ use Botble\JobBoard\Models\JobExperience;
 use Botble\JobBoard\Models\JobSkill;
 use Botble\JobBoard\Models\JobType;
 use Botble\JobBoard\Models\Package;
+use Botble\JobBoard\Tables\Fronts\ApplicantTable;
 use Botble\JobBoard\Services\CouponService;
 use Botble\JobBoard\Supports\InvoiceHelper;
 use Botble\JobBoard\Supports\TwigExtension;
@@ -57,6 +58,62 @@ class HookServiceProvider extends ServiceProvider
     {
         add_filter(BASE_FILTER_APPEND_MENU_NAME, [$this, 'countPendingApplications'], 26, 2);
         add_filter(BASE_FILTER_MENU_ITEMS_COUNT, [$this, 'getMenuItemCount'], 26);
+        if (defined('BASE_FILTER_TABLE_FOOTER_RENDER')) {
+            add_filter(BASE_FILTER_TABLE_FOOTER_RENDER, function (?string $html, $table): ?string {
+                if ($table instanceof ApplicantTable) {
+                    $script = '<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("change", function(e) {
+        var el = e.target;
+        if (el.classList && el.classList.contains("applicant-status-select")) {
+            var url = el.getAttribute("data-url");
+            var status = el.value;
+            if (!url) return;
+            var td = el.closest("td");
+            var meta = document.querySelector(\'meta[name="csrf-token"]\');
+            var token = meta ? meta.getAttribute("content") : "";
+            el.disabled = true;
+            el.classList.add("opacity-75");
+            var loader = document.createElement("span");
+            loader.className = "applicant-status-loader ms-2 small text-muted";
+            loader.textContent = "Saving...";
+            if (td) td.appendChild(loader);
+            var formData = new FormData();
+            formData.append("_token", token);
+            formData.append("status", status);
+            fetch(url, { method: "POST", body: formData, headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" } })
+                .then(function(r) { return r.json().catch(function() { return {}; }); })
+                .then(function(data) {
+                    el.disabled = false;
+                    el.classList.remove("opacity-75");
+                    if (loader && loader.parentNode) loader.remove();
+                    if (typeof Botble !== "undefined") {
+                        if (data && data.error === false) {
+                            Botble.showSuccess(data.message || "Updated successfully");
+                        } else {
+                            Botble.showError((data && data.message) ? data.message : "Update failed");
+                        }
+                    } else {
+                        if (data && data.error === false) alert("Updated successfully");
+                        else alert((data && data.message) || "Update failed");
+                    }
+                })
+                .catch(function() {
+                    el.disabled = false;
+                    el.classList.remove("opacity-75");
+                    if (loader && loader.parentNode) loader.remove();
+                    if (typeof Botble !== "undefined") Botble.showError("Update failed");
+                    else alert("Update failed");
+                });
+        }
+    });
+});
+</script>';
+                    return ($html ?? '') . $script;
+                }
+                return $html;
+            }, 10, 2);
+        }
         if (function_exists('theme_option')) {
             add_action(RENDERING_THEME_OPTIONS_PAGE, [$this, 'addThemeOptions'], 55);
         }

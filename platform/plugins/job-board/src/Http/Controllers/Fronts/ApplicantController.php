@@ -15,6 +15,9 @@ use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Tables\Fronts\ApplicantTable;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 class ApplicantController extends BaseController
 {
@@ -22,11 +25,14 @@ class ApplicantController extends BaseController
     {
         $this->pageTitle(trans('plugins/job-board::messages.applicants'));
 
-        return $table->render(JobBoardHelper::viewPath('dashboard.table.base'));
+        return $table->render(JobBoardHelper::viewPath('dashboard.table.base'), [], [
+            'layout' => 'plugins/job-board::themes.dashboard.layouts.master',
+        ]);
     }
 
-    public function edit(int|string $id)
+    public function edit(int|string $applicant)
     {
+        $id = $applicant instanceof JobApplication ? $applicant->getKey() : $applicant;
         /**
          * @var Account $account
          */
@@ -50,49 +56,81 @@ class ApplicantController extends BaseController
         return ApplicantForm::createFromModel($jobApplication)->renderForm();
     }
 
-    public function update(int|string $id, EditJobApplicationRequest $request)
+    public function update(int|string $applicant, EditJobApplicationRequest $request): RedirectResponse|Response
     {
+        $id = $applicant instanceof JobApplication ? $applicant->getKey() : $applicant;
         /**
          * @var Account $account
          */
         $account = auth('account')->user();
 
-        $jobApplication = JobApplication::query()
-            ->select(['*'])
-            ->whereHas('job.company.accounts', function (Builder $query) use ($account): void {
-                $query->where('account_id', $account->getKey());
-            })
-            ->with(['job'])
-            ->where('id', $id)
-            ->firstOrFail();
+        try {
+            $jobApplication = JobApplication::query()
+                ->select(['*'])
+                ->whereHas('job.company.accounts', function (Builder $query) use ($account): void {
+                    $query->where('account_id', $account->getKey());
+                })
+                ->with(['job'])
+                ->where('id', $id)
+                ->firstOrFail();
 
-        // Store old status before updating
-        $oldStatus = $jobApplication->status;
+            $oldStatus = $jobApplication->status ?? JobApplicationStatusEnum::PENDING();
 
-        $jobApplication->fill($request->only(['status']));
-        $jobApplication->save();
+            $jobApplication->fill($request->only(['status']));
+            $jobApplication->save();
 
-        // Fire status update event if status changed
-        $newStatus = $jobApplication->status;
-        if ($oldStatus->getValue() !== $newStatus->getValue()) {
-            JobApplicationStatusUpdatedEvent::dispatch(
-                $jobApplication,
-                $jobApplication->job,
-                $oldStatus,
-                $newStatus
-            );
+            $newStatus = $jobApplication->status ?? JobApplicationStatusEnum::PENDING();
+            if ($oldStatus->getValue() !== $newStatus->getValue()) {
+                try {
+                    JobApplicationStatusUpdatedEvent::dispatch(
+                        $jobApplication,
+                        $jobApplication->job,
+                        $oldStatus,
+                        $newStatus
+                    );
+                } catch (\Throwable $e) {
+                    Log::warning('JobApplicationStatusUpdatedEvent failed: ' . $e->getMessage());
+                    report($e);
+                }
+            }
+
+            try {
+                event(new UpdatedContentEvent(JOB_APPLICATION_MODULE_SCREEN_NAME, $request, $jobApplication));
+            } catch (\Throwable $e) {
+                Log::warning('UpdatedContentEvent failed: ' . $e->getMessage());
+                report($e);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Applicant update failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'error' => true,
+                    'message' => trans('core/base::notices.update_failed_message'),
+                ], 422);
+            }
+            return redirect()
+                ->to(route('public.account.applicants.edit', $id))
+                ->with('error_msg', trans('core/base::notices.update_failed_message'))
+                ->withInput();
         }
 
-        event(new UpdatedContentEvent(JOB_APPLICATION_MODULE_SCREEN_NAME, $request, $jobApplication));
+        $successMessage = trans('core/base::notices.update_success_message');
 
-        return $this
-            ->httpResponse()
-            ->setPreviousUrl(route('public.account.applicants.index'))
-            ->withUpdatedSuccessMessage();
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'error' => false,
+                'message' => $successMessage,
+            ]);
+        }
+
+        return redirect()
+            ->to(route('public.account.applicants.edit', $id))
+            ->with('success_msg', $successMessage);
     }
 
-    public function destroy(int|string $id)
+    public function destroy(int|string $applicant)
     {
+        $id = $applicant instanceof JobApplication ? $applicant->getKey() : $applicant;
         /**
          * @var Account $account
          */

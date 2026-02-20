@@ -556,7 +556,7 @@
 /* Layout Grid */
 .enl-row {
     display: flex;
-    gap: 24px;
+    gap: 20px;
 }
 .enl-sidebar-col {
     flex: 0 0 280px;
@@ -810,11 +810,22 @@
                     <a href="{{ route('public.account.jobs.create') }}" class="enl-postjob">
                         <i class="fa fa-plus-circle"></i> Post Job
                     </a>
+
+                    <!-- Admission Button (employer only) -->
+                    <a href="{{ route('public.account.admission.edit') }}" class="enl-postjob" style="background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;">
+                        <i class="fa fa-graduation-cap"></i> {{ __('Admission') }}
+                    </a>
                     
                     <!-- Navigation -->
                     <ul class="enl-nav">
                         @foreach ($menuItems as $item)
                             @continue(! $item['name'])
+                            @php
+                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages', 'cms-account-invoices'];
+                                if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
+                                    continue;
+                                }
+                            @endphp
                             <li>
                                 <a href="{{ $item['url'] }}" @class(['active' => $item['active']])>
                                     @if(str_contains($item['icon'] ?? '', 'ti '))

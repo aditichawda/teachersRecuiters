@@ -52,11 +52,14 @@ class Company extends BaseModel
         'google',
         'youtube_video',
         'ceo',
-        'principal_name',
         'total_staff',
         'campus_type',
         'staff_facilities',
         'standard_level',
+        'working_days',
+        'working_hours_start',
+        'working_hours_end',
+        'campus_photos',
         'awards',
         'affiliations',
         'team_members',
@@ -89,12 +92,13 @@ class Company extends BaseModel
         'instagram' => SafeContent::class,
         'google' => SafeContent::class,
         'ceo' => SafeContent::class,
-        'principal_name' => SafeContent::class,
         'total_staff' => 'int',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
         'staff_facilities' => 'array',
         'standard_level' => 'array',
+        'working_days' => 'array',
+        'campus_photos' => 'array',
         'awards' => 'array',
         'affiliations' => 'array',
         'team_members' => 'array',
@@ -183,6 +187,16 @@ class Company extends BaseModel
             ->where('status', BaseStatusEnum::PUBLISHED);
     }
 
+    public function admission(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CompanyAdmission::class, 'company_id');
+    }
+
+    public function admissionEnquiries(): HasMany
+    {
+        return $this->hasMany(AdmissionEnquiry::class, 'company_id');
+    }
+
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
@@ -207,6 +221,8 @@ class Company extends BaseModel
             $company->jobs()->delete();
             $company->reviews()->delete();
             $company->accounts()->detach();
+            $company->admission()->delete();
+            $company->admissionEnquiries()->delete();
         });
     }
 }

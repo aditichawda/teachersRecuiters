@@ -157,7 +157,7 @@
             <select name="company_id" id="company_id" class="jp-select" required>
                 <option value="">-- Select Company --</option>
                 @foreach ($companies as $id => $name)
-                    <option value="{{ $id }}" data-institution-type="{{ $companyInstitutionTypes[$id] ?? '' }}">{{ $name }}</option>
+                    <option value="{{ $id }}" data-institution-type="{{ $companyInstitutionTypes[$id] ?? '' }}" {{ ((isset($defaultCompanyId) && $defaultCompanyId == $id) || (isset($job) && $job && $job->company_id == $id)) ? 'selected' : '' }}>{{ $name }}</option>
                 @endforeach
             </select>
             <small class="text-muted">Select company if already created.</small>
@@ -548,6 +548,26 @@
             </button>
         </div>
 
+        {{-- Internal phones (show when internal, up to 3) --}}
+        <div class="jp-group" id="internal-phones-wrap">
+            <label class="jp-label">Additional phone numbers to receive applications <span class="hint">(optional, up to 3)</span></label>
+            <div id="internal-phones-list">
+                @php
+                    $internalPhones = old('apply_internal_phones', []);
+                    if (!is_array($internalPhones)) $internalPhones = $internalPhones ? [$internalPhones] : [];
+                @endphp
+                @foreach(array_slice($internalPhones, 0, 3) as $idx => $phone)
+                <div class="jp-internal-phone-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                    <input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" value="{{ is_string($phone) ? $phone : '' }}" style="flex:1;">
+                    <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="ti ti-x"></i></button>
+                </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-phone-btn" style="border-radius:8px;">
+                <i class="ti ti-plus"></i> Add phone
+            </button>
+        </div>
+
         <div class="jp-row">
             {{-- 19. Application Deadline --}}
             <div class="jp-col-6">
@@ -642,13 +662,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'Computer Teacher Certification', 'Yoga Teacher Certification'
     ];
 
-    // ===== LANGUAGES DATABASE =====
-    const languages = [
-        'Hindi', 'English', 'Bengali', 'Telugu', 'Marathi', 'Tamil', 'Urdu',
-        'Gujarati', 'Kannada', 'Malayalam', 'Odia', 'Punjabi', 'Assamese',
-        'Sanskrit', 'French', 'German', 'Spanish', 'Japanese', 'Chinese',
-        'Korean', 'Arabic', 'Portuguese', 'Russian'
-    ];
+    // ===== LANGUAGES (from jb_languages table) =====
+    const languages = @json($languagesList ?? []);
 
     // ===== SKILLS (from DB) =====
     const allSkills = @json($skills);
@@ -658,22 +673,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== AUTO-SUGGEST HELPER =====
     function setupAutoSuggest(inputEl, listEl, items, onSelect, isObject = false) {
-        inputEl.addEventListener('input', function() {
-            const val = this.value.toLowerCase().trim();
+        function showList(val) {
+            val = (val || '').toLowerCase().trim();
             listEl.innerHTML = '';
-            if (val.length < 1) { listEl.classList.remove('show'); return; }
-
             let filtered;
-            if (isObject) {
+            if (val.length < 1) {
+                filtered = isObject ? Object.entries(items).slice(0, 15) : items.slice(0, 15);
+            } else if (isObject) {
                 filtered = Object.entries(items).filter(([id, name]) =>
                     name.toLowerCase().includes(val)
                 ).slice(0, 15);
             } else {
                 filtered = items.filter(i => i.toLowerCase().includes(val)).slice(0, 15);
             }
-
             if (filtered.length === 0) { listEl.classList.remove('show'); return; }
-
             filtered.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'jp-suggest-item';
@@ -691,8 +704,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 listEl.appendChild(div);
             });
             listEl.classList.add('show');
-        });
-
+        }
+        inputEl.addEventListener('input', function() { showList(this.value); });
+        inputEl.addEventListener('focus', function() { showList(this.value); });
         inputEl.addEventListener('blur', function() {
             setTimeout(() => listEl.classList.remove('show'), 200);
         });
@@ -801,9 +815,10 @@ document.addEventListener('DOMContentLoaded', function() {
         renderLangTags();
     };
 
-    // ===== COMPANY SELECTION =====
-    document.getElementById('company_id').addEventListener('change', function() {
-        const companyId = this.value;
+    // ===== COMPANY SELECTION (and auto-fill Institution Type + location) =====
+    const companySelectEl = document.getElementById('company_id');
+    function applyCompanySelection() {
+        const companyId = companySelectEl.value;
         const badge = document.getElementById('inst-type-badge');
 
         if (companyId && companyData[companyId]) {
@@ -832,7 +847,12 @@ document.addEventListener('DOMContentLoaded', function() {
             badge.style.background = '#f0f4ff';
             badge.style.color = '#4a6cf7';
         }
-    });
+    }
+    companySelectEl.addEventListener('change', applyCompanySelection);
+    // On load: if a company is already selected (e.g. only one company), auto-fill Institution Type and location
+    if (companySelectEl.value) {
+        applyCompanySelection();
+    }
 
     // ===== SALARY PERIOD =====
     window.selectSalaryPeriod = function(el) {
@@ -892,6 +912,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('internal-emails-list').addEventListener('click', function(e) {
         if (e.target.closest('.jp-remove-internal-email')) e.target.closest('.jp-internal-email-row').remove();
+    });
+
+    // ===== INTERNAL PHONES (up to 3) =====
+    document.getElementById('add-internal-phone-btn').addEventListener('click', function() {
+        const list = document.getElementById('internal-phones-list');
+        const rows = list.querySelectorAll('.jp-internal-phone-row');
+        if (rows.length >= 3) return;
+        const row = document.createElement('div');
+        row.className = 'jp-internal-phone-row';
+        row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+        row.innerHTML = '<input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" style="flex:1;">' +
+            '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="ti ti-x"></i></button>';
+        list.appendChild(row);
+        row.querySelector('.jp-remove-internal-phone').addEventListener('click', function() { row.remove(); });
+    });
+    document.getElementById('internal-phones-list').addEventListener('click', function(e) {
+        if (e.target.closest('.jp-remove-internal-phone')) e.target.closest('.jp-internal-phone-row').remove();
     });
 
     // ===== CITY SEARCH FOR JOB LOCATION =====

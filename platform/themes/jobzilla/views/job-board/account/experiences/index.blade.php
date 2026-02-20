@@ -13,7 +13,7 @@
         margin-bottom: 25px;
     }
     .exp-page-header h3 {
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 600;
         color: #333;
         margin: 0;
@@ -166,15 +166,15 @@
     }
     .exp-empty {
         text-align: center;
-        padding: 60px 20px;
+        /* padding: 60px 20px; */
         background: #fff;
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     .exp-empty i {
-        font-size: 48px;
-        color: #ccc;
-        margin-bottom: 16px;
+        font-size: 28px;
+        color: #fff;
+        /* margin-bottom: 16px; */
     }
     .exp-empty h5 {
         color: #666;
