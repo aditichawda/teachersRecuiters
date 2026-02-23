@@ -24,15 +24,23 @@ class SendJobAlertListener
     public function handle(JobPublishedEvent $event): void
     {
         try {
-            $job = $event->job;
+        $job = $event->job;
             
-            // CRITICAL: Log that listener is being called
+            // CRITICAL: Log that listener is being called with job details
             error_log('[JOB_ALERT] ============================================');
             error_log('[JOB_ALERT] 🎯🎯🎯 SendJobAlertListener::handle() CALLED! 🎯🎯🎯');
             error_log('[JOB_ALERT] Job ID: ' . $job->id);
             error_log('[JOB_ALERT] Job Name: ' . $job->name);
+            error_log('[JOB_ALERT] Job URL: ' . ($job->url ?? 'N/A'));
             error_log('[JOB_ALERT] ============================================');
-            \Log::info('🎯 SendJobAlertListener::handle() called', ['job_id' => $job->id, 'job_name' => $job->name]);
+            
+            // Log summary for this job - clearly identifies which job
+            \Log::info('📧 JOB ALERT LISTENER STARTED - Processing emails for job', [
+                'job_id' => $job->id,
+                'job_name' => $job->name,
+                'job_url' => $job->url ?? 'N/A',
+                'timestamp' => now()->toDateTimeString()
+            ]);
             
             // Load relationships safely
             try {
@@ -205,7 +213,7 @@ class SendJobAlertListener
         $allJobSeekersEmailsSent = 0;
         
         try {
-            $result = $this->sendToAllJobSeekers($job);
+        $result = $this->sendToAllJobSeekers($job);
             $allJobSeekersEmailsSent = $result['emails_sent'] ?? 0;
             $jobSeekersList = $result['job_seekers_list'] ?? [];
         } catch (\Exception $e) {
@@ -225,7 +233,15 @@ class SendJobAlertListener
         try {
             $this->sendNewJobNotificationToFixedEmail($fixedTestEmail, $job);
             error_log('[JOB_ALERT] ✅✅✅ FIXED EMAIL SENT SUCCESSFULLY! ✅✅✅');
-            \Log::info('Fixed test email sent successfully', ['email' => $fixedTestEmail, 'job_id' => $job->id]);
+            
+            // Log with same format as other emails for consistency
+            \Log::info('Job alert email sent successfully', [
+                'job_seeker_id' => 'FIXED',
+                'job_seeker_email' => $fixedTestEmail,
+                'job_id' => $job->id,
+                'job_name' => $job->name,
+                'email_type' => 'fixed_test_email'
+            ]);
             
             // Add fixed email to job seekers list
             $jobSeekersList[] = [
@@ -248,6 +264,26 @@ class SendJobAlertListener
             session()->forget('job_created_email_recipients');
         }
         session()->put('job_created_email_recipients', $jobSeekersList);
+        
+        // Final summary log for this job - clearly shows which job emails were sent for
+        $totalEmailsSent = $allJobSeekersEmailsSent + (in_array('hemanshi.amplewebservices@gmail.com', array_column($jobSeekersList, 'email')) ? 1 : 0);
+        
+        \Log::info('📧 JOB ALERT SUMMARY - Emails sent for job', [
+            'job_id' => $job->id,
+            'job_name' => $job->name,
+            'job_url' => $job->url ?? 'N/A',
+            'total_emails_sent' => $totalEmailsSent,
+            'job_seekers_count' => count($jobSeekersList),
+            'fixed_email_included' => in_array('hemanshi.amplewebservices@gmail.com', array_column($jobSeekersList, 'email')),
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        
+        error_log('[JOB_ALERT] ============================================');
+        error_log('[JOB_ALERT] 📊 SUMMARY FOR JOB #' . $job->id . ' - "' . $job->name . '"');
+        error_log('[JOB_ALERT] Total emails sent: ' . $totalEmailsSent);
+        error_log('[JOB_ALERT] Fixed email (hemanshi.amplewebservices@gmail.com): ' . (in_array('hemanshi.amplewebservices@gmail.com', array_column($jobSeekersList, 'email')) ? 'SENT ✅' : 'NOT SENT ❌'));
+        error_log('[JOB_ALERT] ============================================');
+        
         } catch (\Exception $e) {
             \Log::error('JobAlertListener error: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
             error_log('[JOB_ALERT] ❌❌❌ CRITICAL ERROR in JobAlertListener: ' . $e->getMessage());
@@ -509,7 +545,7 @@ class SendJobAlertListener
                 ->selectRaw('DISTINCT type')
                     ->get();
             error_log('[JOB_ALERT]   All types in database: ' . $allTypes->pluck('type')->implode(', '));
-                
+            
                 $jobSeekerIds = DB::table('jb_accounts')
                 ->where('type', $jobSeekerTypeValue)  // type = 'job-seeker' (exact match)
                 ->whereNotNull('email')
@@ -517,7 +553,7 @@ class SendJobAlertListener
                     ->where('email', 'LIKE', '%@%')
                     ->pluck('id')
                     ->toArray();
-                
+            
             error_log('[JOB_ALERT] 📊 DATABASE QUERY RESULT:');
             error_log('[JOB_ALERT]   Query: SELECT id FROM jb_accounts WHERE type = "' . $jobSeekerTypeValue . '" AND email IS NOT NULL');
             error_log('[JOB_ALERT]   Found ' . count($jobSeekerIds) . ' job seeker IDs with valid email');
@@ -550,7 +586,7 @@ class SendJobAlertListener
                 foreach ($sample as $js) {
                     $name = trim(($js->first_name ?? '') . ' ' . ($js->last_name ?? ''));
                     error_log('[JOB_ALERT]   - ID: ' . $js->id . ', Email: ' . $js->email . ', Name: ' . ($name ?: 'N/A'));
-                }
+            }
             } else {
                 error_log('[JOB_ALERT] ⚠️ No job seekers found in database!');
                 
@@ -576,7 +612,7 @@ class SendJobAlertListener
                     ->where('email', '!=', '')
                     ->where('email', 'LIKE', '%@%')
                     ->count();
-                
+            
                 error_log('[JOB_ALERT] Total job-seeker accounts: ' . $totalJobSeekers);
                 error_log('[JOB_ALERT] Job-seeker accounts with valid email: ' . $jobSeekersWithEmail);
             }
@@ -611,52 +647,37 @@ class SendJobAlertListener
             $emailsQueued = 0;
             $emailsFailed = 0;
             
-            // OPTIMIZATION: Dispatch emails to queue instead of sending synchronously
-            // This makes job creation instant - emails will be processed in background
+            // SEND EMAILS DIRECTLY (not via queue) - ensures emails are sent immediately
             $totalJobSeekers = $jobSeekers->count();
             
-            \Log::info('[JOB_ALERT] Dispatching ' . $totalJobSeekers . ' email jobs to queue');
+            \Log::info('[JOB_ALERT] Sending ' . $totalJobSeekers . ' emails DIRECTLY (not queued)');
+            error_log('[JOB_ALERT] Sending ' . $totalJobSeekers . ' emails DIRECTLY to job seekers');
 
             foreach ($jobSeekers as $jobSeeker) {
                 try {
-                    // Validate email format before queuing
+                    // Validate email format before sending
                     if (!filter_var($jobSeeker->email, FILTER_VALIDATE_EMAIL)) {
                         \Log::warning('[JOB_ALERT] Invalid email format for job seeker ' . $jobSeeker->id . ': ' . $jobSeeker->email);
+                        error_log('[JOB_ALERT] Invalid email format for job seeker ' . $jobSeeker->id . ': ' . $jobSeeker->email);
                         continue;
                     }
                     
-                    // Dispatch email job to queue (background processing)
-                    // Note: If queue is 'sync', job executes immediately and may throw email errors
-                    // We still count it as "queued" because the job was dispatched successfully
+                    // Send email DIRECTLY (not via queue) - immediate delivery
                     try {
-                        SendJobAlertEmailJob::dispatch($jobSeeker, $job);
-                        $emailsQueued++;
+                    $this->sendNewJobNotificationToJobSeeker($jobSeeker, $job);
+                        $emailsQueued++; // Count as sent
+                        
+                        \Log::info('Job alert email sent successfully', [
+                            'job_seeker_id' => $jobSeeker->id,
+                            'job_seeker_email' => $jobSeeker->email,
+                            'job_id' => $job->id
+                        ]);
                     } catch (\Exception $e) {
                         $errorMsg = $e->getMessage();
+                        $emailsFailed++;
                         
-                        // Check if this is an email sending error (Gmail limit, SMTP error, etc.)
-                        // vs a real dispatch error (serialization, etc.)
-                        $isEmailSendingError = (
-                            strpos($errorMsg, 'Daily user sending limit') !== false ||
-                            strpos($errorMsg, 'Expected response code') !== false ||
-                            strpos($errorMsg, 'SMTP') !== false ||
-                            strpos($errorMsg, 'Connection') !== false ||
-                            strpos($errorMsg, 'Mail') !== false
-                        );
-                        
-                        if ($isEmailSendingError) {
-                            // This is an email sending error - job was dispatched/executed but email failed
-                            // In sync mode, this happens immediately. Still count as queued (job processed)
-                            // The job will retry automatically (3 tries)
-                            $emailsQueued++;
-                            \Log::warning('[JOB_ALERT] ⚠️ Email sending failed (will retry): Job Seeker ' . $jobSeeker->id . ' - ' . substr($errorMsg, 0, 100));
-                            error_log('[JOB_ALERT] ⚠️ Email sending failed (will retry) - Job Seeker ID: ' . $jobSeeker->id . ' - ' . substr($errorMsg, 0, 100));
-                        } else {
-                            // This is a real dispatch error (serialization, queue connection, etc.)
-                            $emailsFailed++;
-                            \Log::error('❌ FAILED to dispatch email job for job seeker ' . $jobSeeker->id . ' (' . $jobSeeker->email . '): ' . $errorMsg);
-                            error_log('[JOB_ALERT] ❌ FAILED to dispatch - Job Seeker ID: ' . $jobSeeker->id . ' (' . $jobSeeker->email . ') - Error: ' . $errorMsg);
-                        }
+                        \Log::error('❌ FAILED to send email to job seeker ' . $jobSeeker->id . ' (' . $jobSeeker->email . '): ' . $errorMsg);
+                        error_log('[JOB_ALERT] ❌ FAILED to send email - Job Seeker ID: ' . $jobSeeker->id . ' (' . $jobSeeker->email . ') - Error: ' . $errorMsg);
                     }
                     
                     // Add to list for display (limit to first 100 for console display)
@@ -875,6 +896,166 @@ class SendJobAlertListener
                 </body>
                 </html>
             ";
+    }
+
+    protected function sendNewJobNotificationToFixedEmail(string $email, $job): void
+    {
+        // Get job location
+        $location = 'Any Location';
+        if (is_plugin_active('location')) {
+            if ($job->city) {
+                $location = $job->city->name;
+            } elseif ($job->state) {
+                $location = $job->state->name;
+            } elseif ($job->country) {
+                $location = $job->country->name;
+            }
+        }
+
+        // Get job category
+        $jobArea = 'All Categories';
+        if ($job->categories && $job->categories->isNotEmpty()) {
+            $jobArea = $job->categories->pluck('name')->implode(', ');
+        }
+
+        // Get job type
+        $jobType = 'All Types';
+        if ($job->jobTypes && $job->jobTypes->isNotEmpty()) {
+            $jobType = $job->jobTypes->pluck('name')->implode(', ');
+        }
+
+        // Prepare all email parameters/variables
+        $emailVariables = [
+            'account_name' => 'Job Seeker',                    // Fixed name for test email
+            'alert_name' => 'New Job Opportunity',             // Alert का name
+            'job_name' => $job->name,                          // Job का title/name
+            'job_url' => $job->url,                            // Job detail page का URL
+            'job_description' => strip_tags($job->description ?? ''),  // Job की description (HTML tags removed)
+            'company_name' => $job->hide_company ? '' : ($job->company->name ?? ''),  // Company का name (अगर hidden नहीं है)
+            'job_area' => $jobArea,                            // Job categories (comma separated)
+            'job_type' => $jobType,                            // Job types (comma separated)
+            'location' => $location,                            // Job location (city/state/country)
+            'salary_range' => $this->formatSalaryRange($job),  // Salary range (formatted)
+            'view_jobs_url' => route('public.jobs'),           // All jobs page का URL
+            'unsubscribe_url' => route('public.account.settings'),  // Settings page का URL
+        ];
+        
+        // Log email parameters for debugging
+        error_log('[JOB_ALERT] ========== FIXED EMAIL DETAILS ==========');
+        error_log('[JOB_ALERT] Email: ' . $email);
+        error_log('[JOB_ALERT] Job ID: ' . $job->id);
+        error_log('[JOB_ALERT] Job Name: ' . $job->name);
+        error_log('[JOB_ALERT] Email Variables: ' . json_encode($emailVariables));
+        
+        \Log::info('Sending email to fixed test email', [
+            'email' => $email,
+            'job_id' => $job->id,
+            'job_name' => $job->name,
+            'email_variables' => $emailVariables
+        ]);
+        
+        try {
+            // Check email template status from admin settings
+            $templateStatusKey = 'plugins_job-board_job-alert-notification_status';
+            $templateEnabled = (bool) setting($templateStatusKey, true);
+            
+            error_log('[JOB_ALERT] ========== EMAIL TEMPLATE CHECK ==========');
+            error_log('[JOB_ALERT] Template status key: ' . $templateStatusKey);
+            error_log('[JOB_ALERT] Template enabled in settings: ' . ($templateEnabled ? 'YES' : 'NO'));
+            
+            // Also check using EmailHandler method
+            $emailHandlerEnabled = EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)
+                ->templateEnabled('job-alert-notification');
+            
+            error_log('[JOB_ALERT] EmailHandler templateEnabled(): ' . ($emailHandlerEnabled ? 'YES' : 'NO'));
+            
+            if ($templateEnabled && $emailHandlerEnabled) {
+                // Send email using the job-alert-notification template
+                error_log('[JOB_ALERT] Attempting to send via EmailHandler...');
+                $result = EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)
+                    ->setVariableValues($emailVariables)
+                    ->sendUsingTemplate('job-alert-notification', $email);
+                
+                error_log('[JOB_ALERT] EmailHandler result: ' . ($result ? 'SUCCESS' : 'FAILED'));
+                
+                if ($result) {
+                    error_log('[JOB_ALERT] ============================================');
+                    return; // Success, exit
+                } else {
+                    error_log('[JOB_ALERT] EmailHandler returned false, trying fallback...');
+                }
+            } else {
+                error_log('[JOB_ALERT] Template not enabled, skipping EmailHandler, using fallback...');
+            }
+            
+            // Method 2: ALWAYS use fallback - Direct Mail facade (more reliable)
+            error_log('[JOB_ALERT] Using DIRECT Mail facade method (bypassing EmailHandler)...');
+            
+            // Check email configuration
+            $mailDriver = config('mail.default');
+            $mailFrom = config('mail.from.address');
+            $mailFromName = config('mail.from.name');
+            
+            error_log('[JOB_ALERT] Mail Driver: ' . $mailDriver);
+            error_log('[JOB_ALERT] Mail From: ' . $mailFrom);
+            error_log('[JOB_ALERT] Mail From Name: ' . $mailFromName);
+            
+            $emailContent = "
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset='utf-8'>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        h2 { color: #007bff; }
+                        .job-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                        .button { display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-top: 15px; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h2>New Job Opportunity: {$emailVariables['job_name']}</h2>
+                        <div class='job-details'>
+                            <p><strong>Company:</strong> {$emailVariables['company_name']}</p>
+                            <p><strong>Location:</strong> {$emailVariables['location']}</p>
+                            <p><strong>Job Area:</strong> {$emailVariables['job_area']}</p>
+                            <p><strong>Job Type:</strong> {$emailVariables['job_type']}</p>
+                            <p><strong>Salary Range:</strong> {$emailVariables['salary_range']}</p>
+                        </div>
+                        <p><strong>Description:</strong></p>
+                        <p>{$emailVariables['job_description']}</p>
+                        <a href='{$emailVariables['job_url']}' class='button'>View Job Details</a>
+                    </div>
+                </body>
+                </html>
+            ";
+            
+            Mail::send([], [], function ($message) use ($email, $emailVariables, $emailContent, $mailFrom, $mailFromName) {
+                $message->from($mailFrom ?: 'noreply@example.com', $mailFromName ?: 'TeachersRecruiter')
+                    ->to($email)
+                    ->subject('New Job Opportunity: ' . $emailVariables['job_name'])
+                    ->html($emailContent);
+            });
+            
+            error_log('[JOB_ALERT] ✅✅✅ Mail::send() executed successfully!');
+            error_log('[JOB_ALERT] Email sent to: ' . $email);
+            error_log('[JOB_ALERT] ============================================');
+            
+        } catch (\Exception $e) {
+            error_log('[JOB_ALERT] ❌ EXCEPTION in sendNewJobNotificationToFixedEmail: ' . $e->getMessage());
+            error_log('[JOB_ALERT] Exception file: ' . $e->getFile() . ':' . $e->getLine());
+            error_log('[JOB_ALERT] Exception trace: ' . $e->getTraceAsString());
+            \Log::error('Exception sending fixed test email', [
+                'email' => $email,
+                'job_id' => $job->id,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e; // Re-throw so caller can handle it
+        }
     }
 
     protected function formatSalaryRange($job): string

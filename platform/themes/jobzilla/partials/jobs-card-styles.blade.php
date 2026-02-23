@@ -33,6 +33,24 @@
 .job-card-modern:hover::before {
     background: #0073d1;
 }
+.job-card-modern .jcm-location-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+.job-card-modern .jcm-location {
+    font-size: 13px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.job-card-modern .jcm-location i {
+    font-size: 13px;
+    color: #94a3b8;
+}
 .job-card-modern .jcm-logo {
     width: 56px;
     height: 56px;
@@ -90,10 +108,16 @@
     font-weight: 500;
 }
 .job-card-modern .jcm-meta a:hover { color: #005ba1; }
-.job-card-modern .jcm-tags {
+.job-card-modern .jcm-info .jcm-tags {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+}
+.job-card-modern .jcm-right .jcm-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 .job-card-modern .jcm-tag {
     font-size: 11px;
@@ -283,6 +307,7 @@
 }
 @media(max-width: 767px) {
     .job-card-modern { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .job-card-modern .jcm-location-logo { width: 100%; justify-content: space-between; }
     .job-card-modern .jcm-logo { width: 44px; height: 44px; }
     .job-card-modern .jcm-title { font-size: 15px; }
     .job-card-modern .jcm-meta { gap: 8px; }

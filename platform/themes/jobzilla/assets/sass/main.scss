@@ -3107,10 +3107,21 @@ ol.comment-list {
 /*testimonial style 1*/
 .twm-testimonial-1-carousel {
     margin-bottom: 30px;
+    
+    .owl-item {
+        display: flex;
+        
+        .item {
+            display: flex;
+            width: 100%;
+        }
+    }
 }
 
 .twm-testimonial-1 {
     position: relative;
+    height: 100%;
+    width: 100%;
 
     .twm-testimonial-1-content {
         border-radius: 10px;
@@ -3118,6 +3129,7 @@ ol.comment-list {
         width: 100%;
         position: relative;
         z-index: 1;
+        min-height: 300px;
 
         &:after {
             position: absolute;
@@ -3225,14 +3237,29 @@ ol.comment-list {
 /*testimonial style 1*/
 .twm-testimonial-2-carousel {
     margin-bottom: 30px;
+    
+    .owl-item {
+        display: flex;
+        
+        .item {
+            display: flex;
+            width: 100%;
+        }
+    }
 }
 
 .twm-testimonial-2 {
     position: relative;
     padding: 0px 15px 15px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 
     .twm-testimonial-2-content {
         border-radius: 10px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
 
         .twm-testi-media {
             img {
@@ -3247,6 +3274,10 @@ ol.comment-list {
             border-radius: 10px;
             box-shadow: 0px 0px 20px rgba(56, 152, 226, 0.3);
             position: relative;
+            flex: 1;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
 
             .twm-quote {
                 position: absolute;
@@ -3263,6 +3294,7 @@ ol.comment-list {
                 font-size: 18px;
                 color: $clr-dark;
                 margin-bottom: 20px;
+                flex: 1;
             }
 
             .twm-testi-detail {

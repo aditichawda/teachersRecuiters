@@ -217,39 +217,49 @@
 }
 
 /* ===== Share Section ===== */
-.jd-share-card {
-    background: #fff;
+.jd-share {
+    margin-top: 35px;
+    padding: 25px 30px;
+    background: #f8fafc;
+    border-radius: 14px;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 24px 36px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
-.jd-share-card h4 {
+.jd-share h4 {
     font-size: 16px;
-    font-weight: 700;
-    color: #0c1e3c;
-    margin-bottom: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 15px;
 }
-.jd-share-card .social-icons a {
+.jd-share-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.jd-share-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     border-radius: 10px;
-    background: #f1f5f9;
+    background: #fff;
+    border: 1px solid #e2e8f0;
     color: #475569;
-    margin-right: 8px;
-    transition: all .2s;
-    text-decoration: none;
     font-size: 16px;
+    text-decoration: none;
+    transition: all 0.3s;
 }
-.jd-share-card .social-icons a:hover {
-    background: #0ea5e9;
-    color: #fff;
+.jd-share-btn:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-decoration: none;
 }
+.jd-share-btn.facebook:hover { background: #1877F2; color: #fff; border-color: #1877F2; }
+.jd-share-btn.twitter:hover { background: #1DA1F2; color: #fff; border-color: #1DA1F2; }
+.jd-share-btn.linkedin:hover { background: #0A66C2; color: #fff; border-color: #0A66C2; }
+.jd-share-btn.whatsapp:hover { background: #25D366; color: #fff; border-color: #25D366; }
+.jd-share-btn.copy-link:hover { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
 
 /* ===== Sidebar ===== */
 .jd-sidebar-card {
@@ -391,6 +401,18 @@
 }
 .jd-back-btn:hover { color: #0c4a6e; gap: 8px; }
 
+/* ===== Map Container ===== */
+.jd-content-card .job-board-street-map-container {
+    padding-bottom: 0 !important;
+    position: relative !important;
+}
+.jd-content-card .job-board-street-map-container .job-board-street-map {
+    position: relative !important;
+    width: 100% !important;
+    height: 400px !important;
+    min-height: 400px !important;
+}
+
 /* ===== Responsive ===== */
 @media(max-width: 991px) {
     .jd-hero { padding: 90px 0 40px; }
@@ -409,7 +431,7 @@
     .jd-content-card { padding: 20px; border-radius: 12px; }
     .jd-sidebar-card { padding: 20px; }
     .jd-main { padding: 25px 0 50px; }
-    .jd-share-card { padding: 20px; }
+    .jd-share { padding: 20px; }
 }
 @media(max-width: 480px) {
     .jd-hero { padding: 75px 10px 25px; }
@@ -510,6 +532,16 @@
     <div class="container">
         <a href="{{ JobBoardHelper::getJobsPageURL() }}" class="jd-back-btn">← {{ __('Back to Jobs') }}</a>
 
+        {{-- Job Detail Top Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $topAds = render_page_ads('job-detail', 'top'); @endphp
+            @if (!empty($topAds))
+                <div class="job-detail-ads-top" style="margin: 20px 0;">
+                    {!! $topAds !!}
+                </div>
+            @endif
+        @endif
+
         <div class="row">
             {{-- Left: Job Content --}}
             <div class="col-lg-8 col-md-12">
@@ -529,11 +561,25 @@
                     </div>
                 @endif
 
-                {{-- Share --}}
-                <div class="jd-share-card">
+                {{-- Share Section --}}
+                <div class="jd-share">
                     <h4>{{ __('Share this Job') }}</h4>
-                    <div class="social-icons">
-                        {!! Theme::renderSocialSharing($job->url, SeoHelper::getDescription(), $job->image) !!}
+                    <div class="jd-share-buttons">
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($job->url) }}" target="_blank" rel="noopener" class="jd-share-btn facebook" title="Share on Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://twitter.com/intent/tweet?url={{ urlencode($job->url) }}&text={{ urlencode($job->name) }}" target="_blank" rel="noopener" class="jd-share-btn twitter" title="Share on Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ urlencode($job->url) }}&title={{ urlencode($job->name) }}" target="_blank" rel="noopener" class="jd-share-btn linkedin" title="Share on LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="https://api.whatsapp.com/send?text={{ urlencode($job->name . ' ' . $job->url) }}" target="_blank" rel="noopener" class="jd-share-btn whatsapp" title="Share on WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="javascript:void(0);" onclick="navigator.clipboard.writeText('{{ $job->url }}');this.title='Copied!';setTimeout(()=>this.title='Copy Link',2000);" class="jd-share-btn copy-link" title="Copy Link">
+                            <i class="fas fa-link"></i>
+                        </a>
                     </div>
                 </div>
 
@@ -547,6 +593,16 @@
 
             {{-- Right: Sidebar --}}
             <div class="col-lg-4 col-md-12">
+                {{-- Sidebar Top Ads --}}
+                @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+                    @php $sidebarTopAds = render_page_ads('job-detail', 'sidebar-top'); @endphp
+                    @if (!empty($sidebarTopAds))
+                        <div class="jd-sidebar-card" style="margin-bottom: 20px;">
+                            {!! $sidebarTopAds !!}
+                        </div>
+                    @endif
+                @endif
+
                 {{-- Job Information --}}
                 <div class="jd-sidebar-card">
                     <h4>{{ __('Job Information') }}</h4>
@@ -655,6 +711,16 @@
                     </div>
                 @endif
 
+                {{-- Sidebar Middle Ads --}}
+                @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+                    @php $sidebarMiddleAds = render_page_ads('job-detail', 'sidebar-middle'); @endphp
+                    @if (!empty($sidebarMiddleAds))
+                        <div class="jd-sidebar-card" style="margin-top: 20px;">
+                            {!! $sidebarMiddleAds !!}
+                        </div>
+                    @endif
+                @endif
+
                 {{-- Company Info --}}
                 @if (! $job->hide_company && $company->id)
                     <div class="jd-sidebar-card jd-company-card">
@@ -715,8 +781,38 @@
                     </div>
                 @endif
 
+                {{-- Sidebar Bottom Ads --}}
+                @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+                    @php $sidebarBottomAds = render_page_ads('job-detail', 'sidebar-bottom'); @endphp
+                    @if (!empty($sidebarBottomAds))
+                        <div class="jd-sidebar-card" style="margin-top: 20px;">
+                            {!! $sidebarBottomAds !!}
+                        </div>
+                    @endif
+                @endif
+
+                {{-- Legacy Sidebar Right Ads (for backward compatibility) --}}
+                @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+                    @php $sidebarAds = render_page_ads('job-detail', 'sidebar-right'); @endphp
+                    @if (!empty($sidebarAds))
+                        <div class="jd-sidebar-card" style="margin-top: 20px;">
+                            {!! $sidebarAds !!}
+                        </div>
+                    @endif
+                @endif
+
                 {!! dynamic_sidebar('job_board_sidebar') !!}
             </div>
         </div>
+
+        {{-- Job Detail Bottom Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $bottomAds = render_page_ads('job-detail', 'bottom'); @endphp
+            @if (!empty($bottomAds))
+                <div class="job-detail-ads-bottom" style="margin: 30px 0;">
+                    {!! $bottomAds !!}
+                </div>
+            @endif
+        @endif
     </div>
 </div>

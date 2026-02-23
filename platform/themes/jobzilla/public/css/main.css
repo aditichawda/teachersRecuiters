@@ -2786,7 +2786,7 @@ ol li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1146px;
+  max-width: 1200px;
 }
 @media (max-width: 991px) {
   .header-style-3 .main-bar .container,
@@ -4123,7 +4123,7 @@ ol li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1146px;
+  max-width: 1200px;
 }
 @media (max-width: 991px) {
   .header-style-light .main-bar .container,
@@ -7744,9 +7744,18 @@ ol.comment-list li.comment .comment-respond .comment-form p {
 .twm-testimonial-1-carousel {
   margin-bottom: 30px;
 }
+.twm-testimonial-1-carousel .owl-item {
+  display: flex;
+}
+.twm-testimonial-1-carousel .owl-item .item {
+  display: flex;
+  width: 100%;
+}
 
 .twm-testimonial-1 {
   position: relative;
+  height: 100%;
+  width: 100%;
 }
 .twm-testimonial-1 .twm-testimonial-1-content {
   border-radius: 10px;
@@ -7754,6 +7763,7 @@ ol.comment-list li.comment .comment-respond .comment-form p {
   width: 100%;
   position: relative;
   z-index: 1;
+  min-height: 300px;
 }
 .twm-testimonial-1 .twm-testimonial-1-content:after {
   position: absolute;
@@ -7854,13 +7864,26 @@ ol.comment-list li.comment .comment-respond .comment-form p {
 .twm-testimonial-2-carousel {
   margin-bottom: 30px;
 }
+.twm-testimonial-2-carousel .owl-item {
+  display: flex;
+}
+.twm-testimonial-2-carousel .owl-item .item {
+  display: flex;
+  width: 100%;
+}
 
 .twm-testimonial-2 {
   position: relative;
   padding: 0px 15px 15px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 .twm-testimonial-2 .twm-testimonial-2-content {
   border-radius: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 .twm-testimonial-2 .twm-testimonial-2-content .twm-testi-media img {
   width: auto;
@@ -7872,6 +7895,10 @@ ol.comment-list li.comment .comment-respond .comment-form p {
   border-radius: 10px;
   box-shadow: 0px 0px 20px rgba(56, 152, 226, 0.3);
   position: relative;
+  flex: 1;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
 }
 .twm-testimonial-2 .twm-testimonial-2-content .twm-testi-content .twm-quote {
   position: absolute;
@@ -7886,6 +7913,7 @@ ol.comment-list li.comment .comment-respond .comment-form p {
   font-size: 18px;
   color: #17171d;
   margin-bottom: 20px;
+  flex: 1;
 }
 .twm-testimonial-2 .twm-testimonial-2-content .twm-testi-content .twm-testi-detail .twm-testi-name {
   color: var(--primary-color);

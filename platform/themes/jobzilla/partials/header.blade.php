@@ -4,6 +4,8 @@
         {!! Theme::partial('header-meta') !!}
         {{-- Dialog Alert CSS --}}
         <link rel="stylesheet" href="{{ asset('themes/jobzilla/css/dialog-alert.css') }}?v=2.0.{{ time() }}">
+        {{-- Blue Loader CSS --}}
+        <link rel="stylesheet" href="{{ asset('themes/jobzilla/css/blue-loader.css') }}?v={{ time() }}">
         {{-- Immediately override alert() and confirm() before any scripts load --}}
         <script>
         (function() {

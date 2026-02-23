@@ -22,6 +22,7 @@ var CandidateFilter = /*#__PURE__*/function () {
     this.initializeFromUrl();
     this.handleFiltersOnChange();
     this.initCitySelect();
+    this.handleClearFilters();
     this.$container.on('click', '.side-bar-filter .backdrop', function (e) {
       e.preventDefault();
       $(this).parent().removeClass('active');
@@ -32,9 +33,38 @@ var CandidateFilter = /*#__PURE__*/function () {
     });
   }
   return _createClass(CandidateFilter, [{
+    key: "handleClearFilters",
+    value: function handleClearFilters() {
+      var _this2 = this;
+      this.$container.on('click', '#clear-all-candidate-filters', function (e) {
+        e.preventDefault();
+        var $form = _this2.$container.find('#candidate-filter-form');
+
+        // Clear all inputs
+        $form.find('input[type="text"]').val('');
+        $form.find('input[type="number"]').val('');
+        $form.find('input[type="checkbox"]').prop('checked', false);
+        $form.find('input[type="radio"]').prop('checked', false);
+        $form.find('select').val('').trigger('change');
+
+        // Clear select2 if initialized
+        var $citySelect = $form.find('.selectpicker-location');
+        if ($citySelect.length && typeof $citySelect.select2 === 'function') {
+          $citySelect.val(null).trigger('change');
+        }
+
+        // Reset to default values
+        $form.find('input[name="page"]').val('1');
+
+        // Clear URL params and submit
+        _this2.searchParams = new URLSearchParams();
+        _this2.submit();
+      });
+    }
+  }, {
     key: "initializeFromUrl",
     value: function initializeFromUrl() {
-      var _this2 = this;
+      var _this3 = this;
       // Update form values from URL parameters
       var $form = this.$container.find('#candidate-filter-form');
 
@@ -43,7 +73,7 @@ var CandidateFilter = /*#__PURE__*/function () {
         if (key.includes('[]')) {
           // Handle array parameters
           var baseName = key.replace('[]', '');
-          var values = _this2.searchParams.getAll(key);
+          var values = _this3.searchParams.getAll(key);
           values.forEach(function (val) {
             $form.find("input[name=\"".concat(baseName, "[]\"][value=\"").concat(val, "\"]")).prop('checked', true);
           });
@@ -62,20 +92,20 @@ var CandidateFilter = /*#__PURE__*/function () {
   }, {
     key: "initCitySelect",
     value: function initCitySelect() {
-      var _this3 = this;
+      var _this4 = this;
       var $citySelect = this.$container.find('.selectpicker-location');
       if ($citySelect.length && typeof $citySelect.select2 === 'function') {
         // Handle select2 change event
         $citySelect.on('change', function (e) {
-          _this3.updateSearchParams(e);
-          _this3.submit();
+          _this4.updateSearchParams(e);
+          _this4.submit();
         });
       }
     }
   }, {
     key: "submit",
     value: function submit() {
-      var _this4 = this;
+      var _this5 = this;
       var $form = this.$container.find('#candidate-filter-form');
       var formData = $form.serializeArray();
       var searchParams = new URLSearchParams();
@@ -105,45 +135,45 @@ var CandidateFilter = /*#__PURE__*/function () {
         method: 'GET',
         url: url,
         beforeSend: function beforeSend() {
-          _this4.$loading.show();
-          _this4.scrollToTop();
+          _this5.$loading.show();
+          _this5.scrollToTop();
         },
         success: function success(response) {
           var data = response.data;
-          _this4.$candidatesList.html(data.list);
-          _this4.$container.find('.woocommerce-result-count-left').text(data.total_text);
+          _this5.$candidatesList.html(data.list);
+          _this5.$container.find('.woocommerce-result-count-left').text(data.total_text);
         },
         complete: function complete() {
-          _this4.$loading.hide();
+          _this5.$loading.hide();
         }
       });
     }
   }, {
     key: "handleFiltersOnChange",
     value: function handleFiltersOnChange() {
-      var _this5 = this;
+      var _this6 = this;
       // Handle form submit
       this.$container.on('submit', '#candidate-filter-form', function (e) {
         e.preventDefault();
-        _this5.submit();
+        _this6.submit();
       });
 
       // Handle filter changes (auto-submit for some fields, manual submit for others)
       this.$container.on('change', '#candidate-filter-form input[type="checkbox"], #candidate-filter-form input[type="radio"]', function (event) {
-        _this5.updateSearchParams(event);
-        _this5.submit();
+        _this6.updateSearchParams(event);
+        _this6.submit();
       });
 
       // Handle select2 change for city
       this.$container.on('change', '.selectpicker-location', function (event) {
-        _this5.updateSearchParams(event);
-        _this5.submit();
+        _this6.updateSearchParams(event);
+        _this6.submit();
       });
 
       // Handle other selects (but not keyword input - that should only submit on button click or enter)
       this.$container.on('change', '#candidate-filter-form select:not(.selectpicker-location)', function (event) {
-        _this5.updateSearchParams(event);
-        _this5.submit();
+        _this6.updateSearchParams(event);
+        _this6.submit();
       });
 
       // Handle keyword input - submit on Enter key or search button click
@@ -151,12 +181,12 @@ var CandidateFilter = /*#__PURE__*/function () {
         if (e.which === 13) {
           // Enter key
           e.preventDefault();
-          _this5.submit();
+          _this6.submit();
         }
       });
       this.$container.on('click', '#candidate-filter-form button[type="submit"]', function (e) {
         e.preventDefault();
-        _this5.submit();
+        _this6.submit();
       });
 
       // Handle sort, per page, layout changes
@@ -165,13 +195,13 @@ var CandidateFilter = /*#__PURE__*/function () {
         var name = $target.attr('name');
         var value = $target.val();
         if (name) {
-          _this5.searchParams.set(name, value);
+          _this6.searchParams.set(name, value);
         }
 
         // Update hidden inputs in form
-        var $form = _this5.$container.find('#candidate-filter-form');
+        var $form = _this6.$container.find('#candidate-filter-form');
         $form.find("input[name=\"".concat(name, "\"]")).val(value);
-        _this5.submit();
+        _this6.submit();
       });
 
       // Handle pagination
@@ -180,17 +210,17 @@ var CandidateFilter = /*#__PURE__*/function () {
         var url = new URL(e.target.href || $(e.target).attr('href'));
         var page = url.searchParams.get('page') || $(e.target).data('page');
         if (page) {
-          _this5.searchParams.set('page', page);
-          var $form = _this5.$container.find('#candidate-filter-form');
+          _this6.searchParams.set('page', page);
+          var $form = _this6.$container.find('#candidate-filter-form');
           $form.find('input[name="page"]').val(page);
-          _this5.submit();
+          _this6.submit();
         }
       });
     }
   }, {
     key: "updateSearchParams",
     value: function updateSearchParams(event) {
-      var _this6 = this;
+      var _this7 = this;
       var $target = $(event.target);
       var name = $target.attr('name');
       var value = $target.val();
@@ -203,7 +233,7 @@ var CandidateFilter = /*#__PURE__*/function () {
 
         // Add all checked values
         $("input[name=\"".concat(name, "\"]:checked")).each(function (index, item) {
-          _this6.searchParams.append(baseName, $(item).val());
+          _this7.searchParams.append(baseName, $(item).val());
         });
       } else {
         if (value && value !== '') {

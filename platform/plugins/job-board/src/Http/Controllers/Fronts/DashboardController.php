@@ -16,6 +16,7 @@ use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\Package;
 use Botble\JobBoard\Models\Transaction;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Botble\JobBoard\Services\CouponService;
 use Botble\Language\Facades\Language;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
@@ -420,5 +421,36 @@ class DashboardController extends BaseController
         return $this
             ->httpResponse()
             ->setData(TransactionResource::collection($transactions))->toApiResponse();
+    }
+
+    public function candidates(Request $request)
+    {
+        /**
+         * @var Account $account
+         */
+        $account = auth('account')->user();
+
+        abort_unless($account->isEmployer(), 403, __('Only employers can view candidates'));
+
+        $this->pageTitle(__('All Candidates'));
+        SeoHelper::setTitle(__('All Candidates'));
+
+        Theme::breadcrumb()
+            ->add(trans('plugins/job-board::messages.dashboard'), route('public.account.dashboard'))
+            ->add(__('All Candidates'));
+
+        // Set layout same as companies page
+        Theme::layout('job-board.dashboard.layouts.master');
+
+        // Get filtered candidates
+        $input = $request->all();
+        $candidates = JobBoardHelper::filterCandidates($input);
+
+        $orderByParams = JobBoardHelper::getSortByParams();
+        $layout = $request->query('layout', 'grid');
+
+        $data = compact('candidates', 'orderByParams', 'layout');
+
+        return JobBoardHelper::view('account.candidates', $data);
     }
 }

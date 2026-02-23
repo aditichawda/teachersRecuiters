@@ -317,7 +317,7 @@
 }
 .position-badge {
     padding: 6px 14px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 50%, #004a94 100%);
     color: #fff;
     border-radius: 20px;
     font-size: 12px;

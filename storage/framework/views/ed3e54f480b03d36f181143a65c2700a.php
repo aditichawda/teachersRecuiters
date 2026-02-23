@@ -16,7 +16,7 @@
         <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <li>
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="job_categories[]" id="job-categories-<?php echo e($category->id); ?>" value="<?php echo e($category->id); ?>" <?php if(in_array($category->id, (array) request()->input('job_type', []))): echo 'checked'; endif; ?>>
+                    <input type="checkbox" class="form-check-input" name="job_categories[]" id="job-categories-<?php echo e($category->id); ?>" value="<?php echo e($category->id); ?>" <?php if(in_array($category->id, (array) request()->query('job_categories', []))): echo 'checked'; endif; ?>>
                     <label class="form-check-label" for="job-categories-<?php echo e($category->id); ?>"><?php echo e($category->name); ?></label>
                 </div>
             </li>

@@ -38,6 +38,21 @@ class LoginForm extends AuthForm
                     ->label(trans('plugins/job-board::messages.password'))
                     ->placeholder(trans('plugins/job-board::messages.password'))
                     ->icon('ti ti-lock')
+                    ->attributes([
+                        'id' => 'login-password',
+                        'class' => 'form-control',
+                    ])
+            )
+            ->add(
+                'use_whatsapp_otp',
+                OnOffCheckboxField::class,
+                CheckboxFieldOption::make()
+                    ->label(__('Send OTP via WhatsApp instead of password'))
+                    ->helperText(__('Check this to receive OTP on your WhatsApp number'))
+                    ->wrapperAttributes(['class' => 'mb-3'])
+                    ->attributes([
+                        'id' => 'use-whatsapp-otp-checkbox',
+                    ])
             )
             ->add('openRow', HtmlField::class, [
                 'html' => '<div class="row g-0 mb-3">',

@@ -388,7 +388,180 @@
         padding: 15px 0;
     }
 }
+
+/* ===== DASHBOARD HEADER ===== */
+.enl-header {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+.enl-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 82px;
+}
+
+.enl-header-logo {
+    display: flex;
+    align-items: center;
+}
+.enl-header-logo a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+.enl-header-logo img {
+    max-height: 44px;
+    width: auto;
+}
+.enl-header-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.enl-header-nav li {
+    display: inline-block;
+}
+.enl-header-nav a,
+.enl-header-nav .nav-link {
+    padding: 8px 14px;
+    color: #555;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.enl-header-nav a:hover,
+.enl-header-nav .nav-link:hover { background: #f0f7ff; color: #0073d1; }
+
+.enl-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.enl-header-user {
+    position: relative;
+}
+.enl-header-user-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: none; cursor: pointer;
+    padding: 6px 10px; border-radius: 8px; transition: background 0.2s;
+}
+.enl-header-user-btn:hover { background: #f5f5f5; }
+.enl-header-user-btn img {
+    width: 34px !important; 
+    height: 34px !important; 
+    border-radius: 50% !important; 
+    object-fit: cover !important; 
+    border: 2px solid #e2e8f0 !important;
+    display: block !important;
+    flex-shrink: 0 !important;
+}
+.enl-header-user-btn span { font-size: 13px; font-weight: 500; color: #333; }
+.enl-header-user-btn i { font-size: 12px; color: #888; }
+
+.enl-header-dropdown {
+    position: absolute; top: 100%; right: 0;
+    background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 200px; padding: 8px 0;
+    display: none; z-index: 1001;
+}
+.enl-header-dropdown.show { display: block; }
+.enl-header-dropdown a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px; color: #333; text-decoration: none;
+    font-size: 14px; transition: background 0.15s;
+}
+.enl-header-dropdown a:hover { background: #f5f7fa; color: #0073d1; }
+.enl-header-dropdown a i { width: 18px; text-align: center; color: #888; }
+.enl-header-dropdown hr { margin: 4px 0; border: none; border-top: 1px solid #f0f0f0; }
+
+@media (max-width: 768px) {
+    .enl-header-nav { display: none; }
+    .enl-header-user-btn span { display: none; }
+}
 </style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<!-- Dashboard Header -->
+<div class="enl-header">
+    <div class="enl-header-inner">
+        <!-- Logo -->
+        <div class="enl-header-logo">
+            @if (Theme::getLogo())
+                <a href="{{ BaseHelper::getHomepageUrl() }}">
+                    {!! Theme::getLogoImage([], 'logo_light', 44) !!}
+                </a>
+            @endif
+        </div>
+
+        <!-- Right -->
+        <div class="enl-header-right" style="display: flex; align-items: center; gap: 20px;">
+            <!-- Nav Items Next to User -->
+            <ul class="enl-header-nav" style="margin: 0; padding: 0;">
+                <!-- Home Icon -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="{{ BaseHelper::getHomepageUrl() }}" title="{{ __('Home') }}">
+                        <i class="feather-home" style="font-size: 20px !important;"></i>
+                    </a>
+                </li>
+                
+                <!-- FAQ -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black;" href="{{ route('public.faq') }}">
+                        <span>{{ __('FAQ') }}</span>
+                    </a>
+                </li>
+
+                <!-- Plans -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black;" href="{{ route('public.premium-service') }}">
+                        <span>{{ __('Plans') }}</span>
+                    </a>
+                </li>
+
+                <!-- Notifications -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black; font-size: 20px !important;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                        <i class="feather-bell" style="font-size: 20px !important;"></i>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="enl-header-user">
+                <button class="enl-header-user-btn" onclick="document.getElementById('jsUserDropdown').classList.toggle('show')">
+                    <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}">
+                    <span>{{ $account->first_name ?? $account->name }}</span>
+                    <i class="fa fa-chevron-down"></i>
+                </button>
+                <div class="enl-header-dropdown" id="jsUserDropdown">
+                    <a href="{{ route('public.account.jobseeker.dashboard') }}"><i class="fa fa-home"></i> Dashboard</a>
+                    <a href="{{ route('public.account.settings') }}"><i class="fa fa-cog"></i> Settings</a>
+                    <a href="{{ route('public.account.security') }}"><i class="fa fa-lock"></i> Security</a>
+                    <hr>
+                    <a href="{{ route('public.account.logout') }}" id="logout-link-js" onclick="event.preventDefault(); handleLogoutClick(event);"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="logout-form-js" style="display:none;" action="{{ route('public.account.logout') }}" method="POST">@csrf</form>
 
 <div class="js-settings-page crop-avatar">
     <div class="container">
@@ -639,6 +812,82 @@ document.getElementById('profileModal').addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') document.getElementById('profileModal').style.display = 'none';
 });
+
+// User dropdown close on outside click
+document.addEventListener('click', function(e) {
+    var dropdown = document.getElementById('jsUserDropdown');
+    var btn = e.target.closest('.enl-header-user-btn');
+    if (!btn && dropdown) {
+        dropdown.classList.remove('show');
+    }
+});
+
+// Logout Handler Function - Enhanced
+function handleLogoutClick(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+    }
+    
+    const logoutForm = document.getElementById('logout-form-js');
+    if (!logoutForm) {
+        console.error('Logout form not found');
+        return false;
+    }
+    
+    // Prevent form submission
+    let allowSubmit = false;
+    const submitHandler = function(e) {
+        if (!allowSubmit) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return false;
+        }
+    };
+    logoutForm.addEventListener('submit', submitHandler, true);
+    
+    // Function to wait for dialog system
+    function waitForDialogSystem(callback, maxAttempts) {
+        maxAttempts = maxAttempts || 50;
+        let attempts = 0;
+        
+        function check() {
+            attempts++;
+            if (typeof window.showDialogConfirm === 'function' && typeof jQuery !== 'undefined') {
+                callback(false);
+            } else if (attempts < maxAttempts) {
+                setTimeout(check, 100);
+            } else {
+                callback(true); // Fallback
+            }
+        }
+        check();
+    }
+    
+    // Show logout dialog
+    waitForDialogSystem(function(useFallback) {
+        if (useFallback) {
+            // Use native confirm
+            if (confirm('Do you want to logout?')) {
+                allowSubmit = true;
+                logoutForm.removeEventListener('submit', submitHandler, true);
+                logoutForm.submit();
+            }
+        } else {
+            // Use custom dialog
+            window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                if (confirmed) {
+                    allowSubmit = true;
+                    logoutForm.removeEventListener('submit', submitHandler, true);
+                    logoutForm.submit();
+                }
+            });
+        }
+    });
+    
+    return false;
+}
 </script>
 
 @push('footer')

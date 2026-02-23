@@ -12,11 +12,14 @@ class CityResource extends JsonResource
 {
     public function toArray($request): array
     {
+        $stateName = $this->state ? $this->state->name : '';
+        $label = $stateName ? $this->name . ', ' . $stateName : $this->name;
+
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'state_name' => $this->state->name,
-            'label' => $this->name . ', ' . $this->state->name,
+            'state_name' => $stateName,
+            'label' => $label,
         ];
     }
 }

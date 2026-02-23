@@ -89,42 +89,64 @@ class SendJobSeekerApplicationConfirmationJob implements ShouldQueue
                 <style>
                     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
                     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    h2 { color: #1967d2; }
-                    .success-box { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 15px 0; }
-                    .info-box { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
-                    .button { display: inline-block; background: #1967d2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-top: 15px; font-weight: bold; }
+                    .header { background: linear-gradient(135deg, #1967d2 0%, #4285f4 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                    h2 { color: white; margin: 0; font-size: 28px; }
+                    .success-box { background: #d4edda; border: 2px solid #28a745; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+                    .info-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1967d2; }
+                    .motivational-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3; }
+                    .button { display: inline-block; background: #1967d2; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin-top: 15px; font-weight: bold; transition: background 0.3s; }
+                    .button:hover { background: #1557a0; }
                 </style>
             </head>
             <body>
                 <div class='container'>
-                    <h2>Application Received Successfully!</h2>
-                    <p>Hello " . htmlspecialchars($variables['job_seeker_name']) . ",</p>
+                    <div class='header'>
+                        <h2>✅ Application Submitted Successfully! 🎉</h2>
+                    </div>
+                    
+                    <p style='font-size: 16px; margin-top: 20px;'>Namaste " . htmlspecialchars($variables['job_seeker_name']) . ",</p>
                     
                     <div class='success-box'>
-                        <p style='margin: 0; color: #155724; font-weight: bold;'>✓ Your application has been successfully submitted!</p>
+                        <p style='margin: 0; color: #155724; font-weight: bold; font-size: 18px;'>✓ Aapka Application Successfully Submit Ho Gaya Hai!</p>
+                        <p style='margin: 10px 0 0 0; color: #155724; font-size: 16px;'>Your application has been successfully submitted and received!</p>
                     </div>
                     
                     <div class='info-box'>
-                        <h3 style='color: #1967d2; margin-top: 0;'>Application Details:</h3>
-                        <p><strong>Position:</strong> " . htmlspecialchars($variables['job_name']) . "</p>
-                        <p><strong>Company:</strong> " . htmlspecialchars($variables['company_name']) . "</p>
+                        <h3 style='color: #1967d2; margin-top: 0;'>Application Details / आवेदन की जानकारी:</h3>
+                        <p style='font-size: 15px;'><strong>Position / पद:</strong> " . htmlspecialchars($variables['job_name']) . "</p>
+                        <p style='font-size: 15px;'><strong>Company / संस्था:</strong> " . htmlspecialchars($variables['company_name']) . "</p>
                     </div>
                     
-                    <p>Thank you for your interest in this position. We have received your application and our team will review it carefully.</p>
+                    <div class='motivational-box'>
+                        <h3 style='color: #1565c0; margin-top: 0; font-size: 18px;'>🌟 Aapne Pehla Kadam Uthaya Hai! 🌟</h3>
+                        <p style='margin: 10px 0; color: #1565c0; font-size: 15px;'><strong>Badhai ho!</strong> Aapne apne career mein ek important step liya hai. Aapka application ab review ke liye ready hai.</p>
+                        <p style='margin: 10px 0; color: #1565c0; font-size: 15px;'>Congratulations on taking this important step in your career! Your application is now in the review process. Remember, every expert was once a beginner - you're on the right path! 🚀</p>
+                        <p style='margin: 10px 0; color: #1565c0; font-size: 15px;'><strong>Stay positive and keep moving forward!</strong> / <strong>सकारात्मक रहें और आगे बढ़ते रहें!</strong></p>
+                    </div>
                     
-                    <p>You will be notified via email once we have reviewed your application. Please keep an eye on your inbox for updates.</p>
+                    <p style='font-size: 15px;'>Thank you for your interest in this position. We have received your application and our team will review it carefully.</p>
+                    <p style='font-size: 15px;'>इस पद में आपकी रुचि के लिए धन्यवाद। हमें आपका आवेदन प्राप्त हो गया है और हमारी टीम इसे ध्यान से समीक्षा करेगी।</p>
                     
-                    <p style='text-align: center; margin: 20px 0;'>
-                        <a href='" . htmlspecialchars($variables['job_url']) . "' class='button'>View Job Details</a>
+                    <p style='font-size: 15px; color: #1967d2;'><strong>What Happens Next? / आगे क्या होगा?</strong></p>
+                    <ul style='font-size: 14px; line-height: 1.8;'>
+                        <li>Our team will carefully review your application</li>
+                        <li>You will be notified via email about the status</li>
+                        <li>Please keep an eye on your inbox for updates</li>
+                        <li>Apne email aur phone notifications ko active rakhein</li>
+                    </ul>
+                    
+                    <p style='text-align: center; margin: 25px 0;'>
+                        <a href='" . htmlspecialchars($variables['job_url']) . "' class='button'>View Job Details / नौकरी की जानकारी देखें</a>
                     </p>
                     
                     <p style='text-align: center; margin: 20px 0;'>
-                        <a href='" . htmlspecialchars($variables['view_applications_url']) . "' style='color: #1967d2; text-decoration: none;'>View All My Applications</a>
+                        <a href='" . htmlspecialchars($variables['view_applications_url']) . "' style='color: #1967d2; text-decoration: none; font-size: 14px;'>View All My Applications / मेरे सभी आवेदन देखें</a>
                     </p>
                     
-                    <p style='font-size: 12px; color: #666; text-align: center; margin-top: 30px;'>
+                    <p style='font-size: 13px; color: #666; text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;'>
                         Best of luck with your application!<br>
-                        Best regards,<br>
+                        Aapke application ke liye best of luck!<br><br>
+                        Best regards / शुभकामनाएं,<br>
                         <strong>TeachersRecruiter Team</strong>
                     </p>
                 </div>

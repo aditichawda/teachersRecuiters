@@ -197,7 +197,7 @@
                                 <li><a href="/">Home</a></li>
                                 <li><a href="/jobs">Jobs</a></li>
                                 <li><a href="/companies">Institutes</a></li>
-                                <li><a href="/candidates">Candidates</a></li>
+                                <!-- <li><a href="/candidates">Candidates</a></li> -->
                             </ul>
                         </div>
                     </div>

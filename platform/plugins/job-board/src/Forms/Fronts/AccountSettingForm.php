@@ -114,10 +114,15 @@ class AccountSettingForm extends FormAbstract
                     ->choices(AccountGenderEnum::labels())
             )
             ->when(is_plugin_active('location'), function (FormAbstract $form): void {
+                // Note: Location is handled by custom city search in settings/index.blade.php view
+                // This field is hidden/not used, but kept for form structure compatibility
                 $form->add(
                     'location_data',
-                    SelectLocationField::class,
-                    SelectLocationFieldOption::make()
+                    HtmlField::class,
+                    [
+                        'html' => '<!-- Location handled by custom city search in view -->',
+                        'attr' => ['style' => 'display:none;']
+                    ]
                 );
             })
             ->add(

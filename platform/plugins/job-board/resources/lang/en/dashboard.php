@@ -10,6 +10,7 @@ return [
         'companies' => 'Institution',
         'reviews' => 'Reviews',
         'applicants' => 'Applicants',
+        'candidates' => 'All Candidates',
         'packages' => 'Packages',
         'wallet' => 'Wallet',
         'invoices' => 'Invoices',

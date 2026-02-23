@@ -5,6 +5,16 @@
 <!-- Job Detail V.2 START -->
 <div class="section-full  p-t50 p-b90 bg-white">
     <div class="container">
+        {{-- Job Detail Top Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $topAds = render_page_ads('job-detail', 'top'); @endphp
+            @if (!empty($topAds))
+                <div class="job-detail-ads-top" style="margin: 20px 0;">
+                    {!! $topAds !!}
+                </div>
+            @endif
+        @endif
+
         <!-- BLOG SECTION START -->
         <div class="section-content">
             <div class="twm-job-self-wrap twm-job-detail-v2">
@@ -117,6 +127,20 @@
         </div>
     </div>
 </div>
+
+{{-- Job Detail Bottom Ads --}}
+@if (is_plugin_active('ads') && function_exists('render_page_ads'))
+    <div class="section-full p-t50 p-b90 bg-white">
+        <div class="container">
+            @php $bottomAds = render_page_ads('job-detail', 'bottom'); @endphp
+            @if (!empty($bottomAds))
+                <div class="job-detail-ads-bottom" style="margin: 20px 0;">
+                    {!! $bottomAds !!}
+                </div>
+            @endif
+        </div>
+    </div>
+@endif
 <!-- Job Detail V.2 END -->
 
 @if (! $job->hide_company && $companyJobs->count() > 0)

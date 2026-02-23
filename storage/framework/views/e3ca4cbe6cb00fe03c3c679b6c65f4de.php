@@ -403,15 +403,47 @@
 
             <!-- Password Login Form -->
             <div class="login-form-section active" id="password-login">
-                <?php echo $form
-                       ->modify('submit', 'submit', [
-                            'label' => __('Sign In'),
-                            'attr' => [
-                                'class' => 'btn-login',
-                            ],
-                        ], true)
-                       ->renderForm(); ?>
+                <!-- Password Login Step 1 -->
+                <div id="password-login-step1">
+                    <?php echo $form
+                           ->modify('submit', 'submit', [
+                                'label' => __('Sign In'),
+                                'attr' => [
+                                    'class' => 'btn-login',
+                                    'id' => 'password-login-submit',
+                                ],
+                            ], true)
+                           ->renderForm(); ?>
 
+                </div>
+                
+                <!-- WhatsApp OTP Step 2 (shown after OTP is sent) -->
+                <div id="password-login-otp-step" style="display: none;">
+                    <button type="button" class="btn-back" onclick="showPasswordStep1()">
+                        <i class="ti ti-arrow-left"></i> Back to Login
+                    </button>
+                    <div class="otp-info">
+                        <p>Enter the OTP sent to WhatsApp</p>
+                        <span class="email-display" id="display-whatsapp-phone"></span>
+                    </div>
+                    <form id="verify-password-whatsapp-otp-form">
+                        <div class="otp-input-group">
+                            <input type="text" class="otp-input" maxlength="1" data-index="0" id="password-otp-0">
+                            <input type="text" class="otp-input" maxlength="1" data-index="1" id="password-otp-1">
+                            <input type="text" class="otp-input" maxlength="1" data-index="2" id="password-otp-2">
+                            <input type="text" class="otp-input" maxlength="1" data-index="3" id="password-otp-3">
+                            <input type="text" class="otp-input" maxlength="1" data-index="4" id="password-otp-4">
+                            <input type="text" class="otp-input" maxlength="1" data-index="5" id="password-otp-5">
+                        </div>
+                        <input type="hidden" name="otp" id="password-otp-value">
+                        <button type="submit" class="btn-login" id="verify-password-otp-btn">
+                            <i class="ti ti-check me-2"></i>Verify & Login
+                        </button>
+                    </form>
+                    <div class="resend-otp">
+                        <button type="button" id="resend-password-whatsapp-otp" disabled>Resend OTP in <span id="password-otp-timer">60</span>s</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Email OTP Login Form -->
@@ -556,6 +588,130 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Check if WhatsApp OTP was sent from password form
+    <?php if(session('whatsapp_otp_sent')): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            const phone = '<?php echo e(session('whatsapp_phone')); ?>';
+            if (phone) {
+                document.getElementById('display-whatsapp-phone').textContent = phone;
+                document.getElementById('password-login-step1').style.display = 'none';
+                document.getElementById('password-login-otp-step').style.display = 'block';
+                
+                // Setup OTP inputs for password form
+                const passwordOtpInputs = document.querySelectorAll('#password-login-otp-step .otp-input');
+                const passwordOtpHidden = document.getElementById('password-otp-value');
+                setupOtpInputs(passwordOtpInputs, passwordOtpHidden);
+                if (passwordOtpInputs.length > 0) {
+                    passwordOtpInputs[0].focus();
+                }
+                
+                // Start timer
+                startTimer(document.getElementById('password-otp-timer'), document.getElementById('resend-password-whatsapp-otp'));
+                
+                // Show success message
+                showAlert('<?php echo e(session('message')); ?>', 'success');
+            }
+        });
+    <?php endif; ?>
+    
+    // Handle WhatsApp checkbox in password form
+    document.addEventListener('DOMContentLoaded', function() {
+        const whatsappCheckbox = document.getElementById('use-whatsapp-otp-checkbox');
+        const passwordField = document.getElementById('login-password');
+        
+        if (whatsappCheckbox && passwordField) {
+            whatsappCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    passwordField.style.display = 'none';
+                    passwordField.closest('.form-group').style.display = 'none';
+                } else {
+                    passwordField.style.display = 'block';
+                    passwordField.closest('.form-group').style.display = 'block';
+                }
+            });
+        }
+    });
+    
+    // Verify OTP for password form WhatsApp
+    document.getElementById('verify-password-whatsapp-otp-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const otp = document.getElementById('password-otp-value').value;
+        const btn = document.getElementById('verify-password-otp-btn');
+
+        if (otp.length !== 6) {
+            showAlert('Please enter the complete 6-digit OTP');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ti ti-loader me-2"></i>Verifying...';
+
+        try {
+            const response = await fetch('<?php echo e(route("public.account.login.verifyOtp")); ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ otp })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                showAlert(data.message);
+            } else {
+                showAlert(data.message, 'success');
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            }
+        } catch (error) {
+            showAlert('An error occurred. Please try again.');
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-check me-2"></i>Verify & Login';
+    });
+    
+    // Resend WhatsApp OTP for password form
+    document.getElementById('resend-password-whatsapp-otp').addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ti ti-loader me-2"></i>Sending...';
+
+        try {
+            const response = await fetch('<?php echo e(route("public.account.login.resendOtp")); ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                showAlert(data.message);
+            } else {
+                showAlert(data.message, 'success');
+                startTimer(document.getElementById('password-otp-timer'), btn);
+            }
+        } catch (error) {
+            showAlert('An error occurred. Please try again.');
+        }
+
+        btn.disabled = false;
+    });
+    
+    // Function to show password step 1
+    function showPasswordStep1() {
+        document.getElementById('password-login-step1').style.display = 'block';
+        document.getElementById('password-login-otp-step').style.display = 'none';
+    }
 
     // OTP Input handling
     function setupOtpInputs(inputs, hiddenInput) {

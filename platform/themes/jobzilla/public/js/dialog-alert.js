@@ -216,10 +216,15 @@
                     title = 'Confirm';
                 }
 
-                // Create confirm dialog HTML - Exact match to 2nd screenshot (Logout dialog)
-                // Detect if it's a logout dialog
-                const isLogout = (message && message.toLowerCase().includes('logout')) || 
-                                (title && title.toLowerCase().includes('logout'));
+                // Create confirm dialog HTML - Exact match to screenshot (Logout dialog)
+                // Detect if it's a logout dialog - check message, title, or if title is explicitly "Logout"
+                const messageLower = (message || '').toLowerCase();
+                const titleLower = (title || '').toLowerCase();
+                const isLogout = messageLower.includes('logout') || 
+                                titleLower.includes('logout') ||
+                                title === 'Logout' ||
+                                messageLower.includes('want to logout') ||
+                                messageLower.includes('do you want to logout');
                 
                 // Use logout icon for logout dialogs, info icon for others
                 let iconHtml;
@@ -232,26 +237,31 @@
                 // Set title - use "Logout" for logout dialogs
                 const dialogTitle = isLogout ? 'Logout' : (title || 'Confirm');
                 
+                // Set message - use standard logout message if it's a logout dialog
+                const dialogMessage = isLogout ? 'Are you sure you want to logout?' : (message || '');
+                
                 // Set button labels
                 const actionButtonLabel = isLogout ? 'Logout' : (title && title.toLowerCase().includes('delete') ? 'Delete' : 'OK');
                 
+                // Centered layout: Icon at top center, title and message below, buttons at bottom
+                // Button order: Left = Cancel (text only), Right = Logout (solid blue)
                 const dialogHtml = '<div class="dialog-alert-overlay" id="' + dialogId + '-overlay">' +
-                    '<div class="dialog-alert-box" id="' + dialogId + '" data-type="info">' +
+                    '<div class="dialog-alert-box" id="' + dialogId + '" data-type="' + (isLogout ? 'logout' : 'info') + '">' +
                     '<div class="dialog-alert-icon-container">' +
-                    '<div class="dialog-alert-icon" data-type="info">' +
+                    '<div class="dialog-alert-icon" data-type="' + (isLogout ? 'logout' : 'info') + '">' +
                     iconHtml +
                     '</div>' +
                     '</div>' +
                     '<div class="dialog-alert-content">' +
                     '<h4 class="dialog-alert-title">' + dialogTitle + '</h4>' +
-                    '<p class="dialog-alert-message">' + (message || '') + '</p>' +
+                    '<p class="dialog-alert-message">' + dialogMessage + '</p>' +
                     '</div>' +
                     '<div class="dialog-alert-footer">' +
-                    '<button type="button" class="dialog-alert-btn dialog-alert-btn-confirm" onclick="closeDialogConfirm(\'' + dialogId + '\', true)">' +
-                    actionButtonLabel +
-                    '</button>' +
-                    '<button type="button" class="dialog-alert-btn dialog-alert-btn-primary" onclick="closeDialogConfirm(\'' + dialogId + '\', false)">' +
+                    '<button type="button" class="dialog-alert-btn dialog-alert-btn-confirm' + (isLogout ? ' dialog-alert-btn-logout' : '') + '" onclick="closeDialogConfirm(\'' + dialogId + '\', false)">' +
                     'Cancel' +
+                    '</button>' +
+                    '<button type="button" class="dialog-alert-btn dialog-alert-btn-primary" onclick="closeDialogConfirm(\'' + dialogId + '\', true)">' +
+                    actionButtonLabel +
                     '</button>' +
                     '</div>' +
                     '</div>' +

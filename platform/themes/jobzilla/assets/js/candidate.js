@@ -14,6 +14,7 @@ class CandidateFilter {
         this.initializeFromUrl()
         this.handleFiltersOnChange()
         this.initCitySelect()
+        this.handleClearFilters()
 
         this.$container
             .on('click', '.side-bar-filter .backdrop', function (e) {
@@ -26,6 +27,34 @@ class CandidateFilter {
             .on('click', '.btn-close-filter', () => {
                 this.$container.find('.side-bar-filter').removeClass('active')
             })
+    }
+
+    handleClearFilters() {
+        this.$container.on('click', '#clear-all-candidate-filters', (e) => {
+            e.preventDefault()
+            
+            const $form = this.$container.find('#candidate-filter-form')
+            
+            // Clear all inputs
+            $form.find('input[type="text"]').val('')
+            $form.find('input[type="number"]').val('')
+            $form.find('input[type="checkbox"]').prop('checked', false)
+            $form.find('input[type="radio"]').prop('checked', false)
+            $form.find('select').val('').trigger('change')
+            
+            // Clear select2 if initialized
+            const $citySelect = $form.find('.selectpicker-location')
+            if ($citySelect.length && typeof $citySelect.select2 === 'function') {
+                $citySelect.val(null).trigger('change')
+            }
+            
+            // Reset to default values
+            $form.find('input[name="page"]').val('1')
+            
+            // Clear URL params and submit
+            this.searchParams = new URLSearchParams()
+            this.submit()
+        })
     }
 
     initializeFromUrl() {
@@ -165,7 +194,7 @@ class CandidateFilter {
             $form.find(`input[name="${name}"]`).val(value)
 
             this.submit()
-        })
+    })
 
         // Handle pagination
         this.$container.on('click', '.pagination li a, a.pagination-button', (e) => {
@@ -219,5 +248,5 @@ class CandidateFilter {
 $(document).ready(function() {
     if ($('.candidates-container').length) {
         new CandidateFilter()
-    }
+        }
 })

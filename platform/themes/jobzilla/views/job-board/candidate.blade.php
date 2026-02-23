@@ -523,7 +523,17 @@
 }
 </style>
 
-{{-- Hero --}}
+{{-- Candidate Detail Top Ads --}}
+@if (is_plugin_active('ads') && function_exists('render_page_ads'))
+    @php $topAds = render_page_ads('candidate-detail', 'top'); @endphp
+    @if (!empty($topAds))
+        <div class="candidate-detail-ads-top" style="margin: 20px auto; max-width: 1200px; padding: 0 15px;">
+            {!! $topAds !!}
+        </div>
+    @endif
+@endif
+
+{{-- Hero Section --}}
 <section class="cdt-hero">
     <div class="container">
         <div class="cdt-breadcrumb">
@@ -808,9 +818,19 @@
             {{-- Sidebar --}}
             @if(JobBoardHelper::canViewCandidateInformation())
                 <div class="col-lg-4 col-md-12">
+                    {{-- Candidate Detail Sidebar Ads --}}
+                    @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+                        @php $sidebarAds = render_page_ads('candidate-detail', 'sidebar-right'); @endphp
+                        @if (!empty($sidebarAds))
+                            <div class="cdt-sidebar-card" style="margin-bottom: 20px;">
+                                {!! $sidebarAds !!}
+                            </div>
+                        @endif
+                    @endif
+
                     <div class="cdt-sidebar-wrap">
-                    <div class="cdt-sidebar-card">
-                        <h4>{{ __('Profile Info') }}</h4>
+                        <div class="cdt-sidebar-card">
+                            <h4>{{ __('Profile Info') }}</h4>
                         <ul class="cdt-info-list">
                             @if($candidate->gender ?? null)<li><span class="cdt-info-icon"><i class="fas fa-venus-mars"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Gender') }}</div><div class="cdt-info-value">{{ ucfirst($candidate->gender) }}</div></div></li>@endif
                             @if($candidate->dob ?? null)<li><span class="cdt-info-icon"><i class="fas fa-birthday-cake"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Date of Birth') }}</div><div class="cdt-info-value">{{ is_object($candidate->dob) ? $candidate->dob->format('M d, Y') : $candidate->dob }}</div></div></li>@endif
@@ -890,6 +910,16 @@
                 </div>
             @endif
         </div>
+
+        {{-- Candidate Detail Bottom Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $bottomAds = render_page_ads('candidate-detail', 'bottom'); @endphp
+            @if (!empty($bottomAds))
+                <div class="candidate-detail-ads-bottom" style="margin: 30px 0;">
+                    {!! $bottomAds !!}
+                </div>
+            @endif
+        @endif
     </div>
 </div>
 

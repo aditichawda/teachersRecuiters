@@ -10,7 +10,7 @@
         ]);
 @endphp
 <div class="twm-sidebar-ele-filter">
-    <h4 class="section-head-small mb-4">{{ __('Work Experience') }}</h4>
+    <h4 class="section-head-small mb-4">{{ __('Work experience') }}</h4>
     <ul>
         @foreach($experiences as $experience)
             <li>

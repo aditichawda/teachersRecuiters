@@ -11,6 +11,7 @@ use Botble\Base\Facades\PageTitle;
 use Botble\Base\Http\Actions\DeleteResourceAction;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Http\Responses\BaseHttpResponse;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class AdsController extends BaseController
@@ -19,7 +20,15 @@ class AdsController extends BaseController
     {
         PageTitle::setTitle(trans('plugins/ads::ads.name'));
 
-        return $table->renderTable();
+        // Count ads expiring within 7 days
+        $expiringAdsCount = Ads::whereNotNull('expired_at')
+            ->whereDate('expired_at', '>=', Carbon::now())
+            ->whereDate('expired_at', '<=', Carbon::now()->addDays(7))
+            ->count();
+
+        return $table->renderTable([], [
+            'expiringAdsCount' => $expiringAdsCount,
+        ]);
     }
 
     public function create()

@@ -18,7 +18,12 @@ class JobzillaController extends PublicController
             return $response->setNextUrl(BaseHelper::getHomepageUrl());
         }
 
-        $keyword = $request->input('k');
+        $keyword = BaseHelper::stringify($request->input('k'));
+
+        // Only search if keyword is provided and has at least 2 characters
+        if (empty($keyword) || strlen($keyword) < 2) {
+            return $response->setData([]);
+        }
 
         $cities = $cityRepository->filters($keyword, 20, ['state']);
 

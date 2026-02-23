@@ -97,8 +97,29 @@
     justify-content: space-between;
     height: 82px;
 }
+
+.enl-header-logo {
+    display: flex;
+    align-items: center;
+}
+
+.enl-header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.enl-header-logo {
+    display: flex;
+    align-items: center;
+}
+.enl-header-logo a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
 .enl-header-logo img {
-    max-height: 40px;
+    max-height: 44px;
+    width: auto;
 }
 .enl-header-nav {
     display: flex;
@@ -587,166 +608,48 @@
 <div class="enl-header">
     <div class="enl-header-inner">
         <!-- Logo -->
+        <div class="enl-header-logo">
         <?php if(Theme::getLogo()): ?>
-                    <div class="logo-header">
-                        <div class="logo-header-inner logo-header-one">
-                            <a href="<?php echo e(BaseHelper::getHomepageUrl()); ?>">
-                                <?php if(Theme::get('header_css_class') == 'header-style-light'): ?>
-                                    <?php echo Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo_light', 44) ?: Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo', 44); ?>
-
-                                    <?php echo Theme::getLogoImage(['class' => 'on-scroll-show'], 'logo_light', 44); ?>
-
-                                <?php else: ?>
+                <a href="<?php echo e(BaseHelper::getHomepageUrl()); ?>">
                                     <?php echo Theme::getLogoImage([], 'logo_light', 44); ?>
 
-                                <?php endif; ?>
-
                             </a>
-                        </div>
-                    </div>
                 <?php endif; ?>
+        </div>
 
-        <!-- Center Nav -->
-        <ul class="enl-header-nav">
+        <!-- Right -->
+        <div class="enl-header-right" style="display: flex; align-items: center; gap: 20px;">
+            <!-- Nav Items Next to User -->
+            <ul class="enl-header-nav" style="margin: 0; padding: 0;">
+            <!-- Home Icon - Visible for Employers -->
+            <li class="nav-item">
+                <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="<?php echo e(BaseHelper::getHomepageUrl()); ?>" title="<?php echo e(__('Home')); ?>">
+                    <i class="feather-home" style="font-size: 20px !important;"></i>
+                            </a>
+                        </li>
             
-        <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/')); ?>">
-                                <span><?php echo e(__('Home')); ?></span>
-                            </a>
-                        </li>
+            <!-- FAQ -->
                         <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/how-it-works')); ?>">
-                                <span><?php echo e(__('How it Works')); ?></span>
+                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.faq')); ?>">
+                    <span><?php echo e(__('FAQ')); ?></span>
                             </a>
                         </li>
 
-                        <!-- Jobs Mega Menu Dropdown -->
-                        <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
-                            <a class="nav-link dropdown-toggle" style="color: black;" href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
-                                <span><?php echo e(__('Jobs')); ?></span>
-                            </a>
-                            <div class="dropdown-menu mega-menu" id="jobs-mega-menu" aria-labelledby="jobs-dropdown">
-                                <div class="mega-menu-wrapper">
-                                    <!-- Tabs Navigation -->
-                                    <div class="mega-menu-tabs-wrapper">
-                                        <button class="mega-menu-tab-btn active" onclick="switchMegaMenuTab('categories')" data-tab="categories">
-                                            <?php echo e(__('JOBS BY CATEGORIES')); ?>
-
-                                            <i class="feather-chevron-down"></i>
-                                        </button>
-                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('location')" data-tab="location">
-                                            <?php echo e(__('JOBS BY LOCATIONS')); ?>
-
-                                            <i class="feather-chevron-down"></i>
-                                        </button>
-                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('institution')" data-tab="institution">
-                                            <?php echo e(__('JOBS BY INSTITUTION TYPE')); ?>
-
-                                            <i class="feather-chevron-down"></i>
-                                        </button>
-                                    </div>
-
-                                    <!-- Tab Content -->
-                                    <div class="mega-menu-content-wrapper">
-                                        <!-- Jobs by Categories Content -->
-                                        <div class="mega-menu-tab-content active" id="content-categories">
-                                            <div class="mega-menu-grid">
-                                                <?php
-                                                    $categories = $featuredCategories->chunk(ceil($featuredCategories->count() / 2));
-                                                ?>
-                                                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                    <div class="mega-menu-column">
-                                                        <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <a href="<?php echo e($category->url); ?>" class="mega-menu-grid-item">
-                                                                <div class="mega-menu-grid-icon">
-                                                                    <?php if($category->icon): ?>
-                                                                        <i class="<?php echo e($category->icon); ?>"></i>
-                                                                    <?php else: ?>
-                                                                        <i class="feather-briefcase"></i>
-                                                                    <?php endif; ?>
-                                                                </div>
-                                                                <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name"><?php echo e($category->name); ?></span>
-                                                                    <span class="mega-menu-grid-count"><?php echo e(number_format($category->active_jobs_count ?? 0)); ?> Jobs</span>
-                                                                </div>
+            <!-- Plans -->
+            <li class="nav-item">
+                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.premium-service')); ?>">
+                    <span><?php echo e(__('Plans')); ?></span>
                                                             </a>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    </div>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                <?php if($featuredCategories->isEmpty()): ?>
-                                                    <div class="mega-menu-empty">No categories available</div>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-
-                                        <!-- Jobs by Location Content -->
-                                        <div class="mega-menu-tab-content" id="content-location">
-                                            <div class="mega-menu-grid">
-                                                <?php
-                                                    $locations = $topLocations->chunk(ceil($topLocations->count() / 2));
-                                                ?>
-                                                <?php $__currentLoopData = $locations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                    <div class="mega-menu-column">
-                                                        <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $location): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <a href="<?php echo e(route('public.jobs-by-city', $location->slug)); ?>" class="mega-menu-grid-item">
-                                                                <div class="mega-menu-grid-icon">
-                                                                    <i class="feather-map-pin"></i>
-                                                                </div>
-                                                                <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name">Teacher jobs in <?php echo e($location->name); ?></span>
-                                                                </div>
-                                                            </a>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    </div>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                <?php if($topLocations->isEmpty()): ?>
-                                                    <div class="mega-menu-empty">No locations available</div>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-
-                                        <!-- Jobs by Institution Type Content -->
-                                        <div class="mega-menu-tab-content" id="content-institution">
-                                            <div class="mega-menu-grid">
-                                                <?php
-                                                    $institutions = $institutionTypes->chunk(ceil($institutionTypes->count() / 2));
-                                                ?>
-                                                <?php $__currentLoopData = $institutions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                    <div class="mega-menu-column">
-                                                        <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $institution): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <a href="<?php echo e($institution->url); ?>" class="mega-menu-grid-item">
-                                                                <div class="mega-menu-grid-icon">
-                                                                    <i class="feather-building"></i>
-                                                                </div>
-                                                                <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name"><?php echo e($institution->name); ?></span>
-                                                                    <span class="mega-menu-grid-count"><?php echo e(number_format($institution->active_jobs_count ?? 0)); ?> Jobs</span>
-                                                                </div>
-                                                            </a>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    </div>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                <?php if($institutionTypes->isEmpty()): ?>
-                                                    <div class="mega-menu-empty">No institution types available</div>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </li>
 
-                        <!-- For Schools / Start Hiring -->
+            <!-- Notifications -->
                                      <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/start-hiring')); ?>">
-                                <span><?php echo e(__('Start Hiring')); ?></span>
+                <a class="nav-link" style="color: black; font-size: 20px !important;" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
+                    <i class="feather-bell" style="font-size: 20px !important;"></i>
                             </a>
                         </li>
         </ul>
 
-        <!-- Right -->
-        <div class="enl-header-right">
-            
             <div class="enl-header-user">
                 <button class="enl-header-user-btn" onclick="document.getElementById('enlUserDropdown').classList.toggle('show')">
                     <?php if($company && $company->logo): ?>
@@ -759,10 +662,9 @@
                 </button>
                 <div class="enl-header-dropdown" id="enlUserDropdown">
                     <a href="<?php echo e(route('public.account.dashboard')); ?>"><i class="fa fa-home"></i> Dashboard</a>
-                    <a href="<?php echo e(route('public.account.settings')); ?>"><i class="fa fa-cog"></i> Settings</a>
-                    <a href="<?php echo e(route('public.account.security')); ?>"><i class="fa fa-lock"></i> Security</a>
+                    <a href="<?php echo e(route('public.account.employer.settings.edit')); ?>"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
-                    <a href="<?php echo e(route('public.account.logout')); ?>" onclick="event.preventDefault(); document.getElementById('logout-form-enl').submit();"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                    <a href="javascript:void(0);" id="logout-link-enl"><i class="fa fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -770,6 +672,32 @@
 </div>
 
 <form id="logout-form-enl" style="display:none;" action="<?php echo e(route('public.account.logout')); ?>" method="POST"><?php echo csrf_field(); ?></form>
+
+<!-- Dialog Alert Container - Required for logout dialog -->
+<div id="dialog-alert-container"></div>
+
+<!-- Ensure Dialog System is Loaded -->
+<?php if(!isset($dialogSystemLoaded)): ?>
+    <?php
+        Theme::asset()->usePath()->add('dialog-alert-css', 'css/dialog-alert.css', [], [], '1.0');
+        Theme::asset()->container('footer')->usePath()->add('dialog-alert-js', 'js/dialog-alert.js', ['jquery'], [], '1.0');
+        $dialogSystemLoaded = true;
+    ?>
+<?php endif; ?>
+
+<!-- Ensure jQuery is loaded before dialog system -->
+<script>
+    // Ensure jQuery is available
+    if (typeof jQuery === 'undefined' && typeof $ === 'undefined') {
+        console.warn('jQuery not found, loading from CDN');
+        var script = document.createElement('script');
+        script.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+        script.onload = function() {
+            console.log('jQuery loaded from CDN');
+        };
+        document.head.appendChild(script);
+    }
+</script>
 
 <div class="emp-new-layout">
     <div class="container">
@@ -1194,10 +1122,286 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         var dropdown = document.getElementById('enlUserDropdown');
         var btn = e.target.closest('.enl-header-user-btn');
+        var logoutLink = e.target.closest('#logout-link-enl');
+        
+        // Don't close dropdown if clicking logout link (it will handle its own click)
+        if (logoutLink) {
+            return;
+        }
+        
         if (!btn && dropdown) {
             dropdown.classList.remove('show');
         }
     });
+
+    // Smooth navigation for sidebar menu - load content without full page reload
+    // Use event delegation to catch all clicks, including dynamically added links
+    const mainContent = document.querySelector('.enl-main');
+    
+    // Attach to document to catch all clicks
+    document.addEventListener('click', function(e) {
+        // Find the closest link
+        const link = e.target.closest('.enl-nav a');
+        if (!link) return;
+        
+        const href = link.getAttribute('href');
+        
+        // Skip if it's an external link, logout, or special action
+        if (!href || 
+            href.startsWith('#') || 
+            href.startsWith('javascript:') ||
+            link.hasAttribute('onclick') ||
+            href.includes('logout') ||
+            href.includes('create') ||
+            href.includes('edit')) {
+            return; // Let default behavior happen
+        }
+        
+        // Skip AJAX for candidates - let it do normal navigation
+        // Check for candidates in href (case insensitive)
+        if (href && (href.toLowerCase().includes('candidates') || href.includes('/candidates'))) {
+            // Normal page navigation for candidates - don't intercept
+            return;
+        }
+        
+        // Check if it's a dashboard route
+        if (href.includes('/account/')) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            // Show loader
+            const loader = document.getElementById('page-loading');
+            if (loader) {
+                loader.classList.add('show');
+            }
+            if (mainContent) {
+                mainContent.style.opacity = '0.5';
+                mainContent.style.pointerEvents = 'none';
+            }
+            
+            // Update active state
+            document.querySelectorAll('.enl-nav a').forEach(function(l) {
+                l.classList.remove('active');
+            });
+            link.classList.add('active');
+            
+            // Load content via AJAX - same as companies page
+            fetch(href, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html'
+                },
+                credentials: 'same-origin'
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(function(html) {
+                if (!html || !html.trim()) {
+                    throw new Error('Empty response');
+                }
+                
+                // Parse HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Find .enl-main in response
+                const responseMain = doc.querySelector('.enl-main');
+                
+                if (!responseMain || !mainContent) {
+                    // Fallback to normal navigation
+                    window.location.href = href;
+                    return;
+                }
+                
+                // Get the innerHTML of .enl-main
+                const contentHTML = responseMain.innerHTML;
+                
+                if (!contentHTML || contentHTML.trim().length < 10) {
+                    // Content too short, reload page
+                    window.location.href = href;
+                    return;
+                }
+                
+                // Update content
+                mainContent.innerHTML = contentHTML;
+                
+                // Update URL
+                window.history.pushState({}, '', href);
+                
+                // Re-run scripts
+                const scripts = mainContent.querySelectorAll('script');
+                scripts.forEach(function(oldScript) {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(function(attr) {
+                        newScript.setAttribute(attr.name, attr.value);
+                    });
+                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+                
+                // Reinitialize jQuery
+                if (typeof $ !== 'undefined') {
+                    $(document).ready(function() {
+                        $(document).trigger('contentLoaded');
+                    });
+                }
+            })
+            .catch(function(error) {
+                // On any error, do normal navigation
+                window.location.href = href;
+            })
+            .finally(function() {
+                // Hide loader
+                const loader = document.getElementById('page-loading');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
+                if (mainContent) {
+                    mainContent.style.opacity = '1';
+                    mainContent.style.pointerEvents = 'auto';
+                }
+            });
+        }
+        }
+    });
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function(e) {
+        if (e.state) {
+            window.location.reload();
+        }
+    });
 });
+
+// Logout Button Handler - Enhanced with better dialog system detection (matching navbar.blade.php exactly)
+(function() {
+    function waitForDialogSystem(callback, maxAttempts) {
+        maxAttempts = maxAttempts || 50; // 5 seconds max (50 * 100ms)
+        let attempts = 0;
+        
+        function check() {
+            attempts++;
+            if (typeof window.showDialogConfirm === 'function' && typeof jQuery !== 'undefined') {
+                callback();
+            } else if (attempts < maxAttempts) {
+                setTimeout(check, 100);
+            } else {
+                // Fallback after max attempts
+                console.warn('Dialog system not loaded, using native confirm');
+                callback(true); // Pass true to indicate fallback
+            }
+        }
+        check();
+    }
+    
+    function initLogoutHandler() {
+        const logoutLink = document.getElementById('logout-link-enl');
+        const logoutForm = document.getElementById('logout-form-enl');
+        
+        if (logoutLink && logoutForm) {
+            // Check if already initialized
+            if (logoutLink.dataset.dialogInitialized === 'true') {
+                return; // Already initialized
+            }
+            logoutLink.dataset.dialogInitialized = 'true';
+            
+            // Store allowSubmit flag
+            let allowSubmit = false;
+            
+            // Prevent form submission unless allowed
+            const submitHandler = function(e) {
+                if (!allowSubmit) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            };
+            logoutForm.addEventListener('submit', submitHandler, true);
+            
+            // Add click handler directly (don't clone, just add listener)
+            logoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                console.log('Logout link clicked');
+                
+                // Wait for dialog system
+                waitForDialogSystem(function(useFallback) {
+                    console.log('Dialog system ready, useFallback:', useFallback);
+                    if (useFallback) {
+                        // Use native confirm as fallback
+                        if (confirm('Do you want to logout?')) {
+                            allowSubmit = true;
+                            // Ensure form has correct action before submitting
+                            if (!logoutForm.action || logoutForm.action === '') {
+                                logoutForm.action = '<?php echo e(route('public.account.logout')); ?>';
+                            }
+                            logoutForm.submit();
+                        }
+                    } else {
+                        // Use custom dialog
+                        console.log('Showing custom dialog');
+                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                            console.log('Dialog confirmed:', confirmed);
+                            if (confirmed) {
+                                allowSubmit = true;
+                                logoutForm.removeEventListener('submit', submitHandler, true);
+                                // Ensure form has correct action before submitting
+                                if (!logoutForm.action || logoutForm.action === '' || logoutForm.action === window.location.href) {
+                                    logoutForm.action = '<?php echo e(route('public.account.logout')); ?>';
+                                }
+                                logoutForm.submit();
+                            }
+                        }).catch(function(error) {
+                            console.error('Dialog error:', error);
+                            // Fallback to native confirm on error
+                            if (confirm('Do you want to logout?')) {
+                                allowSubmit = true;
+                                logoutForm.removeEventListener('submit', submitHandler, true);
+                                logoutForm.submit();
+                            }
+                        });
+                    }
+                });
+                
+                return false;
+            }, true); // Use capture phase - fires before other handlers
+            
+            console.log('Logout handler initialized');
+        } else {
+            console.log('Logout elements not found, retrying...', {logoutLink: !!logoutLink, logoutForm: !!logoutForm});
+            // Retry if elements not found yet
+            setTimeout(initLogoutHandler, 200);
+        }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing logout handler');
+            setTimeout(initLogoutHandler, 300);
+        });
+    } else {
+        // DOM already loaded
+        console.log('DOM already loaded, initializing logout handler');
+        setTimeout(initLogoutHandler, 300);
+    }
+    
+    // Also try after a longer delay to ensure all scripts are loaded
+    setTimeout(initLogoutHandler, 1000);
+    setTimeout(initLogoutHandler, 2000);
+    
+    // Also try after window load to ensure all assets are loaded
+    window.addEventListener('load', function() {
+        setTimeout(initLogoutHandler, 500);
+    });
+})();
 </script>
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/views/job-board/dashboard/layouts/body.blade.php ENDPATH**/ ?>

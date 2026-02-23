@@ -26,7 +26,7 @@
                         media="(max-width: 767px)"
                     />
 
-                    {{ RvMedia::image($item->image_url, $item->name, attributes: ['style' => 'max-width: 100%']) }}
+                    {{ RvMedia::image($item->image_url, $item->name, attributes: ['style' => 'width: 100%; max-width: 100%; height: auto; min-height: 100px; max-height: 400px; object-fit: contain; display: block;']) }}
                 </picture>
         @if($item->url)
             </a>

@@ -2,7 +2,7 @@
     /** @var Botble\Table\Abstracts\TableAbstract $table */
 ?>
 
-<?php if (! $__env->hasRenderedOnce('eead5ee5-d1ce-4b7b-ae91-4115fad2295b')): $__env->markAsRenderedOnce('eead5ee5-d1ce-4b7b-ae91-4115fad2295b'); ?>
+<?php if (! $__env->hasRenderedOnce('40a6da88-7339-4985-b0cb-bbcc115463f7')): $__env->markAsRenderedOnce('40a6da88-7339-4985-b0cb-bbcc115463f7'); ?>
     <?php if($randomHash = setting('datatables_random_hash')): ?>
         <script>
             window.DATATABLES_RANDOM_HASH = "<?php echo e($randomHash); ?>";
@@ -12,6 +12,11 @@
 
 <?php echo apply_filters(BASE_FILTER_TABLE_BEFORE_RENDER, null, $table); ?>
 
+
+
+<?php if(isset($expiringAdsCount) && $expiringAdsCount > 0): ?>
+    <?php echo $__env->make('plugins/ads::expiring-ads-alert', ['expiringAdsCount' => $expiringAdsCount], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php endif; ?>
 
 <div class="table-wrapper">
     <?php if($table->hasFilters()): ?>
@@ -525,5 +530,59 @@
 
     <?php echo apply_filters(BASE_FILTER_TABLE_FOOTER_RENDER, null, $table); ?>
 
+
+    
+    <?php if($table instanceof \Botble\Ads\Tables\AdsTable): ?>
+        <style>
+            .table-wrapper table.dataTable tbody tr.ad-expiring-soon {
+                background-color: #fff3cd !important;
+                border-left: 4px solid #ffc107;
+            }
+            .table-wrapper table.dataTable tbody tr.ad-expiring-soon:hover {
+                background-color: #ffe69c !important;
+            }
+            .table-wrapper table.dataTable tbody tr.ad-expiring-urgent {
+                background-color: #f8d7da !important;
+                border-left: 4px solid #dc3545;
+            }
+            .table-wrapper table.dataTable tbody tr.ad-expiring-urgent:hover {
+                background-color: #f5c2c7 !important;
+            }
+        </style>
+        <script>
+            $(document).ready(function() {
+                var tableId = '<?php echo e($table->getOption('id')); ?>';
+                
+                // Function to highlight expiring ads rows
+                function highlightExpiringAds() {
+                    $('#' + tableId + ' tbody tr').each(function() {
+                        var $row = $(this);
+                        var $expiredAtCell = $row.find('td').eq(6); // Column index for expired_at (0-indexed)
+                        var expiredAtText = $expiredAtCell.text() || '';
+                        
+                        // Remove existing classes
+                        $row.removeClass('ad-expiring-soon ad-expiring-urgent');
+                        
+                        if (expiredAtText && (expiredAtText.includes('Expires Today') || expiredAtText.includes('Expires Tomorrow') || expiredAtText.includes('Expires in 1 day') || expiredAtText.includes('Expires in 2 days') || expiredAtText.includes('Expires in 3 days'))) {
+                            $row.addClass('ad-expiring-urgent');
+                        } else if (expiredAtText && expiredAtText.includes('Expires')) {
+                            $row.addClass('ad-expiring-soon');
+                        }
+                    });
+                }
+
+                // Highlight on initial load
+                setTimeout(highlightExpiringAds, 500);
+
+                // Highlight after table redraw (pagination, search, etc.)
+                if (window.LaravelDataTables && window.LaravelDataTables[tableId]) {
+                    var table = window.LaravelDataTables[tableId];
+                    table.on('draw', function() {
+                        setTimeout(highlightExpiringAds, 100);
+                    });
+                }
+            });
+        </script>
+    <?php endif; ?>
 <?php $__env->stopPush(); ?>
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/table/resources/views/base-table.blade.php ENDPATH**/ ?>

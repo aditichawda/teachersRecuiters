@@ -22,13 +22,13 @@
                 ?>
                 
                 <div class="cg-info-section" style="flex: 1; padding: 0 15px;">
-                    <?php if(!empty($cgInst)): ?>
+                <?php if(!empty($cgInst)): ?>
                         <p class="cg-tags mb-2">
-                            <?php $__currentLoopData = $cgInst; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $it): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php $__currentLoopData = $cgInst; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $it): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <span class="badge bg-light text-primary" style="font-size:10px; margin-right: 4px;"><?php echo e($cgLabels[$it] ?? ucwords(str_replace('_',' ', $it))); ?></span>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </p>
-                    <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </p>
+                <?php endif; ?>
                     
                     <?php if($candidate->phone): ?>
                         <p class="cg-phone mb-1" style="font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;">
@@ -106,8 +106,8 @@
                         <p class="cg-desc mt-2" style="font-size: 12px; color: #777; line-height: 1.4;">
                             <?php echo Str::limit(BaseHelper::clean($candidate->description), 100); ?>
 
-                        </p>
-                    <?php endif; ?>
+                    </p>
+                <?php endif; ?>
                 </div>
                 
                 <?php if(! JobBoardHelper::isDisabledPublicProfile() && $candidate->url): ?>

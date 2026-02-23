@@ -20,6 +20,13 @@ class AdsRequest extends Request
             'expired_at' => ['required', 'date'],
             'ads_type' => ['required', 'in:custom_ad,google_adsense'],
             'google_adsense_slot_id' => ['nullable', 'string', 'max:255'],
+            'banner_type' => ['nullable', 'in:single,double,multiple'],
+            'page_type' => ['nullable', 'string', 'max:100'],
+            'position' => ['nullable', 'string', 'max:100'],
+            'image_2' => ['nullable', 'string', 'max:255'],
+            'image_3' => ['nullable', 'string', 'max:255'],
+            'url_2' => ['nullable', 'string', 'max:255'],
+            'url_3' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

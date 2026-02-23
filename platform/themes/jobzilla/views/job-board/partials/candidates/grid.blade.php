@@ -22,13 +22,13 @@
                 @endphp
                 
                 <div class="cg-info-section" style="flex: 1; padding: 0 15px;">
-                    @if (!empty($cgInst))
+                @if (!empty($cgInst))
                         <p class="cg-tags mb-2">
-                            @foreach($cgInst as $it)
+                        @foreach($cgInst as $it)
                                 <span class="badge bg-light text-primary" style="font-size:10px; margin-right: 4px;">{{ $cgLabels[$it] ?? ucwords(str_replace('_',' ', $it)) }}</span>
-                            @endforeach
-                        </p>
-                    @endif
+                        @endforeach
+                    </p>
+                @endif
                     
                     @if ($candidate->phone)
                         <p class="cg-phone mb-1" style="font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;">
@@ -102,8 +102,8 @@
                     @if ($candidate->description)
                         <p class="cg-desc mt-2" style="font-size: 12px; color: #777; line-height: 1.4;">
                             {!! Str::limit(BaseHelper::clean($candidate->description), 100) !!}
-                        </p>
-                    @endif
+                    </p>
+                @endif
                 </div>
                 
                 @if (! JobBoardHelper::isDisabledPublicProfile() && $candidate->url)

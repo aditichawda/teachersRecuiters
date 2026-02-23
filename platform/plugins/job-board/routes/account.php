@@ -395,6 +395,11 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             Route::get('applicants/download-cv/{application}', [JobApplicationController::class, 'downloadCv'])
                 ->name('applicants.download-cv')->wherePrimaryKey('application');
 
+            Route::get('candidates', [
+                'as' => 'candidates.index',
+                'uses' => 'DashboardController@candidates',
+            ]);
+
             Route::group([
                 'prefix' => 'jobs',
                 'as' => 'jobs.',

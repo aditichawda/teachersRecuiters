@@ -7,7 +7,7 @@
             $cityName = $city ? $city->name : null;
         }
     @endphp
-    <div class="form-group mb-4">
+    <div class="twm-sidebar-ele-filter">
         <h4 class="section-head-small mb-4">{{ __('Location') }}</h4>
         <select name="city_id" class="wt-select-bar-large selectpicker-location">
             <option value="">{{ __('Select City') }}</option>

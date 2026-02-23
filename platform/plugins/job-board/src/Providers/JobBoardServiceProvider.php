@@ -623,6 +623,14 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => fn () => route('public.account.applicants.index'),
                     'icon' => 'ti ti-users-group',
                 ])
+                ->registerItem([
+                    'id' => 'cms-account-candidates',
+                    'priority' => 4.5,
+                    'parent_id' => null,
+                    'name' => 'plugins/job-board::dashboard.menu.candidates',
+                    'url' => fn () => '/candidates',
+                    'icon' => 'fa fa-user-circle',
+                ])
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
                     'id' => 'cms-account-packages',
                     'priority' => 5,
