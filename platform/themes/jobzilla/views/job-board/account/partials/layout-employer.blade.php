@@ -387,6 +387,7 @@
                         <li><a href="{{ route('public.account.jobs.create') }}" style="{{ $currentUrl == route('public.account.jobs.create') ? '' : 'background: linear-gradient(135deg, #0073d1, #005bb5); color: #fff; border-left: none;' }}" @class(['active' => $currentUrl == route('public.account.jobs.create')])><i class="fa fa-plus-circle"></i> {{ __('Post Job') }}</a></li>
                         <li><a href="{{ route('public.account.employer.settings.edit') }}" @class(['active' => $currentUrl == route('public.account.employer.settings.edit')])><i class="fa fa-building"></i> {{ __('Settings') }}</a></li>
                         <li><a href="{{ route('public.account.jobs.index') }}" @class(['active' => str_contains($currentUrl, '/jobs') && !str_contains($currentUrl, '/create')])><i class="fa fa-briefcase"></i> {{ __('Jobs') }}</a></li>
+                        <li><a href="{{ route('public.account.admission.edit') }}" @class(['active' => str_contains($currentUrl, 'admission')])><i class="fa fa-graduation-cap"></i> {{ __('Admission') }}</a></li>
                         <li><a href="{{ route('public.account.companies.index') }}" @class(['active' => str_contains($currentUrl, 'companies')])><i class="fa fa-university"></i> {{ __('Institution') }}</a></li>
                         @if(JobBoardHelper::isEnabledReview())
                         <li><a href="{{ route('public.account.reviews.index') }}" @class(['active' => str_contains($currentUrl, 'reviews')])><i class="fa fa-star"></i> {{ __('Reviews') }}</a></li>

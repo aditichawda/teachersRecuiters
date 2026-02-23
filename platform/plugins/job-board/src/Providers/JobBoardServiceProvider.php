@@ -413,6 +413,15 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => route('companies.index'),
                     'permissions' => ['companies.index'],
                 ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-admission-enquiries',
+                    'priority' => 5.5,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Admission Enquiries'),
+                    'icon' => 'ti ti-school',
+                    'url' => route('admission-enquiries.index'),
+                    'permissions' => ['admission-enquiries.index'],
+                ])
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), static function (DashboardMenuSupport $dashboardMenu): void {
                     $dashboardMenu
                         ->registerItem([

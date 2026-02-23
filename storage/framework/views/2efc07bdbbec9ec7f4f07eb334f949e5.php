@@ -352,9 +352,9 @@
 
     <?php
         $screeningAnswers = $jobApplication->screening_answers ?? [];
-        $screeningQuestions = $jobApplication->job->screeningQuestions ?? collect();
+        $screeningQuestionsMap = $jobApplication->job->getAllScreeningQuestionsForApply()->keyBy('id');
     ?>
-    <?php if(!$jobApplication->is_external_apply && $screeningQuestions->isNotEmpty()): ?>
+    <?php if(!$jobApplication->is_external_apply && $screeningQuestionsMap->isNotEmpty() && count($screeningAnswers) > 0): ?>
         <div class="mt-4 pt-3 border-top">
             <h6 class="mb-3 fw-semibold"><?php echo e(trans('plugins/job-board::job-application.screening_questions_answers')); ?></h6>
             <div class="table-responsive">
@@ -367,16 +367,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $__currentLoopData = $screeningQuestions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php $__currentLoopData = $screeningAnswers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $qId => $answer): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php
-                                $answer = $screeningAnswers[$sq->id] ?? null;
+                                $sq = $screeningQuestionsMap->get($qId) ?? $screeningQuestionsMap->get('sq_' . $qId);
+                                if (!$sq) continue;
                                 if (is_string($answer) && str_starts_with(trim($answer), '[')) {
                                     $decoded = json_decode($answer, true);
                                     $answerDisplay = is_array($decoded) ? implode(', ', array_map('trim', $decoded)) : $answer;
                                 } else {
                                     $answerDisplay = $answer !== null && $answer !== '' ? (string) $answer : '—';
                                 }
-                                $correctAnswer = $sq->pivot->correct_answer ?? $sq->correct_answer ?? null;
+                                $correctAnswer = $sq->correct_answer ?? null;
                                 $hasCorrect = (bool) $correctAnswer;
                                 $isCorrect = false;
                                 if ($hasCorrect && $answer !== null && $answer !== '') {
@@ -389,7 +390,7 @@
                                 }
                             ?>
                             <tr>
-                                <td><?php echo e($sq->pivot->question_override ?: $sq->question); ?></td>
+                                <td><?php echo e($sq->question); ?></td>
                                 <td><?php echo e($answerDisplay); ?></td>
                                 <td class="text-center">
                                     <?php if($hasCorrect): ?>

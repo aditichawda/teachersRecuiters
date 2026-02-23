@@ -399,29 +399,16 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 'prefix' => 'jobs',
                 'as' => 'jobs.',
             ], function (): void {
-                Route::resource('', 'AccountJobController')->parameters(['' => 'job']);
+                // Explicit routes first to avoid 404 - edit/update use {job} with whereNumber
+                Route::get('create', ['as' => 'create', 'uses' => 'AccountJobController@create']);
+                Route::get('tags/all', ['as' => 'tags.all', 'uses' => 'AccountJobController@getAllTags']);
+                Route::post('renew/{id}', ['as' => 'renew', 'uses' => 'AccountJobController@renew'])->whereNumber('id');
+                Route::get('{id}/analytics', ['as' => 'analytics', 'uses' => 'AccountJobController@analytics'])->whereNumber('id');
+                Route::get('{id}/view', ['as' => 'view', 'uses' => 'AccountJobController@view'])->whereNumber('id');
+                Route::get('{job}/edit', ['as' => 'edit', 'uses' => 'AccountJobController@edit'])->whereNumber('job');
+                Route::match(['put', 'patch'], '{job}', ['as' => 'update', 'uses' => 'AccountJobController@update'])->whereNumber('job');
 
-                Route::controller('AccountJobController')->group(function (): void {
-                    Route::post('renew/{id}', [
-                        'as' => 'renew',
-                        'uses' => 'renew',
-                    ])->wherePrimaryKey();
-
-                    Route::get('{id}/analytics', [
-                        'as' => 'analytics',
-                        'uses' => 'analytics',
-                    ])->wherePrimaryKey();
-
-                    Route::get('{id}/view', [
-                        'as' => 'view',
-                        'uses' => 'view',
-                    ])->wherePrimaryKey();
-
-                    Route::get('tags/all', [
-                        'as' => 'tags.all',
-                        'uses' => 'getAllTags',
-                    ]);
-                });
+                Route::resource('', 'AccountJobController')->parameters(['' => 'job'])->only(['index', 'store', 'show', 'destroy']);
             });
 
             Route::group([
@@ -467,6 +454,10 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     'as' => 'admission.update',
                     'uses' => 'AdmissionAccountController@update',
                 ]);
+                Route::get('enquiries/{enquiry}', [
+                    'as' => 'admission.enquiry.show',
+                    'uses' => 'AdmissionAccountController@showEnquiry',
+                ])->whereNumber('enquiry');
             });
 
             Route::group([

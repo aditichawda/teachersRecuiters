@@ -267,6 +267,19 @@ AdminHelper::registerRoutes(function (): void {
             'permission' => 'companies.create',
         ])->wherePrimaryKey();
 
+        Route::group(['prefix' => 'admission-enquiries', 'as' => 'admission-enquiries.'], function (): void {
+            Route::match(['get', 'post'], '/', [
+                'as' => 'index',
+                'uses' => 'AdmissionEnquiryController@index',
+                'permission' => 'admission-enquiries.index',
+            ]);
+            Route::delete('{admission_enquiry}', [
+                'as' => 'destroy',
+                'uses' => 'AdmissionEnquiryController@destroy',
+                'permission' => 'admission-enquiries.destroy',
+            ])->wherePrimaryKey('admission_enquiry');
+        });
+
         Route::group(['prefix' => 'job-applications', 'as' => 'job-applications.'], function (): void {
             Route::resource('', 'JobApplicationController')
                 ->except(['create', 'store'])

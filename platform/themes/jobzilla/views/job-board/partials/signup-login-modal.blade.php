@@ -21,7 +21,7 @@
     flex: 0 0 50%;
     max-width: 50%;
     min-height: 400px;
-    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #3b82f6 100%);
+    background: linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #dbeafe 100%);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -71,36 +71,42 @@
 }
 #signupLoginModal .signup-login-btn {
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-            font-size: 1rem;
+    gap: 0.2rem;
+    font-size: 1rem;
+   
     border-radius: 10px;
+    padding: 0.5rem 0.75rem;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     text-decoration: none;
     border: 2px solid transparent;
+}
+#signupLoginModal .signup-login-btn-icon {
+    flex-shrink: 0;
 }
 #signupLoginModal .signup-login-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);
 }
 #signupLoginModal .signup-login-btn-primary {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
     color: #fff !important;
 }
 #signupLoginModal .signup-login-btn-primary:hover {
-    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: #fff !important;
 }
 #signupLoginModal .signup-login-btn-outline {
-    background: #fff;
-    color: #2563eb;
-    border-color: #2563eb;
+    background: #f8fafc;
+    color: #3b82f6;
+    border-color: #93c5fd;
 }
 #signupLoginModal .signup-login-btn-outline:hover {
     background: #eff6ff;
-    color: #1d4ed8;
-    border-color: #1d4ed8;
+    color: #2563eb;
+    border-color: #60a5fa;
 }
 #signupLoginModal .signup-login-divider {
     display: flex;
@@ -187,17 +193,17 @@
                     <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body px-4 pb-4 pt-2">
-                    <p class="signup-login-desc text-center mb-4">{{ __('Create an account or sign in to apply for jobs and get hired.') }}</p>
+                    <p class="signup-login-desc text-center mb-4">{{ __('Create your profile or login to apply for jobs and start hiring') }}</p>
                     <div class="row g-2 mb-0">
                         <div class="col-6">
                             <a href="{{ $registerJobSeekerUrl }}" class="btn signup-login-btn signup-login-btn-primary w-100">
-                                <i class="fas fa-user-graduate me-1"></i>
+                                <svg class="signup-login-btn-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
                                 {{ __('Job Seeker') }}
                             </a>
                         </div>
                         <div class="col-6">
                             <a href="{{ $registerEmployerUrl }}" class="btn signup-login-btn signup-login-btn-outline w-100">
-                                <i class="fas fa-building me-1"></i>
+                                <svg class="signup-login-btn-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
                                 {{ __('Employer') }}
                             </a>
                         </div>
@@ -206,7 +212,7 @@
                         <span class="small text-muted">{{ __('Already have an account?') }}</span>
                     </div>
                     <p class="text-center small mb-0">
-                        <a href="{{ $loginUrl }}" class="signup-login-login-link">{{ __('Login') }} <i class="fas fa-arrow-right ms-1 small"></i></a>
+                        <a href="{{ $loginUrl }}" class="signup-login-login-link">{{ __('Login') }} <svg class="d-inline-block ms-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
                     </p>
                     <div class="form-check d-flex justify-content-center align-items-center mt-3 pt-2">
                         <input class="form-check-input me-2" type="checkbox" id="signupLoginDontShowAgain" value="1">

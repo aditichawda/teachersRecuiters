@@ -298,13 +298,22 @@ class EmployerSettingController extends BaseController
 
         // Handle campus photos (upload new + keep existing via hidden photo url)
         $campusPhotosInput = $request->input('campus_photos', []);
+        $campusPhotosFiles = $request->file('campus_photos_photos', []) ?? [];
         $processedCampusPhotos = [];
-        if (is_array($campusPhotosInput)) {
-            foreach ($campusPhotosInput as $index => $item) {
+        if (is_array($campusPhotosInput) || is_array($campusPhotosFiles)) {
+            $allIndices = array_unique(array_merge(
+                array_keys(is_array($campusPhotosInput) ? $campusPhotosInput : []),
+                array_keys(is_array($campusPhotosFiles) ? $campusPhotosFiles : [])
+            ));
+            sort($allIndices, SORT_NUMERIC);
+            $uploadFolder = $account->upload_folder ?? 0;
+            foreach ($allIndices as $index) {
+                $item = is_array($campusPhotosInput) && isset($campusPhotosInput[$index]) ? $campusPhotosInput[$index] : [];
                 $caption = is_array($item) ? ($item['caption'] ?? '') : '';
                 $photoUrl = null;
-                if ($request->hasFile("campus_photos_photos.{$index}")) {
-                    $result = RvMedia::handleUpload($request->file("campus_photos_photos.{$index}"), 0, $account->upload_folder);
+                $file = isset($campusPhotosFiles[$index]) ? $campusPhotosFiles[$index] : $request->file("campus_photos_photos.{$index}");
+                if ($file && $file->isValid()) {
+                    $result = RvMedia::handleUpload($file, 0, $uploadFolder);
                     if (! $result['error']) {
                         $photoUrl = $result['data']->url;
                     }

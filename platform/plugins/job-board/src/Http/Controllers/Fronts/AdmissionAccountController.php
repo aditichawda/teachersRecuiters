@@ -4,8 +4,10 @@ namespace Botble\JobBoard\Http\Controllers\Fronts;
 
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\JobBoard\Facades\JobBoardHelper;
+use Botble\JobBoard\Models\AdmissionEnquiry;
 use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\CompanyAdmission;
+use Illuminate\Support\Facades\Schema;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
 use Illuminate\Http\RedirectResponse;
@@ -33,10 +35,19 @@ class AdmissionAccountController extends BaseController
 
         $admission = $company->admission ?? new CompanyAdmission(['company_id' => $company->id, 'status' => 'published']);
 
+        // Load enquiries for ALL institutions linked to this employer
+        // (pivot jb_companies_accounts + fallback: jb_companies.account_id if column exists)
+        $companyIds = $this->getEmployerCompanyIds($account);
+        $enquiries = AdmissionEnquiry::query()
+            ->whereIn('company_id', $companyIds)
+            ->with('company:id,name')
+            ->latest()
+            ->paginate(15);
+
         SeoHelper::setTitle(__('Admission') . ' - ' . __('Settings'));
         Theme::breadcrumb()->add(__('Admission'));
 
-        return JobBoardHelper::view('admission.account.edit', compact('company', 'admission'));
+        return JobBoardHelper::view('admission.account.edit', compact('company', 'admission', 'enquiries'));
     }
 
     /**
@@ -54,6 +65,23 @@ class AdmissionAccountController extends BaseController
             return redirect()->back()->with('error_msg', __('Invalid request.'));
         }
 
+        $maxWords = 250;
+        $maxContentLength = (int) setting('admission_about_school_max_length', 1750);
+        $request->validate([
+            'content' => [
+                'nullable',
+                'string',
+                'max:' . $maxContentLength,
+                function ($attribute, $value, $fail) use ($maxWords): void {
+                    if ($value && str_word_count(strip_tags($value)) > $maxWords) {
+                        $fail(__('The about school content must not exceed :max words.', ['max' => $maxWords]));
+                    }
+                },
+            ],
+            'admission_deadline' => ['nullable', 'date'],
+            'status' => ['nullable', 'in:published,draft'],
+        ]);
+
         $admission = $company->admission ?? new CompanyAdmission(['company_id' => $company->id]);
         $admission->content = $request->input('content');
         $admission->admission_deadline = $request->input('admission_deadline') ?: null;
@@ -64,5 +92,48 @@ class AdmissionAccountController extends BaseController
         return redirect()
             ->back()
             ->with('success_msg', __('Admission details saved successfully.'));
+    }
+
+    /**
+     * Show single admission enquiry detail (employer's institution only).
+     */
+    public function showEnquiry(int $enquiry): View|RedirectResponse
+    {
+        $account = auth('account')->user();
+        if (! $account->isEmployer()) {
+            return redirect()->route('public.account.dashboard');
+        }
+
+        $companyIds = $this->getEmployerCompanyIds($account);
+        if ($companyIds->isEmpty()) {
+            return redirect()->route('public.account.dashboard');
+        }
+
+        $enquiryModel = AdmissionEnquiry::query()
+            ->where('id', $enquiry)
+            ->whereIn('company_id', $companyIds)
+            ->with('company:id,name')
+            ->firstOrFail();
+
+        SeoHelper::setTitle(__('Enquiry Detail') . ' - ' . __('Admission'));
+        Theme::breadcrumb()
+            ->add(__('Admission'), route('public.account.admission.edit'))
+            ->add(__('Enquiry') . ' #' . $enquiryModel->id);
+
+        return JobBoardHelper::view('admission.account.enquiry-show', compact('enquiryModel'));
+    }
+
+    /**
+     * Get company IDs for this employer (from pivot + account_id fallback).
+     */
+    private function getEmployerCompanyIds($account): \Illuminate\Support\Collection
+    {
+        $ids = $account->companies()->pluck('id');
+        if (Schema::hasColumn('jb_companies', 'account_id')) {
+            $ownerIds = Company::where('account_id', $account->id)->pluck('id');
+            $ids = $ids->merge($ownerIds)->unique()->values();
+        }
+
+        return $ids;
     }
 }

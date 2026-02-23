@@ -277,6 +277,12 @@
                 <?php if($company->description): ?>
                     <p class="cd-hero-desc"><?php echo e(Str::limit($company->description, 200)); ?></p>
                 <?php endif; ?>
+                <div class="mt-3">
+                    <button type="button" class="btn btn-primary px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#admissionEnquiryModal" style="background: linear-gradient(135deg, #059669, #047857); border: none;">
+                        <i class="fas fa-graduation-cap me-2"></i><?php echo e(__('Admission Enquiry')); ?>
+
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -285,6 +291,12 @@
 
 <div class="cd-main">
     <div class="container">
+        <?php if(session('success_msg')): ?>
+            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert"><?php echo e(session('success_msg')); ?><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+        <?php endif; ?>
+        <?php if(session('error_msg')): ?>
+            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert"><?php echo e(session('error_msg')); ?><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+        <?php endif; ?>
         <a href="<?php echo e(JobBoardHelper::getJobcompaniesPageURL()); ?>" class="cd-back-btn">← <?php echo e(__('Back to companies')); ?></a>
 
         <div class="row">
@@ -341,6 +353,19 @@
 
                     </div>
                 <?php endif; ?>
+
+                
+                <div class="cd-content-card">
+                    <h4 class="cd-section-title"><?php echo e(__('Get Admission with :name', ['name' => $company->name])); ?></h4>
+                    <?php if($company->admission && $company->admission->status === 'published' && $company->admission->content): ?>
+                        <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;"><?php echo e(__('About School / Institution')); ?></h5>
+                        <p class="text-muted small mb-2" style="font-size: 0.85rem;"><?php echo e(__('Details added by the institution for admission.')); ?></p>
+                        <div class="mb-4" style="color: #475569; line-height: 1.6;"><?php echo BaseHelper::clean($company->admission->content); ?></div>
+                    <?php endif; ?>
+                    <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;"><?php echo e(__('Enquiry Form')); ?></h5>
+                    <p class="text-muted small mb-3"><?php echo e(__('Submit your admission enquiry using the form below or use the button above.')); ?></p>
+                    <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                </div>
             </div>
 
             
@@ -414,6 +439,32 @@
                         </div>
                     <?php endif; ?>
                 <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+#admissionEnquiryModal .modal-dialog { max-width: 520px; }
+#admissionEnquiryModal .modal-body { padding: 1rem 1.25rem 1.5rem; }
+#admissionEnquiryModal .admission-enquiry-form .form-label { font-weight: 600; color: #334155; margin-bottom: 6px; font-size: 0.9rem; }
+#admissionEnquiryModal .admission-enquiry-form .form-control,
+#admissionEnquiryModal .admission-enquiry-form .form-select { border-radius: 8px; border: 1px solid #e2e8f0; padding: 8px 12px; font-size: 0.95rem; }
+#admissionEnquiryModal .admission-enquiry-form .btn-primary { border-radius: 8px; padding: 10px 20px; font-weight: 600; }
+</style>
+<div class="modal fade" id="admissionEnquiryModal" tabindex="-1" aria-labelledby="admissionEnquiryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title" id="admissionEnquiryModalLabel">
+                    <i class="fas fa-graduation-cap me-2 text-success"></i><?php echo e(__('Admission Enquiry')); ?> - <?php echo e($company->name); ?>
+
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
             </div>
         </div>
     </div>

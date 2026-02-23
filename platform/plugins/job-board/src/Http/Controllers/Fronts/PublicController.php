@@ -52,48 +52,36 @@ class PublicController extends BaseController
 
     /**
      * Get screening questions for a job (for apply form).
-     * Uses question_override/options_override from pivot, or resolves template with job data.
-     * Includes correct_answer for restriction validation.
+     * Includes admin pool questions AND job-specific (extra) questions added by employer.
      */
     public function getJobScreeningQuestions(int $id)
     {
-        $job = JobModel::with('screeningQuestions')->find($id);
+        $job = JobModel::with(['screeningQuestions', 'jobScreeningQuestions'])->find($id);
         if (! $job) {
             return response()->json(['questions' => []], 200);
         }
-        $replacements = ScreeningQuestionPlaceholder::jobToReplacements($job);
-        $questions = $job->screeningQuestions->sortBy('pivot.order')->values()->map(function ($q) use ($replacements) {
-            $questionText = $q->pivot->question_override
-                ?: ScreeningQuestionPlaceholder::resolve($q->question, $replacements);
-            $opts = $q->pivot->options_override;
-            if ($opts !== null && $opts !== '') {
-                $optsArray = array_filter(array_map('trim', preg_split('/[\r\n]+/', $opts)));
-            } else {
-                $resolved = ScreeningQuestionPlaceholder::resolve(
-                    implode("\n", $q->options_array),
-                    $replacements
-                );
-                $optsArray = array_filter(array_map('trim', preg_split('/[\r\n]+/', $resolved)));
-            }
-
+        $allQuestions = $job->getAllScreeningQuestionsForApply();
+        $questions = $allQuestions->map(function ($q) {
+            $opts = $q->options ?? [];
+            $optsArray = is_array($opts) ? array_values($opts) : [];
             return [
                 'id' => $q->id,
-                'question' => $questionText,
+                'question' => $q->question,
                 'question_type' => $q->question_type,
-                'options' => array_values($optsArray),
-                'is_required' => (bool) ($q->pivot->is_required ?? false),
+                'options' => $optsArray,
+                'is_required' => (bool) ($q->is_required ?? false),
             ];
-        });
+        })->values()->all();
         return response()->json(['questions' => $questions]);
     }
 
     /**
      * Validate screening answers before showing resume step.
-     * Returns { valid: true } or { valid: false, message: "..." }.
+     * Validates both admin pool and job-specific (extra) questions.
      */
     public function validateScreening(Request $request, int $id)
     {
-        $job = JobModel::with('screeningQuestions')->find($id);
+        $job = JobModel::with(['screeningQuestions', 'jobScreeningQuestions'])->find($id);
         if (! $job) {
             return response()->json(['valid' => false, 'message' => 'Job not found.'], 404);
         }
@@ -106,9 +94,10 @@ class PublicController extends BaseController
                 $screeningAnswers[$qId] = json_encode(array_values($val));
             }
         }
-        foreach ($job->screeningQuestions as $sq) {
-            $correctAnswer = $sq->pivot->correct_answer ?: $sq->correct_answer;
-            if (! $correctAnswer || ! ($sq->pivot->is_required ?? false)) {
+        $allQuestions = $job->getAllScreeningQuestionsForApply();
+        foreach ($allQuestions as $sq) {
+            $correctAnswer = $sq->correct_answer ?? null;
+            if (! $correctAnswer || ! ($sq->is_required ?? false)) {
                 continue;
             }
             $answer = $screeningAnswers[$sq->id] ?? null;
@@ -573,11 +562,12 @@ class PublicController extends BaseController
                     $screeningAnswers[$qId] = json_encode(array_values($val));
                 }
             }
-            // Validate correct_answer restriction: if question has correct_answer + is_required, candidate must match
-            $job->load('screeningQuestions');
-            foreach ($job->screeningQuestions as $sq) {
-                $correctAnswer = $sq->pivot->correct_answer ?: $sq->correct_answer;
-                if (! $correctAnswer || ! ($sq->pivot->is_required ?? false)) {
+            // Validate correct_answer restriction for all questions (admin + job-specific)
+            $job->load(['screeningQuestions', 'jobScreeningQuestions']);
+            $allQuestions = $job->getAllScreeningQuestionsForApply();
+            foreach ($allQuestions as $sq) {
+                $correctAnswer = $sq->correct_answer ?? null;
+                if (! $correctAnswer || ! ($sq->is_required ?? false)) {
                     continue;
                 }
                 $answer = $screeningAnswers[$sq->id] ?? null;
@@ -957,6 +947,7 @@ class PublicController extends BaseController
          */
         $company = Company::query()
             ->where($condition)
+            ->with(['admission'])
             ->withCount([
                 'jobs' => function (Builder $query): void {
                     // @phpstan-ignore-next-line
