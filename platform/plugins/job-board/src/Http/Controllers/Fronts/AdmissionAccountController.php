@@ -36,13 +36,28 @@ class AdmissionAccountController extends BaseController
         $admission = $company->admission ?? new CompanyAdmission(['company_id' => $company->id, 'status' => 'published']);
 
         // Load enquiries for ALL institutions linked to this employer
-        // (pivot jb_companies_accounts + fallback: jb_companies.account_id if column exists)
         $companyIds = $this->getEmployerCompanyIds($account);
-        $enquiries = AdmissionEnquiry::query()
+        $sort = $request->get('sort', 'newest');
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
+
+        $enquiriesQuery = AdmissionEnquiry::query()
             ->whereIn('company_id', $companyIds)
-            ->with('company:id,name')
-            ->latest()
-            ->paginate(15);
+            ->with('company:id,name');
+
+        if ($fromDate) {
+            $enquiriesQuery->whereDate('created_at', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $enquiriesQuery->whereDate('created_at', '<=', $toDate);
+        }
+
+        if ($sort === 'oldest') {
+            $enquiriesQuery->oldest();
+        } else {
+            $enquiriesQuery->latest();
+        }
+        $enquiries = $enquiriesQuery->paginate(15)->withQueryString();
 
         SeoHelper::setTitle(__('Admission') . ' - ' . __('Settings'));
         Theme::breadcrumb()->add(__('Admission'));

@@ -35,6 +35,7 @@ use Botble\JobBoard\Models\JobSkill;
 use Botble\JobBoard\Models\JobType;
 use Botble\JobBoard\Models\Tag;
 use Botble\JobBoard\Repositories\Interfaces\AnalyticsInterface;
+use Botble\JobBoard\Services\JobDescriptionAiService;
 use Botble\JobBoard\Services\StoreTagService;
 use Botble\JobBoard\Tables\Fronts\JobTable;
 use Botble\Media\Facades\RvMedia;
@@ -64,6 +65,43 @@ class AccountJobController extends BaseController
         SeoHelper::setTitle(trans('plugins/job-board::messages.manage_jobs'));
 
         return $table->render(JobBoardHelper::viewPath('dashboard.table.base'));
+    }
+
+    /**
+     * Generate job description using AI (Gemini or OpenAI). Called via AJAX from job create form.
+     * Uses title, optional short_description, and optional institution_title (institle) for the prompt.
+     */
+    public function generateDescription(Request $request, JobDescriptionAiService $aiService)
+    {
+        $title = is_string($request->input('title')) ? trim($request->input('title')) : '';
+        $institutionTitle = is_string($request->input('institution_title')) ? trim($request->input('institution_title')) : '';
+
+        if ($title === '') {
+            return response()->json(['success' => false, 'message' => __('Please enter a job title first.')], 422);
+        }
+
+        if (! $aiService->isEnabled()) {
+            return response()->json([
+                'success' => false,
+                'message' => __('AI is not configured. Set GEMINI_API_KEY or OPENAI_API_KEY in .env and JOB_BOARD_AI_PROVIDER to gemini or openai.'),
+            ], 503);
+        }
+
+        $result = $aiService->generateFromTitle($title, '', $institutionTitle);
+
+        if ($result['error'] !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['error'],
+            ], 502);
+        }
+
+        return response()->json([
+            'success' => true,
+            'description' => $result['description'],
+            'fallback' => $result['fallback'] ?? false,
+            'api_error' => $result['api_error'] ?? null,
+        ]);
     }
 
     public function create()

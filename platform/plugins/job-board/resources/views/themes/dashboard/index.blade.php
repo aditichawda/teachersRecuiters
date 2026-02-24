@@ -1,28 +1,65 @@
 @extends(JobBoardHelper::viewPath('dashboard.layouts.master'))
 
+@push('header')
+@if(JobBoardHelper::isEnabledCreditsSystem())
+<style>
+.dashboard-credits-card .card-body {
+    background: linear-gradient(135deg, var(--primary-color, var(--bs-primary, #0d6efd)) 0%, color-mix(in srgb, var(--primary-color, var(--bs-primary, #0d6efd)) 75%, black) 100%) !important;
+    border-radius: var(--bs-border-radius, 0.375rem);
+}
+</style>
+@endif
+@endpush
+
 @section('content')
-    <x-core::stat-widget class="mb-3 row-cols-1 row-cols-sm-2 row-cols-md-3">
-        <x-core::stat-widget.item
-            :label="trans('plugins/job-board::dashboard.jobs_label')"
-            :value="$totalJobs"
-            icon="ti ti-briefcase"
-            color="primary"
-        />
+    @php
+        $account = auth('account')->user();
+        $credits = $account->credits ?? 0;
+    @endphp
+    <div class="row mb-4 align-items-stretch">
+        @if(JobBoardHelper::isEnabledCreditsSystem())
+        <div class="col-lg-4 col-xl-4 mb-3 mb-lg-0">
+            <a href="{{ route('public.account.wallet') }}" class="text-decoration-none text-reset d-block h-100">
+                <x-core::card class="h-100 border-0 overflow-hidden dashboard-credits-card">
+                    <x-core::card.body class="text-white d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-white-50 text-uppercase small mb-1">{{ trans('plugins/job-board::dashboard.wallet_available_coins') }}</h6>
+                            <h2 class="display-5 fw-bold mb-0">{{ format_credits_short($credits) }}</h2>
+                            <span class="small text-white-50">{{ trans('plugins/job-board::dashboard.wallet_buy_credits') }} →</span>
+                        </div>
+                        <div class="opacity-75 ms-3">
+                            <x-core::icon name="ti ti-wallet" class="display-4" />
+                        </div>
+                    </x-core::card.body>
+                </x-core::card>
+            </a>
+        </div>
+        @endif
+        <div class="{{ JobBoardHelper::isEnabledCreditsSystem() ? 'col-lg-8 col-xl-8' : 'col-12' }}">
+            <x-core::stat-widget class="mb-0 row-cols-1 row-cols-sm-2 row-cols-md-3 h-100">
+                <x-core::stat-widget.item
+                    :label="trans('plugins/job-board::dashboard.jobs_label')"
+                    :value="$totalJobs"
+                    icon="ti ti-briefcase"
+                    color="primary"
+                />
 
-        <x-core::stat-widget.item
-            :label="trans('plugins/job-board::dashboard.companies_label')"
-            :value="$totalcompanies"
-            icon="ti ti-building"
-            color="success"
-        />
+                <x-core::stat-widget.item
+                    :label="trans('plugins/job-board::dashboard.companies_label')"
+                    :value="$totalcompanies"
+                    icon="ti ti-building"
+                    color="success"
+                />
 
-        <x-core::stat-widget.item
-            :label="trans('plugins/job-board::dashboard.applicants_label')"
-            :value="$totalApplicants"
-            icon="ti ti-users-group"
-            color="danger"
-        />
-    </x-core::stat-widget>
+                <x-core::stat-widget.item
+                    :label="trans('plugins/job-board::dashboard.applicants_label')"
+                    :value="$totalApplicants"
+                    icon="ti ti-users-group"
+                    color="danger"
+                />
+            </x-core::stat-widget>
+        </div>
+    </div>
 
     <div class="row row-cards mb-3">
         <div class="col-lg-6">

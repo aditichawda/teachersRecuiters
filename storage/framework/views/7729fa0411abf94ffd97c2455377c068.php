@@ -212,9 +212,47 @@
     font-size: 16px;
 }
 
-/* Main Content Area */
+/* Main Content Area – ensure right column always visible */
+.js-settings-main-col {
+    display: block !important;
+    min-width: 280px;
+}
 .js-main-content {
     padding: 0 0 40px 0px;
+    width: 100%;
+    display: block !important;
+}
+/* Wallet page: ensure theme CSS does not hide or clip content */
+.js-main-content-wallet {
+    overflow: visible !important;
+    min-height: 0 !important;
+}
+.js-main-content-wallet .wallet-js-page,
+.js-main-content-wallet .wallet-js-page * {
+    visibility: visible !important;
+}
+.js-main-content-wallet .wallet-js-page .row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+}
+.js-main-content-wallet .wallet-js-page .card {
+    display: block !important;
+}
+.js-main-content-wallet .wallet-js-page [class*="col-"] {
+    display: block !important;
+}
+@media (min-width: 768px) {
+    .js-main-content-wallet .wallet-js-page .col-md-4 {
+        display: block !important;
+        width: 33.333333% !important;
+    }
+}
+@media (min-width: 992px) {
+    .js-main-content-wallet .wallet-js-page .col-lg-5 { width: 41.666667% !important; flex: 0 0 41.666667% !important; }
+    .js-main-content-wallet .wallet-js-page .col-lg-6 { width: 50% !important; }
+    .js-main-content-wallet .wallet-js-page .col-lg-7 { width: 58.333333% !important; flex: 1 1 58.333333% !important; min-width: 280px !important; }
+    .js-main-content-wallet .wallet-js-page .col-xl-4 { width: 33.333333% !important; }
+    .js-main-content-wallet .wallet-js-page .col-xl-8 { width: 66.666667% !important; flex: 1 1 66.666667% !important; min-width: 280px !important; }
 }
 
 .js-page-header {
@@ -390,6 +428,8 @@
 }
 </style>
 
+<?php echo $__env->yieldPushContent('header'); ?>
+
 <div class="js-settings-page crop-avatar">
     <div class="container">
         <div class="row">
@@ -422,7 +462,7 @@
 
                                 </a>
                             <?php else: ?>
-                                <a href="<?php echo e(route('public.account.settings')); ?>" class="js-view-profile-btn js-view-profile-edit">
+                                <a href="<?php echo e(url(route('public.account.settings'))); ?>" target="_self" class="js-view-profile-btn js-view-profile-edit">
                                     <i class="fa fa-user-edit"></i> <?php echo e(__('Complete profile for public link')); ?>
 
                                 </a>
@@ -431,11 +471,19 @@
                     </div>
                     
                     <!-- Wallet -->
+                    <?php if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()): ?>
+                    <a href="<?php echo e(url(route('public.account.jobseeker.wallet'))); ?>" target="_self" class="js-wallet-badge text-decoration-none d-block" style="cursor: pointer; color: inherit;">
+                        <i class="fa fa-wallet"></i>
+                        <span><?php echo e(__('Available Coins')); ?>:</span>
+                        <span class="js-wallet-points"><?php echo e(format_credits_short($account->credits ?? 0)); ?></span>
+                    </a>
+                    <?php else: ?>
                     <div class="js-wallet-badge" onclick="document.getElementById('profileModal').style.display='flex'">
                         <i class="fa fa-wallet"></i>
                         <span>Reward Points:</span>
                         <span class="js-wallet-points"><?php echo e($walletPoints); ?></span>
                     </div>
+                    <?php endif; ?>
 
                     <!-- Navigation -->
                     <?php
@@ -443,13 +491,13 @@
                     ?>
                     <ul class="js-sidebar-nav">
                         <li><a href="<?php echo e(route('public.account.jobseeker.dashboard')); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $currentUrl == route('public.account.jobseeker.dashboard')]); ?>"><i class="fa fa-home"></i> Dashboard</a></li>
-                        <li><a href="<?php echo e(route('public.account.settings')); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $currentUrl == route('public.account.settings')]); ?>"><i class="fa fa-user"></i> My Profile</a></li>
+                        <li><a href="<?php echo e(url(route('public.account.settings'))); ?>" target="_self" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $currentUrl == route('public.account.settings')]); ?>"><i class="fa fa-user"></i> My Profile</a></li>
                         <li><a href="<?php echo e(route('public.account.jobs.saved')); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $currentUrl == route('public.account.jobs.saved')]); ?>"><i class="fa fa-bookmark"></i> Saved Jobs</a></li>
                         <li><a href="<?php echo e(route('public.account.jobs.applied-jobs')); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $currentUrl == route('public.account.jobs.applied-jobs')]); ?>"><i class="fa fa-file-alt"></i> Applied Jobs</a></li>
                         <li><a href="<?php echo e(route('public.account.experiences.index')); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => str_contains($currentUrl, 'experience')]); ?>"><i class="fa fa-briefcase"></i> Experience</a></li>
                         <li><a href="<?php echo e(route('public.account.educations.index')); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => str_contains($currentUrl, 'education')]); ?>"><i class="fa fa-graduation-cap"></i> Education</a></li>
                         <li><a href="<?php echo e(route('public.account.interests-achievements')); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => str_contains($currentUrl, 'interests-achievements')]); ?>"><i class="fa fa-star"></i> Interests & Achievements</a></li>
-                        <li><a href="#" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => false]); ?>"><i class="fa fa-wallet"></i> Wallet <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;"><?php echo e($walletPoints); ?></span></a></li>
+                        <li><?php if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()): ?><a href="<?php echo e(url(route('public.account.jobseeker.wallet'))); ?>" target="_self" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $currentUrl == url(route('public.account.jobseeker.wallet'))]); ?>"><i class="fa fa-wallet"></i> Wallet <span style="background:#0073d1;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;"><?php echo e(format_credits_short($account->credits ?? 0)); ?></span></a><?php else: ?><a href="#" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => false]); ?>"><i class="fa fa-wallet"></i> Wallet <span style="background:#0073d1;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;"><?php echo e($walletPoints); ?></span></a><?php endif; ?></li>
                         <li><a href="<?php echo e(route('public.account.resume-builder')); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => str_contains($currentUrl, 'resume-builder')]); ?>"><i class="fa fa-file-pdf"></i> Resume Builder</a></li>
                         <li><a href="<?php echo e(route('public.account.security')); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $currentUrl == route('public.account.security')]); ?>"><i class="fa fa-lock"></i> Security</a></li>
                     </ul>
@@ -457,8 +505,8 @@
             </div>
             
             <!-- Main Content -->
-            <div class="col-lg-9 col-md-8">
-                <div class="js-main-content">
+            <div class="col-lg-9 col-md-8 js-settings-main-col">
+                <div class="js-main-content <?php echo e(!empty($is_wallet_page) ? 'js-main-content-wallet' : ''); ?>">
                     <?php echo $__env->yieldContent('content'); ?>
                 </div>
             </div>
@@ -547,7 +595,7 @@
         </div>
 
         <?php if($completion < 100): ?>
-            <a href="<?php echo e(route('public.account.settings')); ?>" class="pm-complete-btn">
+            <a href="<?php echo e(url(route('public.account.settings'))); ?>" target="_self" class="pm-complete-btn">
                 <i class="fa fa-user-edit"></i> Complete Your Profile
             </a>
         <?php else: ?>

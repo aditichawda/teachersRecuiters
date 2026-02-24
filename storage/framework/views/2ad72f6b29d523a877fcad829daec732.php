@@ -44,6 +44,11 @@
 .adm-enquiry-card:hover .adm-cta { background: #0073d1; color: #fff; }
 .adm-enquiry-card .adm-cta i { transition: transform 0.2s; font-size: 11px; }
 .adm-enquiry-card:hover .adm-cta i { transform: translateX(2px); }
+
+/* Filter bar */
+.adm-filter-bar .btn { border-radius: 8px; font-weight: 500; }
+.adm-filter-bar .btn-primary { background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%); border: none; }
+.adm-filter-bar .btn-outline-secondary:hover { border-color: #0073d1; color: #0073d1; }
 </style>
 
 <?php if(session('success_msg')): ?>
@@ -93,9 +98,31 @@
 
 
 <div class="adm-edit-card" id="admission-enquiries-section">
-    <h4><i class="fa fa-inbox me-2" style="color: #0073d1;"></i> <?php echo e(__('Admission Enquiries')); ?></h4>
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+        <div>
+            <h4 class="mb-1"><i class="fa fa-inbox me-2" style="color: #0073d1;"></i> <?php echo e(__('Admission Enquiries')); ?></h4>
+            <?php if(isset($enquiries) && $enquiries->isNotEmpty()): ?>
+            <p class="text-muted small mb-0" style="font-size: 0.9rem;"><?php echo e(__('Enquiries submitted from the admission form. Click a card to view full details.')); ?></p>
+            <?php endif; ?>
+        </div>
+        <?php if(isset($enquiries) && $enquiries->isNotEmpty()): ?>
+        <div class="adm-filter-wrap">
+            <form method="get" action="<?php echo e(request()->url()); ?>" id="adm-filter-form" class="d-flex flex-wrap align-items-center gap-2">
+                <input type="hidden" name="sort" id="adm-sort-hidden" value="<?php echo e(request('sort', 'newest')); ?>">
+                <label class="mb-0 small text-muted"><?php echo e(__('From date')); ?></label>
+                <input type="date" name="from_date" class="adm-date-input" value="<?php echo e(request('from_date')); ?>" aria-label="<?php echo e(__('From date')); ?>">
+                <label class="mb-0 small text-muted"><?php echo e(__('To date')); ?></label>
+                <input type="date" name="to_date" class="adm-date-input" value="<?php echo e(request('to_date')); ?>" aria-label="<?php echo e(__('To date')); ?>">
+                <select id="adm-sort-filter" name="sort" aria-label="<?php echo e(__('Sort by date')); ?>">
+                    <option value="newest" <?php echo e((request('sort', 'newest') === 'newest') ? 'selected' : ''); ?>><?php echo e(__('Newest first')); ?></option>
+                    <option value="oldest" <?php echo e(request('sort') === 'oldest' ? 'selected' : ''); ?>><?php echo e(__('Oldest first')); ?></option>
+                </select>
+                <button type="submit" class="btn-apply"><?php echo e(__('Apply')); ?></button>
+            </form>
+        </div>
+        <?php endif; ?>
+    </div>
 <?php if(isset($enquiries) && $enquiries->isNotEmpty()): ?>
-    <p class="text-muted small mb-4" style="font-size: 0.9rem;"><?php echo e(__('Enquiries submitted from the admission form. Click a card to view full details.')); ?></p>
     <div class="row g-2">
         <?php $__currentLoopData = $enquiries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $eq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <div class="col-12">
@@ -110,6 +137,9 @@
                                     <?php if($eq->company): ?><?php echo e($eq->company->name); ?> · <?php endif; ?><?php echo e($eq->admission_for_standard); ?>
 
                                 </div>
+                                <?php if($eq->address): ?>
+                                <div class="adm-address"><?php echo e($eq->address); ?></div>
+                                <?php endif; ?>
                                 <div class="adm-info-wrap mt-1">
                                     <span class="adm-info-item"><i class="fa fa-phone"></i> <?php echo e($eq->contact_number); ?></span>
                                     <?php if($eq->email): ?>
@@ -143,6 +173,12 @@
     var maxWords=parseInt(ta&&ta.dataset.maxWords||250,10);
     function update(){ if(!ta||!disp)return; var n=countWords(ta.value); disp.textContent=n+' / '+maxWords+' <?php echo e(__('words')); ?>'; disp.className='adm-words'+(n>maxWords?' text-danger':''); }
     if(ta&&disp){ update(); ta.addEventListener('input',update); ta.addEventListener('paste',function(){ setTimeout(update,10); }); }
+
+    var filterForm = document.getElementById('adm-filter-form');
+    if (filterForm) {
+        var sortFilter = document.getElementById('adm-sort-filter');
+        if (sortFilter) sortFilter.addEventListener('change', function() { filterForm.submit(); });
+    }
 })();
 </script>
 <?php $__env->stopPush(); ?>

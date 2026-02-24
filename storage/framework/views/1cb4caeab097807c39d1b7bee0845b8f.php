@@ -2,7 +2,7 @@
     /** @var Botble\Table\Abstracts\TableAbstract $table */
 ?>
 
-<?php if (! $__env->hasRenderedOnce('8317eb89-af76-4b9c-a1f5-2b2403a2367a')): $__env->markAsRenderedOnce('8317eb89-af76-4b9c-a1f5-2b2403a2367a'); ?>
+<?php if (! $__env->hasRenderedOnce('72de3a5c-c43f-4053-8764-cb980436282d')): $__env->markAsRenderedOnce('72de3a5c-c43f-4053-8764-cb980436282d'); ?>
     <?php if($randomHash = setting('datatables_random_hash')): ?>
         <script>
             window.DATATABLES_RANDOM_HASH = "<?php echo e($randomHash); ?>";

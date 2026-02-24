@@ -1,15 +1,105 @@
+<?php $__env->startPush('header'); ?>
+<?php if(JobBoardHelper::isEnabledCreditsSystem()): ?>
+<style>
+.dashboard-credits-card .card-body {
+    background: linear-gradient(135deg, var(--primary-color, var(--bs-primary, #0d6efd)) 0%, color-mix(in srgb, var(--primary-color, var(--bs-primary, #0d6efd)) 75%, black) 100%) !important;
+    border-radius: var(--bs-border-radius, 0.375rem);
+}
+</style>
+<?php endif; ?>
+<?php $__env->stopPush(); ?>
+
 <?php $__env->startSection('content'); ?>
-    <?php if (isset($component)) { $__componentOriginalcb57bd80785ff3a7de842b89d59c972b = $component; } ?>
+    <?php
+        $account = auth('account')->user();
+        $credits = $account->credits ?? 0;
+    ?>
+    <div class="row mb-4 align-items-stretch">
+        <?php if(JobBoardHelper::isEnabledCreditsSystem()): ?>
+        <div class="col-lg-4 col-xl-4 mb-3 mb-lg-0">
+            <a href="<?php echo e(route('public.account.wallet')); ?>" class="text-decoration-none text-reset d-block h-100">
+                <?php if (isset($component)) { $__componentOriginalc107e2f90dff5eb05519f33918d2c807 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalc107e2f90dff5eb05519f33918d2c807 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::card.index','data' => ['class' => 'h-100 border-0 overflow-hidden dashboard-credits-card']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::card'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'h-100 border-0 overflow-hidden dashboard-credits-card']); ?>
+                    <?php if (isset($component)) { $__componentOriginal4fdb92edf089f19cd17d37829580c9a6 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal4fdb92edf089f19cd17d37829580c9a6 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::card.body.index','data' => ['class' => 'text-white d-flex align-items-center']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::card.body'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'text-white d-flex align-items-center']); ?>
+                        <div class="flex-grow-1">
+                            <h6 class="text-white-50 text-uppercase small mb-1"><?php echo e(trans('plugins/job-board::dashboard.wallet_available_coins')); ?></h6>
+                            <h2 class="display-5 fw-bold mb-0"><?php echo e(format_credits_short($credits)); ?></h2>
+                            <span class="small text-white-50"><?php echo e(trans('plugins/job-board::dashboard.wallet_buy_credits')); ?> →</span>
+                        </div>
+                        <div class="opacity-75 ms-3">
+                            <?php if (isset($component)) { $__componentOriginal73995948b3bd877b76251b40caf28170 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal73995948b3bd877b76251b40caf28170 = $attributes; } ?>
+<?php $component = Botble\Icon\View\Components\Icon::resolve(['name' => 'ti ti-wallet'] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::icon'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Botble\Icon\View\Components\Icon::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'display-4']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $attributes = $__attributesOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__attributesOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $component = $__componentOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__componentOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+                        </div>
+                     <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal4fdb92edf089f19cd17d37829580c9a6)): ?>
+<?php $attributes = $__attributesOriginal4fdb92edf089f19cd17d37829580c9a6; ?>
+<?php unset($__attributesOriginal4fdb92edf089f19cd17d37829580c9a6); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal4fdb92edf089f19cd17d37829580c9a6)): ?>
+<?php $component = $__componentOriginal4fdb92edf089f19cd17d37829580c9a6; ?>
+<?php unset($__componentOriginal4fdb92edf089f19cd17d37829580c9a6); ?>
+<?php endif; ?>
+                 <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalc107e2f90dff5eb05519f33918d2c807)): ?>
+<?php $attributes = $__attributesOriginalc107e2f90dff5eb05519f33918d2c807; ?>
+<?php unset($__attributesOriginalc107e2f90dff5eb05519f33918d2c807); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalc107e2f90dff5eb05519f33918d2c807)): ?>
+<?php $component = $__componentOriginalc107e2f90dff5eb05519f33918d2c807; ?>
+<?php unset($__componentOriginalc107e2f90dff5eb05519f33918d2c807); ?>
+<?php endif; ?>
+            </a>
+        </div>
+        <?php endif; ?>
+        <div class="<?php echo e(JobBoardHelper::isEnabledCreditsSystem() ? 'col-lg-8 col-xl-8' : 'col-12'); ?>">
+            <?php if (isset($component)) { $__componentOriginalcb57bd80785ff3a7de842b89d59c972b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb57bd80785ff3a7de842b89d59c972b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::stat-widget.index','data' => ['class' => 'mb-3 row-cols-1 row-cols-sm-2 row-cols-md-3']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::stat-widget.index','data' => ['class' => 'mb-0 row-cols-1 row-cols-sm-2 row-cols-md-3 h-100']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('core::stat-widget'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'mb-3 row-cols-1 row-cols-sm-2 row-cols-md-3']); ?>
-        <?php if (isset($component)) { $__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468 = $component; } ?>
+<?php $component->withAttributes(['class' => 'mb-0 row-cols-1 row-cols-sm-2 row-cols-md-3 h-100']); ?>
+                <?php if (isset($component)) { $__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal26ee7a516e9427ed7ae2b3fb7e70c468 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::stat-widget.item','data' => ['label' => trans('plugins/job-board::dashboard.jobs_label'),'value' => $totalJobs,'icon' => 'ti ti-briefcase','color' => 'primary']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('core::stat-widget.item'); ?>
@@ -30,7 +120,7 @@
 <?php unset($__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468); ?>
 <?php endif; ?>
 
-        <?php if (isset($component)) { $__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468 = $component; } ?>
+                <?php if (isset($component)) { $__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal26ee7a516e9427ed7ae2b3fb7e70c468 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::stat-widget.item','data' => ['label' => trans('plugins/job-board::dashboard.companies_label'),'value' => $totalcompanies,'icon' => 'ti ti-building','color' => 'success']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('core::stat-widget.item'); ?>
@@ -51,7 +141,7 @@
 <?php unset($__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468); ?>
 <?php endif; ?>
 
-        <?php if (isset($component)) { $__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468 = $component; } ?>
+                <?php if (isset($component)) { $__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal26ee7a516e9427ed7ae2b3fb7e70c468 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::stat-widget.item','data' => ['label' => trans('plugins/job-board::dashboard.applicants_label'),'value' => $totalApplicants,'icon' => 'ti ti-users-group','color' => 'danger']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('core::stat-widget.item'); ?>
@@ -71,7 +161,7 @@
 <?php $component = $__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468; ?>
 <?php unset($__componentOriginal26ee7a516e9427ed7ae2b3fb7e70c468); ?>
 <?php endif; ?>
-     <?php echo $__env->renderComponent(); ?>
+             <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalcb57bd80785ff3a7de842b89d59c972b)): ?>
 <?php $attributes = $__attributesOriginalcb57bd80785ff3a7de842b89d59c972b; ?>
@@ -81,6 +171,8 @@
 <?php $component = $__componentOriginalcb57bd80785ff3a7de842b89d59c972b; ?>
 <?php unset($__componentOriginalcb57bd80785ff3a7de842b89d59c972b); ?>
 <?php endif; ?>
+        </div>
+    </div>
 
     <div class="row row-cards mb-3">
         <div class="col-lg-6">

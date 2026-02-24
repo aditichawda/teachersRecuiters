@@ -16,6 +16,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         @yield('header', view(JobBoardHelper::viewPath('dashboard.layouts.header')))
+        @stack('header')
 
         <script type="text/javascript">
             'use strict';

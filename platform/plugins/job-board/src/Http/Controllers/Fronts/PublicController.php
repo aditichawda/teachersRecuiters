@@ -18,6 +18,7 @@ use Botble\JobBoard\Models\Analytics;
 use Botble\JobBoard\Models\Category;
 use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\Currency;
+use Botble\JobBoard\Models\ExternalApplyClickLog;
 use Botble\JobBoard\Models\Job as JobModel;
 use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\JobExperience;
@@ -619,6 +620,17 @@ class PublicController extends BaseController
                 }
 
                 JobAppliedEvent::dispatch($jobApplication, $job);
+            } else {
+                // Track external apply click: increment counter and log user info
+                $job::withoutEvents(fn () => $job::withoutTimestamps(fn () => $job->increment('external_apply_clicks')));
+                ExternalApplyClickLog::query()->create([
+                    'job_id' => $job->id,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'account_id' => $account?->getKey(),
+                    'referer' => $request->header('referer'),
+                    'clicked_at' => now(),
+                ]);
             }
 
             if (! $request->ajax()) {

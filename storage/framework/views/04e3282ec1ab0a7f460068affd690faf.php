@@ -16,6 +16,7 @@
         <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 
         <?php echo $__env->yieldContent('header', view(JobBoardHelper::viewPath('dashboard.layouts.header'))); ?>
+        <?php echo $__env->yieldPushContent('header'); ?>
 
         <script type="text/javascript">
             'use strict';

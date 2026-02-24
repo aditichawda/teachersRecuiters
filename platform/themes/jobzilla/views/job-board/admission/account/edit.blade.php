@@ -46,6 +46,11 @@
 .adm-enquiry-card:hover .adm-cta { background: #0073d1; color: #fff; }
 .adm-enquiry-card .adm-cta i { transition: transform 0.2s; font-size: 11px; }
 .adm-enquiry-card:hover .adm-cta i { transform: translateX(2px); }
+
+/* Filter bar */
+.adm-filter-bar .btn { border-radius: 8px; font-weight: 500; }
+.adm-filter-bar .btn-primary { background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%); border: none; }
+.adm-filter-bar .btn-outline-secondary:hover { border-color: #0073d1; color: #0073d1; }
 </style>
 
 @if(session('success_msg'))
@@ -94,9 +99,31 @@
 
 {{-- Enquiries List --}}
 <div class="adm-edit-card" id="admission-enquiries-section">
-    <h4><i class="fa fa-inbox me-2" style="color: #0073d1;"></i> {{ __('Admission Enquiries') }}</h4>
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+        <div>
+            <h4 class="mb-1"><i class="fa fa-inbox me-2" style="color: #0073d1;"></i> {{ __('Admission Enquiries') }}</h4>
+            @if(isset($enquiries) && $enquiries->isNotEmpty())
+            <p class="text-muted small mb-0" style="font-size: 0.9rem;">{{ __('Enquiries submitted from the admission form. Click a card to view full details.') }}</p>
+            @endif
+        </div>
+        @if(isset($enquiries) && $enquiries->isNotEmpty())
+        <div class="adm-filter-wrap">
+            <form method="get" action="{{ request()->url() }}" id="adm-filter-form" class="d-flex flex-wrap align-items-center gap-2">
+                <input type="hidden" name="sort" id="adm-sort-hidden" value="{{ request('sort', 'newest') }}">
+                <label class="mb-0 small text-muted">{{ __('From date') }}</label>
+                <input type="date" name="from_date" class="adm-date-input" value="{{ request('from_date') }}" aria-label="{{ __('From date') }}">
+                <label class="mb-0 small text-muted">{{ __('To date') }}</label>
+                <input type="date" name="to_date" class="adm-date-input" value="{{ request('to_date') }}" aria-label="{{ __('To date') }}">
+                <select id="adm-sort-filter" name="sort" aria-label="{{ __('Sort by date') }}">
+                    <option value="newest" {{ (request('sort', 'newest') === 'newest') ? 'selected' : '' }}>{{ __('Newest first') }}</option>
+                    <option value="oldest" {{ request('sort') === 'oldest' ? 'selected' : '' }}>{{ __('Oldest first') }}</option>
+                </select>
+                <button type="submit" class="btn-apply">{{ __('Apply') }}</button>
+            </form>
+        </div>
+        @endif
+    </div>
 @if(isset($enquiries) && $enquiries->isNotEmpty())
-    <p class="text-muted small mb-4" style="font-size: 0.9rem;">{{ __('Enquiries submitted from the admission form. Click a card to view full details.') }}</p>
     <div class="row g-2">
         @foreach($enquiries as $eq)
         <div class="col-12">
@@ -110,6 +137,9 @@
                                 <div class="adm-meta">
                                     @if($eq->company){{ $eq->company->name }} · @endif{{ $eq->admission_for_standard }}
                                 </div>
+                                @if($eq->address)
+                                <div class="adm-address">{{ $eq->address }}</div>
+                                @endif
                                 <div class="adm-info-wrap mt-1">
                                     <span class="adm-info-item"><i class="fa fa-phone"></i> {{ $eq->contact_number }}</span>
                                     @if($eq->email)
@@ -143,6 +173,12 @@
     var maxWords=parseInt(ta&&ta.dataset.maxWords||250,10);
     function update(){ if(!ta||!disp)return; var n=countWords(ta.value); disp.textContent=n+' / '+maxWords+' {{ __('words') }}'; disp.className='adm-words'+(n>maxWords?' text-danger':''); }
     if(ta&&disp){ update(); ta.addEventListener('input',update); ta.addEventListener('paste',function(){ setTimeout(update,10); }); }
+
+    var filterForm = document.getElementById('adm-filter-form');
+    if (filterForm) {
+        var sortFilter = document.getElementById('adm-sort-filter');
+        if (sortFilter) sortFilter.addEventListener('change', function() { filterForm.submit(); });
+    }
 })();
 </script>
 @endpush

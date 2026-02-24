@@ -265,27 +265,6 @@
     <p><?php echo e(__('Choose Classic or Modern template. Resume uses your profile details (name, email, experience, education, skills). Empty fields show sample text so the resume always looks complete.')); ?></p>
 </div>
 
-<?php
-    $missingFields = [];
-    if (!$account->first_name) $missingFields[] = 'Name';
-    if (!$account->email) $missingFields[] = 'Email';
-    if (!$account->phone) $missingFields[] = 'Phone';
-    if ($educations->isEmpty()) $missingFields[] = 'Education';
-    if ($experiences->isEmpty()) $missingFields[] = 'Experience';
-?>
-
-<?php if(count($missingFields) > 0): ?>
-<div class="rb-warning">
-    <i class="fa fa-exclamation-triangle"></i>
-    <span>
-        <?php echo e(__('Complete your profile for a better resume.')); ?>
-
-        <?php echo e(__('Missing:')); ?> <strong><?php echo e(implode(', ', $missingFields)); ?></strong>.
-        <a href="<?php echo e(route('public.account.settings')); ?>"><?php echo e(__('Update Profile')); ?></a>
-    </span>
-</div>
-<?php endif; ?>
-
 <div class="rb-templates-grid">
     <!-- Template 1: Classic (Recommended) -->
     <div class="rb-template-card selected" data-template="classic" onclick="selectTemplate(this)">

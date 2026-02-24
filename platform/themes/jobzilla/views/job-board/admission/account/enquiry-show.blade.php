@@ -33,7 +33,7 @@
         <div class="adm-detail-row"><span class="adm-detail-label">{{ __('Email') }}</span><span class="adm-detail-value">{{ $e->email ?: '–' }}</span></div>
         <div class="adm-detail-row"><span class="adm-detail-label">{{ __('Age') }}</span><span class="adm-detail-value">{{ $e->age ?? '–' }}</span></div>
         <div class="adm-detail-row"><span class="adm-detail-label">{{ __('Standard') }}</span><span class="adm-detail-value">{{ $e->admission_for_standard ?? '–' }}</span></div>
-        <div class="adm-detail-row"><span class="adm-detail-label">{{ __('Address') }}</span><span class="adm-detail-value">{{ $e->address ?: '–' }}</span></div>
+        <div class="adm-detail-row"><span class="adm-detail-label">{{ __('Address') }}</span><span class="adm-detail-value adm-address-value">{{ $e->address ?: '–' }}</span></div>
         @if($e->message)
         <div class="adm-detail-row"><span class="adm-detail-label">{{ __('Message') }}</span><div class="adm-detail-message flex-grow-1">{{ $e->message }}</div></div>
         @endif

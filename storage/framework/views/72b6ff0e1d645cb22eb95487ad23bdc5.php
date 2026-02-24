@@ -32,7 +32,7 @@
         <div class="adm-detail-row"><span class="adm-detail-label"><?php echo e(__('Email')); ?></span><span class="adm-detail-value"><?php echo e($e->email ?: '–'); ?></span></div>
         <div class="adm-detail-row"><span class="adm-detail-label"><?php echo e(__('Age')); ?></span><span class="adm-detail-value"><?php echo e($e->age ?? '–'); ?></span></div>
         <div class="adm-detail-row"><span class="adm-detail-label"><?php echo e(__('Standard')); ?></span><span class="adm-detail-value"><?php echo e($e->admission_for_standard ?? '–'); ?></span></div>
-        <div class="adm-detail-row"><span class="adm-detail-label"><?php echo e(__('Address')); ?></span><span class="adm-detail-value"><?php echo e($e->address ?: '–'); ?></span></div>
+        <div class="adm-detail-row"><span class="adm-detail-label"><?php echo e(__('Address')); ?></span><span class="adm-detail-value adm-address-value"><?php echo e($e->address ?: '–'); ?></span></div>
         <?php if($e->message): ?>
         <div class="adm-detail-row"><span class="adm-detail-label"><?php echo e(__('Message')); ?></span><div class="adm-detail-message flex-grow-1"><?php echo e($e->message); ?></div></div>
         <?php endif; ?>

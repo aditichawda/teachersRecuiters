@@ -556,7 +556,7 @@
 /* Layout Grid */
 .enl-row {
     display: flex;
-    gap: 20px;
+    gap: 15px;
 }
 .enl-sidebar-col {
     flex: 0 0 280px;

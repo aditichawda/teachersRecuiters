@@ -23,13 +23,12 @@
         // Silent fail
     }
     
-    // Get recent applications
+    // Get recent applications (all applications for this account; load account for address/state)
     $recentApplications = [];
     try {
         $recentApplications = \Botble\JobBoard\Models\JobApplication::query()
             ->where('account_id', $account->id)
-            ->where('is_saved', false)
-            ->with('job')
+            ->with(['job', 'account'])
             ->latest()
             ->limit(5)
             ->get();
@@ -354,6 +353,14 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     margin-bottom: 30px;
+}
+.js-stats-row-4 {
+    grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 768px) {
+    .js-stats-row-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
 .js-stat-card {
@@ -867,7 +874,7 @@
                     <div class="text-center">
                         <div class="js-profile-avatar-wrapper">
                             <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}" class="js-profile-avatar">
-                            <a href="{{ route('public.account.settings') }}" class="js-avatar-camera-btn" title="{{ __('Change Photo') }}">
+                            <a href="{{ url(route('public.account.settings')) }}" class="js-avatar-camera-btn" data-nav-link title="{{ __('Change Photo') }}">
                                 <i class="fa fa-camera"></i>
                             </a>
                         </div>
@@ -888,31 +895,39 @@
                                 <i class="fa fa-external-link-alt"></i> {{ __('View Profile') }}
                             </a>
                         @else
-                            <a href="{{ route('public.account.settings') }}" class="js-view-profile-btn js-view-profile-edit">
+                            <a href="{{ url(route('public.account.settings')) }}" class="js-view-profile-btn js-view-profile-edit" data-nav-link>
                                 <i class="fa fa-user-edit"></i> {{ __('Complete profile for public link') }}
                             </a>
                         @endif
                     </div>
                     
                     <!-- Wallet -->
+                    @if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
+                    <a href="{{ url(route('public.account.jobseeker.wallet')) }}" class="js-wallet-badge text-decoration-none d-block" data-nav-link style="cursor: pointer; color: inherit;">
+                        <i class="fa fa-wallet"></i>
+                        <span>{{ __('Available Coins') }}:</span>
+                        <span class="js-wallet-points">{{ format_credits_short($account->credits ?? 0) }}</span>
+                    </a>
+                    @else
                     <div class="js-wallet-badge" onclick="document.getElementById('profileModal').style.display='flex'" style="cursor: pointer;">
                         <i class="fa fa-wallet"></i>
                         <span>Reward Points:</span>
                         <span class="js-wallet-points">{{ $walletPoints }}</span>
                     </div>
+                    @endif
 
-                    <!-- Navigation -->
-                    <ul class="js-sidebar-nav">
-                        <li><a href="{{ route('public.account.jobseeker.dashboard') }}" class="active"><i class="fa fa-home"></i> Dashboard</a></li>
-                        <li><a href="{{ route('public.account.settings') }}"><i class="fa fa-user"></i> My Profile</a></li>
-                        <li><a href="{{ route('public.account.jobs.saved') }}"><i class="fa fa-bookmark"></i> Saved Jobs</a></li>
-                        <li><a href="{{ route('public.account.jobs.applied-jobs') }}"><i class="fa fa-file-alt"></i> Applied Jobs</a></li>
-                        <li><a href="{{ route('public.account.experiences.index') }}"><i class="fa fa-briefcase"></i> Experience</a></li>
-                        <li><a href="{{ route('public.account.educations.index') }}"><i class="fa fa-graduation-cap"></i> Education</a></li>
-                        <li><a href="{{ route('public.account.interests-achievements') }}"><i class="fa fa-star"></i> Interests & Achievements</a></li>
-                        <li><a href="#"><i class="fa fa-wallet"></i> Wallet <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $walletPoints }}</span></a></li>
-                        <li><a href="{{ route('public.account.resume-builder') }}"><i class="fa fa-file-pdf"></i> Resume Builder</a></li>
-                        <li><a href="{{ route('public.account.security') }}"><i class="fa fa-lock"></i> Security</a></li>
+                    <!-- Navigation: use onclick to force navigation if theme JS intercepts clicks -->
+                    <ul class="js-sidebar-nav js-account-nav-links">
+                        <li><a href="{{ url(route('public.account.jobseeker.dashboard')) }}" class="active" data-nav-link><i class="fa fa-home"></i> Dashboard</a></li>
+                        <li><a href="{{ url(route('public.account.settings')) }}" data-nav-link><i class="fa fa-user"></i> My Profile</a></li>
+                        <li><a href="{{ url(route('public.account.jobs.saved')) }}" data-nav-link><i class="fa fa-bookmark"></i> Saved Jobs</a></li>
+                        <li><a href="{{ url(route('public.account.jobs.applied-jobs')) }}" data-nav-link><i class="fa fa-file-alt"></i> Applied Jobs</a></li>
+                        <li><a href="{{ url(route('public.account.experiences.index')) }}" data-nav-link><i class="fa fa-briefcase"></i> Experience</a></li>
+                        <li><a href="{{ url(route('public.account.educations.index')) }}" data-nav-link><i class="fa fa-graduation-cap"></i> Education</a></li>
+                        <li><a href="{{ url(route('public.account.interests-achievements')) }}" data-nav-link><i class="fa fa-star"></i> Interests & Achievements</a></li>
+                        <li><a href="@if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()){{ url(route('public.account.jobseeker.wallet')) }}@else#@endif" data-nav-link><i class="fa fa-wallet"></i> {{ __('Wallet') }} <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">@if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()){{ format_credits_short($account->credits ?? 0) }}@else{{ $walletPoints }}@endif</span></a></li>
+                        <li><a href="{{ url(route('public.account.resume-builder')) }}" data-nav-link><i class="fa fa-file-pdf"></i> Resume Builder</a></li>
+                        <li><a href="{{ url(route('public.account.security')) }}" data-nav-link><i class="fa fa-lock"></i> Security</a></li>
                     </ul>
                 </div>
             </div>
@@ -932,7 +947,14 @@
                     </div>
                     
                     <!-- Stats Cards -->
-                    <div class="js-stats-row">
+                    <div class="js-stats-row {{ \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem() ? 'js-stats-row-4' : '' }}">
+                        @if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
+                        <a href="{{ url(route('public.account.jobseeker.wallet')) }}" class="js-stat-card blue text-decoration-none" data-nav-link style="color: inherit;">
+                            <h6>{{ __('Available Coins') }}</h6>
+                            <h2>{{ format_credits_short($account->credits ?? 0) }}</h2>
+                            <i class="fa fa-wallet js-stat-icon"></i>
+                        </a>
+                        @endif
                         <div class="js-stat-card blue">
                             <h6>Saved Jobs</h6>
                             <h2>{{ $savedJobsCount }}</h2>
@@ -1031,21 +1053,35 @@
                     
                     <!-- Row 2: My Applications + Notifications -->
                     <div class="js-content-row js-section-gap">
-                        <!-- My Applications -->
+                        <!-- My Applications (blue theme) -->
                         <div class="js-content-card">
-                            <div class="js-content-card-header">
-                                <h5><i class="fa fa-file-alt me-2" style="color: #28a745;"></i>My Applications</h5>
+                            <div class="js-content-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <h5 class="mb-0"><i class="fa fa-file-alt me-2" style="color: #0d6efd;"></i>My Applications</h5>
+                                @if(count($recentApplications) > 0)
+                                    <a href="{{ route('public.account.jobs.applied-jobs') }}" class="btn btn-sm btn-outline-primary">View all</a>
+                                @endif
                             </div>
                             <div class="js-content-card-body">
                                 @if(count($recentApplications) > 0)
                                     @foreach($recentApplications as $application)
-                                        <div class="js-application-item">
-                                            <div class="js-application-icon" style="background: #e8f5e9; color: #28a745;">
-                                                <i class="fa fa-check-circle"></i>
+                                        <div class="js-application-item border-bottom mb-3 pb-3" style="border-color: #e9ecef !important;">
+                                            <div class="d-flex align-items-center js-application-toggle cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#app-detail-{{ $application->id }}" aria-expanded="false">
+                                                <div class="js-application-icon flex-shrink-0" style="background: #e7f1ff; color: #0d6efd;">
+                                                    <i class="fa fa-check-circle"></i>
+                                                </div>
+                                                <div class="js-application-info flex-grow-1">
+                                                    <h6 class="mb-0">{{ $application->job->name ?? 'Job' }}</h6>
+                                                    <p class="mb-0 small text-muted">Applied {{ $application->created_at->diffForHumans() }} · <span class="text-primary small">Click for details</span></p>
+                                                </div>
+                                                <i class="fa fa-chevron-down text-primary ms-2 js-application-chevron"></i>
                                             </div>
-                                            <div class="js-application-info">
-                                                <h6>{{ $application->job->name ?? 'Job' }}</h6>
-                                                <p>Applied {{ $application->created_at->diffForHumans() }}</p>
+                                            <div class="collapse mt-2" id="app-detail-{{ $application->id }}">
+                                                <div class="small bg-light rounded p-3" style="border-left: 3px solid #0d6efd;">
+                                                    <p class="mb-1"><strong>Name:</strong> {{ $application->full_name ?: trim($application->first_name . ' ' . ($application->last_name ?? '')) ?: '—' }}</p>
+                                                    <p class="mb-1"><strong>Address:</strong> {{ optional($application->account)->address ?? '—' }}</p>
+                                                    <p class="mb-1"><strong>Mobile:</strong> {{ $application->phone ?: optional($application->account)->phone ?? '—' }}</p>
+                                                    <p class="mb-0"><strong>State:</strong> {{ optional($application->account)->state_name ?? optional($application->account)->city_name ?? '—' }}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
@@ -1209,7 +1245,7 @@
 
         <!-- Complete Profile Button -->
         @if($completion < 100)
-            <a href="{{ route('public.account.settings') }}" class="pm-complete-btn">
+            <a href="{{ url(route('public.account.settings')) }}" class="pm-complete-btn" data-nav-link>
                 <i class="fa fa-user-edit"></i> Complete Your Profile
             </a>
         @else
@@ -1443,4 +1479,27 @@ document.addEventListener('keydown', function(e) {
         document.getElementById('profileModal').style.display = 'none';
     }
 });
+
+// Force navigation for account links (prevents theme JS from intercepting and redirecting to home)
+function attachAccountNavHandlers() {
+    document.querySelectorAll('.js-dashboard a[data-nav-link]').forEach(function(link) {
+        if (link._navHandled) return;
+        link._navHandled = true;
+        link.addEventListener('click', function(e) {
+            var href = this.getAttribute('href');
+            if (href && href !== '#' && href !== '') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                window.location.href = href;
+                return false;
+            }
+        }, true);
+    });
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachAccountNavHandlers);
+} else {
+    attachAccountNavHandlers();
+}
 </script>

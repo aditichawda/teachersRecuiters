@@ -340,6 +340,12 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     Route::delete('{id}', 'JobAlertController@destroy')->name('destroy');
                     Route::post('{id}/toggle', 'JobAlertController@toggle')->name('toggle');
                 });
+
+                // Job seeker wallet only (separate from employer wallet)
+                Route::get('jobseeker/wallet', [
+                    'as' => 'jobseeker.wallet',
+                    'uses' => 'WalletController@index',
+                ])->middleware(['account:' . AccountTypeEnum::JOB_SEEKER, 'enable-credits', LocaleMiddleware::class]);
             });
         });
     });
@@ -395,12 +401,16 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             Route::get('applicants/download-cv/{application}', [JobApplicationController::class, 'downloadCv'])
                 ->name('applicants.download-cv')->wherePrimaryKey('application');
 
+            Route::get('applicants/export-resumes', [JobApplicationController::class, 'exportResumes'])
+                ->name('applicants.export-resumes');
+
             Route::group([
                 'prefix' => 'jobs',
                 'as' => 'jobs.',
             ], function (): void {
                 // Explicit routes first to avoid 404 - edit/update use {job} with whereNumber
                 Route::get('create', ['as' => 'create', 'uses' => 'AccountJobController@create']);
+                Route::post('generate-description', ['as' => 'generate-description', 'uses' => 'AccountJobController@generateDescription']);
                 Route::get('tags/all', ['as' => 'tags.all', 'uses' => 'AccountJobController@getAllTags']);
                 Route::post('renew/{id}', ['as' => 'renew', 'uses' => 'AccountJobController@renew'])->whereNumber('id');
                 Route::get('{id}/analytics', ['as' => 'analytics', 'uses' => 'AccountJobController@analytics'])->whereNumber('id');
@@ -434,11 +444,6 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'as' => 'package.subscribe.callback',
                         'uses' => 'getPackageSubscribeCallback',
                     ])->wherePrimaryKey();
-
-                    Route::put('/', [
-                        'as' => 'package.subscribe.put',
-                        'uses' => 'subscribePackage',
-                    ]);
                 });
             });
 
@@ -461,20 +466,6 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             });
 
             Route::group([
-                'prefix' => 'wallet',
-                'middleware' => [
-                    'account:' . AccountTypeEnum::EMPLOYER,
-                    'enable-credits',
-                    LocaleMiddleware::class,
-                ],
-            ], function (): void {
-                Route::get('/', [
-                    'as' => 'wallet',
-                    'uses' => 'WalletController@index',
-                ]);
-            });
-
-            Route::group([
                 'prefix' => 'invoices',
                 'as' => 'invoices.',
             ], function (): void {
@@ -486,6 +477,27 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     ->name('generate_invoice')
                     ->wherePrimaryKey();
             });
+
+            // Employer wallet only (job seeker has separate route: jobseeker.wallet)
+            Route::group([
+                'middleware' => ['enable-credits', LocaleMiddleware::class],
+            ], function (): void {
+                Route::get('wallet', [
+                    'as' => 'wallet',
+                    'uses' => 'WalletController@index',
+                ]);
+            });
+        });
+
+        // Package subscribe (PUT): shared so both employer & job seeker wallet can submit
+        Route::group([
+            'prefix' => 'account',
+            'middleware' => ['account', 'enable-credits', LocaleMiddleware::class],
+        ], function (): void {
+            Route::put('packages', [
+                'as' => 'package.subscribe.put',
+                'uses' => 'DashboardController@subscribePackage',
+            ]);
         });
 
         Route::group(['prefix' => 'ajax/accounts'], function (): void {

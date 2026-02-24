@@ -47,6 +47,8 @@
     .jp-textarea { min-height: 120px; resize: vertical; }
     .jp-error { color: #dc3545; font-size: 12px; margin-top: 4px; display: none; }
     .jp-error.show { display: block; }
+    .jp-ai-error { display: none; margin-top: 8px; padding: 10px 12px; font-size: 13px; color: #856404; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; }
+    .jp-ai-error.show { display: block; }
     .jp-group { margin-bottom: 20px; }
     .jp-row { display: flex; gap: 20px; flex-wrap: wrap; }
     .jp-col-6 { flex: 0 0 calc(50% - 10px); max-width: calc(50% - 10px); }
@@ -285,14 +287,21 @@
 
         
         <div class="jp-group">
+            <label class="jp-label">Short description <span class="hint">(Optional – used by AI to generate detailed description)</span></label>
+            <input type="text" id="job_short_description" class="jp-input" placeholder="e.g. Teaching English to primary classes, curriculum delivery" value="<?php echo e(old('description', optional($job)->description ?? '')); ?>">
+        </div>
+
+        
+        <div class="jp-group">
             <label class="jp-label">
                 Detailed Job Description <span class="required">*</span>
-                <button type="button" class="jp-ai-btn ms-2" id="aiGenerateBtn" title="Generate description based on job title">
+                <button type="button" class="jp-ai-btn ms-2" id="aiGenerateBtn" title="Generate from title, short description and institution">
                     <i class="fa fa-magic"></i> Generate with AI
                 </button>
             </label>
             <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required><?php echo e(old('content', optional($job)->content ?? '')); ?></textarea>
             <div class="jp-error" id="err-description">Job description is required.</div>
+            <div class="jp-ai-error" id="ai-generate-error" role="alert" aria-live="polite"></div>
         </div>
 
         
@@ -1319,31 +1328,80 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ===== AI GENERATE DESCRIPTION =====
+    // ===== AI GENERATE DESCRIPTION (OpenAI API) =====
+    var aiErrorEl = document.getElementById('ai-generate-error');
+    function showAiError(text) {
+        if (aiErrorEl) {
+            aiErrorEl.textContent = text || 'AI could not generate. Please write the description manually.';
+            aiErrorEl.classList.add('show');
+        }
+    }
+    function hideAiError() {
+        if (aiErrorEl) {
+            aiErrorEl.textContent = '';
+            aiErrorEl.classList.remove('show');
+        }
+    }
+
     document.getElementById('aiGenerateBtn').addEventListener('click', function() {
-        var title = document.getElementById('job_title').value;
-        if (!title) { 
-            if (typeof window.showDialogAlert === 'function') {
-                window.showDialogAlert('error', 'Please enter a job title first.', 'Validation Error');
-            } else {
-                alert('Please enter a job title first.');
-            }
-            return; 
+        var title = (document.getElementById('job_title').value || '').trim();
+        var shortDesc = (document.getElementById('job_short_description') && document.getElementById('job_short_description').value) ? document.getElementById('job_short_description').value.trim() : '';
+        var companyId = document.getElementById('company_id') ? document.getElementById('company_id').value : '';
+        var instTitle = '';
+        if (companyId && typeof companyData !== 'undefined' && companyData[companyId]) {
+            instTitle = companyData[companyId].institution_type || (typeof companies !== 'undefined' ? companies[companyId] : '') || '';
+        }
+        if (!instTitle && typeof companies !== 'undefined' && companies[companyId]) {
+            instTitle = companies[companyId];
+        }
+        if (!title) {
+            showAiError('Please enter a job title first.');
+            return;
         }
 
-        this.disabled = true;
-        this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
+        hideAiError();
+        var btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
 
-        var desc = generateJobDescription(title);
-        document.getElementById('job_description').value = desc;
+        var url = '<?php echo e(route("public.account.jobs.generate-description")); ?>';
+        var token = (document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content')) || '';
 
-        this.disabled = false;
-        this.innerHTML = '<i class="fa fa-magic"></i> Generate with AI';
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ title: title, short_description: shortDesc, institution_title: instTitle })
+        })
+        .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, status: res.status, data: data }; }); })
+        .then(function(result) {
+            if (result.ok && result.data.success && result.data.description) {
+                document.getElementById('job_description').value = result.data.description;
+                if (result.data.fallback) {
+                    var fallbackMsg = result.data.api_error
+                        ? (result.data.api_error + ' Draft generated below – you can edit it.')
+                        : 'Draft generated (AI limit reached). You can edit below.';
+                    showAiError(fallbackMsg);
+                } else {
+                    hideAiError();
+                }
+            } else {
+                var msg = (result.data && result.data.message) ? result.data.message : 'AI could not generate. Please write the description manually.';
+                showAiError(msg);
+            }
+        })
+        .catch(function() {
+            showAiError('Network error. Please try again or write the description manually.');
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-magic"></i> Generate with AI';
+        });
     });
-
-    function generateJobDescription(title) {
-        return 'We are looking for a dedicated and passionate ' + title + ' to join our educational institution.\n\nKey Responsibilities:\n• Plan, prepare, and deliver high-quality lessons in accordance with the curriculum\n• Create a positive and engaging learning environment for students\n• Assess and evaluate student progress and provide constructive feedback\n• Collaborate with fellow teachers and staff to enhance the educational experience\n• Participate in professional development activities and staff meetings\n• Maintain accurate records of student attendance, grades, and performance\n• Communicate effectively with parents/guardians regarding student progress\n\nWhat We Offer:\n• Competitive salary package\n• Professional development opportunities\n• Supportive and collaborative work environment\n• Modern teaching facilities and resources\n\nIf you are passionate about education and want to make a meaningful impact on students\' lives, we encourage you to apply.';
-    }
 
     // ===== JOB-SPECIFIC SCREENING QUESTIONS (add/remove/toggle) =====
     var jsqList = document.getElementById('job-screening-questions-list');

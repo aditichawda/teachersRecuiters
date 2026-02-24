@@ -39,10 +39,17 @@
     background: #f8fafc;
 }
 .table-wrapper .table tbody td {
-    padding: 14px;
+    padding: 8px 5px;
     vertical-align: middle;
     border-bottom: 1px solid #f1f5f9;
     color: #334155;
+}
+.table-wrapper .table thead th:nth-child(4),
+.table-wrapper .table tbody td:nth-child(4) {
+    max-width: 110px;
+    width: 110px;
+    word-break: break-all;
+    overflow-wrap: break-word;
 }
 .table-wrapper .table tbody tr:hover {
     background: #fafbfc;
@@ -51,6 +58,7 @@
 .table-wrapper .table a:not(.btn) {
     color: var(--primary-color, #0073d1);
     text-decoration: none;
+    font-size: 14px;
 }
 .table-wrapper .table .btn-link:hover,
 .table-wrapper .table a:not(.btn):hover {
