@@ -285,18 +285,15 @@
             </div>
         </div>
 
-        {{-- Short description (optional, used by AI to generate detailed description) --}}
-        <div class="jp-group">
-            <label class="jp-label">Short description <span class="hint">(Optional – used by AI to generate detailed description)</span></label>
-            <input type="text" id="job_short_description" class="jp-input" placeholder="e.g. Teaching English to primary classes, curriculum delivery" value="{{ old('description', optional($job)->description ?? '') }}">
-        </div>
-
         {{-- Detailed Job Description --}}
         <div class="jp-group">
             <label class="jp-label">
                 Detailed Job Description <span class="required">*</span>
-                <button type="button" class="jp-ai-btn ms-2" id="aiGenerateBtn" title="Generate from title, short description and institution">
+                <button type="button" class="jp-ai-btn ms-2" id="aiGenerateBtn" title="Generate from job title and institution">
                     <i class="fa fa-magic"></i> Generate with AI
+                </button>
+                <button type="button" class="jp-ai-btn jp-clear-btn ms-2" id="aiClearBtn" title="Clear AI-generated description">
+                    <i class="fa fa-eraser"></i> Clear
                 </button>
             </label>
             <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required>{{ old('content', optional($job)->content ?? '') }}</textarea>
