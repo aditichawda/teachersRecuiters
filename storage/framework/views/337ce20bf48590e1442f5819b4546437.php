@@ -15,7 +15,12 @@
         <?php endif; ?>
      <?php $__env->endSlot(); ?>
 
-    <?php echo Form::text($name, $options['value'], $options['attr']); ?>
+    <?php
+        $id = Arr::get($options['attr'], 'id', $name);
+        Arr::set($options['attr'], 'id', $id);
+    ?>
+
+    <?php echo Form::textarea($name, $options['value'], $options['attr']); ?>
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -27,4 +32,4 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
-<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/text.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/textarea.blade.php ENDPATH**/ ?>
