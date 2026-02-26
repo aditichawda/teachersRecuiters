@@ -1464,7 +1464,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     tryShowDialog(attempts + 1);
                 }, 100);
             } else {
-
                 if (confirm('Do you want to logout?')) {
                     logoutForm.submit();
                 }
