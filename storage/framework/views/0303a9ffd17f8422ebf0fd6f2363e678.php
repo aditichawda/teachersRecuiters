@@ -15,7 +15,11 @@
         <?php endif; ?>
      <?php $__env->endSlot(); ?>
 
+<<<<<<<< HEAD:storage/framework/views/0303a9ffd17f8422ebf0fd6f2363e678.php
     <?php echo Form::datePicker($name, $options['value'], $options['attr']); ?>
+========
+    <?php echo Form::editor($name, \Illuminate\Support\Arr::get($options, 'value'), \Illuminate\Support\Arr::get($options, 'attr', [])); ?>
+>>>>>>>> 689f01a2 (payment update):storage/framework/views/aea30219928aff8839c25c74bdfb6979.php
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -27,4 +31,8 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
+<<<<<<<< HEAD:storage/framework/views/0303a9ffd17f8422ebf0fd6f2363e678.php
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/date-picker.blade.php ENDPATH**/ ?>
+========
+<?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/editor.blade.php ENDPATH**/ ?>
+>>>>>>>> 689f01a2 (payment update):storage/framework/views/aea30219928aff8839c25c74bdfb6979.php
