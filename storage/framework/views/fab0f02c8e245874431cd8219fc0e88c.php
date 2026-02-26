@@ -205,7 +205,7 @@
 <?php endif; ?>
 <?php if (isset($__componentOriginal9d1723e55a4fe6f8bd7b5292f882d2ac)): ?>
 <?php $component = $__componentOriginal9d1723e55a4fe6f8bd7b5292f882d2ac; ?>
-<?php unset($__componentOriginal9d1723e55a4fe6f8bd7b5292f882d2ac); ?>
+<?php unset($__attributesOriginal9d1723e55a4fe6f8bd7b5292f882d2ac); ?>
 <?php endif; ?>
 
                             <?php

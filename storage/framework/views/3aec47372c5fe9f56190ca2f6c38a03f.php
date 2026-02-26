@@ -1432,11 +1432,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     tryShowDialog(attempts + 1);
                 }, 100);
             } else {
+                // Fallback to native confirm after max attempts
                 if (confirm('Do you want to logout?')) {
                     logoutForm.submit();
                 }
             }
         }
+        
         tryShowDialog();
     }
     
