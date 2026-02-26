@@ -15,11 +15,7 @@
         <?php endif; ?>
      <?php $__env->endSlot(); ?>
 
-<<<<<<< HEAD
-    <?php echo Form::repeater($name, $options['value'] ?? Arr::get($options, 'selected'), Arr::get($options, 'fields', [])); ?>
-=======
-    <?php echo Form::repeater($name, $options['value'] ?: Arr::get($options, 'selected'), $options['fields'] ?: []); ?>
->>>>>>> 6b7ae336 (payment update)
+    <?php echo Form::text($name, $options['value'], $options['attr']); ?>
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -31,4 +27,6 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
-<?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/repeater.blade.php ENDPATH**/ ?>
+
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/text.blade.php ENDPATH**/ ?>
+
