@@ -54,6 +54,8 @@ class AccountController extends BaseController
             $request = $form->getRequest();
 
             $request->merge(['password' => Hash::make($request->input('password'))]);
+            $fullName = trim(($request->input('first_name', '') . ' ' . $request->input('last_name', '')));
+            $request->merge(['full_name' => $fullName]);
             $account->fill($request->input());
             $account->is_featured = $request->input('is_featured', false);
             $verifiedAt = Carbon::now();
@@ -82,14 +84,22 @@ class AccountController extends BaseController
 
     public function edit(Account $account, Request $request)
     {
-        $this->pageTitle(trans('core/base::forms.edit_item', ['name' => $account->name]));
+        try {
+            $this->pageTitle(trans('core/base::forms.edit_item', ['name' => $account->name ?? '']));
 
-        $account->password = null;
+            $account->password = null;
 
-        event(new BeforeEditContentEvent($request, $account));
+            event(new BeforeEditContentEvent($request, $account));
 
-        return AccountForm::createFromModel($account)
-            ->renderForm();
+            return AccountForm::createFromModel($account)
+                ->renderForm();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()
+                ->route('accounts.index')
+                ->with('error_msg', 'Edit failed: ' . $e->getMessage());
+        }
     }
 
     public function update(Account $account, AccountEditRequest $request)
@@ -106,14 +116,7 @@ class AccountController extends BaseController
                 } else {
                     $data = $request->except('password');
                 }
-                static::applyFullNameToAccount($request, $account);
-                if ($request->has('full_name')) {
-                    $data = array_merge($data, [
-                        'full_name' => $request->input('full_name'),
-                        'first_name' => $request->input('first_name'),
-                        'last_name' => $request->input('last_name'),
-                    ]);
-                }
+                $data['full_name'] = trim(($request->input('first_name', '') . ' ' . $request->input('last_name', '')));
                 $account->fill($data);
                 $account->is_featured = $request->input('is_featured', false);
 
@@ -171,12 +174,13 @@ class AccountController extends BaseController
             ->where('jb_accounts.type', AccountTypeEnum::EMPLOYER)
             ->when($keyword, function ($query) use ($keyword): void {
                 $query->where(function ($query) use ($keyword): void {
-                    $query->where('jb_accounts.first_name', 'LIKE', "%{$keyword}%")
+                    $query->where('jb_accounts.full_name', 'LIKE', "%{$keyword}%")
+                        ->orWhere('jb_accounts.first_name', 'LIKE', "%{$keyword}%")
                         ->orWhere('jb_accounts.last_name', 'LIKE', "%{$keyword}%")
                         ->orWhere('jb_accounts.email', 'LIKE', "%{$keyword}%");
                 });
             })
-            ->select(['jb_accounts.id', 'jb_accounts.first_name', 'jb_accounts.last_name', 'jb_accounts.email'])
+            ->select(['jb_accounts.id', 'jb_accounts.first_name', 'jb_accounts.last_name', 'jb_accounts.full_name', 'jb_accounts.email'])
             ->take(10)
             ->get();
 
@@ -188,27 +192,10 @@ class AccountController extends BaseController
     public function getAllEmployers()
     {
         return Account::query()
-            ->toBase()
-            ->select(DB::raw('CONCAT(first_name, " ", last_name) as name'))
             ->where('type', AccountTypeEnum::EMPLOYER)
-            ->pluck('name')
+            ->get()
+            ->map(fn (Account $a) => $a->name)
             ->all();
     }
 
-    /**
-     * Split full_name from request into first_name and last_name and merge into request for fill().
-     */
-    protected static function applyFullNameToAccount(Request $request, Account $account): void
-    {
-        if (! $request->has('full_name')) {
-            return;
-        }
-        $full = trim((string) $request->input('full_name'));
-        $parts = explode(' ', $full, 2);
-        $request->merge([
-            'full_name' => $full,
-            'first_name' => $parts[0] ?? '',
-            'last_name' => $parts[1] ?? '',
-        ]);
-    }
 }

@@ -12,6 +12,7 @@ use Botble\Payment\Models\Payment;
 use Botble\Payment\Supports\PaymentHelper;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Razorpay\Api\Api;
 use Razorpay\Api\Errors\BadRequestError;
 use Razorpay\Api\Errors\SignatureVerificationError;
@@ -768,6 +769,28 @@ class RazorpayController extends BaseController
         }
 
         $this->linkPaymentWithOrder($chargeId, $orderId, $status);
+
+        $customerId = $customerInfo['customer_id'] ?? null;
+        $customerType = $customerInfo['customer_type'] ?? null;
+        if ((! $customerId || ! $customerType) && auth('account')->check()) {
+            $customerId = auth('account')->id();
+            $customerType = \Botble\JobBoard\Models\Account::class;
+        }
+
+        if (defined('PAYMENT_ACTION_PAYMENT_PROCESSED')) {
+            do_action(PAYMENT_ACTION_PAYMENT_PROCESSED, [
+            'amount' => $amount,
+            'currency' => $currency,
+            'charge_id' => $chargeId,
+            'payment_channel' => RAZORPAY_PAYMENT_METHOD_NAME,
+            'status' => $status,
+            'order_id' => (array) $orderId,
+            'customer_id' => $customerId,
+            'customer_type' => $customerType,
+            'discount_amount' => Session::get('coupon_discount_amount', 0),
+            'coupon_code' => Session::get('applied_coupon_code'),
+        ]);
+        }
 
         return $response
             ->setNextUrl(PaymentHelper::getRedirectURL($token) . '?charge_id=' . $chargeId)

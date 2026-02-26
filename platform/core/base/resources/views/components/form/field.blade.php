@@ -9,20 +9,29 @@
     'showError' => true,
 ])
 
+@php
+    $options = is_array($options) ? $options : (method_exists($options, 'toArray') ? $options->toArray() : []);
+    $wrapper = Arr::get($options, 'wrapper', true);
+    $wrapperAttrs = Arr::get($options, 'wrapperAttrs', '');
+    $labelOpt = Arr::get($options, 'label', '');
+    $labelShow = Arr::get($options, 'label_show', true);
+    $labelAttr = Arr::get($options, 'label_attr', []);
+@endphp
+
 @if ($showLabel && $showField)
-    @if ($options['wrapper'] !== false)
-        <div {!! $options['wrapperAttrs'] !!}>
+    @if ($wrapper !== false)
+        <div {!! $wrapperAttrs !!}>
     @endif
 @endif
 
-@if ($showLabel && $options['label'] !== false && $options['label_show'])
+@if ($showLabel && $labelOpt !== false && $labelShow)
     @if (isset($label))
         {!! $label !!}
     @else
         <x-core::form.label
             :for="$name"
-            :label="$options['label']"
-            :attributes="new Illuminate\View\ComponentAttributeBag($options['label_attr'])"
+            :label="$labelOpt"
+            :attributes="new Illuminate\View\ComponentAttributeBag($labelAttr)"
         />
     @endif
 @endif
@@ -44,7 +53,7 @@
 @include('core/base::forms.partials.errors')
 
 @if ($showLabel && $showField)
-    @if ($options['wrapper'] !== false)
+    @if ($wrapper !== false)
         </div>
     @endif
 @endif

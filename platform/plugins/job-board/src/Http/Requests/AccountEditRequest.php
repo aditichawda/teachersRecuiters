@@ -9,11 +9,15 @@ class AccountEditRequest extends Request
 {
     public function rules(): array
     {
+        $account = $this->route('account');
+        $accountId = $account && is_object($account) ? $account->getKey() : (is_numeric($account) ? $account : null);
+
         $rules = [
-            'full_name' => 'required|max:255|min:2',
+            'first_name' => 'required|max:120|min:2',
+            'last_name' => 'nullable|max:120',
             'confirmed_at' => new OnOffRule(),
-            'email' => 'required|max:60|min:6|email|unique:jb_accounts,email,' . $this->route('account.id'),
-            'unique_id' => 'nullable|string|unique:jb_accounts,unique_id,' . $this->route('account.id'),
+            'email' => 'required|max:60|min:6|email|unique:jb_accounts,email,' . ($accountId ?? 0),
+            'unique_id' => 'nullable|string|unique:jb_accounts,unique_id,' . ($accountId ?? 0),
         ];
 
         if ($this->input('is_change_password') == 1) {

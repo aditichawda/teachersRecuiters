@@ -16,7 +16,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 
 class LoginController extends Controller
@@ -26,6 +25,17 @@ class LoginController extends Controller
     }
 
     public string $redirectTo = '/';
+
+    /**
+     * Login ke baad: job seeker → job seeker dashboard, employer → employer dashboard
+     */
+    public function redirectTo(): string
+    {
+        if ($this->guard()->check()) {
+            return $this->getDashboardUrlForAccount($this->guard()->user());
+        }
+        return $this->redirectTo;
+    }
 
     public function showLoginForm()
     {
@@ -50,7 +60,18 @@ class LoginController extends Controller
         Theme::asset()->container('footer')
             ->writeContent('js-validation-scripts', JsValidator::formRequest(LoginRequest::class), ['jquery']);
 
-        return Theme::scope('job-board.auth.login', ['form' => LoginForm::create()], 'plugins/job-board::themes.auth.login')->render();
+        $showEmailOtpStep = session('show_email_otp_step', false);
+        $otpEmail = session('otp_email', '');
+        $showWhatsappOtpStep = session('show_whatsapp_otp_step', false);
+        $otpPhone = session('otp_phone', '');
+
+        return Theme::scope('job-board.auth.login', [
+            'form' => LoginForm::create(),
+            'show_email_otp_step' => $showEmailOtpStep,
+            'otp_email' => $otpEmail,
+            'show_whatsapp_otp_step' => $showWhatsappOtpStep,
+            'otp_phone' => $otpPhone,
+        ], 'plugins/job-board::themes.auth.login')->render();
     }
 
     protected function guard()
@@ -129,10 +150,47 @@ class LoginController extends Controller
         }
 
         if ($this->attemptLogin($request)) {
-            // Redirect based on account type
             $account = $this->guard()->user();
-            $this->redirectTo = $this->getDashboardUrlForAccount($account);
+            $account = Account::find($account->id);
 
+            // 1. Pehle email check: Email unverified → Email OTP (email se login = email OTP)
+            if ($account->email_verified_at === null) {
+                $this->guard()->logout();
+                $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $expiresAt = Carbon::now()->addMinutes(10);
+                $request->session()->put('login_otp', [
+                    'email' => $account->email,
+                    'otp' => $otp,
+                    'expires_at' => $expiresAt,
+                    'type' => 'email',
+                ]);
+                try {
+                    Mail::send([], [], function ($message) use ($account, $otp) {
+                        $message->to($account->email)
+                            ->subject(__('Verify your email - Teachers Recruiter'))
+                            ->html(
+                                "<div style='font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;'>" .
+                                "<h2 style='color: #0073d1;'>" . __('Email Verification') . "</h2>" .
+                                "<p>" . __('Hello') . " " . ($account->first_name ?: $account->name) . ",</p>" .
+                                "<p>" . __('Please verify your email using the OTP below:') . "</p>" .
+                                "<div style='background: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;'>{$otp}</div>" .
+                                "<p>" . __('This OTP is valid for 10 minutes.') . "</p>" .
+                                "<p style='color: #888; font-size: 12px;'>Teachers Recruiter</p></div>"
+                            );
+                    });
+                } catch (\Exception $e) {
+                    return back()->withInput()->withErrors([
+                        'email' => __('Failed to send verification OTP. Please try Email OTP login method.'),
+                    ]);
+                }
+                return redirect()->route('public.account.login')
+                    ->with('message', __('Please verify your email. We have sent an OTP to your email address.'))
+                    ->with('show_email_otp_step', true)
+                    ->with('otp_email', $account->email);
+            }
+
+            // 2. Email verified → direct login (WhatsApp OTP redirect nahi; verified email = dashboard)
+            $this->redirectTo = $this->getDashboardUrlForAccount($account);
             return $this->sendLoginResponse($request);
         }
 
@@ -180,23 +238,9 @@ class LoginController extends Controller
     {
         if ($this->guard()->validate($this->credentials($request))) {
             $account = $this->guard()->getLastAttempted();
-
-            if (setting('verify_account_email', 0) && empty($account->confirmed_at)) {
-                throw ValidationException::withMessages([
-                    'confirmation' => [
-                        trans('plugins/job-board::account.not_confirmed', [
-                            'resend_link' => route(
-                                'public.account.resend_confirmation',
-                                ['email' => $account->email]
-                            ),
-                        ]),
-                    ],
-                ]);
-            }
-
+            // Verification = only email_verified_at (null = not verified). Unverified handled in login() with OTP step.
             return $this->baseAttemptLogin($request);
         }
-
         return false;
     }
 
@@ -394,6 +438,18 @@ class LoginController extends Controller
                 'error' => true,
                 'message' => __('Account not found.'),
             ]);
+        }
+
+        // If email was not verified, set email_verified_at now (verify via OTP = verified)
+        if ($account->email_verified_at === null) {
+            $account->email_verified_at = Carbon::now();
+            $account->confirmed_at = $account->confirmed_at ?? $account->email_verified_at;
+            $account->save();
+        }
+        // If WhatsApp OTP used, set phone_verified_at
+        if ($otpData['type'] === 'whatsapp') {
+            $account->phone_verified_at = Carbon::now();
+            $account->save();
         }
 
         // Clear OTP session

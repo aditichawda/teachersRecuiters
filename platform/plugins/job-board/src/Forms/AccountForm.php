@@ -28,21 +28,24 @@ class AccountForm extends FormAbstract
         Assets::addScriptsDirectly('vendor/core/plugins/job-board/js/account-admin.js');
 
         $account = $this->getModel();
-        $fullNameValue = $account->getKey()
-            ? ($account->full_name ?: trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')))
-            : '';
 
         $this
             ->setupModel(new Account())
             ->setValidatorClass(AccountCreateRequest::class)
             ->template('plugins/job-board::accounts.form')
-            ->add('full_name', 'text', [
-                'label' => trans('plugins/job-board::account.form.full_name'),
+            ->add('first_name', 'text', [
+                'label' => trans('plugins/job-board::account.form.first_name'),
                 'required' => true,
-                'value' => $fullNameValue,
                 'attr' => [
-                    'placeholder' => trans('plugins/job-board::account.form.full_name_placeholder'),
-                    'data-counter' => 255,
+                    'placeholder' => trans('plugins/job-board::messages.enter_first_name'),
+                    'data-counter' => 120,
+                ],
+            ])
+            ->add('last_name', 'text', [
+                'label' => trans('plugins/job-board::account.form.last_name'),
+                'attr' => [
+                    'placeholder' => trans('plugins/job-board::messages.enter_last_name'),
+                    'data-counter' => 120,
                 ],
             ])
             ->add('email', 'text', [
@@ -167,11 +170,11 @@ class AccountForm extends FormAbstract
             ])
             ->add('avatar_image', 'mediaImage', [
                 'label' => trans('plugins/job-board::account.form.avatar_image'),
-                'value' => $this->getModel()->avatar->url,
+                'value' => $this->getModel()->avatar_id && $this->getModel()->avatar ? $this->getModel()->avatar->url : null,
             ])
             ->add('resume', 'mediaFile', [
                 'label' => trans('plugins/job-board::account.form.resume'),
-                'value' => $this->getModel()->resume,
+                'value' => $this->getModel()->getAttribute('resume'),
             ]);
 
         /**
