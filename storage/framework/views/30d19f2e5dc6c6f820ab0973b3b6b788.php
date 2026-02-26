@@ -299,6 +299,7 @@
 
 <?php if(is_plugin_active('job-board')): ?>
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.apply-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">
             <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         </script>

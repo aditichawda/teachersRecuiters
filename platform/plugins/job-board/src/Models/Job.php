@@ -81,6 +81,8 @@ class Job extends BaseModel
         'application_closing_date',
         'zip_code',
         'unique_id',
+        // 'apply_internal_phones', // Uncomment after adding column to database
+        // 'enable_whatsapp_notifications', // Uncomment after adding column to database
     ];
 
     protected $casts = [
@@ -98,6 +100,8 @@ class Job extends BaseModel
         'apply_url' => SafeContent::class,
         'is_remote' => 'boolean',
         'apply_internal_emails' => 'array',
+        'apply_internal_phones' => 'array',
+        // 'enable_whatsapp_notifications' => 'boolean', // Uncomment after adding column to database
     ];
 
     public function skills(): BelongsToMany

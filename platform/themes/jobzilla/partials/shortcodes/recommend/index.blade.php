@@ -24,16 +24,16 @@
             <div class="container">
                 <div class="filter-carousal">
                     <!-- Filter Menu -->
-                    <div class="twm-jobs-filter">
+                    <!-- <div class="twm-jobs-filter">
                         <ul class="btn-filter-wrap">
                             <li class="btn-filter btn-active" data-filter="*">{{ __('All') }}</li>
                             @foreach ($jobTypes as $type)
                                 <li class="btn-filter" data-filter=".{{ $type->id }}">{{ $type->name }}</li>
                             @endforeach
                         </ul>
-                    </div>
+                    </div> -->
                     <!-- Filter Menu -->
-
+                   
                     <!-- IMAGE CAROUSEL START -->
                     <div class="section-content ">
                         <div class="owl-carousel owl-carousel-filter mfp-gallery owl-btn-vertical-center">
@@ -74,6 +74,12 @@
                                 </div>
                             @endforeach
                         </div>
+                        <!-- No Jobs Available Message -->
+                        <div class="no-jobs-message" style="display: none; text-align: center; padding: 60px 20px; color: #64748b;">
+                            <i class="feather-briefcase" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                            <h4 style="color: #334155; margin-bottom: 10px;">{{ __('No jobs available currently') }}</h4>
+                            <p style="color: #94a3b8; font-size: 14px;">{{ __('Please try another category or check back later.') }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -81,3 +87,23 @@
     </div>
 </div>
 <!-- Recommended Jobs SECTION END -->
+
+<script>
+// Initialize no jobs message check on page load
+$(document).ready(function() {
+    const $carousel = $('.owl-carousel-filter');
+    if ($carousel.length) {
+        const $sectionContent = $carousel.closest('.section-content');
+        const $noJobsMessage = $sectionContent.find('.no-jobs-message');
+        
+        // Check initial state - if no jobs at all
+        setTimeout(function() {
+            const totalItems = $carousel.find('.item').length;
+            if (totalItems === 0) {
+                $carousel.hide();
+                $noJobsMessage.show();
+            }
+        }, 500);
+    }
+});
+</script>

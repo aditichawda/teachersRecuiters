@@ -26,7 +26,7 @@
             </div>
             <div class="col-lg-5">
                 <div class="hiw-hero-image">
-                    <img src="{{ Theme::asset()->url('images/gir-large.png') }}" alt="Teaching Career" class="img-fluid rounded-4">
+                    <img src="/themes/jobzilla/images/Find-your-dream-teaching-job.png" alt="Teaching Career" class="img-fluid rounded-4">
                 </div>
             </div>
         </div>
@@ -65,58 +65,137 @@
     </div>
 </section>
 
-{{-- SECTION 3: Process Steps with Numbers (1-6 Grid) --}}
+{{-- SECTION 3: How It Works - Toggleable For Educators / For Institutions --}}
 <section class="hiw-process-section">
     <div class="container">
         <div class="hiw-section-header">
-            <h2 class="hiw-section-title">How Teachers Recruiter Works</h2>
+            <h2 class="hiw-section-title">How It Works</h2>
+        </div>
+        
+        {{-- Toggle Buttons --}}
+        <div class="hiw-toggle-buttons">
+            <button class="hiw-toggle-btn active" data-target="educators" onclick="toggleHowItWorks('educators')">
+                For Educators
+            </button>
+            <button class="hiw-toggle-btn" data-target="institutions" onclick="toggleHowItWorks('institutions')">
+                For Institutions
+            </button>
+        </div>
+        
+        {{-- For Educators Content (Default) --}}
+        <div id="educators-content" class="hiw-content-section active">
+            <div class="hiw-content-header">
+                <h3 class="hiw-content-title">For Educators</h3>
+                <p class="hiw-content-subtitle">Follow the steps and apply for verified school jobs.</p>
         </div>
         <div class="row g-4">
-            <div class="col-lg-4 col-md-6">
+                <div class="col-lg-3 col-md-6">
                 <div class="hiw-step-card">
-                    <span class="hiw-step-number">1</span>
-                    <h4 class="hiw-step-title">Create an Account</h4>
-                    <p class="hiw-step-desc">Sign up for free as a teacher or school. Fill in your basic details to get started.</p>
+                        <span class="hiw-step-number">01</span>
+                        <h4 class="hiw-step-title">Upload Your Resume</h4>
+                        <p class="hiw-step-desc">Sign up, verify your email/mobile, and upload your resume. <strong>100% Free Registration</strong></p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">02</span>
+                        <h4 class="hiw-step-title">Search Job & Apply</h4>
+                        <p class="hiw-step-desc">Complete your profile, get job suggestions, and apply to unlimited jobs. <strong>No Cost to Apply</strong></p>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6">
+                <div class="col-lg-3 col-md-6">
                 <div class="hiw-step-card">
-                    <span class="hiw-step-number">2</span>
-                    <h4 class="hiw-step-title">Complete Your Profile</h4>
-                    <p class="hiw-step-desc">Add your qualifications, experience, preferred subjects and upload your resume.</p>
+                        <span class="hiw-step-number">03</span>
+                        <h4 class="hiw-step-title">Get Noticed by Schools</h4>
+                        <p class="hiw-step-desc">Schools can view your profile and contact you directly for opportunities.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">04</span>
+                        <h4 class="hiw-step-title">Interview & Get Hired</h4>
+                        <p class="hiw-step-desc">Attend interviews, receive offers, and start your new educator role.</p>
+            </div>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6">
+        </div>
+        
+        {{-- For Institutions Content --}}
+        <div id="institutions-content" class="hiw-content-section">
+            <div class="hiw-content-header">
+                <h3 class="hiw-content-title">For Institutions</h3>
+                <p class="hiw-content-subtitle">Smart Hiring. Verified Educators. Faster Recruitment.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
                 <div class="hiw-step-card">
-                    <span class="hiw-step-number">3</span>
-                    <h4 class="hiw-step-title">Search & Discover</h4>
-                    <p class="hiw-step-desc">Browse thousands of teaching jobs. Filter by location, subject, salary and school type.</p>
+                        <span class="hiw-step-number">01</span>
+                        <h4 class="hiw-step-title">Register Your Institution</h4>
+                        <p class="hiw-step-desc">Sign up with basic details and verify your email/mobile to activate your account.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">02</span>
+                        <h4 class="hiw-step-title">Post Jobs & Manage Applications</h4>
+                        <p class="hiw-step-desc">Publish job openings, receive relevant applications, and track or shortlist candidates from your dashboard.</p>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6">
+                <div class="col-lg-3 col-md-6">
                 <div class="hiw-step-card">
-                    <span class="hiw-step-number">4</span>
-                    <h4 class="hiw-step-title">Apply to Jobs</h4>
-                    <p class="hiw-step-desc">Found a job you like? Apply with one click. Your profile is shared with the school.</p>
+                        <span class="hiw-step-number">03</span>
+                        <h4 class="hiw-step-title">Access Educators Resume</h4>
+                        <p class="hiw-step-desc">Search verified teacher profiles using filters like subject, experience, qualification, location, and availability.</p>
+                    </div>
                 </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">04</span>
+                        <h4 class="hiw-step-title">Interview and Hire Faster</h4>
+                        <p class="hiw-step-desc">Connect directly with shortlisted candidates and hire the best talent quickly.</p>
             </div>
-            <div class="col-lg-4 col-md-6">
-                <div class="hiw-step-card">
-                    <span class="hiw-step-number">5</span>
-                    <h4 class="hiw-step-title">Get Shortlisted</h4>
-                    <p class="hiw-step-desc">Schools review applications and shortlist candidates. You'll be notified instantly.</p>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <div class="hiw-step-card">
-                    <span class="hiw-step-number">6</span>
-                    <h4 class="hiw-step-title">Interview & Join</h4>
-                    <p class="hiw-step-desc">Attend interviews, receive offers and start your new teaching journey!</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+function toggleHowItWorks(target) {
+    // Hide all content sections
+    document.querySelectorAll('.hiw-content-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.hiw-toggle-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected content
+    const contentSection = document.getElementById(target + '-content');
+    if (contentSection) {
+        contentSection.classList.add('active');
+    }
+    
+    // Add active class to clicked button
+    const clickedBtn = event.target;
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    }
+}
+
+// Ensure default view is shown on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const educatorsContent = document.getElementById('educators-content');
+    const educatorsBtn = document.querySelector('[data-target="educators"]');
+    
+    if (educatorsContent && educatorsBtn) {
+        educatorsContent.classList.add('active');
+        educatorsBtn.classList.add('active');
+    }
+});
+</script>
 
 {{-- SECTION 3.5: Watch How It Works - Video --}}
 <section class="hiw-video-section">
@@ -147,7 +226,7 @@
         <div class="row align-items-center hiw-alt-row">
             <div class="col-lg-6">
                 <div class="hiw-alt-image">
-                    <img src="{{ Theme::asset()->url('images/gir-large-2.png') }}" alt="For Teachers" class="img-fluid rounded-4">
+                    <img src="/themes/jobzilla/images/Why-teachers-love-us.png" alt="For Teachers" class="img-fluid rounded-4">
                 </div>
             </div>
             <div class="col-lg-6">
@@ -170,7 +249,7 @@
         <div class="row align-items-center hiw-alt-row flex-lg-row-reverse">
             <div class="col-lg-6">
                 <div class="hiw-alt-image">
-                    <img src="{{ Theme::asset()->url('images/boy-large.png') }}" alt="For Schools" class="img-fluid rounded-4">
+                    <img src="/themes/jobzilla/images/Hire-quality-teachers-fast.png" alt="For Schools" class="img-fluid rounded-4">
                 </div>
             </div>
             <div class="col-lg-6">

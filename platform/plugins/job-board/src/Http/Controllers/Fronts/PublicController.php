@@ -302,9 +302,8 @@ class PublicController extends BaseController
             ],
         };
 
-        if (JobBoardHelper::isPinFeaturedJobsInTheTop()) {
-            $sortBy = ['jb_jobs.is_featured' => 'DESC', ...$sortBy];
-        }
+        // Always prioritize featured jobs
+        $sortBy = ['jb_jobs.is_featured' => 'DESC', ...$sortBy];
 
         if (is_plugin_active('location')) {
             $with = array_merge($with, array_keys(Location::getSupported(JobModel::class)));
@@ -379,6 +378,57 @@ class PublicController extends BaseController
             ->with(['slugable'])
             ->pinFeatured();
 
+        // Filter by company ID (institution name)
+        if ($request->input('company_id')) {
+            $companies = $companies->where('id', $request->input('company_id'));
+        }
+
+        // Filter by institution type
+        if ($request->has('institution_type') && is_array($request->input('institution_type'))) {
+            $companies = $companies->whereIn('institution_type', $request->input('institution_type'));
+        }
+
+        // Filter by location
+        if ($request->input('country_id')) {
+            $companies = $companies->where('country_id', $request->input('country_id'));
+        }
+        if ($request->input('state_id')) {
+            $companies = $companies->where('state_id', $request->input('state_id'));
+        }
+        if ($request->input('city_id')) {
+            $companies = $companies->where('city_id', $request->input('city_id'));
+        }
+
+        // Filter by campus type
+        if ($request->has('campus_type') && is_array($request->input('campus_type'))) {
+            $companies = $companies->whereIn('campus_type', $request->input('campus_type'));
+        }
+
+        // Filter by currently hiring (has active jobs)
+        if ($request->boolean('currently_hiring')) {
+            $companies = $companies->has('activeJobs');
+        }
+
+        // Filter by benefits offered (staff_facilities)
+        if ($request->has('benefits') && is_array($request->input('benefits'))) {
+            $benefits = $request->input('benefits');
+            $companies = $companies->where(function (Builder $query) use ($benefits): void {
+                foreach ($benefits as $benefit) {
+                    $query->orWhereJsonContains('staff_facilities', $benefit);
+                }
+            });
+        }
+
+        // Filter by standard level
+        if ($request->has('standard_level') && is_array($request->input('standard_level'))) {
+            $standardLevels = $request->input('standard_level');
+            $companies = $companies->where(function (Builder $query) use ($standardLevels): void {
+                foreach ($standardLevels as $level) {
+                    $query->orWhereJsonContains('standard_level', $level);
+                }
+            });
+        }
+
         if ($requestQuery['keyword']) {
             if (
                 is_plugin_active('language') &&
@@ -397,8 +447,8 @@ class PublicController extends BaseController
         }
 
         match ($requestQuery['sort_by'] ?? 'oldest') {
-            'newest' => $companies = $companies->latest(),
-            default => $companies = $companies->oldest(),
+            'newest' => $companies = $companies->orderBy('is_featured', 'DESC')->latest(),
+            default => $companies = $companies->orderBy('is_featured', 'DESC')->oldest(),
         };
 
         $companies = $companies->paginate($requestQuery['per_page'] ?: 12);
@@ -628,7 +678,18 @@ class PublicController extends BaseController
                     $jobApplication->setRelation('account', $account);
                 }
 
-                JobAppliedEvent::dispatch($jobApplication, $job);
+                // Dispatch event safely - wrap in try-catch to prevent 500 errors
+                try {
+                    JobAppliedEvent::dispatch($jobApplication, $job);
+                } catch (\Exception $eventException) {
+                    // Log event error but don't fail the application
+                    \Log::error('Failed to dispatch JobAppliedEvent: ' . $eventException->getMessage(), [
+                        'exception' => $eventException,
+                        'application_id' => $jobApplication->id,
+                        'job_id' => $job->id,
+                    ]);
+                    // Continue - application is saved, just email might fail
+                }
             }
 
             if (! $request->ajax()) {
@@ -643,11 +704,23 @@ class PublicController extends BaseController
                 ->httpResponse()
                 ->setData(['url' => $job->apply_url])
                 ->setMessage($message);
-        } catch (Exception) {
+        } catch (Exception $e) {
+            // Log the actual error for debugging
+            \Log::error('Job application failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['resume', 'cover_letter', 'screening_answers_file']),
+            ]);
+            
+            // Return detailed error message in development, generic in production
+            $errorMessage = config('app.debug') 
+                ? 'Application failed: ' . $e->getMessage() 
+                : trans('plugins/job-board::job-application.email.failed');
+            
             return $this
                 ->httpResponse()
                 ->setError()
-                ->setMessage(trans('plugins/job-board::job-application.email.failed'));
+                ->setMessage($errorMessage);
         }
     }
 
@@ -720,9 +793,8 @@ class PublicController extends BaseController
             ],
         };
 
-        if (JobBoardHelper::isPinFeaturedJobsInTheTop()) {
-            $sortBy = ['jb_jobs.is_featured' => 'DESC', ...$sortBy];
-        }
+        // Always prioritize featured jobs
+        $sortBy = ['jb_jobs.is_featured' => 'DESC', ...$sortBy];
 
         if (is_plugin_active('location')) {
             $with = array_merge($with, array_keys(Location::getSupported(JobModel::class)));

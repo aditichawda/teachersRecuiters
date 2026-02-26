@@ -186,6 +186,151 @@ All JavaScript fuctions Start
         }
     }
 
+    // Home Category Search Autocomplete function ========================== //
+    function home_category_search() {
+        const $categoryInput = $('#home_category_search');
+        const $categoryId = $('#home_keyword_id');
+        const $suggestions = $('#home-category-suggestions');
+        let searchTimeout = null;
+        let activeSuggestionIndex = -1;
+
+        if (!$categoryInput.length) {
+            console.log('Category input not found');
+            return;
+        }
+
+        // Check if categories are loaded
+        if (!window.jobCategories) {
+            console.log('Job categories not loaded yet, retrying...');
+            setTimeout(function() {
+                home_category_search();
+            }, 200);
+            return;
+        }
+
+        console.log('Job roles search initialized with', window.jobCategories.length, 'roles');
+
+        // Function to show job roles
+        function showCategories(keyword) {
+            if (!window.jobCategories || window.jobCategories.length === 0) {
+                $suggestions.html('<div class="home-category-no-results">No job roles available</div>').show();
+                return;
+            }
+
+            keyword = (keyword || '').trim().toLowerCase();
+            activeSuggestionIndex = -1;
+
+            let filtered;
+            if (keyword.length === 0) {
+                // Show all job roles when no keyword
+                filtered = window.jobCategories;
+            } else {
+                // Filter job roles locally
+                filtered = window.jobCategories.filter(function(cat) {
+                    return cat.name.toLowerCase().includes(keyword);
+                });
+            }
+
+            if (filtered.length === 0) {
+                $suggestions.html('<div class="home-category-no-results">No job roles found</div>').show();
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(function(category) {
+                html += '<div class="home-category-suggestion-item" ' +
+                    'data-id="' + category.id + '" ' +
+                    'data-name="' + category.name + '">' +
+                    '<div class="city-name">' + category.name + '</div>' +
+                    '</div>';
+            });
+
+            $suggestions.html(html).show();
+        }
+
+        // Show all categories on focus or click
+        $categoryInput.on('focus click', function() {
+            const currentVal = $(this).val();
+            if (!currentVal) {
+                showCategories('');
+            } else {
+                // If there's a value, show filtered results
+                showCategories(currentVal);
+            }
+        });
+
+        // Category search autocomplete
+        $categoryInput.on('input', function() {
+            const keyword = $(this).val().trim().toLowerCase();
+
+            // Clear category selection when user types
+            if (keyword.length > 0) {
+                $categoryId.val('');
+            }
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            searchTimeout = setTimeout(function() {
+                showCategories(keyword);
+            }, 100);
+        });
+
+        // Keyboard navigation for suggestions
+        $categoryInput.on('keydown', function(e) {
+            const $items = $suggestions.find('.home-category-suggestion-item');
+
+            if (!$suggestions.is(':visible') || $items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeSuggestionIndex >= 0) {
+                    $items.eq(activeSuggestionIndex).trigger('click');
+                }
+            } else if (e.key === 'Escape') {
+                $suggestions.hide();
+            }
+        });
+
+        // Select job role from suggestions
+        $(document).on('click', '.home-category-suggestion-item', function() {
+            const $item = $(this);
+            const roleName = $item.data('name');
+
+            // Set job role as keyword
+            $categoryInput.val(roleName);
+            $categoryId.val(roleName);
+            $suggestions.hide();
+        });
+
+        // Close suggestions on outside click
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.home-category-search-wrapper').length) {
+                $suggestions.hide();
+            }
+        });
+
+        // Load job role name if keyword is already set
+        const existingKeyword = $categoryId.val();
+        if (existingKeyword && window.jobCategories) {
+            const role = window.jobCategories.find(function(cat) {
+                return cat.name == existingKeyword || cat.id == existingKeyword;
+            });
+            if (role) {
+                $categoryInput.val(role.name);
+            }
+        }
+    }
+
     //  Job Categories Carousel function by = owl.carousel.js ========================== //
     function job_categories_carousel() {
         $('.job-categories-carousel').owlCarousel({
@@ -625,7 +770,7 @@ All JavaScript fuctions Start
                     items: 1,
                 },
                 991: {
-                    items: 2,
+                    items: 1,
                 },
             },
         });
@@ -651,10 +796,10 @@ All JavaScript fuctions Start
                     items: 1,
                 },
                 991: {
-                    items: 2,
+                    items: 1,
                 },
                 1199: {
-                    items: 3,
+                    items: 1,
                 },
             },
         });
@@ -1282,17 +1427,18 @@ All JavaScript fuctions Start
 
     function v_testimonial_slider() {
         const swiper = new Swiper('.v-testimonial-slider', {
-            slidesPerView: 2,
+            slidesPerView: 1,
             spaceBetween: 20,
             loop: true,
             autoplay: {
                 delay: 2500,
                 disableOnInteraction: false,
             },
-            direction: "vertical",
+            direction: "horizontal",
             pagination: {
                 el: ".swiper-pagination",
                 clickable: true,
+                type: "bullets",
             },
             breakpoints: {
                 0: {
@@ -1300,7 +1446,8 @@ All JavaScript fuctions Start
                     slidesPerView: 1,
                 },
                 767: {
-                    direction: "vertical",
+                    direction: "horizontal",
+                    slidesPerView: 1,
                 }
 
             },
@@ -1375,6 +1522,44 @@ All JavaScript fuctions Start
             /* Filter */
             owl.owlFilter(filter_data, function (_owl) {
                 $(_owl).find('.item').each(owlAnimateFilter);
+                
+                // Check if any items are visible after filtering
+                const $carousel = $('.owl-carousel-filter');
+                const $sectionContent = $carousel.closest('.section-content');
+                const $noJobsMessage = $sectionContent.find('.no-jobs-message');
+                
+                // Wait for filter animation to complete
+                setTimeout(function() {
+                    // Count items that match the filter
+                    let visibleItems = 0;
+                    
+                    if (filter_data === '*') {
+                        // Show all items
+                        visibleItems = $carousel.find('.item').length;
+                    } else {
+                        // Count items that match the filter class
+                        // filter_data is like ".123", items have class "123"
+                        const filterClass = filter_data.replace('.', '');
+                        $carousel.find('.item').each(function() {
+                            const $item = $(this);
+                            // Check if item has the filter class (items have classes like "123", "456" etc)
+                            const itemClasses = $item.attr('class') || '';
+                            if (itemClasses.indexOf(filterClass) !== -1 || $item.hasClass(filterClass)) {
+                                visibleItems++;
+                            }
+                        });
+                    }
+                    
+                    if (visibleItems === 0) {
+                        // Hide carousel and show no jobs message
+                        $carousel.hide();
+                        $noJobsMessage.show();
+                    } else {
+                        // Show carousel and hide no jobs message
+                        $carousel.show();
+                        $noJobsMessage.hide();
+                    }
+                }, 400);
             });
         })
 
@@ -1577,5 +1762,13 @@ All JavaScript fuctions Start
             setJobBoardMap($(e));
         });
     }
+
+    // Initialize category search on document ready
+    $(document).ready(function() {
+        // Wait a bit for window.jobCategories to be set from inline script
+        setTimeout(function() {
+            home_category_search();
+        }, 100);
+    });
 
 })(window.jQuery);

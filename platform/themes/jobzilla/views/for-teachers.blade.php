@@ -350,24 +350,40 @@
 }
 
 /* Responsive */
+@media(max-width: 991px) {
+    .for-teachers-section { padding: 70px 0 45px; }
+    .teachers-hero h1 { font-size: 36px; }
+    .teachers-features { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .benefits-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-container { grid-template-columns: 1fr; }
+}
 @media(max-width: 768px) {
-    .for-teachers-section { padding: 70px 0 40px; }
-    .teachers-hero h1 { font-size: 32px; }
-    .teachers-hero .hero-subtitle { font-size: 18px; }
-    .teachers-hero p { font-size: 16px; }
+    .for-teachers-section { padding: 60px 0 40px; }
+    .teachers-hero { padding: 30px 0; }
+    .teachers-hero h1 { font-size: 28px; line-height: 1.3; }
+    .teachers-hero .hero-subtitle { font-size: 16px; }
+    .teachers-hero p { font-size: 15px; }
     .teachers-features { grid-template-columns: 1fr; gap: 20px; margin-bottom: 40px; }
     .teachers-feature-card { padding: 25px 20px; }
-    .teachers-benefits { padding: 35px 25px; }
+    .teachers-benefits { padding: 30px 20px; }
     .benefits-grid { grid-template-columns: 1fr; gap: 15px; }
     .steps-container { grid-template-columns: 1fr; gap: 20px; }
-    .teachers-stats { padding: 40px 25px; }
-    .teachers-stats h2 { font-size: 28px; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-    .stat-number { font-size: 36px; }
-    .teachers-cta { padding: 40px 25px; }
-    .teachers-cta h2 { font-size: 28px; }
-    .cta-buttons { flex-direction: column; }
-    .btn-primary-custom, .btn-outline-custom { width: 100%; }
+    .teachers-stats { padding: 35px 20px; }
+    .teachers-stats h2 { font-size: 24px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .stat-number { font-size: 32px; }
+    .stat-label { font-size: 12px; }
+    .teachers-cta { padding: 35px 20px; }
+    .teachers-cta h2 { font-size: 24px; }
+    .teachers-cta p { font-size: 14px; }
+    .cta-buttons { flex-direction: column; gap: 12px; }
+    .btn-primary-custom, .btn-outline-custom { width: 100%; padding: 14px 24px; font-size: 15px; }
+}
+@media(max-width: 575px) {
+    .for-teachers-section { padding: 50px 0 30px; }
+    .teachers-hero h1 { font-size: 24px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .stat-item { text-align: center; }
 }
 </style>
 

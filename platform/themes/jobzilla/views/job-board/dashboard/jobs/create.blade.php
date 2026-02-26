@@ -668,6 +668,26 @@
             </button>
         </div>
 
+        {{-- WhatsApp Notification Option --}}
+        @php
+            $whatsappColumnExists = \Illuminate\Support\Facades\Schema::hasColumn('jb_jobs', 'enable_whatsapp_notifications');
+        @endphp
+        @if($whatsappColumnExists)
+        <div class="jp-group" id="whatsapp-notification-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
+            <div class="form-check" style="margin-top: 15px;">
+                <input type="checkbox" name="enable_whatsapp_notifications" value="1" class="form-check-input" id="enable_whatsapp_notifications" 
+                    {{ old('enable_whatsapp_notifications', optional($job)->enable_whatsapp_notifications ?? false) ? 'checked' : '' }}>
+                <label class="form-check-label jp-label" for="enable_whatsapp_notifications" style="cursor: pointer;">
+                    <i class="fa fa-whatsapp" style="color: #25D366; margin-right: 5px;"></i>
+                    {{ __('Send WhatsApp notifications when candidates apply') }}
+                </label>
+                <small class="form-text text-muted d-block" style="margin-top: 5px; margin-left: 25px;">
+                    {{ __('You will receive WhatsApp notifications on your phone numbers when a candidate applies for this job') }}
+                </small>
+            </div>
+        </div>
+        @endif
+
         <div class="jp-row">
             <div class="jp-col-6">
                 <div class="jp-group">
@@ -1121,6 +1141,8 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('internal-emails-wrap').style.display = val2 === 'internal' ? 'block' : 'none';
             var phonesWrap = document.getElementById('internal-phones-wrap');
             if (phonesWrap) phonesWrap.style.display = val2 === 'internal' ? 'block' : 'none';
+            var whatsappWrap = document.getElementById('whatsapp-notification-wrap');
+            if (whatsappWrap) whatsappWrap.style.display = val2 === 'internal' ? 'block' : 'none';
         }
     };
 

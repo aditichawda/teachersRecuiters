@@ -608,7 +608,7 @@
         <div class="row">
             <div class="@if(JobBoardHelper::canViewCandidateInformation()) col-lg-8 @else col-lg-12 @endif col-md-12">
                 {{-- Personal Details (reference UI) --}}
-                <div class="cdt-card">
+                    <div class="cdt-card">
                     <h4 class="cdt-block-heading">{{ __('Personal Details') }}</h4>
                     <div class="cdt-personal-card">
                         <div class="cdt-personal-avatar">
@@ -666,17 +666,17 @@
                         <div class="cdt-text-block">{!! nl2br(e($candidate->activities)) !!}</div>
                     @else
                         <p class="cdt-empty-msg">— {{ __('No activities added') }}</p>
-                    @endif
+                @endif
                 </div>
 
                 {{-- YouTube Link (card) --}}
-                <div class="cdt-card">
+                    <div class="cdt-card">
                     <h4 class="cdt-block-heading">{{ __('YouTube Link') }}</h4>
                     @if(!empty($youtubeUrl))
                         <a href="{{ $youtubeUrl }}" target="_blank" rel="noopener noreferrer" class="cdt-link-yt"><i class="fab fa-youtube"></i> {{ __('Watch on YouTube') }}</a>
                     @else
                         <p class="cdt-empty-msg">— {{ __('No YouTube link added') }}</p>
-                    @endif
+                                    @endif
                 </div>
 
                 {{-- Tabs: Work Experience | Education Details | Other Details --}}
@@ -705,7 +705,7 @@
                                 @endforeach
                             @else
                                 <p class="cdt-empty-msg">— {{ __('No work experience added') }}</p>
-                            @endif
+                                    @endif
                         </div>
 
                         <div id="cdt-pane-education" class="cdt-tab-pane" role="tabpanel">
@@ -721,8 +721,8 @@
                                             @if($education->specialized ?? null)<div class="cdt-timeline-num-sub">{{ ucwords($education->specialized) }}</div>@endif
                                             @if($education->description ?? null)<div class="cdt-timeline-num-desc">{!! BaseHelper::clean($education->description) !!}</div>@endif
                                         </div>
-                                    </div>
-                                @endforeach
+                                </div>
+                            @endforeach
                             @else
                                 <p class="cdt-empty-msg">— {{ __('No education added') }}</p>
                             @endif
@@ -739,20 +739,20 @@
                                 <div class="mb-4">
                                     <div class="cdt-section-title mb-2">{{ __('Achievements') }}</div>
                                     <div class="cdt-text-block">{!! nl2br(e($candidate->achievements)) !!}</div>
-                                </div>
-                            @endif
+                    </div>
+                @endif
                             @if(!empty(trim($candidate->activities ?? '')))
                                 <div class="mb-4">
                                     <div class="cdt-section-title mb-2">{{ __('Activities') }}</div>
                                     <div class="cdt-text-block">{!! nl2br(e($candidate->activities)) !!}</div>
                                 </div>
-                            @endif
+                                    @endif
                             @if(!empty($youtubeUrl ?? null))
                                 <div class="mb-4">
                                     <div class="cdt-section-title mb-2">{{ __('YouTube Link') }}</div>
                                     <a href="{{ $youtubeUrl }}" target="_blank" rel="noopener noreferrer" class="cdt-link-yt"><i class="fab fa-youtube"></i> {{ __('Watch on YouTube') }}</a>
                                 </div>
-                            @endif
+                                    @endif
                             <div class="cdt-detail-list mb-4">
                                 <div class="cdt-section-title mb-3">{{ __('Job Preferences') }}</div>
                                 <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Preferred Institution Type') }}</span><span class="cdt-detail-value">{{ $instTypesDisplay }}</span></div>
@@ -778,8 +778,8 @@
                                             <li><strong>{{ $level }}</strong>@if($spec) — {{ $spec }}@endif @if(!empty($q['institution'])) ({{ $q['institution'] }})@endif</li>
                                         @endforeach
                                     </ul>
-                                </div>
-                            @endif
+                                        </div>
+                                    @endif
                             @if(is_array($candidate->teaching_certifications ?? null) && !empty($candidate->teaching_certifications))
                                 <div class="mb-4">
                                     <div class="cdt-section-title mb-3">{{ __('Teaching Certifications') }}</div>
@@ -798,7 +798,7 @@
                                         @foreach($candidate->languages as $lang)
                                             @php $langName = is_array($lang) ? ($lang['language'] ?? '') : (string)$lang; $prof = is_array($lang) ? ($lang['proficiency'] ?? '') : ''; $langName = $langName ? ucwords(str_replace('_', ' ', $langName)) : $langName; $prof = $prof ? ucwords(str_replace('_', ' ', $prof)) : $prof; @endphp
                                             <li>{{ $langName }}{!! $prof ? ' – ' . e($prof) : '' !!}</li>
-                                        @endforeach
+                            @endforeach
                                     </ul>
                                 </div>
                             @endif
@@ -829,8 +829,8 @@
                     @endif
 
                     <div class="cdt-sidebar-wrap">
-                        <div class="cdt-sidebar-card">
-                            <h4>{{ __('Profile Info') }}</h4>
+                    <div class="cdt-sidebar-card">
+                        <h4>{{ __('Profile Info') }}</h4>
                         <ul class="cdt-info-list">
                             @if($candidate->gender ?? null)<li><span class="cdt-info-icon"><i class="fas fa-venus-mars"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Gender') }}</div><div class="cdt-info-value">{{ ucfirst($candidate->gender) }}</div></div></li>@endif
                             @if($candidate->dob ?? null)<li><span class="cdt-info-icon"><i class="fas fa-birthday-cake"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Date of Birth') }}</div><div class="cdt-info-value">{{ is_object($candidate->dob) ? $candidate->dob->format('M d, Y') : $candidate->dob }}</div></div></li>@endif
@@ -851,11 +851,11 @@
                         <ul class="cdt-info-list">
                             <li>
                                 <span class="cdt-info-icon"><i class="fas fa-star"></i></span>
-                                <div class="cdt-info-text">
+                                    <div class="cdt-info-text">
                                     <div class="cdt-info-label">{{ __('Interests') }}</div>
                                     <div class="cdt-info-value cdt-info-value-block">{{ !empty(trim($candidate->interests ?? '')) ? Str::limit(strip_tags($candidate->interests), 120) : '—' }}</div>
-                                </div>
-                            </li>
+                                    </div>
+                                </li>
                         </ul>
                     </div>
 
@@ -865,11 +865,11 @@
                         <ul class="cdt-info-list">
                             <li>
                                 <span class="cdt-info-icon"><i class="fas fa-trophy"></i></span>
-                                <div class="cdt-info-text">
+                                    <div class="cdt-info-text">
                                     <div class="cdt-info-label">{{ __('Achievements') }}</div>
                                     <div class="cdt-info-value cdt-info-value-block">{{ !empty(trim($candidate->achievements ?? '')) ? Str::limit(strip_tags($candidate->achievements), 120) : '—' }}</div>
-                                </div>
-                            </li>
+                                    </div>
+                                </li>
                         </ul>
                     </div>
 
@@ -879,11 +879,11 @@
                         <ul class="cdt-info-list">
                             <li>
                                 <span class="cdt-info-icon"><i class="fas fa-tasks"></i></span>
-                                <div class="cdt-info-text">
+                                    <div class="cdt-info-text">
                                     <div class="cdt-info-label">{{ __('Activities') }}</div>
                                     <div class="cdt-info-value cdt-info-value-block">{{ !empty(trim($candidate->activities ?? '')) ? Str::limit(strip_tags($candidate->activities), 120) : '—' }}</div>
-                                </div>
-                            </li>
+                                    </div>
+                                </li>
                         </ul>
                     </div>
 
@@ -893,7 +893,7 @@
                         <ul class="cdt-info-list">
                             <li>
                                 <span class="cdt-info-icon"><i class="fab fa-youtube"></i></span>
-                                <div class="cdt-info-text">
+                                    <div class="cdt-info-text">
                                     <div class="cdt-info-label">{{ __('YouTube') }}</div>
                                     <div class="cdt-info-value">
                                         @if(!empty($youtubeUrl))
@@ -902,8 +902,8 @@
                                             —
                                         @endif
                                     </div>
-                                </div>
-                            </li>
+                                    </div>
+                                </li>
                         </ul>
                     </div>
                     </div>

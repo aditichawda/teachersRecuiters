@@ -4,6 +4,8 @@ namespace Theme\Jobzilla\Http\Controllers;
 
 use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Http\Responses\BaseHttpResponse;
+use Botble\Base\Enums\BaseStatusEnum;
+use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
 use Botble\Location\Repositories\Interfaces\CityInterface;
 use Botble\Theme\Facades\Theme;
 use Botble\Theme\Http\Controllers\PublicController;
@@ -28,6 +30,39 @@ class JobzillaController extends PublicController
         $cities = $cityRepository->filters($keyword, 20, ['state']);
 
         return $response->setData(CityResource::collection($cities));
+    }
+
+    public function ajaxGetJobRoles(Request $request, CategoryInterface $categoryRepository, BaseHttpResponse $response)
+    {
+        if (! $request->ajax() || ! $request->wantsJson()) {
+            return $response->setNextUrl(BaseHelper::getHomepageUrl());
+        }
+
+        $keyword = BaseHelper::stringify($request->input('k'));
+
+        $categories = $categoryRepository->advancedGet([
+            'condition' => [
+                'status' => BaseStatusEnum::PUBLISHED,
+            ],
+            'order_by' => ['order' => 'ASC', 'created_at' => 'DESC'],
+        ]);
+
+        // If keyword is empty, return all categories (for dropdown on click)
+        // Otherwise filter by keyword
+        if (!empty($keyword) && strlen($keyword) >= 2) {
+            $categories = $categories->filter(function ($category) use ($keyword) {
+                return stripos($category->name, $keyword) !== false;
+            });
+        }
+
+        $categories = $categories->take(100)->map(function ($category) {
+            return [
+                'id' => $category->id,
+                'name' => $category->name,
+            ];
+        });
+
+        return $response->setData($categories->values());
     }
 
     public function faq()

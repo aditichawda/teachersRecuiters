@@ -60,7 +60,7 @@
                         </h4>
                     </div>
                     <?php if($jobRoles->isNotEmpty()): ?>
-                        <ul class="jobs-category-list">
+                        <ul class="jobs-category-list auto-scroll-list" id="jobs-by-designation-list">
                             <?php $__currentLoopData = $jobRoles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <li>
                                     <a href="<?php echo e($role->url); ?>" class="jobs-category-link">
@@ -87,7 +87,7 @@
                         </h4>
                     </div>
                     <?php if($teachingSubjects->isNotEmpty()): ?>
-                        <ul class="jobs-category-list">
+                        <ul class="jobs-category-list auto-scroll-list" id="jobs-by-teaching-subject-list">
                             <?php $__currentLoopData = $teachingSubjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <li>
                                     <a href="<?php echo e($subject->url); ?>" class="jobs-category-link">
@@ -114,7 +114,7 @@
                         </h4>
                     </div>
                     <?php if($institutionTypes->isNotEmpty()): ?>
-                        <ul class="jobs-category-list">
+                        <ul class="jobs-category-list auto-scroll-list" id="jobs-by-institution-type-list">
                             <?php $__currentLoopData = $institutionTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $institution): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <li>
                                     <a href="<?php echo e($institution->url); ?>" class="jobs-category-link">
@@ -192,9 +192,10 @@
     max-height: 240px;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-right: 8px;
+    padding-right: 12px;
     width: 100%;
     box-sizing: border-box;
+    position: relative;
 }
 
 .jobs-category-list::-webkit-scrollbar {
@@ -219,6 +220,11 @@
     margin-bottom: 12px;
     padding-bottom: 12px;
     border-bottom: 1px solid #F0F0F0;
+    position: relative;
+    z-index: 1;
+    clear: both;
+    display: block;
+    width: 100%;
 }
 
 .jobs-category-list li:last-child {
@@ -234,10 +240,13 @@
     transition: all 0.3s ease;
     display: block;
     position: relative;
+    padding: 4px 0;
     padding-left: 0;
     word-wrap: break-word;
     overflow-wrap: break-word;
     max-width: 100%;
+    line-height: 1.5;
+    z-index: 2;
 }
 
 .jobs-category-link:hover {
@@ -276,4 +285,124 @@
         font-size: 14px;
     }
 }
-</style><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/shortcodes/jobs-by-categories/index.blade.php ENDPATH**/ ?>
+
+/* Auto-scroll styles */
+.auto-scroll-list {
+    scroll-behavior: smooth;
+    position: relative;
+}
+
+.auto-scroll-list.paused {
+    scroll-behavior: auto;
+}
+
+/* Prevent text overlay during scroll */
+.auto-scroll-list li {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.auto-scroll-list .jobs-category-link {
+    width: 100%;
+    display: block;
+    white-space: normal;
+    overflow: visible;
+}
+</style>
+
+<script>
+(function() {
+    'use strict';
+    
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAutoScroll);
+    } else {
+        initAutoScroll();
+    }
+    
+    function initAutoScroll() {
+        // Get all three scroll lists
+        const designationList = document.getElementById('jobs-by-designation-list');
+        const teachingSubjectList = document.getElementById('jobs-by-teaching-subject-list');
+        const institutionTypeList = document.getElementById('jobs-by-institution-type-list');
+        
+        // Scroll speed (pixels per scroll) - slow for readability
+        const scrollSpeed = 0.4;
+        // Scroll interval (milliseconds) - slower interval for smooth reading
+        const scrollInterval = 60;
+        
+        // Function to auto-scroll a list
+        function autoScrollList(listElement, listId, startDelay) {
+            if (!listElement) return;
+            
+            // Check if content actually overflows
+            const maxScroll = listElement.scrollHeight - listElement.clientHeight;
+            if (maxScroll <= 0) return; // No need to scroll if content fits
+            
+            let scrollPosition = 0;
+            let isScrolling = true;
+            let scrollDirection = 1; // 1 for down, -1 for up
+            let scrollIntervalId = null;
+            let pauseAtEnd = false;
+            
+            // Pause on hover
+            listElement.addEventListener('mouseenter', function() {
+                isScrolling = false;
+                listElement.classList.add('paused');
+            });
+            
+            listElement.addEventListener('mouseleave', function() {
+                isScrolling = true;
+                listElement.classList.remove('paused');
+            });
+            
+            // Auto-scroll function
+            function scroll() {
+                if (!isScrolling || maxScroll <= 0) return;
+                
+                // If paused at end, wait before continuing
+                if (pauseAtEnd) {
+                    pauseAtEnd = false;
+                    return;
+                }
+                
+                scrollPosition += scrollSpeed * scrollDirection;
+                
+                // Reverse direction when reaching top or bottom
+                if (scrollPosition >= maxScroll) {
+                    scrollPosition = maxScroll;
+                    scrollDirection = -1;
+                    pauseAtEnd = true;
+                    // Wait 2 seconds at bottom before reversing
+                    setTimeout(function() {
+                        pauseAtEnd = false;
+                    }, 2000);
+                } else if (scrollPosition <= 0) {
+                    scrollPosition = 0;
+                    scrollDirection = 1;
+                    pauseAtEnd = true;
+                    // Wait 2 seconds at top before reversing
+                    setTimeout(function() {
+                        pauseAtEnd = false;
+                    }, 2000);
+                }
+                
+                listElement.scrollTop = scrollPosition;
+            }
+            
+            // Start scrolling after a delay (let page load first) + individual delay for each list
+            setTimeout(function() {
+                scrollIntervalId = setInterval(scroll, scrollInterval);
+            }, 1500 + (startDelay || 0));
+        }
+        
+        // Initialize auto-scroll for each list separately with different start delays
+        // This makes them scroll independently and not in sync
+        autoScrollList(designationList, 'designation', 0);
+        autoScrollList(teachingSubjectList, 'teaching-subject', 600);
+        autoScrollList(institutionTypeList, 'institution-type', 1200);
+    }
+})();
+</script><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/shortcodes/jobs-by-categories/index.blade.php ENDPATH**/ ?>

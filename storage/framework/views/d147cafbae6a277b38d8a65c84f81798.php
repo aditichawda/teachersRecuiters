@@ -10,7 +10,7 @@
     <!-- TITLE END-->
     <div class="container">
         <div class="section-content">
-            <div class="owl-carousel home-client-carousel3 owl-btn-vertical-center" style="background-color: aliceblue;">
+            <div class="owl-carousel home-client-carousel3 owl-btn-vertical-center">
                 <?php $__currentLoopData = $companies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $company): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="item">
                         <div class="ow-client-logo">

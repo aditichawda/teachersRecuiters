@@ -9,11 +9,10 @@
     @endphp
     <div class="form-group mb-4">
         <h4 class="section-head-small mb-4">{{ __('Location') }}</h4>
-        <select name="city_id" class="wt-select-bar-large selectpicker-location">
-            <option value="">{{ __('Select City') }}</option>
-            @if ($cityId && $cityName)
-                <option value="{{ $cityId }}" selected>{{ $cityName }}</option>
-            @endif
-        </select>
+        <div class="job-city-search-wrapper" style="position: relative;">
+            <input type="text" name="city_search" id="job_city_search" class="wt-select-bar-large job-city-search-input" placeholder="{{ __('Select Your Location') }}" autocomplete="off" value="{{ request('city_search', $cityName) }}" />
+            <input type="hidden" name="city_id" id="job_city_id" value="{{ $cityId }}" />
+            <div class="job-city-suggestions" id="job-city-suggestions" style="display: none;"></div>
+        </div>
     </div>
 @endif

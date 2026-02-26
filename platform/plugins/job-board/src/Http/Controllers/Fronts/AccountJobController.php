@@ -210,6 +210,19 @@ class AccountJobController extends BaseController
             'never_expired',
         ]);
 
+        // Remove fields if columns don't exist in database yet
+        // This will be enabled after migrations are run
+        if ($request->has('apply_internal_phones')) {
+            if (!Schema::hasColumn('jb_jobs', 'apply_internal_phones')) {
+                $request->request->remove('apply_internal_phones');
+            }
+        }
+        if ($request->has('enable_whatsapp_notifications')) {
+            if (!Schema::hasColumn('jb_jobs', 'enable_whatsapp_notifications')) {
+                $request->request->remove('enable_whatsapp_notifications');
+            }
+        }
+
         $request->merge([
             'expire_date' => Carbon::now()->addDays(JobBoardHelper::jobExpiredDays()),
             'author_id' => $account->getAuthIdentifier(),
