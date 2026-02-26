@@ -1283,12 +1283,21 @@ document.addEventListener('DOMContentLoaded', function() {
 // Logout Button Handler - Enhanced with better dialog system detection
 (function() {
     function waitForDialogSystem(callback, maxAttempts) {
-        maxAttempts = maxAttempts || 50; // 5 seconds max (50 * 100ms)
+        maxAttempts = maxAttempts || 100; // 10 seconds max (100 * 100ms)
         let attempts = 0;
         
         function check() {
             attempts++;
-            if (typeof window.showDialogConfirm === 'function' && typeof jQuery !== 'undefined') {
+            // Check if showDialogConfirm function exists (it should work even without jQuery check)
+            if (typeof window.showDialogConfirm === 'function') {
+                // Also ensure dialog container exists
+                if (typeof jQuery !== 'undefined' && jQuery('#dialog-alert-container').length === 0) {
+                    jQuery('body').append('<div id="dialog-alert-container"></div>');
+                } else if (typeof jQuery === 'undefined' && !document.getElementById('dialog-alert-container')) {
+                    const container = document.createElement('div');
+                    container.id = 'dialog-alert-container';
+                    document.body.appendChild(container);
+                }
                 callback();
             } else if (attempts < maxAttempts) {
                 setTimeout(check, 100);
@@ -1345,13 +1354,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     } else {
                         // Use custom dialog
-                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
-                            if (confirmed) {
+                        try {
+                            window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                                if (confirmed) {
+                                    allowSubmit = true;
+                                    logoutForm.removeEventListener('submit', submitHandler, true);
+                                    logoutForm.submit();
+                                }
+                            }).catch(function(error) {
+                                console.error('Dialog error:', error);
+                                // Fallback to native confirm on error
+                                if (confirm('Do you want to logout?')) {
+                                    allowSubmit = true;
+                                    logoutForm.submit();
+                                }
+                            });
+                        } catch (error) {
+                            console.error('Dialog system error:', error);
+                            // Fallback to native confirm on error
+                            if (confirm('Do you want to logout?')) {
                                 allowSubmit = true;
-                                logoutForm.removeEventListener('submit', submitHandler, true);
                                 logoutForm.submit();
                             }
-                        });
+                        }
                     }
                 });
                 
@@ -1366,15 +1391,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initLogoutHandler, 300);
+            setTimeout(initLogoutHandler, 500);
         });
     } else {
         // DOM already loaded
-        setTimeout(initLogoutHandler, 300);
+        setTimeout(initLogoutHandler, 500);
     }
     
-    // Also try after a longer delay to ensure all scripts are loaded
-    setTimeout(initLogoutHandler, 1000);
+    // Also try after longer delays to ensure all scripts are loaded
+    setTimeout(initLogoutHandler, 1500);
+    setTimeout(initLogoutHandler, 3000);
 })();
 </script>
+
+
+<div id="dialog-alert-container" style="display: none;"></div>
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/navbar.blade.php ENDPATH**/ ?>
