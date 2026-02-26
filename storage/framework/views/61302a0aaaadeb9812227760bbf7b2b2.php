@@ -15,9 +15,7 @@
         <?php endif; ?>
      <?php $__env->endSlot(); ?>
 
-    <?php echo Form::repeater($name, $options['value'] ?? Arr::get($options, 'selected'), Arr::get($options, 'fields', [])); ?>
-
-
+    <?php echo Form::repeater($name, $options['value'] ?: Arr::get($options, 'selected'), $options['fields'] ?: []); ?>
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
