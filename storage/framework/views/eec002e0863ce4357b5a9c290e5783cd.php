@@ -6,7 +6,7 @@
             : cms_currency()->getDefaultCurrency()->title,
         'amount' => $package->price,
         'name' => $package->name,
-        'returnUrl' => url('account/packages/' . $package->id . '/subscribe'),
+        'returnUrl' => route('public.account.package.subscribe', $package->id),
         'callbackUrl' => route('public.account.package.subscribe.callback', $package->id),
     ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php $__env->stopSection(); ?>
