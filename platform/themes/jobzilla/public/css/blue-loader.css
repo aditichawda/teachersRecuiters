@@ -1,0 +1,229 @@
+/**
+ * Blue Loader Component
+ * Reusable loader for data fetching operations
+ */
+
+/* Main Loader Container */
+.blue-loader-container {
+    position: relative;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.blue-loader-container.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    min-height: 100vh;
+}
+
+/* Blue Spinner */
+.blue-loader {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(59, 130, 246, 0.2);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: blue-spin 0.8s linear infinite;
+}
+
+.blue-loader.small {
+    width: 30px;
+    height: 30px;
+    border-width: 3px;
+}
+
+.blue-loader.medium {
+    width: 40px;
+    height: 40px;
+    border-width: 3.5px;
+}
+
+.blue-loader.large {
+    width: 60px;
+    height: 60px;
+    border-width: 5px;
+}
+
+/* Spinner Animation */
+@keyframes blue-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Loader with Text */
+.blue-loader-with-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.blue-loader-text {
+    color: #3b82f6;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Overlay Loader (for modals, forms) */
+.blue-loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border-radius: inherit;
+}
+
+/* Inline Loader (for buttons, small areas) */
+.blue-loader-inline {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(59, 130, 246, 0.2);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: blue-spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+/* Page Loading (for full page loads) */
+#page-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#page-loading.show {
+    display: flex;
+}
+
+#page-loading .blue-loader {
+    width: 60px;
+    height: 60px;
+    border-width: 5px;
+}
+
+/* Candidates Page Specific */
+.candidates-listing.loading {
+    position: relative;
+    min-height: 400px;
+}
+
+.candidates-listing.loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+}
+
+.candidates-listing.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(59, 130, 246, 0.2);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: blue-spin 0.8s linear infinite;
+    z-index: 11;
+}
+
+/* Screening Questions Loader */
+#job-screening-questions-wrap.loading {
+    position: relative;
+    min-height: 200px;
+}
+
+#job-screening-questions-wrap.loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+    border-radius: 8px;
+}
+
+#job-screening-questions-wrap.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(59, 130, 246, 0.2);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: blue-spin 0.8s linear infinite;
+    z-index: 11;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.blue-loader-container,
+#page-loading {
+    animation: fadeIn 0.2s ease-in;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .blue-loader {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .blue-loader.large {
+        width: 50px;
+        height: 50px;
+    }
+}

@@ -1,8 +1,8 @@
-@if ($job->latitude && $job->longitude)
-    <div>
-        <h4 class="twm-s-title">{{ __('Location') }}</h4>
-        <div class="job-board-street-map-container">
-            <div class="job-board-street-map"
+<div class="jd-content-card" style="margin-top: 24px;">
+    <h4 class="jd-section-title">{{ __('Location') }}</h4>
+    @if ($job->latitude && $job->longitude)
+        <div class="job-board-street-map-container" style="margin-top: 16px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+            <div class="job-board-street-map" style="width: 100%; height: 400px; min-height: 400px;"
                 data-popup-id="#street-map-popup-template"
                 data-center="{{ json_encode([$job->latitude, $job->longitude]) }}"
                 data-map-icon="{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}"></div>
@@ -48,5 +48,23 @@
                 </table>
             </div>
         </div>
-    </div>
-@endif
+    @else
+        <div style="margin-top: 16px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+            @if ($job->full_address)
+                <p style="margin: 0; color: #475569; font-size: 15px;">
+                    <i class="fas fa-map-marker-alt" style="color: #0ea5e9; margin-right: 8px;"></i>
+                    {{ $job->full_address }}
+                </p>
+            @elseif ($job->location)
+                <p style="margin: 0; color: #475569; font-size: 15px;">
+                    <i class="fas fa-map-marker-alt" style="color: #0ea5e9; margin-right: 8px;"></i>
+                    {{ $job->location }}
+                </p>
+            @else
+                <p style="margin: 0; color: #94a3b8; font-size: 14px;">
+                    {{ __('Location information not available') }}
+                </p>
+            @endif
+        </div>
+    @endif
+</div>

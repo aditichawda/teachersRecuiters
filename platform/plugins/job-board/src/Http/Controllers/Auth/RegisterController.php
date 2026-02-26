@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 use Botble\JobBoard\Notifications\EmailVerificationNotification;
 
 class RegisterController extends BaseController
@@ -398,21 +399,41 @@ class RegisterController extends BaseController
                 'account_type' => $request->input('account_type', 'job-seeker'),
             ];
         }
+        
+        // Handle is_whatsapp_available - can be "1", "on", "true", true, or 1
+        $whatsappValue = $formData['is_whatsapp_available'] ?? false;
+        if ($whatsappValue === '1' || $whatsappValue === 'on' || $whatsappValue === 'true' || $whatsappValue === true || $whatsappValue === 1) {
+            $formData['is_whatsapp_available'] = true;
+        } else {
+            $formData['is_whatsapp_available'] = false;
+        }
+        
+        \Log::info('Form data processing', [
+            'raw_is_whatsapp' => $whatsappValue,
+            'processed_is_whatsapp' => $formData['is_whatsapp_available'],
+            'all_request_inputs' => array_keys($request->all()),
+            'form_data_keys' => array_keys($formData),
+        ]);
 
-        // Generate OTP code - fixed code for testing (use 123456 to verify)
-        $code = '123456';
+        // Generate random 6-digit OTP code
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $expiresAt = now()->addMinutes(10);
 
         // Map phone_display to phone if phone is null
-        $phone = $formData['phone'] ?? $formData['phone_display'] ?? '';
-        $phoneCountryCode = $formData['phone_country_code'] ?? '';
+        // Try multiple sources for phone number
+        $phone = $formData['phone'] ?? $formData['phone_display'] ?? $request->input('phone') ?? $request->input('phone_display') ?? '';
+        $phoneCountryCode = $formData['phone_country_code'] ?? $request->input('phone_country_code') ?? '';
         
         \Log::info('Phone data from form:', [
-            'phone' => $phone,
-            'phone_display' => $formData['phone_display'] ?? 'not set',
+            'phone_from_form_data' => $formData['phone'] ?? 'not set',
+            'phone_display_from_form_data' => $formData['phone_display'] ?? 'not set',
+            'phone_from_request' => $request->input('phone') ?? 'not set',
+            'phone_display_from_request' => $request->input('phone_display') ?? 'not set',
+            'final_phone' => $phone,
             'phone_country_code' => $phoneCountryCode,
             'form_data_keys' => array_keys($formData),
+            'all_request_keys' => array_keys($request->all()),
         ]);
         
         // Format phone with country code: "+919340193449" (no space)
@@ -568,9 +589,81 @@ class RegisterController extends BaseController
                 ->setMessage('Verification code generated. Email sending failed, please check server logs. OTP Code: ' . $code);
         }
 
+        // Send WhatsApp OTP if WhatsApp is available
+        $isWhatsAppAvailable = $formData['is_whatsapp_available'] ?? false;
+        $whatsappSent = false;
+        
+        \Log::info('WhatsApp OTP Check - Registration', [
+            'is_whatsapp_available' => $isWhatsAppAvailable,
+            'phone' => $phone,
+            'phone_length' => strlen($phone ?? ''),
+            'form_data_is_whatsapp' => $formData['is_whatsapp_available'] ?? 'not set',
+            'all_form_data_keys' => array_keys($formData),
+        ]);
+        
+        if ($isWhatsAppAvailable && $phone) {
+            // Clean phone number before sending (remove + and any non-numeric characters)
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+            // If 10 digits, add 91 country code
+            if (strlen($cleanPhone) == 10) {
+                $cleanPhone = '91' . $cleanPhone;
+            }
+            
+            \Log::info('Attempting to send WhatsApp OTP', [
+                'original_phone' => $phone,
+                'cleaned_phone' => $cleanPhone,
+                'code' => $code,
+                'email' => $email,
+            ]);
+            
+            try {
+                $whatsappSent = $this->sendWhatsAppMessage($cleanPhone, $code);
+                if ($whatsappSent) {
+                    Log::info('WhatsApp OTP sent successfully during registration', [
+                        'phone' => $phone,
+                        'code' => $code,
+                        'email' => $email,
+                    ]);
+                } else {
+                    Log::warning('WhatsApp OTP sending failed during registration', [
+                        'phone' => $phone,
+                        'code' => $code,
+                        'email' => $email,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('WhatsApp OTP send error during registration: ' . $e->getMessage(), [
+                    'phone' => $phone,
+                    'code' => $code,
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+        } else {
+            \Log::warning('WhatsApp OTP not sent - conditions not met', [
+                'is_whatsapp_available' => $isWhatsAppAvailable,
+                'has_phone' => !empty($phone),
+                'phone' => $phone ?? 'empty',
+            ]);
+        }
+
+        // Format phone for display (add + for user-friendly display)
+        $displayPhone = $phone;
+        if ($phone && strlen($phone) > 10) {
+            $displayPhone = '+' . substr($phone, 0, 2) . ' ' . substr($phone, 2);
+        }
+        
+        $message = trans('plugins/job-board::messages.verification_code_sent') ?: 'Verification code sent to your email address.';
+        if ($isWhatsAppAvailable && $whatsappSent) {
+            $message = "Verification code sent to your WhatsApp number ({$displayPhone}) and email ({$email}).";
+        } elseif ($isWhatsAppAvailable && !$whatsappSent) {
+            $message = "Verification code sent to your email. WhatsApp OTP sending failed for {$displayPhone}.";
+        }
+
         return $this
             ->httpResponse()
-            ->setMessage(trans('plugins/job-board::messages.verification_code_sent') ?: 'Verification code sent to your email address.');
+            ->setMessage($message);
     }
 
     /**
@@ -1709,8 +1802,8 @@ class RegisterController extends BaseController
                 ->setNextUrl(route('public.account.register.employer.verifyEmailPage'));
         }
 
-        // Generate OTP - fixed code for testing (use 123456 to verify)
-        $code = '123456';
+        // Generate random 6-digit OTP code
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expiresAt = now()->addMinutes(10);
 
         // Map phone_display to phone
@@ -1782,14 +1875,88 @@ class RegisterController extends BaseController
             ]);
         }
 
+        // Send WhatsApp OTP if WhatsApp is available
+        $isWhatsAppAvailable = $request->input('is_whatsapp_available', false);
+        $whatsappSent = false;
+        
+        \Log::info('WhatsApp OTP Check - Employer Registration', [
+            'is_whatsapp_available' => $isWhatsAppAvailable,
+            'is_whatsapp_available_raw' => $request->input('is_whatsapp_available'),
+            'phone' => $phone,
+            'phone_length' => strlen($phone ?? ''),
+            'email' => $email,
+        ]);
+        
+        if ($isWhatsAppAvailable && $phone) {
+            // Clean phone number before sending (remove + and any non-numeric characters)
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+            // If 10 digits, add 91 country code
+            if (strlen($cleanPhone) == 10) {
+                $cleanPhone = '91' . $cleanPhone;
+            }
+            
+            \Log::info('Attempting to send Employer WhatsApp OTP', [
+                'original_phone' => $phone,
+                'cleaned_phone' => $cleanPhone,
+                'code' => $code,
+                'email' => $email,
+            ]);
+            
+            try {
+                $whatsappSent = $this->sendWhatsAppMessage($cleanPhone, $code);
+                if ($whatsappSent) {
+                    Log::info('Employer WhatsApp OTP sent successfully', [
+                        'phone' => $phone,
+                        'code' => $code,
+                        'email' => $email,
+                        'temp_account_id' => $tempAccount->id,
+                    ]);
+                } else {
+                    Log::warning('Employer WhatsApp OTP sending failed', [
+                        'phone' => $phone,
+                        'code' => $code,
+                        'email' => $email,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Employer WhatsApp OTP send error: ' . $e->getMessage(), [
+                    'phone' => $phone,
+                    'code' => $code,
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+        } else {
+            \Log::warning('Employer WhatsApp OTP not sent - conditions not met', [
+                'is_whatsapp_available' => $isWhatsAppAvailable,
+                'has_phone' => !empty($phone),
+                'phone' => $phone ?? 'empty',
+            ]);
+        }
+
+        // Format phone for display (add + for user-friendly display)
+        $displayPhone = $phone;
+        if ($phone && strlen($phone) > 10) {
+            $displayPhone = '+' . substr($phone, 0, 2) . ' ' . substr($phone, 2);
+        }
+        
+        $message = 'Verification code sent to your email.';
+        if ($isWhatsAppAvailable && $whatsappSent) {
+            $message = "Verification code sent to your WhatsApp number ({$displayPhone}) and email ({$email}).";
+        } elseif ($isWhatsAppAvailable && !$whatsappSent) {
+            $message = "Verification code sent to your email. WhatsApp OTP sending failed for {$displayPhone}.";
+        }
+
         Log::info('Employer Step 1 completed - OTP sent:', [
             'email' => $email,
             'temp_account_id' => $tempAccount->id,
+            'whatsapp_sent' => $whatsappSent,
         ]);
 
         return $this
             ->httpResponse()
-            ->setMessage('Verification code sent to your email.')
+            ->setMessage($message)
             ->setNextUrl(route('public.account.register.employer.verifyEmailPage'));
     }
 
@@ -1902,7 +2069,37 @@ class RegisterController extends BaseController
             return $this->httpResponse()->setError()->setMessage('Failed to resend code. Please try again.');
         }
 
-        return $this->httpResponse()->setMessage('Verification code resent to your email.');
+        // Send WhatsApp OTP if WhatsApp is available
+        $isWhatsAppAvailable = $tempAccount->is_whatsapp_available ?? false;
+        $phone = $tempAccount->phone ?? '';
+        $whatsappSent = false;
+        if ($isWhatsAppAvailable && $phone) {
+            try {
+                $whatsappSent = $this->sendWhatsAppMessage($phone, $code);
+                if ($whatsappSent) {
+                    Log::info('Employer WhatsApp OTP resent successfully', [
+                        'phone' => $phone,
+                        'code' => $code,
+                        'email' => $email,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Employer WhatsApp OTP resend error: ' . $e->getMessage(), [
+                    'phone' => $phone,
+                    'code' => $code,
+                    'email' => $email,
+                ]);
+            }
+        }
+
+        $message = 'Verification code resent to your email.';
+        if ($isWhatsAppAvailable && $whatsappSent) {
+            $message = 'Verification code resent to your email and WhatsApp.';
+        } elseif ($isWhatsAppAvailable && !$whatsappSent) {
+            $message = 'Verification code resent to your email. WhatsApp OTP sending failed.';
+        }
+
+        return $this->httpResponse()->setMessage($message);
     }
 
     /**
@@ -2066,5 +2263,245 @@ class RegisterController extends BaseController
             ->httpResponse()
             ->setMessage('Registration successful! Welcome to TeachersRecruiter.')
             ->setNextUrl(route('public.account.dashboard'));
+    }
+
+    /**
+     * Send WhatsApp message using MSG Club API (Template-based)
+     */
+    protected function sendWhatsAppMessage(string $phone, string $otp): bool
+    {
+        \Log::info('sendWhatsAppMessage called', [
+            'original_phone' => $phone,
+            'otp' => $otp,
+        ]);
+        
+        // Get WhatsApp API configuration from settings or env
+        $apiUrl = setting('whatsapp_api_url', env('WHATSAPP_API_URL', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate'));
+        $authKey = setting('whatsapp_api_key', env('WHATSAPP_API_KEY', '4625770ffb62853af287cedec7f50b0'));
+        $senderId = setting('whatsapp_sender_id', env('WHATSAPP_SENDER_ID', '919039632383'));
+        $templateName = setting('whatsapp_otp_template', env('WHATSAPP_OTP_TEMPLATE', 'otp_signup_login'));
+
+        \Log::info('WhatsApp API Configuration', [
+            'api_url' => $apiUrl,
+            'has_auth_key' => !empty($authKey),
+            'auth_key_length' => strlen($authKey ?? ''),
+            'auth_key_first_10' => substr($authKey ?? '', 0, 10),
+            'auth_key_last_10' => substr($authKey ?? '', -10),
+            'sender_id' => $senderId,
+            'template_name' => $templateName,
+        ]);
+
+        if (!$apiUrl || !$authKey) {
+            \Log::error('WhatsApp API configuration missing', [
+                'api_url' => $apiUrl,
+                'has_auth_key' => !empty($authKey),
+            ]);
+            return false;
+        }
+
+        // Clean phone number - remove all non-numeric characters (including +)
+        $originalPhone = $phone;
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        
+        \Log::info('Phone cleaning step 1', [
+            'original' => $originalPhone,
+            'after_preg_replace' => $phone,
+            'phone_length' => strlen($phone),
+        ]);
+        
+        // Store original phone for logging
+        $phoneWithCountryCode = $phone;
+        $phoneWithoutCountryCode = $phone;
+        
+        // If phone has country code (starts with 91 and is 12 digits), extract 10 digits
+        if (strlen($phone) == 12 && substr($phone, 0, 2) == '91') {
+            $phoneWithoutCountryCode = substr($phone, 2); // Remove country code
+            \Log::info('Extracted phone without country code', [
+                'with_country_code' => $phone,
+                'without_country_code' => $phoneWithoutCountryCode,
+            ]);
+        } elseif (strlen($phone) == 10) {
+            // Already 10 digits, no country code
+            $phoneWithoutCountryCode = $phone;
+            \Log::info('Phone is already 10 digits', [
+                'phone' => $phone,
+            ]);
+        } elseif (strlen($phone) < 10) {
+            \Log::error('Phone number too short', [
+                'phone' => $phone,
+                'length' => strlen($phone),
+            ]);
+            return false;
+        }
+        
+        // Try without country code first (as per user suggestion)
+        // API might expect just 10 digits without country code
+        $phone = $phoneWithoutCountryCode;
+        
+        \Log::info('Final phone number for WhatsApp API', [
+            'phone_with_country_code' => $phoneWithCountryCode,
+            'phone_without_country_code' => $phoneWithoutCountryCode,
+            'final_phone_used' => $phone,
+            'phone_length' => strlen($phone),
+            'format' => '10 digits without country code',
+        ]);
+
+        try {
+            // Prepare request body according to MSG Club API format (matching Postman screenshot exactly)
+            $requestBody = [
+                'mobileNumbers' => $phone,  // User's phone number (digits only, e.g., "9165268525")
+                'senderId' => $senderId,
+                'component' => [
+                    'messaging_product' => 'whatsapp',
+                    'recipient_type' => 'individual',
+                    'type' => 'template',
+                    'template' => [
+                        'name' => $templateName,
+                        'language' => [
+                            'code' => 'en'
+                        ],
+                        'components' => [
+                            [
+                                'type' => 'body',
+                                'index' => 0,
+                                'parameters' => [
+                                    [
+                                        'type' => 'text',
+                                        'text' => $otp  // Random OTP generated
+                                    ]
+                                ]
+                            ],
+                            [
+                                'type' => 'button',
+                                'sub_type' => 'url',
+                                'index' => 0,
+                                'parameters' => [
+                                    [
+                                        'type' => 'text',
+                                        'text' => $otp  // Same OTP for button
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'qrImageUrl' => false,
+                    'qrLinkUrl' => false,
+                    'to' => $phone  // Same phone number as mobileNumbers
+                ]
+            ];
+
+            \Log::info('WhatsApp API Request Body', [
+                'request_body' => json_encode($requestBody, JSON_PRETTY_PRINT),
+                'api_url' => $apiUrl . '?AUTH_KEY=' . substr($authKey, 0, 10) . '...',
+            ]);
+
+            // Make API call with AUTH_KEY as query parameter
+            // Try without URL encoding first (as Postman might not encode it)
+            // If AUTH_KEY has special characters, they should be in the key itself
+            $fullUrl = $apiUrl . '?AUTH_KEY=' . $authKey;
+            \Log::info('Making WhatsApp API call', [
+                'url' => $apiUrl . '?AUTH_KEY=' . substr($authKey, 0, 10) . '...',
+                'full_url' => $fullUrl, // Log full URL for debugging (AUTH_KEY visible)
+                'full_url_length' => strlen($fullUrl),
+                'auth_key' => $authKey, // Log full AUTH_KEY for verification
+                'auth_key_length' => strlen($authKey),
+            ]);
+            
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])
+            ->timeout(60) // 1 minute timeout as requested
+            ->connectTimeout(30) // 30 seconds to establish connection
+            ->retry(2, 2000) // Retry 2 times with 2 second delay
+            ->post($fullUrl, $requestBody);
+            
+            // Get response data first - ensure variables are always defined
+            $responseBody = $response->body() ?? '';
+            $responseJson = $response->json() ?? [];
+            $statusCode = $response->status();
+            
+            \Log::info('WhatsApp API Response - Detailed', [
+                'status_code' => $statusCode,
+                'response_body_raw' => $responseBody,
+                'response_json' => $responseJson,
+                'is_successful' => $response->successful(),
+            ]);
+
+            // Check if request was successful
+            if ($response->successful()) {
+                $responseData = $responseJson;
+                
+                // Check response code (3001 seems to be success based on screenshot)
+                if (isset($responseData['responseCode'])) {
+                    if ($responseData['responseCode'] == '3001') {
+                        \Log::info('WhatsApp OTP sent successfully', [
+                            'phone' => $phone,
+                            'response' => $responseData
+                        ]);
+                        return true;
+                    } else {
+                        \Log::warning('WhatsApp API returned non-success response code', [
+                            'phone' => $phone,
+                            'response_code' => $responseData['responseCode'],
+                            'response_message' => $responseData['response'] ?? 'No message',
+                            'full_response' => $responseData,
+                            'possible_reasons' => [
+                                '3009' => 'Unauthorized - Check AUTH_KEY validity or API account status',
+                                '3002' => 'Invalid phone number format',
+                                '3003' => 'Template not found or not approved',
+                                '3004' => 'Invalid parameters',
+                            ]
+                        ]);
+                        return false;
+                    }
+                } else {
+                    \Log::warning('WhatsApp API response missing responseCode', [
+                        'phone' => $phone,
+                        'response' => $responseData
+                    ]);
+                    return false;
+                }
+            } else {
+                \Log::error('WhatsApp API request failed - HTTP Error', [
+                    'phone' => $phone,
+                    'status' => $statusCode,
+                    'body' => $responseBody,
+                    'json' => $responseJson,
+                    'error_details' => [
+                        '400' => 'Bad Request - Check request format',
+                        '401' => 'Unauthorized - Invalid AUTH_KEY',
+                        '403' => 'Forbidden - Check API permissions',
+                        '404' => 'Not Found - Check API endpoint',
+                        '500' => 'Server Error - API provider issue',
+                    ]
+                ]);
+                return false;
+            }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            \Log::error('WhatsApp API Connection Error (Timeout/Network Issue)', [
+                'phone' => $phone,
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'possible_causes' => [
+                    'API server is slow or unreachable',
+                    'Network connectivity issue',
+                    'Firewall blocking the request',
+                    'API endpoint might be down',
+                    'Server IP might be blocked by API provider',
+                ],
+                'suggestion' => 'Check network connectivity, firewall settings, and API server status. Try testing the API endpoint directly from Postman.',
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            \Log::error('WhatsApp API Error: ' . $e->getMessage(), [
+                'phone' => $phone,
+                'error_type' => get_class($e),
+                'error_code' => $e->getCode(),
+                'error_message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
     }
 }

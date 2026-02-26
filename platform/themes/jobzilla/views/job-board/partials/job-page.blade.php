@@ -356,6 +356,16 @@
 {{-- Main Content --}}
 <div class="jobs-main-section jobs-container">
     <div class="container">
+        {{-- Jobs Page Top Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $topAds = render_page_ads('jobs', 'top'); @endphp
+            @if (!empty($topAds))
+                <div class="jobs-ads-top" style="margin: 20px 0;">
+                    {!! $topAds !!}
+                </div>
+            @endif
+        @endif
+
         <div class="row">
             {{-- Sidebar Filters --}}
             <div class="col-lg-4 col-md-12 jobs-sidebar-modern">
@@ -382,6 +392,17 @@
                         </div>
                     </div>
                 </div>
+                
+                {{-- Jobs Page Sidebar Ads --}}
+                @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+                    @php $sidebarAds = render_page_ads('jobs', 'sidebar-right'); @endphp
+                    @if (!empty($sidebarAds))
+                        <div class="side-bar mb-4" style="margin-top: 20px;">
+                            {!! $sidebarAds !!}
+                        </div>
+                    @endif
+                @endif
+
                 {!! dynamic_sidebar('job_board_sidebar') !!}
             </div>
 
@@ -442,5 +463,15 @@
                 </div>
             </div>
         </div>
+
+        {{-- Jobs Page Bottom Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $bottomAds = render_page_ads('jobs', 'bottom'); @endphp
+            @if (!empty($bottomAds))
+                <div class="jobs-ads-bottom" style="margin: 30px 0;">
+                    {!! $bottomAds !!}
+                </div>
+            @endif
+        @endif
     </div>
 </div>

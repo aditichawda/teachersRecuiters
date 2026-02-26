@@ -373,6 +373,16 @@
 
 <section class="for-teachers-section">
     <div class="container">
+        {{-- For Teachers Top Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $topAds = render_page_ads('for-teachers', 'top'); @endphp
+            @if (!empty($topAds))
+                <div class="for-teachers-ads-top" style="margin: 20px 0;">
+                    {!! $topAds !!}
+                </div>
+            @endif
+        @endif
+
         <!-- Hero Section -->
         <div class="teachers-hero">
             <span class="hero-subtitle">For Teachers</span>
@@ -568,5 +578,15 @@
                 <a href="{{ JobBoardHelper::getJobsPageURL() }}" class="btn-outline-custom">Explore Job Opportunities</a>
             </div>
         </div>
+
+        {{-- For Teachers Bottom Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $bottomAds = render_page_ads('for-teachers', 'bottom'); @endphp
+            @if (!empty($bottomAds))
+                <div class="for-teachers-ads-bottom" style="margin: 30px 0;">
+                    {!! $bottomAds !!}
+                </div>
+            @endif
+        @endif
     </div>
 </section>

@@ -119,30 +119,48 @@ class AdsServiceProvider extends ServiceProvider implements DeferrableProvider
             }
         });
 
-        if (defined('LANGUAGE_MODULE_SCREEN_NAME') && defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME')) {
-            LanguageAdvancedManager::registerModule(Ads::class, [
-                'name',
-                'image',
-                'tablet_image',
-                'mobile_image',
-                'url',
-            ]);
-        }
+        // Language support disabled for ads
+        // if (defined('LANGUAGE_MODULE_SCREEN_NAME') && defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME')) {
+        //     LanguageAdvancedManager::registerModule(Ads::class, [
+        //         'name',
+        //         'image',
+        //         'tablet_image',
+        //         'mobile_image',
+        //         'url',
+        //     ]);
+        // }
 
         if (defined('THEME_FRONT_HEADER')) {
             add_filter(THEME_FRONT_HEADER, function ($html) {
                 $autoAds = setting('ads_google_adsense_auto_ads');
                 $clientId = setting('ads_google_adsense_unit_client_id');
 
+                // Add ads CSS
+                $css = '<style>
+                    .ad-item { display: block; width: 100%; margin-bottom: 15px; }
+                    .ad-item img, .ad-item picture img { width: 100%; max-width: 100%; height: auto; min-height: 100px; max-height: 400px; object-fit: contain; display: block; }
+                    .ad-item a { display: block; width: 100%; }
+                    .ad-item picture { display: block; width: 100%; }
+                    .ads-container { width: 100%; margin: 20px 0; }
+                    .ads-container.ads-double .ad-item img, .ads-container.ads-double .ad-item picture img { min-height: 150px; max-height: 300px; }
+                    .ads-container.ads-multiple .ad-item img, .ads-container.ads-multiple .ad-item picture img { min-height: 120px; max-height: 250px; }
+                    .home-ads-top .ad-item img, .home-ads-top .ad-item picture img, .home-ads-bottom .ad-item img, .home-ads-bottom .ad-item picture img { min-height: 150px; max-height: 400px; width: 100%; }
+                    @media (max-width: 768px) {
+                        .ad-item img, .ad-item picture img { min-height: 80px; max-height: 250px; }
+                        .ads-container.ads-double .ad-item img, .ads-container.ads-double .ad-item picture img { min-height: 100px; max-height: 200px; }
+                        .ads-container.ads-multiple .ad-item img, .ads-container.ads-multiple .ad-item picture img { min-height: 80px; max-height: 180px; }
+                    }
+                </style>';
+
                 if ($autoAds) {
-                    return $html . $autoAds;
+                    return $html . $css . $autoAds;
                 }
 
                 if ($clientId) {
-                    return $html . view('plugins/ads::partials.google-adsense.unit-ads-header', compact('clientId'))->render();
+                    return $html . $css . view('plugins/ads::partials.google-adsense.unit-ads-header', compact('clientId'))->render();
                 }
 
-                return $html;
+                return $html . $css;
             }, 128);
 
             add_filter(THEME_FRONT_FOOTER, function ($html) {

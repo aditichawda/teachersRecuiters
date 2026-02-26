@@ -4,6 +4,7 @@ namespace Botble\Ads\Tables;
 
 use Botble\Ads\Models\Ads;
 use Botble\Base\Facades\Html;
+use Carbon\Carbon;
 use Botble\Table\Abstracts\TableAbstract;
 use Botble\Table\Actions\DeleteAction;
 use Botble\Table\Actions\EditAction;
@@ -22,6 +23,7 @@ use Botble\Table\HeaderActions\CreateHeaderAction;
 
 class AdsTable extends TableAbstract
 {
+
     public function setup(): void
     {
         $this
@@ -30,25 +32,60 @@ class AdsTable extends TableAbstract
                 IdColumn::make(),
                 ImageColumn::make(),
                 NameColumn::make()->route('ads.edit'),
-                FormattedColumn::make('key')
-                    ->title(trans('plugins/ads::ads.shortcode'))
+                FormattedColumn::make('url')
+                    ->title(trans('plugins/ads::ads.url'))
                     ->alignStart()
                     ->getValueUsing(function (FormattedColumn $column) {
-                        $value = $column->getItem()->key;
+                        $ad = $column->getItem();
+                        $url = $ad->url;
 
-                        if (! function_exists('shortcode')) {
-                            return $value;
+                        if (empty($url)) {
+                            return '<span class="text-muted">' . trans('plugins/ads::ads.not_set') . '</span>';
                         }
 
-                        return shortcode()->generateShortcode('ads', ['key' => $value]);
-                    })
-                    ->renderUsing(fn (FormattedColumn $column) => Html::tag('code', $column->getValue()))
-                    ->copyable()
-                    ->copyableState(fn (FormattedColumn $column) => $column->getValue()),
+                        // Truncate long URLs for display
+                        $displayUrl = strlen($url) > 50 ? substr($url, 0, 50) . '...' : $url;
+                        
+                        return Html::link($url, $displayUrl, [
+                            'target' => '_blank',
+                            'rel' => 'noopener noreferrer',
+                            'title' => $url,
+                            'class' => 'text-primary text-decoration-none'
+                        ]);
+                    }),
                 Column::make('clicked')
                     ->title(trans('plugins/ads::ads.clicked'))
                     ->alignStart(),
-                DateColumn::make('expired_at')->title(trans('plugins/ads::ads.expired_at')),
+                FormattedColumn::make('expired_at')
+                    ->title(trans('plugins/ads::ads.expired_at'))
+                    ->getValueUsing(function (FormattedColumn $column) {
+                        $ad = $column->getItem();
+                        $expiredAt = $ad->expired_at;
+                        
+                        if (!$expiredAt) {
+                            return '';
+                        }
+                        
+                        $expiredAtCarbon = Carbon::parse($expiredAt);
+                        $now = Carbon::now();
+                        $daysUntilExpiry = (int) $now->diffInDays($expiredAtCarbon, false);
+                        
+                        $dateFormatted = $expiredAtCarbon->format('Y-m-d');
+                        
+                        if ($daysUntilExpiry >= 0 && $daysUntilExpiry <= 7) {
+                            $badgeClass = $daysUntilExpiry <= 3 ? 'badge bg-danger' : 'badge bg-warning';
+                            if ($daysUntilExpiry == 0) {
+                                $badgeText = 'Today';
+                            } elseif ($daysUntilExpiry == 1) {
+                                $badgeText = '1 day left';
+                            } else {
+                                $badgeText = $daysUntilExpiry . ' days left';
+                            }
+                            return $dateFormatted . ' ' . Html::tag('span', $badgeText, ['class' => $badgeClass . ' ms-2']);
+                        }
+                        
+                        return $dateFormatted;
+                    }),
                 StatusColumn::make(),
             ])
             ->addHeaderAction(CreateHeaderAction::make()->route('ads.create'))
@@ -63,15 +100,25 @@ class AdsTable extends TableAbstract
                 DateBulkChange::make()->name('expired_at')->title(trans('plugins/ads::ads.expired_at')),
             ])
             ->queryUsing(function ($query): void {
+                $now = Carbon::now();
+                $sevenDaysFromNow = Carbon::now()->addDays(7);
+                
                 $query->select([
                     'id',
                     'image',
                     'key',
                     'name',
+                    'url',
                     'clicked',
                     'expired_at',
                     'status',
-                ]);
+                ])
+                ->orderByRaw('CASE 
+                    WHEN expired_at IS NOT NULL AND expired_at >= ? AND expired_at <= ? THEN 0 
+                    WHEN expired_at IS NOT NULL AND expired_at >= ? THEN 1 
+                    ELSE 2 
+                END', [$now, $sevenDaysFromNow, $now])
+                ->orderBy('expired_at', 'asc');
             });
     }
 }

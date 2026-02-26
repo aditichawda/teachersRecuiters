@@ -56,6 +56,8 @@
     padding: 25px 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     margin-bottom: 20px;
+    position: sticky;
+    top: 20px;
 }
 
 .emp-avatar-wrapper {
@@ -394,7 +396,7 @@
                     @endphp
                     <ul class="emp-sidebar-nav">
                         <li><a href="{{ route('public.account.dashboard') }}" @class(['active' => $currentUrl == route('public.account.dashboard')])><i class="fa fa-home"></i> {{ __('Dashboard') }}</a></li>
-                        <li><a href="{{ route('public.account.jobs.create') }}" style="{{ $currentUrl == route('public.account.jobs.create') ? '' : 'background: linear-gradient(135deg, #0073d1, #005bb5); color: #fff; border-left: none;' }}" @class(['active' => $currentUrl == route('public.account.jobs.create')])><i class="fa fa-plus-circle"></i> {{ __('Post Job') }}</a></li>
+                        <li><a href="{{ route('public.account.jobs.create') }}" @class(['active' => $currentUrl == route('public.account.jobs.create')])><i class="fa fa-plus-circle"></i> {{ __('Post Job') }}</a></li>
                         <li><a href="{{ route('public.account.employer.settings.edit') }}" @class(['active' => $currentUrl == route('public.account.employer.settings.edit')])><i class="fa fa-building"></i> {{ __('Settings') }}</a></li>
                         <li><a href="{{ route('public.account.jobs.index') }}" @class(['active' => str_contains($currentUrl, '/jobs') && !str_contains($currentUrl, '/create')])><i class="fa fa-briefcase"></i> {{ __('Jobs') }}</a></li>
                         <li><a href="{{ route('public.account.admission.edit') }}" @class(['active' => str_contains($currentUrl, 'admission')])><i class="fa fa-graduation-cap"></i> {{ __('Admission') }}</a></li>
@@ -403,6 +405,7 @@
                         <li><a href="{{ route('public.account.reviews.index') }}" @class(['active' => str_contains($currentUrl, 'reviews')])><i class="fa fa-star"></i> {{ __('Reviews') }}</a></li>
                         @endif
                         <li><a href="{{ route('public.account.applicants.index') }}" @class(['active' => str_contains($currentUrl, 'applicants')])><i class="fa fa-users"></i> {{ __('Applicants') }}</a></li>
+                        <li><a href="/candidates" @class(['active' => str_contains($currentUrl, 'candidates')])><i class="fa fa-user-circle"></i> {{ __('All Candidates') }}</a></li>
                         @if(JobBoardHelper::isEnabledCreditsSystem())
                         <li><a href="{{ route('public.account.packages') }}" @class(['active' => str_contains($currentUrl, 'packages')])><i class="fa fa-box"></i> {{ __('Packages') }} <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $account->credits ?? 0 }}</span></a></li>
                         @endif

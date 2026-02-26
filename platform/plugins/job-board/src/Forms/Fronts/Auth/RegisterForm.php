@@ -170,13 +170,13 @@ class RegisterForm extends AuthForm
                 'html' => '<div class="step-content" data-step="3" style="display:none;" id="step-3-job-seeker">',
             ])
             ->when(is_plugin_active('location'), function (FormAbstract $form): void {
+                // City-only search field (similar to sign up location page)
                 $form->add(
-                    'location',
-                    SelectLocationField::class,
-                    SelectLocationFieldOption::make()
-                        ->label('Location')
-                        ->addAttribute('data-step', '3')
-                        ->addAttribute('data-account-type', 'job-seeker')
+                    'location_city_search',
+                    HtmlField::class,
+                    [
+                        'html' => view('plugins/job-board::auth.partials.city-search-field')->render(),
+                    ]
                 );
             })
             ->add(

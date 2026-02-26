@@ -147,7 +147,7 @@
     background: #fff;
 }
 .bp-content-wrapper {
-    max-width: 800px;
+    
     margin: 0 auto;
 }
 
@@ -372,7 +372,7 @@
 
 {{-- Hero Section --}}
 <section class="bp-hero">
-    <div class="container" style="max-width: 900px;">
+    <div class="container">
         {{-- Breadcrumb --}}
         <div class="bp-breadcrumb">
             <a href="{{ BaseHelper::getHomepageUrl() }}">Home</a>
@@ -419,7 +419,7 @@
 {{-- Featured Image --}}
 @if ($post->image)
     <div class="bp-featured-img">
-        <div class="container" style="max-width: 900px;">
+        <div class="container">
             <img src="{{ RvMedia::getImageUrl($post->image, null, false, RvMedia::getDefaultImage()) }}" alt="{{ $post->name }}">
         </div>
     </div>

@@ -39,6 +39,57 @@ class AdsManager
         return view('plugins/ads::partials.ad-display', compact('data', 'attributes'))->render();
     }
 
+    public function displayByPageAndPosition(string $pageType, string $position, array $attributes = []): string
+    {
+        $this->load();
+
+        // Check if new columns exist by checking first ad
+        $hasNewColumns = false;
+        if ($this->data->isNotEmpty()) {
+            $firstAd = $this->data->first();
+            $hasNewColumns = isset($firstAd->page_type) || property_exists($firstAd, 'page_type');
+        }
+
+        if (!$hasNewColumns) {
+            // Fallback to location-based system
+            $locationKey = $pageType . '-' . $position;
+            return $this->display($locationKey, $attributes, false);
+        }
+
+        $data = $this
+            ->filterExpired($this->data)
+            ->filter(function ($item) use ($pageType) {
+                if (!isset($item->page_type)) {
+                    return false;
+                }
+                return $item->page_type === 'all' || $item->page_type === $pageType;
+            })
+            ->filter(function ($item) use ($position) {
+                if (!isset($item->position)) {
+                    return false;
+                }
+                return $item->position === $position;
+            })
+            ->sortBy('order');
+
+        if ($data->isEmpty()) {
+            return '';
+        }
+
+        // Group by banner type
+        $bannerType = $data->first()->banner_type ?? 'single';
+        
+        if ($bannerType === 'single') {
+            $data = $data->random(1);
+            return view('plugins/ads::partials.ad-display', compact('data', 'attributes'))->render();
+        } else {
+            // For double/multiple, take appropriate number
+            $count = $bannerType === 'double' ? 2 : 3;
+            $data = $data->take($count);
+            return view('plugins/ads::partials.ad-display-multiple', compact('data', 'attributes'))->render();
+        }
+    }
+
     public function load(bool $force = false, array $with = []): self
     {
         if (! $this->loaded || $force) {

@@ -245,7 +245,32 @@
     .cd-sidebar-card { padding: 20px; }
     .cd-main { padding: 25px 0 50px; }
 }
+
+/* Review Avatar Size */
+.review-item .avatar-md,
+.review-item .rounded-circle.avatar-md {
+    width: 48px !important;
+    height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    object-fit: cover;
+}
+.review-listing .review-item .flex-shrink-0 {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
 </style>
+
+{{-- Company Detail Top Ads --}}
+@if (is_plugin_active('ads') && function_exists('render_page_ads'))
+    @php $topAds = render_page_ads('company-detail', 'top'); @endphp
+    @if (!empty($topAds))
+        <div class="company-detail-ads-top" style="margin: 20px auto; max-width: 1200px; padding: 0 15px;">
+            {!! $topAds !!}
+        </div>
+    @endif
+@endif
 
 {{-- Hero Section --}}
 <section class="cd-hero">
@@ -370,6 +395,16 @@
 
             {{-- Sidebar --}}
             <div class="col-lg-4 col-md-12">
+                {{-- Company Detail Sidebar Ads --}}
+                @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+                    @php $sidebarAds = render_page_ads('company-detail', 'sidebar-right'); @endphp
+                    @if (!empty($sidebarAds))
+                        <div class="cd-sidebar-card" style="margin-bottom: 20px;">
+                            {!! $sidebarAds !!}
+                        </div>
+                    @endif
+                @endif
+
                 {{-- Map --}}
                 <div class="cd-sidebar-card">
                     @include(Theme::getThemeNamespace('views.job-board.partials.company-map'), ['company' => $company])
@@ -441,6 +476,16 @@
                 @endif
             </div>
         </div>
+
+        {{-- Company Detail Bottom Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $bottomAds = render_page_ads('company-detail', 'bottom'); @endphp
+            @if (!empty($bottomAds))
+                <div class="company-detail-ads-bottom" style="margin: 30px 0;">
+                    {!! $bottomAds !!}
+                </div>
+            @endif
+        @endif
     </div>
 </div>
 

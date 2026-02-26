@@ -31,6 +31,13 @@ class Ads extends BaseModel
         'order',
         'ads_type',
         'google_adsense_slot_id',
+        'banner_type',
+        'page_type',
+        'position',
+        'image_2',
+        'image_3',
+        'url_2',
+        'url_3',
     ];
 
     protected $casts = [
@@ -42,6 +49,19 @@ class Ads extends BaseModel
     public function scopeNotExpired(Builder $query): Builder
     {
         return $query->whereDate('expired_at', '>=', Carbon::now());
+    }
+
+    public function isExpiringSoon(int $days = 7): bool
+    {
+        if (!$this->expired_at) {
+            return false;
+        }
+
+        $expiredAt = Carbon::parse($this->expired_at);
+        $now = Carbon::now();
+        $daysUntilExpiry = $now->diffInDays($expiredAt, false);
+
+        return $daysUntilExpiry >= 0 && $daysUntilExpiry <= $days;
     }
 
     protected function randomHash(): Attribute
@@ -84,6 +104,50 @@ class Ads extends BaseModel
                 }
 
                 return $this->parseImageUrl('mobile');
+            }
+        );
+    }
+
+    protected function image2Url(): Attribute
+    {
+        return Attribute::get(
+            function (): ?string {
+                if (!$this->image_2) {
+                    return null;
+                }
+                
+                if (config('plugins.ads.general.use_real_image_url')) {
+                    return RvMedia::getImageUrl($this->image_2);
+                }
+
+                return route('public.ads-click.image', [
+                    'randomHash' => $this->random_hash,
+                    'adsKey' => $this->key,
+                    'size' => 'image2',
+                    'hashName' => md5($this->key . '_2'),
+                ]);
+            }
+        );
+    }
+
+    protected function image3Url(): Attribute
+    {
+        return Attribute::get(
+            function (): ?string {
+                if (!$this->image_3) {
+                    return null;
+                }
+                
+                if (config('plugins.ads.general.use_real_image_url')) {
+                    return RvMedia::getImageUrl($this->image_3);
+                }
+
+                return route('public.ads-click.image', [
+                    'randomHash' => $this->random_hash,
+                    'adsKey' => $this->key,
+                    'size' => 'image3',
+                    'hashName' => md5($this->key . '_3'),
+                ]);
             }
         );
     }

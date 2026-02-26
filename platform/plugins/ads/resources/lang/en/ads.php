@@ -51,4 +51,6 @@ return [
     'tablet_image_helper' => 'For devices with width from 768px to 1200px, if empty, will use the image from the desktop.',
     'mobile_image' => 'Mobile Image',
     'mobile_image_helper' => 'For devices with width less than 768px, if empty, will use the image from the tablet.',
+    'expiring_ads_alert_title' => ':count ad(s) are expiring within 7 days!',
+    'expiring_ads_alert_message' => 'Please review and update the expiration dates for these ads to ensure continuous display.',
 ];

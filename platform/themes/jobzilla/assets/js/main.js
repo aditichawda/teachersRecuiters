@@ -14,10 +14,14 @@ All JavaScript fuctions Start
         const $singleLocation = $('.selectpicker-location');
         if ($singleLocation.length) {
             $singleLocation.select2({
+                placeholder: $singleLocation.data('placeholder') || 'Select Your Location',
+                allowClear: true,
+                minimumInputLength: 2,
                 ajax: {
                     url: $singleLocation.data('url') || (window.siteUrl + '/ajax/cities'),
                     dataType: 'json',
                     type: 'GET',
+                    delay: 250,
                     data: function (params) {
                         return {k: params.term};
                     },
@@ -34,7 +38,8 @@ All JavaScript fuctions Start
                                 );
                             }),
                         };
-                    }
+                    },
+                    cache: true
                 }
             });
         }
@@ -54,6 +59,131 @@ All JavaScript fuctions Start
             touchDrag: false,
             mouseDrag: false,
         });
+    }
+
+    // Home City Search Autocomplete function ========================== //
+    function home_city_search() {
+        const $cityInput = $('#home_city_search');
+        const $cityId = $('#home_city_id');
+        const $suggestions = $('#home-city-suggestions');
+        let searchTimeout = null;
+        let activeSuggestionIndex = -1;
+
+        if (!$cityInput.length) return;
+
+        // City search autocomplete
+        $cityInput.on('input', function() {
+            const keyword = $(this).val().trim();
+            activeSuggestionIndex = -1;
+
+            // Clear city selection when user types
+            $cityId.val('');
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (keyword.length < 2) {
+                $suggestions.hide().empty();
+                return;
+            }
+
+            $suggestions.html('<div class="home-city-loading">Searching...</div>').show();
+
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: window.siteUrl + '/ajax/search-cities',
+                    type: 'GET',
+                    data: { k: keyword },
+                    success: function(response) {
+                        const cities = response.data || [];
+                        
+                        if (cities.length === 0) {
+                            $suggestions.html('<div class="home-city-no-results">No cities found</div>');
+                            return;
+                        }
+
+                        let html = '';
+                        cities.forEach(function(city) {
+                            const locationParts = [];
+                            if (city.state_name) locationParts.push(city.state_name);
+                            if (city.country_name) locationParts.push(city.country_name);
+                            
+                            html += '<div class="home-city-suggestion-item" ' +
+                                'data-id="' + city.id + '" ' +
+                                'data-name="' + city.name + '">' +
+                                '<div class="city-name">' + city.name + '</div>' +
+                                (locationParts.length ? '<div class="city-location">' + locationParts.join(', ') + '</div>' : '') +
+                                '</div>';
+                        });
+
+                        $suggestions.html(html);
+                    },
+                    error: function() {
+                        $suggestions.html('<div class="home-city-no-results">Error searching cities</div>');
+                    }
+                });
+            }, 300);
+        });
+
+        // Keyboard navigation for suggestions
+        $cityInput.on('keydown', function(e) {
+            const $items = $suggestions.find('.home-city-suggestion-item');
+
+            if (!$suggestions.is(':visible') || $items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeSuggestionIndex >= 0) {
+                    $items.eq(activeSuggestionIndex).trigger('click');
+                }
+            } else if (e.key === 'Escape') {
+                $suggestions.hide();
+            }
+        });
+
+        // Select city from suggestions
+        $(document).on('click', '.home-city-suggestion-item', function() {
+            const $item = $(this);
+            const cityId = $item.data('id');
+            const cityName = $item.data('name');
+
+            // Set city
+            $cityInput.val(cityName);
+            $cityId.val(cityId);
+            $suggestions.hide();
+        });
+
+        // Close suggestions on outside click
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.home-city-search-wrapper').length) {
+                $suggestions.hide();
+            }
+        });
+
+        // Load city name if city_id is already set
+        const existingCityId = $cityId.val();
+        if (existingCityId) {
+            $.ajax({
+                url: window.siteUrl + '/ajax/search-cities',
+                type: 'GET',
+                data: { city_id: existingCityId },
+                success: function(response) {
+                    const cities = response.data || [];
+                    if (cities.length > 0) {
+                        $cityInput.val(cities[0].name);
+                    }
+                }
+            });
+        }
     }
 
     //  Job Categories Carousel function by = owl.carousel.js ========================== //
@@ -929,6 +1059,8 @@ All JavaScript fuctions Start
     $(document).ready(function () {
         //  selectpicker function by = bootstrap-select.min.js ========================== //
         select_picker_select(),
+            //  Home City Search Autocomplete function ========================== //
+            home_city_search(),
             //  Home 1 Banner Carousel function by = owl.carousel.js ========================== //
             twm_h1_bnr_carousal(),
             //  Job Categories Carousel function by = owl.carousel.js ========================== //

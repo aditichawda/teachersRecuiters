@@ -12,6 +12,11 @@
 
 {!! apply_filters(BASE_FILTER_TABLE_BEFORE_RENDER, null, $table) !!}
 
+{{-- Expiring Ads Alert (for Ads plugin) --}}
+@if (isset($expiringAdsCount) && $expiringAdsCount > 0)
+    @include('plugins/ads::expiring-ads-alert', ['expiringAdsCount' => $expiringAdsCount])
+@endif
+
 <div class="table-wrapper">
     @if ($table->hasFilters())
         <x-core::card
@@ -256,4 +261,58 @@
     {!! $dataTable->scripts() !!}
 
     {!! apply_filters(BASE_FILTER_TABLE_FOOTER_RENDER, null, $table) !!}
+
+    {{-- Custom CSS and JS for highlighting expiring ads (Ads plugin) --}}
+    @if ($table instanceof \Botble\Ads\Tables\AdsTable)
+        <style>
+            .table-wrapper table.dataTable tbody tr.ad-expiring-soon {
+                background-color: #fff3cd !important;
+                border-left: 4px solid #ffc107;
+            }
+            .table-wrapper table.dataTable tbody tr.ad-expiring-soon:hover {
+                background-color: #ffe69c !important;
+            }
+            .table-wrapper table.dataTable tbody tr.ad-expiring-urgent {
+                background-color: #f8d7da !important;
+                border-left: 4px solid #dc3545;
+            }
+            .table-wrapper table.dataTable tbody tr.ad-expiring-urgent:hover {
+                background-color: #f5c2c7 !important;
+            }
+        </style>
+        <script>
+            $(document).ready(function() {
+                var tableId = '{{ $table->getOption('id') }}';
+                
+                // Function to highlight expiring ads rows
+                function highlightExpiringAds() {
+                    $('#' + tableId + ' tbody tr').each(function() {
+                        var $row = $(this);
+                        var $expiredAtCell = $row.find('td').eq(6); // Column index for expired_at (0-indexed)
+                        var expiredAtText = $expiredAtCell.text() || '';
+                        
+                        // Remove existing classes
+                        $row.removeClass('ad-expiring-soon ad-expiring-urgent');
+                        
+                        if (expiredAtText && (expiredAtText.includes('Expires Today') || expiredAtText.includes('Expires Tomorrow') || expiredAtText.includes('Expires in 1 day') || expiredAtText.includes('Expires in 2 days') || expiredAtText.includes('Expires in 3 days'))) {
+                            $row.addClass('ad-expiring-urgent');
+                        } else if (expiredAtText && expiredAtText.includes('Expires')) {
+                            $row.addClass('ad-expiring-soon');
+                        }
+                    });
+                }
+
+                // Highlight on initial load
+                setTimeout(highlightExpiringAds, 500);
+
+                // Highlight after table redraw (pagination, search, etc.)
+                if (window.LaravelDataTables && window.LaravelDataTables[tableId]) {
+                    var table = window.LaravelDataTables[tableId];
+                    table.on('draw', function() {
+                        setTimeout(highlightExpiringAds, 100);
+                    });
+                }
+            });
+        </script>
+    @endif
 @endpush

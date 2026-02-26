@@ -13,15 +13,31 @@ document.addEventListener('DOMContentLoaded', function() {
         var step1 = document.getElementById('apply-step-1');
         if (step1) step1.style.display = 'block';
         if (list) list.innerHTML = '';
-        if (wrap) wrap.style.display = 'none';
+        if (wrap) {
+            wrap.style.display = 'none';
+            wrap.classList.remove('loading');
+        }
         var jobIdInput = applyNow.querySelector('input[name="job_id"]') || applyNow.querySelector('.modal-job-id');
         if (jobIdInput) jobIdInput.value = jobId || '';
         if (!jobId) return;
+        
+        // Show loader
+        if (wrap) {
+            wrap.style.display = 'block';
+            wrap.classList.add('loading');
+        }
+        
         fetch(screeningUrl + '/' + jobId, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
             .then(function(r) { return r.json(); })
             .then(function(data) {
+                // Hide loader
+                if (wrap) wrap.classList.remove('loading');
+                
                 var questions = data.questions || [];
-                if (questions.length === 0) return;
+                if (questions.length === 0) {
+                    if (wrap) wrap.style.display = 'none';
+                    return;
+                }
                 questions.forEach(function(q) {
                     var div = document.createElement('div');
                     div.className = 'mb-2';
@@ -102,6 +118,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     list.appendChild(div);
                 });
                 wrap.style.display = 'block';
+            })
+            .catch(function(error) {
+                // Hide loader on error
+                if (wrap) {
+                    wrap.classList.remove('loading');
+                    wrap.style.display = 'none';
+                }
+                console.error('Error loading screening questions:', error);
             });
     });
 

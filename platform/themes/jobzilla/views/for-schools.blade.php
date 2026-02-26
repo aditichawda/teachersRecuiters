@@ -30,7 +30,7 @@
 .schools-hero .hero-badge {
     display: inline-block;
     padding: 8px 20px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
     color: #fff;
     border-radius: 50px;
     font-size: 14px;
@@ -129,20 +129,20 @@
 .schools-feature-card:hover {
     transform: translateX(8px);
     box-shadow: 0 8px 30px rgba(0, 115, 209, 0.12);
-    border-left-color: #10b981;
+    border-left-color: #0073d1;
 }
 .schools-feature-icon {
     width: 80px;
     height: 80px;
     min-width: 80px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
     border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 36px;
     color: #fff;
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 115, 209, 0.3);
 }
 .schools-feature-content {
     flex: 1;
@@ -273,7 +273,7 @@
     top: 0;
     bottom: 0;
     width: 3px;
-    background: linear-gradient(180deg, #0073d1 0%, #10b981 100%);
+    background: linear-gradient(180deg, #0073d1 0%, #005bb5 100%);
     transform: translateX(-50%);
     z-index: 0;
 }
@@ -302,7 +302,7 @@
     width: 70px;
     height: 70px;
     min-width: 70px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -310,7 +310,7 @@
     font-size: 32px;
     font-weight: 700;
     color: #fff;
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 115, 209, 0.3);
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -378,15 +378,15 @@
     border: 2px solid transparent;
 }
 .stat-item:hover {
-    border-color: #10b981;
+    border-color: #0073d1;
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+    box-shadow: 0 8px 25px rgba(0, 115, 209, 0.15);
 }
 .stat-number {
     font-size: 48px;
     font-weight: 700;
     margin-bottom: 10px;
-    background: linear-gradient(135deg, #0073d1 0%, #10b981 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -433,7 +433,7 @@
     flex-wrap: wrap;
 }
 .cta-visual {
-    background: linear-gradient(135deg, #0073d1 0%, #10b981 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -475,7 +475,7 @@
 .btn-primary-custom {
     display: inline-block;
     padding: 16px 40px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
     color: #fff;
     border-radius: 50px;
     font-size: 16px;
@@ -483,11 +483,11 @@
     text-decoration: none;
     transition: all 0.3s ease;
     border: 2px solid transparent;
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 115, 209, 0.3);
 }
 .btn-primary-custom:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 12px 30px rgba(0, 115, 209, 0.4);
     color: #fff;
 }
 .btn-outline-custom {
@@ -580,6 +580,16 @@
 
 <section class="for-schools-section">
     <div class="container">
+        {{-- For Schools Top Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $topAds = render_page_ads('for-schools', 'top'); @endphp
+            @if (!empty($topAds))
+                <div class="for-schools-ads-top" style="margin: 20px 0;">
+                    {!! $topAds !!}
+                </div>
+            @endif
+        @endif
+
         <!-- Hero Section -->
         <div class="schools-hero">
             <div class="schools-hero-content">
@@ -813,5 +823,15 @@
                 </div>
             </div>
         </div>
+
+        {{-- For Schools Bottom Ads --}}
+        @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+            @php $bottomAds = render_page_ads('for-schools', 'bottom'); @endphp
+            @if (!empty($bottomAds))
+                <div class="for-schools-ads-bottom" style="margin: 30px 0;">
+                    {!! $bottomAds !!}
+                </div>
+            @endif
+        @endif
     </div>
 </section>

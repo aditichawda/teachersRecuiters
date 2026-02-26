@@ -185,3 +185,102 @@ add_filter(BASE_FILTER_BEFORE_RENDER_FORM, function (FormAbstract $form, ?Model 
 
     return $form;
 }, 120, 3);
+
+// Ads Helper Functions
+if (is_plugin_active('ads')) {
+    if (!function_exists('display_ads_by_page')) {
+        /**
+         * Display ads based on page type and position
+         */
+        function display_ads_by_page(string $pageType, string $position, array $attributes = []): string
+        {
+            if (!is_plugin_active('ads')) {
+                return '';
+            }
+
+            return \Botble\Ads\Facades\AdsManager::displayByPageAndPosition($pageType, $position, $attributes);
+        }
+    }
+
+    if (!function_exists('render_page_ads')) {
+        /**
+         * Render ads for a page - returns empty string if no ads, no placeholder
+         */
+        function render_page_ads(string $pageType, string $position, array $attributes = []): string
+        {
+            if (!is_plugin_active('ads')) {
+                return '';
+            }
+
+            try {
+                $ads = '';
+                if (function_exists('display_ads_by_page')) {
+                    $ads = display_ads_by_page($pageType, $position, $attributes);
+                }
+                
+                // Fallback to location-based system
+                if (empty($ads)) {
+                    // Map position to location key format
+                    $locationMap = [
+                        'job-detail' => [
+                            'top' => 'job-detail-top',
+                            'sidebar-right' => 'job-detail-sidebar',
+                            'sidebar' => 'job-detail-sidebar',
+                            'bottom' => 'job-detail-bottom',
+                        ],
+                        'jobs' => [
+                            'top' => 'jobs-top',
+                            'sidebar-right' => 'jobs-sidebar',
+                            'sidebar' => 'jobs-sidebar',
+                            'bottom' => 'jobs-bottom',
+                        ],
+                        'candidate-detail' => [
+                            'top' => 'candidate-detail-top',
+                            'sidebar-right' => 'candidate-detail-sidebar',
+                            'sidebar' => 'candidate-detail-sidebar',
+                            'bottom' => 'candidate-detail-bottom',
+                        ],
+                        'company-detail' => [
+                            'top' => 'company-detail-top',
+                            'sidebar-right' => 'company-detail-sidebar',
+                            'sidebar' => 'company-detail-sidebar',
+                            'bottom' => 'company-detail-bottom',
+                        ],
+                        'home' => [
+                            'top' => 'home-top',
+                            'sidebar' => 'home-sidebar',
+                            'bottom' => 'home-bottom',
+                        ],
+                        'for-schools' => [
+                            'top' => 'for-schools-top',
+                            'sidebar' => 'for-schools-sidebar',
+                            'bottom' => 'for-schools-bottom',
+                        ],
+                        'for-teachers' => [
+                            'top' => 'for-teachers-top',
+                            'sidebar' => 'for-teachers-sidebar',
+                            'bottom' => 'for-teachers-bottom',
+                        ],
+                    ];
+                    
+                    $locationKey = null;
+                    if (isset($locationMap[$pageType][$position])) {
+                        $locationKey = $locationMap[$pageType][$position];
+                    } else {
+                        // Default fallback: pageType-position
+                        $locationKey = $pageType . '-' . str_replace('-right', '', $position);
+                    }
+                    
+                    if ($locationKey) {
+                        $ads = \Botble\Ads\Facades\AdsManager::display($locationKey, $attributes, false);
+                    }
+                }
+                
+                // Return empty if no ads (no placeholder, no empty div)
+                return $ads ?: '';
+            } catch (\Exception $e) {
+                return '';
+            }
+        }
+    }
+}

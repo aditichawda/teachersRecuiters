@@ -97,6 +97,13 @@
                             $isEmployer = auth('account')->check() && auth('account')->user()->isEmployer();
                         @endphp
 
+                        <!-- Home Icon - Visible for All Users -->
+                        <li class="nav-item">
+                            <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="{{ BaseHelper::getHomepageUrl() }}" title="{{ __('Home') }}">
+                                <i class="feather-home" style="font-size: 20px !important;"></i>
+                            </a>
+                        </li>
+
                         @if($isJobSeeker)
                             <!-- Job Seeker Menu -->
                             <li class="nav-item">
@@ -124,13 +131,30 @@
                                     <i class="feather-bell" style="font-size: 20px !important"></i>
                                 </a>
                             </li>
+                        @elseif($isEmployer)
+                            <!-- Employer Menu -->
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="{{ route('public.faq') }}">
+                                    <span>{{ __('FAQ') }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black;" href="{{ route('public.premium-service') }}">
+                                    <span>{{ __('Plans') }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                                    <i class="feather-bell" style="font-size: 20px !important"></i>
+                                </a>
+                            </li>
                         @else
-                            <!-- Default Menu for Employer and Non-logged-in Users -->
-                        <li class="nav-item">
+                            <!-- Default Menu for Non-logged-in Users Only -->
+                        <!-- <li class="nav-item">
                             <a class="nav-link" style="color: black;" href="{{ url('/') }}">
                                 <span>{{ __('Home') }}</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="nav-item">
                             <a class="nav-link" style="color: black;" href="{{ url('/how-it-works') }}">
                                 <span>{{ __('How it Works') }}</span>
@@ -277,7 +301,7 @@
                                         <div class="twm-nav-btn-left dropdown">
                                             <a href="javascript:void(0)" class="dropdown-toggle" role="button" id="account-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                                 <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}" width="35" height="35" class="rounded-circle me-1">
-                                                <span class="d-none d-md-inline-block fw-medium">{{ Str::limit($account->name, 9) }}</span>
+                                                <span class="d-none d-md-inline-block fw-medium">{{ $account->first_name ?? $account->name }}</span>
                                             </a>
                                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="account-dropdown">
                                                 @if ($account->isEmployer())
@@ -312,9 +336,8 @@
                                                 <li>
                                                     {!! Form::open([
                                                         'route' => 'public.account.logout',
-                                                        'id' => 'logout-form',
-                                                        'onsubmit' => 'return confirm("' . __('Do you want to logout?') . '");']) !!}
-                                                        <button class="dropdown-item">
+                                                        'id' => 'logout-form']) !!}
+                                                        <button type="button" class="dropdown-item" id="logout-btn">
                                                             <i class="feather-log-out"></i>
                                                             <span>{{ __('Logout') }}</span>
                                                         </button>
@@ -805,6 +828,66 @@
     align-items: center !important;
 }
 
+/* Navbar Icon and Text Alignment */
+.header-nav .nav-item {
+    display: flex;
+    align-items: center;
+}
+
+.header-nav .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 16px;
+    line-height: 1.5;
+    transition: all 0.3s;
+}
+
+.header-nav .nav-link.home-icon-link,
+.header-nav .nav-link.icon-link {
+    padding: 15px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-nav .nav-link.home-icon-link i,
+.header-nav .nav-link.icon-link i {
+    font-size: 20px;
+    line-height: 1;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.header-nav .nav-link span {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1.5;
+}
+
+/* Ensure consistent alignment for all nav items */
+.header-nav .nav > li {
+    display: flex;
+    align-items: center;
+}
+
+.header-nav .nav > li > a {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+@media (max-width: 1199px) {
+    .header-nav .nav-link {
+        padding: 12px 12px;
+    }
+    
+    .header-nav .nav-link.home-icon-link,
+    .header-nav .nav-link.icon-link {
+        padding: 12px 12px;
+    }
+}
+
 /* Home Client Carousel 3 Improvements */
 .home-client-carousel3 {
     padding: 15px 0 !important;
@@ -1167,5 +1250,102 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Also run after a short delay to ensure Waypoint has initialized
     setTimeout(initNavbarScroll, 500);
+})();
+
+// Logout Button Handler - Enhanced with better dialog system detection
+(function() {
+    function waitForDialogSystem(callback, maxAttempts) {
+        maxAttempts = maxAttempts || 50; // 5 seconds max (50 * 100ms)
+        let attempts = 0;
+        
+        function check() {
+            attempts++;
+            if (typeof window.showDialogConfirm === 'function' && typeof jQuery !== 'undefined') {
+                callback();
+            } else if (attempts < maxAttempts) {
+                setTimeout(check, 100);
+            } else {
+                // Fallback after max attempts
+                console.warn('Dialog system not loaded, using native confirm');
+                callback(true); // Pass true to indicate fallback
+            }
+        }
+        check();
+    }
+    
+    function initLogoutHandler() {
+        const logoutBtn = document.getElementById('logout-btn');
+        const logoutForm = document.getElementById('logout-form');
+        
+        if (logoutBtn && logoutForm) {
+            // Check if already initialized
+            if (logoutBtn.dataset.dialogInitialized === 'true') {
+                return; // Already initialized
+            }
+            logoutBtn.dataset.dialogInitialized = 'true';
+            
+            // Remove any existing listeners by cloning
+            const newBtn = logoutBtn.cloneNode(true);
+            newBtn.dataset.dialogInitialized = 'true';
+            logoutBtn.parentNode.replaceChild(newBtn, logoutBtn);
+            
+            // Store allowSubmit flag
+            let allowSubmit = false;
+            
+            // Prevent form submission unless allowed
+            const submitHandler = function(e) {
+                if (!allowSubmit) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            };
+            logoutForm.addEventListener('submit', submitHandler, true);
+            
+            newBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                // Wait for dialog system
+                waitForDialogSystem(function(useFallback) {
+                    if (useFallback) {
+                        // Use native confirm as fallback
+                        if (confirm('Do you want to logout?')) {
+                            allowSubmit = true;
+                            logoutForm.submit();
+                        }
+                    } else {
+                        // Use custom dialog
+                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                            if (confirmed) {
+                                allowSubmit = true;
+                                logoutForm.removeEventListener('submit', submitHandler, true);
+                                logoutForm.submit();
+                            }
+                        });
+                    }
+                });
+                
+                return false;
+            }, true); // Use capture phase
+        } else if (!logoutBtn || !logoutForm) {
+            // Retry if elements not found yet
+            setTimeout(initLogoutHandler, 200);
+        }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initLogoutHandler, 300);
+        });
+    } else {
+        // DOM already loaded
+        setTimeout(initLogoutHandler, 300);
+    }
+    
+    // Also try after a longer delay to ensure all scripts are loaded
+    setTimeout(initLogoutHandler, 1000);
 })();
 </script>

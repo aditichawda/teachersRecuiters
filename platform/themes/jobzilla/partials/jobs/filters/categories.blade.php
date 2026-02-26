@@ -16,7 +16,7 @@
         @foreach($categories as $category)
             <li>
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="job_categories[]" id="job-categories-{{ $category->id }}" value="{{ $category->id }}" @checked(in_array($category->id, (array) request()->input('job_type', [])))>
+                    <input type="checkbox" class="form-check-input" name="job_categories[]" id="job-categories-{{ $category->id }}" value="{{ $category->id }}" @checked(in_array($category->id, (array) request()->query('job_categories', [])))>
                     <label class="form-check-label" for="job-categories-{{ $category->id }}">{{ $category->name }}</label>
                 </div>
             </li>

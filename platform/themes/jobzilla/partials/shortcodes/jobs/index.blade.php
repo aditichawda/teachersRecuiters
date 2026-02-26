@@ -205,10 +205,38 @@
 .jobs-top-filter .filter-group input[type="text"]:focus,
 .jobs-top-filter .filter-group select:focus {
     outline: none;
-    border-color: #0073d1;
-    box-shadow: 0 0 0 5px rgba(0, 115, 209, 0.1), 0 6px 20px rgba(0, 115, 209, 0.15);
+    border-color: #003d82;
+    box-shadow: 0 0 0 5px rgba(0, 61, 130, 0.1), 0 6px 20px rgba(0, 61, 130, 0.15);
     transform: translateY(-2px);
     background: #ffffff;
+}
+
+/* Keyword input below job role dropdown */
+.jobs-top-filter .filter-group .keyword-input-below {
+    margin-top: 10px;
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1e293b;
+    background: #ffffff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.jobs-top-filter .filter-group .keyword-input-below:focus {
+    outline: none;
+    border-color: #003d82;
+    box-shadow: 0 0 0 5px rgba(0,61,130,.1), 0 6px 20px rgba(0,61,130,.15);
+    transform: translateY(-2px);
+    background: #ffffff;
+}
+
+.jobs-top-filter .filter-group .keyword-input-below:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
 }
 
 /* Bootstrap Select (selectpicker) Styling - High Specificity */
@@ -279,6 +307,32 @@
     border-width: 6px 6px 0 6px !important;
     margin-top: -3px !important;
     right: 18px !important;
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Fix dropdown arrow using ::after pseudo-element */
+.jobs-top-filter .filter-group .bootstrap-select .dropdown-toggle::after,
+.jobs-top-filter .filter-group .bootstrap-select.form-control .dropdown-toggle::after {
+    content: "" !important;
+    position: absolute !important;
+    right: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-left: 5px solid transparent !important;
+    border-right: 5px solid transparent !important;
+    border-top: 6px solid #64748b !important;
+    margin: 0 !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
 }
 
 .jobs-top-filter .filter-group .bootstrap-select .dropdown-toggle.bs-placeholder,
@@ -346,6 +400,41 @@
     color: #1e293b !important;
 }
 
+/* Fix dropdown arrow for multiple selects */
+.jobs-top-filter .filter-group .bootstrap-select[data-multiple="true"] .dropdown-toggle .caret,
+.jobs-top-filter .filter-group .bootstrap-select.multiple .dropdown-toggle .caret {
+    color: #64748b !important;
+    border-top-color: #64748b !important;
+    border-width: 6px 6px 0 6px !important;
+    margin-top: -3px !important;
+    right: 18px !important;
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.jobs-top-filter .filter-group .bootstrap-select[data-multiple="true"] .dropdown-toggle::after,
+.jobs-top-filter .filter-group .bootstrap-select.multiple .dropdown-toggle::after {
+    content: "" !important;
+    position: absolute !important;
+    right: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-left: 5px solid transparent !important;
+    border-right: 5px solid transparent !important;
+    border-top: 6px solid #64748b !important;
+    margin: 0 !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+}
+
 /* Select2 Styling (if Select2 is being used instead) */
 .jobs-top-filter .filter-group .select2-container {
     width: 100% !important;
@@ -394,6 +483,38 @@
 .jobs-top-filter .filter-group .select2-container--default .select2-selection--single .select2-selection__placeholder,
 .jobs-top-filter .filter-group .select2-container--default .select2-selection--multiple .select2-selection__placeholder {
     color: #94a3b8 !important;
+}
+
+/* Fix Select2 dropdown arrow */
+.jobs-top-filter .filter-group .select2-container--default .select2-selection--single .select2-selection__arrow,
+.jobs-top-filter .filter-group .select2-container--default .select2-selection--multiple .select2-selection__arrow {
+    position: absolute !important;
+    right: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    height: auto !important;
+    width: auto !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.jobs-top-filter .filter-group .select2-container--default .select2-selection--single .select2-selection__arrow b,
+.jobs-top-filter .filter-group .select2-container--default .select2-selection--multiple .select2-selection__arrow b {
+    border-color: #64748b transparent transparent transparent !important;
+    border-style: solid !important;
+    border-width: 6px 5px 0 5px !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin-left: -5px !important;
+    margin-top: -3px !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .jobs-top-filter .filter-group .select2-container--default .select2-selection--multiple .select2-selection__choice {
@@ -571,18 +692,18 @@
     background-size: 200% 100%;
     color: #fff;
     border: none;
-    padding: 18px 45px;
-    border-radius: 14px;
-    font-size: 16px;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 6px 20px rgba(0, 115, 209, 0.35), 0 2px 8px rgba(0, 115, 209, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 115, 209, 0.35), 0 2px 6px rgba(0, 115, 209, 0.2);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.5px;
     position: relative;
     overflow: hidden;
 }
@@ -604,19 +725,51 @@
 
 .search-btn:hover {
     background-position: 100% 0;
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 10px 30px rgba(0, 115, 209, 0.45), 0 4px 12px rgba(0, 115, 209, 0.25);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 6px 20px rgba(0, 115, 209, 0.45), 0 3px 10px rgba(0, 115, 209, 0.25);
 }
 .search-btn:active {
-    transform: translateY(-1px) scale(0.98);
-}
-
-.search-btn:active {
-    transform: translateY(0);
+    transform: translateY(-1px) scale(0.99);
 }
 
 .search-btn i {
-    font-size: 18px;
+    font-size: 14px;
+}
+
+/* Clear Filter Button */
+.clear-filter-btn {
+    background: #fff;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.clear-filter-btn:hover {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.clear-filter-btn:active {
+    transform: translateY(0);
+}
+
+.clear-filter-btn i {
+    font-size: 14px;
 }
 
 /* Enhanced Layout Toggle Button - Small version for sidebar */
@@ -831,6 +984,355 @@ html {
         justify-content: center;
     }
 }
+
+/* ===== Jobs Sidebar - Matching Candidates Page Style ===== */
+.jobs-sidebar-modern {
+    position: relative;
+}
+.jobs-sidebar-modern .side-bar-filter {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    position: sticky;
+    top: 100px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+.jobs-sidebar-modern .sidebar-elements {
+    padding: 16px;
+    padding-right: 12px;
+}
+.jobs-sidebar-modern .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    margin-left: -16px;
+    margin-right: -12px;
+    margin-top: -16px;
+    border-bottom: 1px solid rgba(0, 61, 130, 0.1);
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);
+    /* border-radius: 16px 16px 0 0; */
+    box-shadow: 0 2px 8px rgba(0, 61, 130, 0.1);
+}
+.jobs-sidebar-modern .sidebar-header h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0c4a6e;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.jobs-sidebar-modern .sidebar-header h4 i {
+    color: #0284c7;
+}
+.jobs-sidebar-modern .btn-clear-filters {
+    background: rgba(255, 255, 255, 0.9);
+    color: #0c4a6e;
+    border: 1px solid rgba(2, 132, 199, 0.3);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 61, 130, 0.1);
+}
+.jobs-sidebar-modern .btn-clear-filters:hover {
+    background: rgba(255, 255, 255, 1);
+    color: #075985;
+    border-color: rgba(2, 132, 199, 0.5);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 61, 130, 0.15);
+}
+.jobs-sidebar-modern .btn-clear-filters i {
+    font-size: 14px;
+}
+.jobs-sidebar-modern .form-group {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.jobs-sidebar-modern .form-group:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+.jobs-sidebar-modern .twm-sidebar-ele-filter {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.jobs-sidebar-modern .twm-sidebar-ele-filter:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+.jobs-sidebar-modern .section-head-small {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 10px !important;
+}
+.jobs-sidebar-modern .input-group {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all .2s;
+}
+.jobs-sidebar-modern .input-group:focus-within {
+    border-color: #003d82;
+    box-shadow: 0 0 0 3px rgba(0,61,130,.1);
+}
+.jobs-sidebar-modern .input-group .form-control {
+    border: none;
+    padding: 6px 12px;
+    height: 36px;
+    font-size: 13px;
+    background: #fff;
+}
+.jobs-sidebar-modern .input-group .form-control:focus {
+    box-shadow: none;
+}
+.jobs-sidebar-modern .input-group .btn {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    padding: 0 12px;
+}
+.jobs-sidebar-modern .twm-sidebar-ele-filter ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.jobs-sidebar-modern .twm-sidebar-ele-filter li {
+    margin-bottom: 6px;
+}
+
+/* Scroll for filter sections with many options */
+.jobs-sidebar-modern .twm-sidebar-ele-filter,
+.jobs-sidebar-modern .form-group {
+    position: relative;
+}
+
+/* Apply scroll only to lists/options containers that have many items */
+.jobs-sidebar-modern .twm-sidebar-ele-filter ul,
+.jobs-sidebar-modern .form-group ul[style*="height"],
+.jobs-sidebar-modern .twm-sidebar-ele-filter > div:has(> ul),
+.jobs-sidebar-modern .form-group > div:has(> ul),
+.jobs-sidebar-modern .twm-sidebar-ele-filter .form-check,
+.jobs-sidebar-modern .form-group .form-check {
+    max-height: 180px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+}
+
+/* For select elements with multiple options */
+.jobs-sidebar-modern select[multiple] {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* Custom scrollbar for filter sections */
+.jobs-sidebar-modern .twm-sidebar-ele-filter ul::-webkit-scrollbar,
+.jobs-sidebar-modern .form-group ul::-webkit-scrollbar,
+.jobs-sidebar-modern .twm-sidebar-ele-filter > div::-webkit-scrollbar,
+.jobs-sidebar-modern .form-group > div::-webkit-scrollbar {
+    width: 6px;
+}
+
+.jobs-sidebar-modern .twm-sidebar-ele-filter ul::-webkit-scrollbar-track,
+.jobs-sidebar-modern .form-group ul::-webkit-scrollbar-track,
+.jobs-sidebar-modern .twm-sidebar-ele-filter > div::-webkit-scrollbar-track,
+.jobs-sidebar-modern .form-group > div::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.jobs-sidebar-modern .twm-sidebar-ele-filter ul::-webkit-scrollbar-thumb,
+.jobs-sidebar-modern .form-group ul::-webkit-scrollbar-thumb,
+.jobs-sidebar-modern .twm-sidebar-ele-filter > div::-webkit-scrollbar-thumb,
+.jobs-sidebar-modern .form-group > div::-webkit-scrollbar-thumb {
+    background: #003d82;
+    border-radius: 10px;
+}
+
+.jobs-sidebar-modern .twm-sidebar-ele-filter ul::-webkit-scrollbar-thumb:hover,
+.jobs-sidebar-modern .form-group ul::-webkit-scrollbar-thumb:hover,
+.jobs-sidebar-modern .twm-sidebar-ele-filter > div::-webkit-scrollbar-thumb:hover,
+.jobs-sidebar-modern .form-group > div::-webkit-scrollbar-thumb:hover {
+    background: #002d5f;
+}
+.jobs-sidebar-modern .form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    transition: all 0.2s;
+    border-radius: 6px;
+    padding-left: 8px;
+    margin-left: -8px;
+    margin-bottom: 4px;
+}
+.jobs-sidebar-modern .form-check:hover {
+    background: #f8faff;
+}
+.jobs-sidebar-modern .form-check-input {
+    margin-top: 0 !important;
+    border-radius: 4px;
+    border-color: #cbd5e1;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+}
+.jobs-sidebar-modern .form-check-input:checked {
+    background-color: #003d82;
+    border-color: #003d82;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.jobs-sidebar-modern .form-check-input:focus {
+    border-color: #003d82;
+    box-shadow: 0 0 0 3px rgba(0, 61, 130, 0.1);
+    outline: none;
+}
+.jobs-sidebar-modern .form-check-label {
+    font-size: 13px;
+    color: #475569;
+    margin: 0;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1.4;
+    flex: 1;
+}
+.jobs-sidebar-modern .form-check:hover .form-check-label {
+    color: #003d82;
+}
+.jobs-sidebar-modern .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+.jobs-sidebar-modern .wt-select-bar-large {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 12px;
+    height: 36px;
+    font-size: 13px;
+    color: #1e293b;
+}
+.jobs-sidebar-modern .wt-select-bar-large:focus {
+    border-color: #003d82;
+    box-shadow: 0 0 0 3px rgba(0,61,130,.1);
+    outline: none;
+}
+.jobs-sidebar-modern .side-bar-filter::-webkit-scrollbar {
+    width: 6px;
+}
+.jobs-sidebar-modern .side-bar-filter::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+.jobs-sidebar-modern .side-bar-filter::-webkit-scrollbar-thumb {
+    background: #003d82;
+    border-radius: 10px;
+}
+.jobs-sidebar-modern .side-bar-filter::-webkit-scrollbar-thumb:hover {
+    background: #002d5f;
+}
+
+/* Apply Filter Button */
+.jobs-sidebar-modern .apply-filter-wrapper {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+    margin-left: -16px;
+    margin-right: -12px;
+    padding-left: 16px;
+    padding-right: 12px;
+}
+.jobs-sidebar-modern .apply-filter-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #7dd3fc 0%, #bae6fd 50%, #e0f2fe 100%);
+    color: #0c4a6e;
+    border: 1px solid rgba(2, 132, 199, 0.3);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2);
+}
+.jobs-sidebar-modern .apply-filter-btn:hover {
+    background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 50%, #38bdf8 100%);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    transform: translateY(-1px);
+    color: #075985;
+}
+.jobs-sidebar-modern .apply-filter-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
+}
+.jobs-sidebar-modern .apply-filter-btn i {
+    font-size: 16px;
+}
+
+.jobs-sidebar-modern .sidebar-elements {
+    margin-right: 0;
+}
+.jobs-sidebar-modern .form-group,
+.jobs-sidebar-modern .twm-sidebar-ele-filter {
+    padding-right: 0;
+    margin-right: 0;
+}
+.jobs-sidebar-modern .form-check,
+.jobs-sidebar-modern .form-control,
+.jobs-sidebar-modern .wt-select-bar-large,
+.jobs-sidebar-modern select {
+    margin-right: 0;
+}
+
+@media(max-width: 991px) {
+    .jobs-sidebar-modern .side-bar-filter {
+        position: relative;
+        top: 0;
+        max-height: none;
+    }
+    .jobs-sidebar-modern .sidebar-header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .jobs-sidebar-modern .sidebar-header h4 {
+        font-size: 15px;
+    }
+    .jobs-sidebar-modern .btn-clear-filters {
+        font-size: 12px;
+        padding: 5px 12px;
+    }
+}
 </style>
 
 <div class="section-full p-t120 p-b90 site-bg-white jobs-container">
@@ -847,9 +1349,15 @@ html {
                 <div class="filter-group">
                     <label>
                         <i class="feather-briefcase"></i>
-                        <span>{{ __('Enter Teaching Subject or Post') }}</span>
+                        <span>{{ __('Select Job Role') }}</span>
                     </label>
-                    <input type="text" name="keyword" value="{{ BaseHelper::stringify(request()->query('keyword')) }}" placeholder="{{ __('Enter Teaching Subject or Post') }}">
+                    <select name="job_categories[]" class="selectpicker" data-live-search="true" data-size="8" title="{{ __('Select Job Role') }}">
+                        <option value="">{{ __('All Job Roles') }}</option>
+                        @foreach($jobRoles as $jobRole)
+                            <option value="{{ $jobRole->id }}" @selected(in_array($jobRole->id, (array) request()->query('job_categories', [])))>{{ $jobRole->name }}</option>
+                        @endforeach
+                    </select>
+                    <!-- <input type="text" name="keyword" value="{{ BaseHelper::stringify(request()->query('keyword')) }}" placeholder="{{ __('Or Enter Teaching Subject or Post') }}" class="keyword-input-below"> -->
                 </div>
                 
                 <div class="filter-group">
@@ -931,61 +1439,60 @@ html {
                     <i class="feather-plus"></i>
                     {{ __('Advance Search') }}
                 </a>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button type="button" class="clear-filter-btn" id="clear-top-filters">
+                        <i class="feather-x-circle"></i>
+                        {{ __('Clear Filters') }}
+                    </button>
                 <button type="submit" class="search-btn">
                     <i class="feather-search"></i>
                     {{ __('Find Job') }}
                 </button>
+                </div>
             </div>
         </form>
         
         <div class="row">
-            <div class="col-lg-4 col-md-12">
+            <div class="col-lg-3 col-md-12 jobs-sidebar-modern">
                 <div class="side-bar-filter">
                     <div class="backdrop"></div>
-                    <div class="side-bar">
-                        <div class="sidebar-elements search-bx" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 0; overflow: hidden;">
-                            <button class="d-md-none position-absolute btn btn-link btn-close-filter" style="top: 15px; right: 15px; z-index: 10; color: #64748b; font-size: 20px; padding: 8px;">
+                    <div class="side-bar p-0">
+                        <div class="sidebar-elements search-bx">
+                            <button class="d-md-none position-absolute btn btn-link btn-close-filter" style="top: 10px; right: 10px; z-index: 10;">
                                 <i class="feather-x"></i>
                             </button>
                             
-                            <!-- Compact Header -->
-                            <div class="sidebar-header-controls" style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%); padding: 20px; color: #0c4a6e; margin: 0; border-bottom: 1px solid #bae6fd;">
-                                <div style="display: flex; align-items: center; justify-content: space-between;">
-                                    <h4 style="margin: 0; font-size: 18px; font-weight: 700; color: #0c4a6e; display: flex; align-items: center; gap: 10px;">
-                                        <i class="feather-filter" style="font-size: 20px;"></i>
+                            {{-- Sidebar Header with Clear Filters --}}
+                            <div class="sidebar-header">
+                                <h4>
+                                    <i class="feather-filter"></i>
                                         {{ __('Filters') }}
                                     </h4>
-                                    <button type="button" class="btn-clear-filters" style="background: rgba(12, 74, 110, 0.1); border: 1px solid rgba(12, 74, 110, 0.2); color: #0c4a6e; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                                        <i class="feather-refresh-cw" style="font-size: 12px; margin-right: 4px;"></i>
+                                <button type="button" class="btn-clear-filters" id="clear-all-job-filters">
+                                    <i class="feather-x-circle"></i>
                                         {{ __('Clear All') }}
                                     </button>
-                                </div>
                             </div>
                             
-                            <!-- Filters Form with Scroll -->
-                            <div class="filters-scroll-container" style="max-height: 115rem; overflow-y: auto; overflow-x: hidden; padding: 20px; position: relative;">
                                 <form action="{{ JobBoardHelper::getJobsPageURL() }}" method="get" id="jobs-filter-form" data-ajax-url="{{ route('public.ajax.jobs') }}">
-                                    <div style="display: flex; flex-direction: column; gap: 16px;">
                                         {!! Theme::partial('jobs.filters.keyword') !!}
-
                                         {!! Theme::partial('jobs.filters.categories') !!}
-
                                         {!! Theme::partial('jobs.filters.city') !!}
-
                                         {!! Theme::partial('jobs.filters.types') !!}
-
                                         {!! Theme::partial('jobs.filters.date_posted') !!}
-
                                         {!! Theme::partial('jobs.filters.experiences') !!}
-
                                         {!! Theme::partial('jobs.filters.skills') !!}
-                                    </div>
-                                    
-                                    <!-- Apply Button -->
-                                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; padding-right: 0;">
-                                        <button type="submit" style="width: 100%; background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 50%, #0ea5e9 100%); color: #0c4a6e; border: none; padding: 14px 20px; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);">
-                                            <i class="feather-check-circle" style="margin-right: 8px;"></i>
-                                            {{ __('Apply Filters') }}
+                                
+                                <input type="hidden" name="per_page" value="{{ BaseHelper::stringify(request()->query('per_page', 12)) }}">
+                                <input type="hidden" name="page" value="1">
+                                <input type="hidden" name="layout" value="{{ BaseHelper::stringify(request()->query('layout') ?: $layout ?: 'grid') }}">
+                                <input type="hidden" name="sort_by" value="{{ BaseHelper::stringify(request()->query('sort_by')) }}">
+                                
+                                <!-- Apply Filter Button -->
+                                <div class="apply-filter-wrapper">
+                                    <button type="submit" class="apply-filter-btn">
+                                        <i class="feather-check-circle"></i>
+                                        <span>{{ __('Apply Filter') }}</span>
                                         </button>
                                     </div>
                                 </form>
@@ -993,92 +1500,166 @@ html {
                         </div>
                     </div>
                     
-                    <style>
-                        /* Custom Scrollbar for Filters - Inside Container */
-                        .filters-scroll-container {
-                            scrollbar-width: thin;
-                            scrollbar-color: #7dd3fc #f0f9ff;
+                <script>
+                    $(document).ready(function() {
+                        // Initialize filters from URL parameters (for home page search)
+                        function initializeFiltersFromURL() {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            
+                            // City filter is already pre-selected in the blade template
+                            // Just ensure Select2 shows the selected value if it exists
+                            const cityId = urlParams.get('city_id');
+                            if (cityId) {
+                                const $citySelect = $('#jobs-filter-form .selectpicker-location');
+                                if ($citySelect.length) {
+                                    // Wait for Select2 to be initialized (by main.js)
+                                    const checkSelect2 = setInterval(function() {
+                                        if ($citySelect.hasClass('select2-hidden-accessible')) {
+                                            clearInterval(checkSelect2);
+                                            // Select2 is initialized, ensure the value is set
+                                            if ($citySelect.val() !== cityId) {
+                                                $citySelect.val(cityId).trigger('change');
+                                            }
+                                        }
+                                    }, 100);
+                                    
+                                    // Stop checking after 3 seconds
+                                    setTimeout(function() {
+                                        clearInterval(checkSelect2);
+                                    }, 3000);
+                        }
+                            }
+                            
+                            // Initialize job categories checkboxes from URL
+                            const jobCategories = urlParams.getAll('job_categories[]');
+                            if (jobCategories.length > 0) {
+                                jobCategories.forEach(function(categoryId) {
+                                    const $checkbox = $('#jobs-filter-form input[name="job_categories[]"][value="' + categoryId + '"]');
+                                    if ($checkbox.length) {
+                                        $checkbox.prop('checked', true);
+                                    }
+                                });
+                            }
+                            
+                            // Initialize top filter dropdown from URL (already handled in blade template)
+                            // Just refresh selectpicker to show selected values
+                            const topJobCategories = urlParams.getAll('job_categories[]');
+                            if (topJobCategories.length > 0 && typeof $ !== 'undefined' && $.fn.selectpicker) {
+                                setTimeout(function() {
+                                    const $topSelect = $('#jobs-top-filter-form select[name="job_categories[]"]');
+                                    if ($topSelect.length) {
+                                        $topSelect.selectpicker('refresh');
+                                    }
+                                }, 300);
+                            }
                         }
                         
-                        .filters-scroll-container::-webkit-scrollbar {
-                            width: 8px;
-                        }
+                        // Initialize filters after a short delay to ensure Select2/Selectpicker are ready
+                        setTimeout(function() {
+                            initializeFiltersFromURL();
+                        }, 800);
                         
-                        .filters-scroll-container::-webkit-scrollbar-track {
-                            background: #f0f9ff;
-                            border-radius: 10px;
-                            margin: 10px 0;
-                        }
-                        
-                        .filters-scroll-container::-webkit-scrollbar-thumb {
-                            background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 50%, #38bdf8 100%);
-                            border-radius: 10px;
-                            border: 2px solid #f0f9ff;
-                        }
-                        
-                        .filters-scroll-container::-webkit-scrollbar-thumb:hover {
-                            background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 50%, #0ea5e9 100%);
-                        }
-                        
-                        /* Ensure scrollbar stays inside */
-                        .sidebar-elements.search-bx {
-                            position: relative;
-                            overflow: hidden;
-                        }
-                        
-                        .filters-scroll-container {
-                            padding-right: 12px !important;
-                        }
-                        
-                        /* Clear Filters Button Hover */
-                        .btn-clear-filters:hover {
-                            background: rgba(12, 74, 110, 0.15) !important;
-                            border-color: rgba(12, 74, 110, 0.3) !important;
-                            transform: translateY(-1px);
-                        }
-                        
-                        /* Apply Button Hover */
-                        .sidebar-elements button[type="submit"]:hover {
-                            transform: translateY(-2px);
-                            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important;
-                            background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%) !important;
-                        }
-                        
-                        /* Filter Sections Spacing */
-                        .sidebar-elements .form-group,
-                        .sidebar-elements .form-item,
-                        .sidebar-elements .filter-section {
-                            margin-bottom: 0 !important;
-                        }
-                        
-                        /* Right side alignment */
-                        .sidebar-elements.search-bx {
-                            width: 100%;
-                        }
-                        
-                        .filters-scroll-container form {
-                            width: 100%;
-                        }
-                    </style>
-                    
-                    <script>
-                        $(document).ready(function() {
-                            // Clear all filters
-                            $('.btn-clear-filters').on('click', function(e) {
-                                e.preventDefault();
-                                $('#jobs-filter-form')[0].reset();
-                                $('select').val('').trigger('change');
-                                $('input[type="checkbox"]').prop('checked', false);
-                                $('input[type="radio"]').prop('checked', false);
+                        // Clear all filters - matching candidates page functionality
+                        $('#clear-all-job-filters, .btn-clear-filters').on('click', function(e) {
+                            e.preventDefault();
+                            
+                            // Clear sidebar form (#jobs-filter-form)
+                            const sidebarFormInputs = $('#jobs-filter-form').find('input, select, textarea');
+                            sidebarFormInputs.each(function() {
+                                const $input = $(this);
+                                if ($input.attr('type') === 'checkbox') {
+                                    $input.prop('checked', false);
+                                } else if ($input.attr('type') === 'radio') {
+                                    $input.prop('checked', false);
+                                } else if ($input.attr('type') === 'text' || $input.attr('type') === 'number' || $input.attr('type') === 'search' || $input.attr('type') === 'hidden') {
+                                    if ($input.attr('name') !== 'layout' && $input.attr('name') !== 'per_page' && $input.attr('name') !== 'page' && $input.attr('name') !== 'sort_by') {
+                                        $input.val('');
+                                    }
+                                } else if ($input.is('select')) {
+                                    // Handle Bootstrap Select (selectpicker)
+                                    if ($input.hasClass('selectpicker')) {
+                                        if ($input.prop('multiple')) {
+                                            $input.selectpicker('deselectAll');
+                                        } else {
+                                            $input.selectpicker('val', '');
+                                        }
+                                        $input.selectpicker('refresh');
+                                    } else {
+                                        // Regular select
+                                        if ($input.prop('multiple')) {
+                                            $input.val([]);
+                                        } else {
+                                            $input.val('').trigger('change');
+                                        }
+                                    }
+                                }
                             });
+                            
+                            // Clear top filter form (#jobs-top-filter-form)
+                            const topFormInputs = $('#jobs-top-filter-form').find('input, select, textarea');
+                            topFormInputs.each(function() {
+                                const $input = $(this);
+                                if ($input.attr('type') === 'checkbox') {
+                                    $input.prop('checked', false);
+                                } else if ($input.attr('type') === 'radio') {
+                                    $input.prop('checked', false);
+                                } else if ($input.attr('type') === 'text' || $input.attr('type') === 'number' || $input.attr('type') === 'search') {
+                                    if ($input.attr('name') !== 'layout') {
+                                        $input.val('');
+                        }
+                                } else if ($input.is('select')) {
+                                    // Handle Bootstrap Select (selectpicker)
+                                    if ($input.hasClass('selectpicker')) {
+                                        if ($input.prop('multiple')) {
+                                            $input.selectpicker('deselectAll');
+                                        } else {
+                                            $input.selectpicker('val', '');
+                                        }
+                                        $input.selectpicker('refresh');
+                                    } else {
+                                        // Regular select
+                                        if ($input.prop('multiple')) {
+                                            $input.val([]);
+                                        } else {
+                                            $input.val('').trigger('change');
+                        }
+                                    }
+                                }
+                            });
+                            
+                            // Reset radius slider
+                            const radiusSlider = document.getElementById('radius-slider');
+                            if (radiusSlider) {
+                                radiusSlider.value = 0;
+                                const radiusValue = document.getElementById('radius-value');
+                                if (radiusValue) {
+                                    radiusValue.textContent = '0';
+                                }
+                            }
+                            
+                            // Clear Select2 (city filter)
+                            if (typeof $ !== 'undefined' && $.fn.select2) {
+                                $('#jobs-filter-form .selectpicker-location, #jobs-top-filter-form .selectpicker-location').each(function() {
+                                    const $select = $(this);
+                                    if ($select.hasClass('select2-hidden-accessible')) {
+                                        $select.val(null).trigger('change');
+                                    } else {
+                                        $select.val('');
+                                    }
+                                });
+                            }
+                            
+                            // Clear URL parameters and reload to initial state
+                            const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
+                            window.location.href = baseUrl.split('?')[0];
                         });
                     </script>
                 </div>
 
-                {!! dynamic_sidebar('job_board_sidebar') !!}
-            </div>
+            {{-- Widget Sidebar - Commented out if causing CSS display issues --}}
+            {{-- {!! dynamic_sidebar('job_board_sidebar') !!} --}}
 
-            <div class="col-lg-8 col-md-12 position-relative">
+            <div class="col-lg-9 col-md-12 position-relative">
                 <div class="product-filter-wrap d-flex justify-content-between align-items-center m-b30">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <button type="submit" class="d-block d-md-none btn btn-open-filter" style="background: linear-gradient(135deg, #0073d1 0%, #00a8ff 100%); color: #fff; border: none; padding: 12px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 115, 209, 0.3);">
@@ -1249,6 +1830,113 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Advance search toggle - show/hide advanced filters
+    // Clear Top Filters Button
+    const clearTopFiltersBtn = document.getElementById('clear-top-filters');
+    if (clearTopFiltersBtn) {
+        clearTopFiltersBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Get the form
+            const form = document.getElementById('jobs-top-filter-form');
+            if (!form) return;
+            
+            // Reset all input fields (except layout)
+            const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="search"]');
+            inputs.forEach(function(input) {
+                if (input.name !== 'layout') {
+                    input.value = '';
+                }
+            });
+            
+            // Reset all select dropdowns - Clear Bootstrap Select first
+            const selects = form.querySelectorAll('select');
+            selects.forEach(function(select) {
+                const $select = $(select);
+                if ($select.hasClass('selectpicker')) {
+                    if (select.multiple) {
+                        $select.selectpicker('deselectAll');
+                    } else {
+                        $select.selectpicker('val', '');
+                    }
+                    $select.selectpicker('refresh');
+                } else {
+                    // Fallback if selectpicker not initialized
+                    if (select.multiple) {
+                        Array.from(select.options).forEach(function(option) {
+                            option.selected = false;
+                        });
+                    } else {
+                        select.selectedIndex = 0;
+                    }
+                }
+            });
+            
+            // Reset radius slider
+            const radiusSlider = document.getElementById('radius-slider');
+            if (radiusSlider) {
+                radiusSlider.value = 0;
+                const radiusValue = document.getElementById('radius-value');
+                if (radiusValue) {
+                    radiusValue.textContent = '0';
+                }
+            }
+            
+            // Clear Select2 if it exists
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('#jobs-top-filter-form .select2, #jobs-top-filter-form .selectpicker-location').each(function() {
+                    const $select = $(this);
+                    if ($select.hasClass('select2-hidden-accessible')) {
+                        $select.val(null).trigger('change');
+                    }
+                });
+            }
+            
+            // Also clear sidebar filters
+            const sidebarForm = document.getElementById('jobs-filter-form');
+            if (sidebarForm) {
+                const sidebarInputs = sidebarForm.querySelectorAll('input, select, textarea');
+                sidebarInputs.forEach(function(input) {
+                    const $input = $(input);
+                    if (input.type === 'checkbox') {
+                        input.checked = false;
+                    } else if (input.type === 'radio') {
+                        input.checked = false;
+                    } else if (input.type === 'text' || input.type === 'number' || input.type === 'search') {
+                        if (input.name !== 'layout' && input.name !== 'per_page' && input.name !== 'page' && input.name !== 'sort_by') {
+                            input.value = '';
+                        }
+                    } else if (input.tagName === 'SELECT') {
+                        const $select = $(input);
+                        if ($select.hasClass('selectpicker')) {
+                            if (input.multiple) {
+                                $select.selectpicker('deselectAll');
+                            } else {
+                                $select.selectpicker('val', '');
+                            }
+                            $select.selectpicker('refresh');
+                        } else if ($select.hasClass('selectpicker-location') || $select.hasClass('select2-hidden-accessible')) {
+                            $select.val(null).trigger('change');
+                        } else {
+                            if (input.multiple) {
+                                input.value = [];
+                            } else {
+                                input.value = '';
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Clear URL parameters and reload
+            const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
+            window.location.href = baseUrl.split('?')[0];
+            
+            // Clear URL parameters and reload to initial state (like page start)
+            const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
+            window.location.href = baseUrl.split('?')[0];
+        });
+    }
+    
     const advanceSearchLink = document.getElementById('toggle-advance-search');
     const advancedFiltersRow = document.getElementById('advanced-filters-row');
     

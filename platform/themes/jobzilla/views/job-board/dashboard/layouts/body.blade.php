@@ -110,8 +110,29 @@
     justify-content: space-between;
     height: 82px;
 }
+
+.enl-header-logo {
+    display: flex;
+    align-items: center;
+}
+
+.enl-header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.enl-header-logo {
+    display: flex;
+    align-items: center;
+}
+.enl-header-logo a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
 .enl-header-logo img {
-    max-height: 40px;
+    max-height: 44px;
+    width: auto;
 }
 .enl-header-nav {
     display: flex;
@@ -600,160 +621,47 @@
 <div class="enl-header">
     <div class="enl-header-inner">
         <!-- Logo -->
+        <div class="enl-header-logo">
         @if (Theme::getLogo())
-                    <div class="logo-header">
-                        <div class="logo-header-inner logo-header-one">
-                            <a href="{{ BaseHelper::getHomepageUrl()  }}">
-                                @if (Theme::get('header_css_class') == 'header-style-light')
-                                    {!! Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo_light', 44) ?: Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo', 44) !!}
-                                    {!! Theme::getLogoImage(['class' => 'on-scroll-show'], 'logo_light', 44) !!}
-                                @else
+                <a href="{{ BaseHelper::getHomepageUrl() }}">
                                     {!! Theme::getLogoImage([], 'logo_light', 44) !!}
-                                @endif
-
                             </a>
-                        </div>
-                    </div>
                 @endif
+        </div>
 
-        <!-- Center Nav -->
-        <ul class="enl-header-nav">
+        <!-- Right -->
+        <div class="enl-header-right" style="display: flex; align-items: center; gap: 20px;">
+            <!-- Nav Items Next to User -->
+            <ul class="enl-header-nav" style="margin: 0; padding: 0;">
+            <!-- Home Icon - Visible for Employers -->
+            <li class="nav-item">
+                <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="{{ BaseHelper::getHomepageUrl() }}" title="{{ __('Home') }}">
+                    <i class="feather-home" style="font-size: 20px !important;"></i>
+                            </a>
+                        </li>
             
-        <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="{{ url('/') }}">
-                                <span>{{ __('Home') }}</span>
-                            </a>
-                        </li>
+            <!-- FAQ -->
                         <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="{{ url('/how-it-works') }}">
-                                <span>{{ __('How it Works') }}</span>
+                <a class="nav-link" style="color: black;" href="{{ route('public.faq') }}">
+                    <span>{{ __('FAQ') }}</span>
                             </a>
                         </li>
 
-                        <!-- Jobs Mega Menu Dropdown -->
-                        <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
-                            <a class="nav-link dropdown-toggle" style="color: black;" href="{{ JobBoardHelper::getJobsPageURL() }}" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
-                                <span>{{ __('Jobs') }}</span>
-                            </a>
-                            <div class="dropdown-menu mega-menu" id="jobs-mega-menu" aria-labelledby="jobs-dropdown">
-                                <div class="mega-menu-wrapper">
-                                    <!-- Tabs Navigation -->
-                                    <div class="mega-menu-tabs-wrapper">
-                                        <button class="mega-menu-tab-btn active" onclick="switchMegaMenuTab('categories')" data-tab="categories">
-                                            {{ __('JOBS BY CATEGORIES') }}
-                                            <i class="feather-chevron-down"></i>
-                                        </button>
-                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('location')" data-tab="location">
-                                            {{ __('JOBS BY LOCATIONS') }}
-                                            <i class="feather-chevron-down"></i>
-                                        </button>
-                                        <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('institution')" data-tab="institution">
-                                            {{ __('JOBS BY INSTITUTION TYPE') }}
-                                            <i class="feather-chevron-down"></i>
-                                        </button>
-                                    </div>
-
-                                    <!-- Tab Content -->
-                                    <div class="mega-menu-content-wrapper">
-                                        <!-- Jobs by Categories Content -->
-                                        <div class="mega-menu-tab-content active" id="content-categories">
-                                            <div class="mega-menu-grid">
-                                                @php
-                                                    $categories = $featuredCategories->chunk(ceil($featuredCategories->count() / 2));
-                                                @endphp
-                                                @foreach($categories as $chunk)
-                                                    <div class="mega-menu-column">
-                                                        @foreach($chunk as $category)
-                                                            <a href="{{ $category->url }}" class="mega-menu-grid-item">
-                                                                <div class="mega-menu-grid-icon">
-                                                                    @if($category->icon)
-                                                                        <i class="{{ $category->icon }}"></i>
-                                                                    @else
-                                                                        <i class="feather-briefcase"></i>
-                                                                    @endif
-                                                                </div>
-                                                                <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name">{{ $category->name }}</span>
-                                                                    <span class="mega-menu-grid-count">{{ number_format($category->active_jobs_count ?? 0) }} Jobs</span>
-                                                                </div>
+            <!-- Plans -->
+            <li class="nav-item">
+                <a class="nav-link" style="color: black;" href="{{ route('public.premium-service') }}">
+                    <span>{{ __('Plans') }}</span>
                                                             </a>
-                                                        @endforeach
-                                                    </div>
-                                                @endforeach
-                                                @if($featuredCategories->isEmpty())
-                                                    <div class="mega-menu-empty">No categories available</div>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        <!-- Jobs by Location Content -->
-                                        <div class="mega-menu-tab-content" id="content-location">
-                                            <div class="mega-menu-grid">
-                                                @php
-                                                    $locations = $topLocations->chunk(ceil($topLocations->count() / 2));
-                                                @endphp
-                                                @foreach($locations as $chunk)
-                                                    <div class="mega-menu-column">
-                                                        @foreach($chunk as $location)
-                                                            <a href="{{ route('public.jobs-by-city', $location->slug) }}" class="mega-menu-grid-item">
-                                                                <div class="mega-menu-grid-icon">
-                                                                    <i class="feather-map-pin"></i>
-                                                                </div>
-                                                                <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name">Teacher jobs in {{ $location->name }}</span>
-                                                                </div>
-                                                            </a>
-                                                        @endforeach
-                                                    </div>
-                                                @endforeach
-                                                @if($topLocations->isEmpty())
-                                                    <div class="mega-menu-empty">No locations available</div>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        <!-- Jobs by Institution Type Content -->
-                                        <div class="mega-menu-tab-content" id="content-institution">
-                                            <div class="mega-menu-grid">
-                                                @php
-                                                    $institutions = $institutionTypes->chunk(ceil($institutionTypes->count() / 2));
-                                                @endphp
-                                                @foreach($institutions as $chunk)
-                                                    <div class="mega-menu-column">
-                                                        @foreach($chunk as $institution)
-                                                            <a href="{{ $institution->url }}" class="mega-menu-grid-item">
-                                                                <div class="mega-menu-grid-icon">
-                                                                    <i class="feather-building"></i>
-                                                                </div>
-                                                                <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name">{{ $institution->name }}</span>
-                                                                    <span class="mega-menu-grid-count">{{ number_format($institution->active_jobs_count ?? 0) }} Jobs</span>
-                                                                </div>
-                                                            </a>
-                                                        @endforeach
-                                                    </div>
-                                                @endforeach
-                                                @if($institutionTypes->isEmpty())
-                                                    <div class="mega-menu-empty">No institution types available</div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </li>
 
-                        <!-- For Schools / Start Hiring -->
+            <!-- Notifications -->
                                      <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="{{ url('/start-hiring') }}">
-                                <span>{{ __('Start Hiring') }}</span>
+                <a class="nav-link" style="color: black; font-size: 20px !important;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                    <i class="feather-bell" style="font-size: 20px !important;"></i>
                             </a>
                         </li>
         </ul>
 
-        <!-- Right -->
-        <div class="enl-header-right">
-            
             <div class="enl-header-user">
                 <button class="enl-header-user-btn" onclick="document.getElementById('enlUserDropdown').classList.toggle('show')">
                     @if($company && $company->logo)
@@ -766,10 +674,9 @@
                 </button>
                 <div class="enl-header-dropdown" id="enlUserDropdown">
                     <a href="{{ route('public.account.dashboard') }}"><i class="fa fa-home"></i> Dashboard</a>
-                    <a href="{{ route('public.account.settings') }}"><i class="fa fa-cog"></i> Settings</a>
-                    <a href="{{ route('public.account.security') }}"><i class="fa fa-lock"></i> Security</a>
+                    <a href="{{ route('public.account.employer.settings.edit') }}"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
-                    <a href="{{ route('public.account.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form-enl').submit();"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                    <a href="javascript:void(0);" id="logout-link-enl"><i class="fa fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -777,6 +684,32 @@
 </div>
 
 <form id="logout-form-enl" style="display:none;" action="{{ route('public.account.logout') }}" method="POST">@csrf</form>
+
+<!-- Dialog Alert Container - Required for logout dialog -->
+<div id="dialog-alert-container"></div>
+
+<!-- Ensure Dialog System is Loaded -->
+@if (!isset($dialogSystemLoaded))
+    @php
+        Theme::asset()->usePath()->add('dialog-alert-css', 'css/dialog-alert.css', [], [], '1.0');
+        Theme::asset()->container('footer')->usePath()->add('dialog-alert-js', 'js/dialog-alert.js', ['jquery'], [], '1.0');
+        $dialogSystemLoaded = true;
+    @endphp
+@endif
+
+<!-- Ensure jQuery is loaded before dialog system -->
+<script>
+    // Ensure jQuery is available
+    if (typeof jQuery === 'undefined' && typeof $ === 'undefined') {
+        console.warn('jQuery not found, loading from CDN');
+        var script = document.createElement('script');
+        script.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+        script.onload = function() {
+            console.log('jQuery loaded from CDN');
+        };
+        document.head.appendChild(script);
+    }
+</script>
 
 <div class="emp-new-layout">
     <div class="container">
@@ -1191,9 +1124,240 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         var dropdown = document.getElementById('enlUserDropdown');
         var btn = e.target.closest('.enl-header-user-btn');
+        var logoutLink = e.target.closest('#logout-link-enl');
+        
+        // Don't close dropdown if clicking logout link (it will handle its own click)
+        if (logoutLink) {
+            return;
+        }
+        
         if (!btn && dropdown) {
             dropdown.classList.remove('show');
         }
     });
+
+    // Smooth navigation for sidebar menu - load content without full page reload
+    // Use event delegation to catch all clicks, including dynamically added links
+    const mainContent = document.querySelector('.enl-main');
+    
+    // Attach to document to catch all clicks
+    document.addEventListener('click', function(e) {
+        // Find the closest link
+        const link = e.target.closest('.enl-nav a');
+        if (!link) return;
+        
+        const href = link.getAttribute('href');
+        
+        // Skip if it's an external link, logout, or special action
+        if (!href || 
+            href.startsWith('#') || 
+            href.startsWith('javascript:') ||
+            link.hasAttribute('onclick') ||
+            href.includes('logout') ||
+            href.includes('create') ||
+            href.includes('edit')) {
+            return; // Let default behavior happen
+        }
+        
+        // Skip AJAX for candidates - let it do normal navigation
+        // Check for candidates in href (case insensitive)
+        if (href && (href.toLowerCase().includes('candidates') || href.includes('/candidates'))) {
+            // Normal page navigation for candidates - don't intercept
+            return;
+        }
+        
+        // Check if it's a dashboard route
+        if (href.includes('/account/')) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            // Show loader
+            const loader = document.getElementById('page-loading');
+            if (loader) {
+                loader.classList.add('show');
+            }
+            if (mainContent) {
+                mainContent.style.opacity = '0.5';
+                mainContent.style.pointerEvents = 'none';
+            }
+            
+            // Update active state
+            document.querySelectorAll('.enl-nav a').forEach(function(l) {
+                l.classList.remove('active');
+            });
+            link.classList.add('active');
+            
+            // Load content via AJAX - same as companies page
+            fetch(href, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html'
+                },
+                credentials: 'same-origin'
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(function(html) {
+                if (!html || !html.trim()) {
+                    throw new Error('Empty response');
+                }
+                
+                // Parse HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Find .enl-main in response
+                const responseMain = doc.querySelector('.enl-main');
+                
+                if (!responseMain || !mainContent) {
+                    // Fallback to normal navigation
+                    window.location.href = href;
+                    return;
+                }
+                
+                // Get the innerHTML of .enl-main
+                const contentHTML = responseMain.innerHTML;
+                
+                if (!contentHTML || contentHTML.trim().length < 10) {
+                    // Content too short, reload page
+                    window.location.href = href;
+                    return;
+                }
+                
+                // Update content
+                mainContent.innerHTML = contentHTML;
+                
+                // Update URL
+                window.history.pushState({}, '', href);
+                
+                // Re-run scripts
+                const scripts = mainContent.querySelectorAll('script');
+                scripts.forEach(function(oldScript) {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(function(attr) {
+                        newScript.setAttribute(attr.name, attr.value);
+                    });
+                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+                
+                // Reinitialize jQuery
+                if (typeof $ !== 'undefined') {
+                    $(document).ready(function() {
+                        $(document).trigger('contentLoaded');
+                    });
+                }
+            })
+            .catch(function(error) {
+                // On any error, do normal navigation
+                window.location.href = href;
+            })
+            .finally(function() {
+                // Hide loader
+                const loader = document.getElementById('page-loading');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
+                if (mainContent) {
+                    mainContent.style.opacity = '1';
+                    mainContent.style.pointerEvents = 'auto';
+                }
+            });
+        }
+        }
+    });
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function(e) {
+        if (e.state) {
+            window.location.reload();
+        }
+    });
 });
+
+// Logout Button Handler for Employer Dashboard
+(function() {
+    function showLogoutDialog() {
+        const logoutForm = document.getElementById('logout-form-enl');
+        if (!logoutForm) {
+            console.error('Logout form not found');
+            return;
+        }
+
+        // Wait for dialog system to be available
+        function tryShowDialog(attempts) {
+            attempts = attempts || 0;
+            
+            if (typeof window.showDialogConfirm === 'function') {
+                // Use custom dialog
+                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                    if (confirmed) {
+                        logoutForm.submit();
+                    }
+                }).catch(function(error) {
+                    console.error('Dialog error:', error);
+                    // Fallback to native confirm
+                    if (confirm('Do you want to logout?')) {
+                        logoutForm.submit();
+                    }
+                });
+            } else if (attempts < 50) {
+                // Retry after 100ms
+                setTimeout(function() {
+                    tryShowDialog(attempts + 1);
+                }, 100);
+            } else {
+                // Fallback to native confirm after max attempts
+                if (confirm('Do you want to logout?')) {
+                    logoutForm.submit();
+                }
+            }
+        }
+        
+        tryShowDialog();
+    }
+    
+    function initLogoutHandler() {
+        const logoutLink = document.getElementById('logout-link-enl');
+        
+        if (logoutLink) {
+            // Remove any existing listeners by cloning
+            const newLogoutLink = logoutLink.cloneNode(true);
+            logoutLink.parentNode.replaceChild(newLogoutLink, logoutLink);
+            
+            // Add click handler
+            newLogoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showLogoutDialog();
+                return false;
+            });
+            
+            console.log('Employer dashboard logout handler initialized');
+        } else {
+            // Retry if element not found
+            setTimeout(initLogoutHandler, 200);
+        }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initLogoutHandler, 500);
+        });
+    } else {
+        setTimeout(initLogoutHandler, 500);
+    }
+    
+    // Also try after window load
+    window.addEventListener('load', function() {
+        setTimeout(initLogoutHandler, 500);
+    });
+})();
 </script>

@@ -1,4 +1,16 @@
 <div class="col-lg-4 col-md-12">
+    {{-- Sidebar Top Ads --}}
+    @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+        @php $sidebarTopAds = render_page_ads('job-detail', 'sidebar-top'); @endphp
+        @if (!empty($sidebarTopAds))
+            <div class="side-bar mb-4">
+                <div class="widget mb-5">
+                    {!! $sidebarTopAds !!}
+                </div>
+            </div>
+        @endif
+    @endif
+
     <div class="side-bar mb-4">
         <div class="twm-s-info2-wrap mb-5">
             <div class="twm-s-info2">
@@ -104,6 +116,18 @@
         @endif
     </div>
 
+    {{-- Sidebar Middle Ads --}}
+    @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+        @php $sidebarMiddleAds = render_page_ads('job-detail', 'sidebar-middle'); @endphp
+        @if (!empty($sidebarMiddleAds))
+            <div class="side-bar mb-4">
+                <div class="widget mb-5">
+                    {!! $sidebarMiddleAds !!}
+                </div>
+            </div>
+        @endif
+    @endif
+
     @if (! $job->hide_company && $company->id)
         <div class="twm-s-info3-wrap mb-5">
             <div class="twm-s-info3">
@@ -161,6 +185,30 @@
                     @endif
                 </ul>
                 <a href="{{ $company->url }}" class="site-button">{{ __('View Profile') }}</a>
+            </div>
+        </div>
+    @endif
+
+    {{-- Sidebar Bottom Ads --}}
+    @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+        @php $sidebarBottomAds = render_page_ads('job-detail', 'sidebar-bottom'); @endphp
+        @if (!empty($sidebarBottomAds))
+            <div class="side-bar mb-4">
+                <div class="widget mb-5">
+                    {!! $sidebarBottomAds !!}
+                </div>
+            </div>
+        @endif
+    @endif
+
+    {{-- Legacy Sidebar Right Ads (for backward compatibility) --}}
+    @if (is_plugin_active('ads') && function_exists('render_page_ads'))
+        <div class="side-bar mb-4">
+            <div class="widget mb-5">
+                @php $sidebarAds = render_page_ads('job-detail', 'sidebar-right'); @endphp
+                @if (!empty($sidebarAds))
+                    {!! $sidebarAds !!}
+                @endif
             </div>
         </div>
     @endif
