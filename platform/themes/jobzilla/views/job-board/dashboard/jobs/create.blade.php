@@ -777,7 +777,7 @@
 
         {{-- Job-specific screening questions (employer adds per job, not stored in admin) --}}
         <div class="mt-4 pt-4 border-top">
-            <h6 class="mb-3 fw-semibold"><i class="fa fa-plus-circle"></i> {{ __('Your screening questions for this job') }}</h6>
+            <h4 class="mb-3 fw-semibold"><i class="fa fa-plus-circle"></i> {{ __('Your screening questions for this job') }}</h4>
             <p class="text-muted small mb-3">{{ __('Add questions only for this job. Candidates will answer these when applying.') }}</p>
             <div id="job-screening-questions-list">
                 @php
@@ -1338,7 +1338,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('aiGenerateBtn').addEventListener('click', function() {
         var title = (document.getElementById('job_title').value || '').trim();
-        var shortDesc = (document.getElementById('job_short_description') && document.getElementById('job_short_description').value) ? document.getElementById('job_short_description').value.trim() : '';
         var companyId = document.getElementById('company_id') ? document.getElementById('company_id').value : '';
         var instTitle = '';
         if (companyId && typeof companyData !== 'undefined' && companyData[companyId]) {
@@ -1346,6 +1345,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (!instTitle && typeof companies !== 'undefined' && companies[companyId]) {
             instTitle = companies[companyId];
+        }
+        var companySelect = document.getElementById('company_id');
+        if (companySelect && companySelect.selectedOptions && companySelect.selectedOptions.length) {
+            var opt = companySelect.selectedOptions[0];
+            if (!instTitle) instTitle = (opt.getAttribute('data-institution-type') || opt.textContent || '').trim();
         }
         if (!title) {
             showAiError('Please enter a job title first.');
@@ -1368,7 +1372,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': token,
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ title: title, short_description: shortDesc, institution_title: instTitle })
+            body: JSON.stringify({ title: title, institution_title: instTitle })
         })
         .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, status: res.status, data: data }; }); })
         .then(function(result) {
@@ -1394,6 +1398,12 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.disabled = false;
             btn.innerHTML = '<i class="fa fa-magic"></i> Generate with AI';
         });
+    });
+
+    document.getElementById('aiClearBtn').addEventListener('click', function() {
+        var descEl = document.getElementById('job_description');
+        if (descEl) descEl.value = '';
+        hideAiError();
     });
 
     // ===== JOB-SPECIFIC SCREENING QUESTIONS (add/remove/toggle) =====

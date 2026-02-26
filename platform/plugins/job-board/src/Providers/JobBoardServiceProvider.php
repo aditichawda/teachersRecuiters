@@ -629,7 +629,9 @@ class JobBoardServiceProvider extends ServiceProvider
                     'priority' => 4,
                     'parent_id' => null,
                     'name' => 'plugins/job-board::dashboard.menu.applicants',
-                    'url' => fn () => route('public.account.applicants.index'),
+                    'url' => fn () => \Illuminate\Support\Facades\Route::has('public.account.applicants.index')
+                        ? route('public.account.applicants.index')
+                        : url('/account/applicants'),
                     'icon' => 'ti ti-users-group',
                 ])
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([

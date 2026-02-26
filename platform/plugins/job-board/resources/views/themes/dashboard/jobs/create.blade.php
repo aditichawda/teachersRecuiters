@@ -189,8 +189,11 @@
         <div class="jp-group">
             <label class="jp-label">
                 Detailed Job Description <span class="required">*</span>
-                <button type="button" class="jp-ai-btn ms-2" id="aiGenerateBtn" title="Generate description based on job title">
+                <button type="button" class="jp-ai-btn ms-2" id="aiGenerateBtn" title="Generate description based on job title and institution">
                     <i class="ti ti-sparkles"></i> Generate with AI
+                </button>
+                <button type="button" class="jp-ai-btn jp-clear-btn ms-2" id="aiClearBtn" title="Clear AI-generated description">
+                    <i class="ti ti-eraser"></i> Clear
                 </button>
             </label>
             <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required></textarea>
@@ -1068,6 +1071,11 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.disabled = false;
             btn.innerHTML = '<i class="ti ti-sparkles"></i> Generate with AI';
         });
+    });
+
+    document.getElementById('aiClearBtn').addEventListener('click', function() {
+        var descEl = document.getElementById('job_description');
+        if (descEl) descEl.value = '';
     });
 
     // ===== FORM VALIDATION =====

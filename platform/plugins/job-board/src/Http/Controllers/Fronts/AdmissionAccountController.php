@@ -80,8 +80,8 @@ class AdmissionAccountController extends BaseController
             return redirect()->back()->with('error_msg', __('Invalid request.'));
         }
 
-        $maxWords = 250;
-        $maxContentLength = (int) setting('admission_about_school_max_length', 1750);
+        $maxWords = 125;
+        $maxContentLength = (int) setting('admission_about_school_max_length', 1300);
         $request->validate([
             'content' => [
                 'nullable',
@@ -93,13 +93,13 @@ class AdmissionAccountController extends BaseController
                     }
                 },
             ],
-            'admission_deadline' => ['nullable', 'date'],
+            'admission_deadline' => ['required', 'date'],
             'status' => ['nullable', 'in:published,draft'],
         ]);
 
         $admission = $company->admission ?? new CompanyAdmission(['company_id' => $company->id]);
         $admission->content = $request->input('content');
-        $admission->admission_deadline = $request->input('admission_deadline') ?: null;
+        $admission->admission_deadline = $request->input('admission_deadline');
         $admission->status = $request->input('status', 'published');
         $admission->company_id = $company->id;
         $admission->save();

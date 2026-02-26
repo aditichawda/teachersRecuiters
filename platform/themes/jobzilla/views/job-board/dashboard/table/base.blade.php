@@ -80,6 +80,26 @@
     font-size: 0.875rem;
     color: #64748b;
 }
+
+/* Selected row: lighter blue background, white text (name + all columns) */
+.table-wrapper .table.dataTable tbody tr.selected td {
+    background-color: #6ba3e0 !important;
+    color: #fff !important;
+}
+.table-wrapper .table.dataTable tbody tr.selected td a,
+.table-wrapper .table.dataTable tbody tr.selected td a.text-primary,
+.table-wrapper .table.dataTable tbody tr.selected td a.text-decoration-none,
+.table-wrapper .table.dataTable tbody tr.selected td span,
+.table-wrapper .table.dataTable tbody tr.selected td .text-primary {
+    color: #fff !important;
+}
+.table-wrapper .table.dataTable tbody tr.selected td a:hover {
+    color: #e8f0f8 !important;
+}
+.table-wrapper .table.dataTable tbody tr.selected .form-select {
+    color: #333;
+    background-color: #fff;
+}
 </style>
 
 @extends('core/table::table')

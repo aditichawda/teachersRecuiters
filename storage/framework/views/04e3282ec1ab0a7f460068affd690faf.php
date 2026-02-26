@@ -54,13 +54,14 @@
                     <?php if(Session::has('success_msg')): ?>
                         Botble.showSuccess('<?php echo e(session('success_msg')); ?>');
                     <?php endif; ?>
-                    <?php if(Session::has('error_msg')): ?>
+                    <?php if(Session::has('error_msg') && !request()->routeIs('public.account.admission.*')): ?>
                         Botble.showError('<?php echo e(session('error_msg')); ?>');
                     <?php endif; ?>
-                    <?php if(isset($error_msg)): ?>
+                    <?php if(isset($error_msg) && !request()->routeIs('public.account.admission.*')): ?>
                         Botble.showError('<?php echo e($error_msg); ?>');
                     <?php endif; ?>
-                    <?php if(isset($errors)): ?>
+                    
+                    <?php if(isset($errors) && $errors->any() && !request()->routeIs('public.account.admission.*')): ?>
                         <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             Botble.showError('<?php echo e($error); ?>');
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>

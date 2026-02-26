@@ -277,12 +277,17 @@
                 <?php if($company->description): ?>
                     <p class="cd-hero-desc"><?php echo e(Str::limit($company->description, 200)); ?></p>
                 <?php endif; ?>
+                <?php
+                    $admissionOpen = $company->admission && $company->admission->status === 'published' && trim($company->admission->content ?? '') !== '' && $company->admission->admission_deadline && !\Carbon\Carbon::parse($company->admission->admission_deadline)->endOfDay()->isPast();
+                ?>
+                <?php if($admissionOpen): ?>
                 <div class="mt-3">
                     <button type="button" class="btn btn-primary px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#admissionEnquiryModal" style="background: linear-gradient(135deg, #059669, #047857); border: none;">
                         <i class="fas fa-graduation-cap me-2"></i><?php echo e(__('Admission Enquiry')); ?>
 
                     </button>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -355,17 +360,17 @@
                 <?php endif; ?>
 
                 
+                <?php if($admissionOpen): ?>
                 <div class="cd-content-card">
                     <h4 class="cd-section-title"><?php echo e(__('Get Admission with :name', ['name' => $company->name])); ?></h4>
-                    <?php if($company->admission && $company->admission->status === 'published' && $company->admission->content): ?>
-                        <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;"><?php echo e(__('About School / Institution')); ?></h5>
-                        <p class="text-muted small mb-2" style="font-size: 0.85rem;"><?php echo e(__('Details added by the institution for admission.')); ?></p>
-                        <div class="mb-4" style="color: #475569; line-height: 1.6;"><?php echo BaseHelper::clean($company->admission->content); ?></div>
-                    <?php endif; ?>
+                    <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;"><?php echo e(__('About School / Institution')); ?></h5>
+                    <p class="text-muted small mb-2" style="font-size: 0.85rem;"><?php echo e(__('Details added by the institution for admission.')); ?></p>
+                    <div class="mb-4" style="color: #475569; line-height: 1.6;"><?php echo BaseHelper::clean($company->admission->content); ?></div>
                     <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;"><?php echo e(__('Enquiry Form')); ?></h5>
                     <p class="text-muted small mb-3"><?php echo e(__('Submit your admission enquiry using the form below or use the button above.')); ?></p>
                     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 </div>
+                <?php endif; ?>
             </div>
 
             
@@ -445,6 +450,7 @@
 </div>
 
 
+<?php if(isset($admissionOpen) && $admissionOpen): ?>
 <style>
 #admissionEnquiryModal .modal-dialog { max-width: 520px; }
 #admissionEnquiryModal .modal-body { padding: 1rem 1.25rem 1.5rem; }
@@ -469,4 +475,5 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/company.blade.php ENDPATH**/ ?>

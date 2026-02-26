@@ -2,6 +2,7 @@
 
 namespace Botble\Location\Http\Controllers;
 
+use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Http\Actions\DeleteResourceAction;
 use Botble\Base\Http\Controllers\BaseController;
@@ -147,6 +148,10 @@ class CityController extends BaseController
 
             $query = City::query()
                 ->select(['id', 'name', 'state_id', 'country_id'])
+                ->where(function ($q) {
+                    $q->where('cities.status', BaseStatusEnum::PUBLISHED)
+                        ->orWhereNull('cities.status');
+                })
                 ->with(['state:id,name,country_id', 'state.country:id,name', 'country:id,name']);
 
             $perPage = 10;
@@ -155,7 +160,12 @@ class CityController extends BaseController
             // When no keyword: show India cities by default if default_country=1 (paginated)
             if (! $keyword || strlen($keyword) < 2) {
                 if ($defaultCountry === '1' || $defaultCountry === 'true') {
-                    $india = Country::query()->where('name', 'India')->first();
+                    $india = Country::query()
+                        ->where(function ($q) {
+                            $q->where('status', BaseStatusEnum::PUBLISHED)->orWhereNull('status');
+                        })
+                        ->whereRaw('LOWER(name) = ?', ['india'])
+                        ->first();
                     if ($india) {
                         $query->where(function ($q) use ($india) {
                             $q->where('cities.country_id', $india->id)
@@ -190,8 +200,8 @@ class CityController extends BaseController
                     $query->limit(12);
                 }
             } else {
-                // Keyword search: search across all countries
-                $query->where('name', 'LIKE', '%' . $keyword . '%')->limit(15);
+                // Keyword search: case-insensitive across all countries
+                $query->whereRaw('LOWER(cities.name) LIKE ?', ['%' . mb_strtolower($keyword) . '%'])->limit(15);
             }
 
             $query->orderBy('order')->orderBy('name');

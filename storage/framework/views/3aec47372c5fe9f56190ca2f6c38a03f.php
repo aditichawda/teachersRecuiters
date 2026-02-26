@@ -4,7 +4,20 @@
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
     
     $account = auth('account')->user();
-    $company = $account->companies()->first();
+    $company = $account->companies()->with('slugable')->first();
+    $employerPublicProfileUrl = null;
+    if ($account->isEmployer() && $company) {
+        $companySlugKey = $company->slugable?->key ?? null;
+        if (!$companySlugKey) {
+            try {
+                $slugModel = \Botble\Slug\Facades\SlugHelper::getSlug(null, \Botble\Slug\Facades\SlugHelper::getPrefix(\Botble\JobBoard\Models\Company::class), \Botble\JobBoard\Models\Company::class, $company->id);
+                $companySlugKey = $slugModel?->key ?? null;
+            } catch (\Throwable $e) {
+                $companySlugKey = null;
+            }
+        }
+        $employerPublicProfileUrl = $companySlugKey ? route('public.company', $companySlugKey) : route('public.account.companies.index');
+    }
     
     // Profile completion
     $profileFields = [
@@ -791,13 +804,15 @@
                         <h5 class="enl-name">Hello, <?php echo e($company->name ?? $account->name); ?></h5>
                         <p class="enl-date">Joined <?php echo e($account->created_at->format('M d, Y')); ?></p>
                         <p class="enl-updated">Last Updated: <?php echo e($account->updated_at->format('M d, Y')); ?></p>
-                        <button type="button" class="enl-view-btn" onclick="document.getElementById('enlProfileModal').style.display='flex'">
+                        <?php if($account->isEmployer()): ?>
+                        <a href="<?php echo e($employerPublicProfileUrl ?? route('public.account.companies.index')); ?>" class="enl-view-btn" style="display:inline-block;text-decoration:none;" <?php echo e(($employerPublicProfileUrl && $employerPublicProfileUrl !== route('public.account.companies.index')) ? 'target="_blank" rel="noopener"' : ''); ?>>
                             <i class="fa fa-eye"></i> View Profile
-                        </button>
+                        </a>
+                        <?php endif; ?>
                     </div>
                     
-                    <!-- Credits -->
-                    <div class="enl-credits">
+                    <!-- Credits (click opens profile completion modal) -->
+                    <div class="enl-credits" onclick="document.getElementById('enlProfileModal').style.display='flex'" style="cursor:pointer;">
                         <i class="fa fa-coins"></i>
                         <span>Credits:</span>
                         <span class="enl-credits-val"><?php echo e($account->credits ?? 0); ?></span>

@@ -9,20 +9,24 @@ class JobDescriptionAiService
 {
     public function isEnabled(): bool
     {
-        $config = config('plugins.job-board.general.ai_job_description', []);
-
+        $config = config('plugins.job-board.general.ai_job_description');
+        if (! is_array($config)) {
+            return false;
+        }
         if (empty($config['enabled'])) {
             return false;
         }
-
         $provider = $config['provider'] ?? 'openai';
 
-        return ! empty($this->getApiKey($provider));
+        return $this->getApiKey($provider) !== '';
     }
 
     protected function getApiKey(string $provider): string
     {
-        $config = config('plugins.job-board.general.ai_job_description', []);
+        $config = config('plugins.job-board.general.ai_job_description');
+        if (! is_array($config)) {
+            return '';
+        }
         if ($provider === 'gemini') {
             $gemini = $config['gemini'] ?? [];
 
@@ -44,7 +48,10 @@ class JobDescriptionAiService
             return ['description' => null, 'error' => 'Title is required.'];
         }
 
-        $config = config('plugins.job-board.general.ai_job_description', []);
+        $config = config('plugins.job-board.general.ai_job_description');
+        if (! is_array($config)) {
+            return ['description' => null, 'error' => 'AI job description is not configured.'];
+        }
         $provider = $config['provider'] ?? 'openai';
 
         $shortDescription = trim($shortDescription);
@@ -64,7 +71,7 @@ class JobDescriptionAiService
 
     protected function generateWithGemini(string $title, string $shortDescription, string $institutionTitle): array
     {
-        $gemini = config('plugins.job-board.general.ai_job_description.gemini', []);
+        $gemini = is_array($config = config('plugins.job-board.general.ai_job_description')) ? ($config['gemini'] ?? []) : [];
         $apiKey = $this->getApiKey('gemini');
         $configuredModel = trim((string) ($gemini['model'] ?? ''));
         $maxTokens = (int) ($gemini['max_tokens'] ?? 1500);
@@ -349,7 +356,7 @@ class JobDescriptionAiService
         $out = "Create a professional job description for an institute. "
             . "Include: (1) A short job summary in 2–3 lines, (2) exactly 3 key responsibilities as bullet points, "
             . "(3) exactly 3 required skills as bullet points, (4) basic job details (timing/location if needed). "
--3            . "Keep the language simple, clear, and professional. Use plain text only; no markdown or HTML. Use • for bullet points.\n\n";
+            . "Keep the language simple, clear, and professional. Use plain text only; no markdown or HTML. Use • for bullet points.\n\n";
 
         $out .= "Job title: " . $title . "\n";
 

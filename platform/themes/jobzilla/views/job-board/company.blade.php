@@ -275,11 +275,16 @@
                 @if ($company->description)
                     <p class="cd-hero-desc">{{ Str::limit($company->description, 200) }}</p>
                 @endif
+                @php
+                    $admissionOpen = $company->admission && $company->admission->status === 'published' && trim($company->admission->content ?? '') !== '' && $company->admission->admission_deadline && !\Carbon\Carbon::parse($company->admission->admission_deadline)->endOfDay()->isPast();
+                @endphp
+                @if ($admissionOpen)
                 <div class="mt-3">
                     <button type="button" class="btn btn-primary px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#admissionEnquiryModal" style="background: linear-gradient(135deg, #059669, #047857); border: none;">
                         <i class="fas fa-graduation-cap me-2"></i>{{ __('Admission Enquiry') }}
                     </button>
                 </div>
+                @endif
             </div>
         </div>
     </div>
@@ -349,18 +354,18 @@
                     </div>
                 @endif
 
-                {{-- Admission Section (last on employer details page) - institution detail from dashboard "About School/Institution" --}}
+                {{-- Admission Section + Enquiry Form: only when employer has added About School/Institution and deadline has not passed --}}
+                @if ($admissionOpen)
                 <div class="cd-content-card">
                     <h4 class="cd-section-title">{{ __('Get Admission with :name', ['name' => $company->name]) }}</h4>
-                    @if ($company->admission && $company->admission->status === 'published' && $company->admission->content)
-                        <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;">{{ __('About School / Institution') }}</h5>
-                        <p class="text-muted small mb-2" style="font-size: 0.85rem;">{{ __('Details added by the institution for admission.') }}</p>
-                        <div class="mb-4" style="color: #475569; line-height: 1.6;">{!! BaseHelper::clean($company->admission->content) !!}</div>
-                    @endif
+                    <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;">{{ __('About School / Institution') }}</h5>
+                    <p class="text-muted small mb-2" style="font-size: 0.85rem;">{{ __('Details added by the institution for admission.') }}</p>
+                    <div class="mb-4" style="color: #475569; line-height: 1.6;">{!! BaseHelper::clean($company->admission->content) !!}</div>
                     <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;">{{ __('Enquiry Form') }}</h5>
                     <p class="text-muted small mb-3">{{ __('Submit your admission enquiry using the form below or use the button above.') }}</p>
                     @include(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company])
                 </div>
+                @endif
             </div>
 
             {{-- Sidebar --}}
@@ -439,7 +444,8 @@
     </div>
 </div>
 
-{{-- Admission Enquiry Modal - same form & layout as section at bottom --}}
+{{-- Admission Enquiry Modal - only when admission is open (content + deadline not passed) --}}
+@if (isset($admissionOpen) && $admissionOpen)
 <style>
 #admissionEnquiryModal .modal-dialog { max-width: 520px; }
 #admissionEnquiryModal .modal-body { padding: 1rem 1.25rem 1.5rem; }
@@ -463,3 +469,4 @@
         </div>
     </div>
 </div>
+@endif

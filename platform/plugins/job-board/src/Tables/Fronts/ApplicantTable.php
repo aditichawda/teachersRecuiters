@@ -3,7 +3,6 @@
 namespace Botble\JobBoard\Tables\Fronts;
 
 use Botble\Base\Facades\BaseHelper;
-use Botble\Base\Facades\Html;
 use Botble\JobBoard\Enums\JobApplicationStatusEnum;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\Job;
@@ -23,6 +22,8 @@ use Illuminate\Support\Facades\Validator;
 class ApplicantTable extends TableAbstract
 {
     protected bool $bStateSave = false;
+
+    protected string $filterTemplate = 'plugins/job-board::themes.dashboard.table.applicant-filter';
 
     protected array $defaultVisibleColumns = ['first_name', 'job_id', 'email', 'created_at', 'status'];
 
@@ -87,9 +88,22 @@ class ApplicantTable extends TableAbstract
         string $operator,
         ?string $value
     ) {
+        if ($value === null || $value === '') {
+            return $query;
+        }
         $key = preg_replace('/[^A-Za-z0-9_]/', '', str_replace(' ', '', $key));
         $table = $this->getModel()->getTable();
 
+        if ($key === 'job_id' && $value !== '') {
+            $query->where($table . '.job_id', '=', (int) $value);
+
+            return $query;
+        }
+        if ($key === 'status' && $value !== '') {
+            $query->where($table . '.status', '=', $value);
+
+            return $query;
+        }
         if ($key === 'created_at_from' && $value) {
             $validator = Validator::make([$key => $value], [$key => ['date']]);
             if (! $validator->fails()) {
@@ -117,18 +131,7 @@ class ApplicantTable extends TableAbstract
                 if (! $job || ! $job->name) {
                     return '&mdash;';
                 }
-                try {
-                    $url = $job->url ?? '#';
-                    return Html::link(
-                        $url,
-                        $job->name . ' ' . BaseHelper::renderIcon('ti ti-external-link'),
-                        ['target' => '_blank'],
-                        null,
-                        false
-                    );
-                } catch (\Throwable $e) {
-                    return e($job->name);
-                }
+                return e($job->name);
             })
             ->editColumn('is_external_apply', function (JobApplication $item) {
                 return $item->is_external_apply ? trans('plugins/job-board::messages.external') : trans('plugins/job-board::messages.internal');

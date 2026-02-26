@@ -56,7 +56,9 @@ class AccountController extends BaseController
             $request->merge(['password' => Hash::make($request->input('password'))]);
             $account->fill($request->input());
             $account->is_featured = $request->input('is_featured', false);
-            $account->confirmed_at = Carbon::now();
+            $verifiedAt = Carbon::now();
+            $account->email_verified_at = $verifiedAt;
+            $account->confirmed_at = $verifiedAt;
 
             if ($request->input('avatar_image')) {
                 $image = MediaFile::query()
@@ -104,7 +106,14 @@ class AccountController extends BaseController
                 } else {
                     $data = $request->except('password');
                 }
-
+                static::applyFullNameToAccount($request, $account);
+                if ($request->has('full_name')) {
+                    $data = array_merge($data, [
+                        'full_name' => $request->input('full_name'),
+                        'first_name' => $request->input('first_name'),
+                        'last_name' => $request->input('last_name'),
+                    ]);
+                }
                 $account->fill($data);
                 $account->is_featured = $request->input('is_featured', false);
 
@@ -120,14 +129,18 @@ class AccountController extends BaseController
 
                 $account->save();
 
-                $isConfirmedEmail = $request->input('confirmed_at');
-
-                if ($isConfirmedEmail && ! $account->confirmed_at) {
-                    $account->confirmed_at = Carbon::now();
-                }
-
-                if (! $isConfirmedEmail && $account->confirmed_at) {
-                    $account->confirmed_at = null;
+                // Only update email_verified_at and confirmed_at when the field was sent (both together)
+                if ($request->has('confirmed_at')) {
+                    $isConfirmedEmail = $request->input('confirmed_at');
+                    if ($isConfirmedEmail && ! $account->confirmed_at) {
+                        $verifiedAt = Carbon::now();
+                        $account->email_verified_at = $verifiedAt;
+                        $account->confirmed_at = $verifiedAt;
+                    }
+                    if (! $isConfirmedEmail && $account->confirmed_at) {
+                        $account->email_verified_at = null;
+                        $account->confirmed_at = null;
+                    }
                 }
 
                 $account->save();
@@ -180,5 +193,22 @@ class AccountController extends BaseController
             ->where('type', AccountTypeEnum::EMPLOYER)
             ->pluck('name')
             ->all();
+    }
+
+    /**
+     * Split full_name from request into first_name and last_name and merge into request for fill().
+     */
+    protected static function applyFullNameToAccount(Request $request, Account $account): void
+    {
+        if (! $request->has('full_name')) {
+            return;
+        }
+        $full = trim((string) $request->input('full_name'));
+        $parts = explode(' ', $full, 2);
+        $request->merge([
+            'full_name' => $full,
+            'first_name' => $parts[0] ?? '',
+            'last_name' => $parts[1] ?? '',
+        ]);
     }
 }

@@ -10,6 +10,7 @@ use Botble\JobBoard\Models\CompanyAdmission;
 use Botble\JobBoard\Models\AdmissionEnquiry;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
@@ -22,9 +23,16 @@ class AdmissionController extends BaseController
      */
     public function index(): View
     {
+        $today = Carbon::today()->toDateString();
         $companies = Company::query()
             ->where('status', 'published')
-            ->whereHas('admission', fn ($q) => $q->where('status', 'published'))
+            ->whereHas('admission', function ($q) use ($today): void {
+                $q->where('status', 'published')
+                    ->where(function ($q2) use ($today): void {
+                        $q2->whereNull('admission_deadline')
+                            ->orWhereDate('admission_deadline', '>=', $today);
+                    });
+            })
             ->with(['admission', 'slugable'])
             ->when(JobBoardHelper::isPinFeaturedcompaniesInTheTop(), fn ($q) => $q->orderByDesc('is_featured'))
             ->orderByDesc('is_featured')

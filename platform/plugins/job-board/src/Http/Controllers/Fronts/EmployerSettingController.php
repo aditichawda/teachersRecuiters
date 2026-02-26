@@ -8,6 +8,7 @@ use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\AccountActivityLog;
 use Botble\JobBoard\Models\Company;
 use Botble\Media\Facades\RvMedia;
+use Botble\Slug\Facades\SlugHelper;
 use Botble\Optimize\Facades\OptimizerHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -44,6 +45,16 @@ class EmployerSettingController extends BaseController
                 'status' => 'published',
             ]);
             $account->companies()->attach($company->id);
+            if (SlugHelper::isSupportedModel(Company::class)) {
+                try {
+                    $existing = SlugHelper::getSlug(null, SlugHelper::getPrefix(Company::class), Company::class, $company->id);
+                    if (! $existing) {
+                        SlugHelper::createSlug($company);
+                    }
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+            }
         } else {
             // If company name is empty or same as account name, populate from registration data
             if (

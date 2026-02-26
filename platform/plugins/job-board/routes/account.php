@@ -6,6 +6,7 @@ use Botble\JobBoard\Http\Controllers\Fronts\AccountEducationController;
 use Botble\JobBoard\Http\Controllers\Fronts\AccountExperienceController;
 use Botble\JobBoard\Http\Controllers\Fronts\AccountLanguageController;
 use Botble\JobBoard\Http\Controllers\Fronts\CouponController;
+use Botble\JobBoard\Http\Controllers\Fronts\ApplicantController;
 use Botble\JobBoard\Http\Controllers\JobApplicationController;
 use Botble\JobBoard\Http\Middleware\LocaleMiddleware;
 use Botble\Theme\Facades\Theme;
@@ -393,9 +394,10 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 'prefix' => 'applicants',
                 'as' => 'applicants.',
             ], function (): void {
+                Route::match(['get', 'post'], '', ['as' => 'index', 'uses' => 'ApplicantController@index']);
                 Route::resource('', 'ApplicantController')
                     ->parameters(['' => 'applicant'])
-                    ->only(['index', 'edit', 'update']);
+                    ->only(['edit', 'update']);
             });
 
             Route::get('applicants/download-cv/{application}', [JobApplicationController::class, 'downloadCv'])
