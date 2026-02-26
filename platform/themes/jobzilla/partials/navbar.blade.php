@@ -1253,37 +1253,99 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(initNavbarScroll, 500);
 })();
 
-// Logout Button Handler - Simplified and more reliable
+// Logout Button Handler - Enhanced with proper dialog system detection
+// Ensure dialog-alert.js is loaded before this runs
 (function() {
+    // Quick check: if dialog system not loaded, wait a bit more
+    if (typeof window.showDialogConfirm === 'undefined' && typeof jQuery === 'undefined') {
+        // Scripts might not be loaded yet, wait and retry
+        setTimeout(function() {
+            if (typeof window.showDialogConfirm === 'undefined') {
+                console.warn('Dialog system not found, will use native confirm');
+            }
+        }, 2000);
+    }
+    
+    function waitForDialogSystem(callback, maxAttempts) {
+        maxAttempts = maxAttempts || 100; // 10 seconds max (100 * 100ms)
+        let attempts = 0;
+        
+        function check() {
+            attempts++;
+            // Check if jQuery and dialog system are both ready
+            if (typeof jQuery !== 'undefined' && typeof window.showDialogConfirm === 'function') {
+                // Ensure dialog container exists (create if needed)
+                try {
+                    if (jQuery('#dialog-alert-container').length === 0) {
+                        jQuery('body').append('<div id="dialog-alert-container"></div>');
+                    }
+                } catch (e) {
+                    // If jQuery fails, try vanilla JS
+                    if (!document.getElementById('dialog-alert-container')) {
+                        const container = document.createElement('div');
+                        container.id = 'dialog-alert-container';
+                        document.body.appendChild(container);
+                    }
+                }
+                console.log('Dialog system ready, showing logout dialog');
+                callback(false); // Dialog system ready
+                return;
+            }
+            
+            if (attempts < maxAttempts) {
+                setTimeout(check, 100);
+            } else {
+                console.warn('Dialog system not loaded after ' + maxAttempts + ' attempts, using native confirm');
+                console.log('jQuery available:', typeof jQuery !== 'undefined');
+                console.log('showDialogConfirm available:', typeof window.showDialogConfirm === 'function');
+                callback(true); // Pass true to indicate fallback
+            }
+        }
+        check();
+    }
+    
                 function showLogoutDialog() {
-        // Try custom dialog first
-                    if (typeof window.showDialogConfirm === 'function') {
-                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
-                            if (confirmed) {
+        waitForDialogSystem(function(useFallback) {
+            if (useFallback) {
+                // Use native confirm as fallback
+                if (confirm('Do you want to logout?')) {
                     const logoutForm = document.getElementById('logout-form');
                     if (logoutForm) {
                                 logoutForm.submit();
                             }
                 }
-            }).catch(function(error) {
-                console.error('Dialog error:', error);
-                // Fallback to native confirm
-                if (confirm('Do you want to logout?')) {
-                    const logoutForm = document.getElementById('logout-form');
-                    if (logoutForm) {
+                    } else {
+                // Use custom dialog
+                try {
+                                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                                    if (confirmed) {
+                            const logoutForm = document.getElementById('logout-form');
+                            if (logoutForm) {
                                         logoutForm.submit();
-                    }
-                                    }
-                                });
-                            } else {
-            // Use native confirm as fallback
+                            }
+                        }
+                    }).catch(function(error) {
+                        console.error('Dialog error:', error);
+                        // Fallback to native confirm on error
+                        if (confirm('Do you want to logout?')) {
+                            const logoutForm = document.getElementById('logout-form');
+                            if (logoutForm) {
+                                logoutForm.submit();
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error calling showDialogConfirm:', error);
+                    // Fallback to native confirm
                                 if (confirm('Do you want to logout?')) {
-                const logoutForm = document.getElementById('logout-form');
-                if (logoutForm) {
+                        const logoutForm = document.getElementById('logout-form');
+                        if (logoutForm) {
                                     logoutForm.submit();
                                 }
                             }
-        }
+                }
+            }
+        });
     }
     
     function initLogoutHandler() {
@@ -1311,6 +1373,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Prevent default form submission
         logoutForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            e.stopImmediatePropagation();
             return false;
         }, true);
         
@@ -1319,6 +1382,11 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
+            
+            console.log('Logout button clicked');
+            console.log('jQuery available:', typeof jQuery !== 'undefined');
+            console.log('showDialogConfirm available:', typeof window.showDialogConfirm === 'function');
+            
             showLogoutDialog();
             return false;
         });
@@ -1329,15 +1397,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initLogoutHandler, 100);
+            setTimeout(initLogoutHandler, 300);
         });
     } else {
         // DOM already loaded
-        setTimeout(initLogoutHandler, 100);
+        setTimeout(initLogoutHandler, 300);
     }
     
-    // Also try after a longer delay to ensure all scripts are loaded
-    setTimeout(initLogoutHandler, 500);
-    setTimeout(initLogoutHandler, 1500);
+    // Also try after longer delays to ensure all scripts are loaded
+    setTimeout(initLogoutHandler, 1000);
+    setTimeout(initLogoutHandler, 2000);
 })();
 </script>

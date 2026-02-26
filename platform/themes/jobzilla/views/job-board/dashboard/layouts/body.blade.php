@@ -4,7 +4,20 @@
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
     
     $account = auth('account')->user();
-    $company = $account->companies()->first();
+    $company = $account->companies()->with('slugable')->first();
+    $employerPublicProfileUrl = null;
+    if ($account->isEmployer() && $company) {
+        $companySlugKey = $company->slugable?->key ?? null;
+        if (!$companySlugKey) {
+            try {
+                $slugModel = \Botble\Slug\Facades\SlugHelper::getSlug(null, \Botble\Slug\Facades\SlugHelper::getPrefix(\Botble\JobBoard\Models\Company::class), \Botble\JobBoard\Models\Company::class, $company->id);
+                $companySlugKey = $slugModel?->key ?? null;
+            } catch (\Throwable $e) {
+                $companySlugKey = null;
+            }
+        }
+        $employerPublicProfileUrl = $companySlugKey ? route('public.company', $companySlugKey) : route('public.account.companies.index');
+    }
     
     // Profile completion
     $profileFields = [
@@ -577,7 +590,7 @@
 /* Layout Grid */
 .enl-row {
     display: flex;
-    gap: 20px;
+    gap: 15px;
 }
 .enl-sidebar-col {
     flex: 0 0 280px;
@@ -663,7 +676,7 @@
                     <a href="{{ route('public.account.dashboard') }}"><i class="fa fa-home"></i> Dashboard</a>
                     <a href="{{ route('public.account.employer.settings.edit') }}"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
-                    <a href="javascript:void(0);" id="logout-link-enl"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                    <a href="{{ route('public.account.logout') }}" id="logout-link-enl" onclick="event.preventDefault(); var f = document.getElementById('logout-form-enl'); if (!f) return false; if (typeof window.showDialogConfirm === 'function') { window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(ok) { if (ok) f.submit(); }).catch(function() { if (confirm('Do you want to logout?')) f.submit(); }); } else { if (confirm('Do you want to logout?')) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -718,13 +731,15 @@
                         <h5 class="enl-name">Hello, {{ $company->name ?? $account->name }}</h5>
                         <p class="enl-date">Joined {{ $account->created_at->format('M d, Y') }}</p>
                         <p class="enl-updated">Last Updated: {{ $account->updated_at->format('M d, Y') }}</p>
-                        <button type="button" class="enl-view-btn" onclick="document.getElementById('enlProfileModal').style.display='flex'">
+                        @if($account->isEmployer())
+                        <a href="{{ $employerPublicProfileUrl ?? route('public.account.companies.index') }}" class="enl-view-btn" style="display:inline-block;text-decoration:none;" {{ ($employerPublicProfileUrl && $employerPublicProfileUrl !== route('public.account.companies.index')) ? 'target="_blank" rel="noopener"' : '' }}>
                             <i class="fa fa-eye"></i> View Profile
-                        </button>
+                        </a>
+                        @endif
                     </div>
                     
-                    <!-- Credits -->
-                    <div class="enl-credits">
+                    <!-- Credits (click opens profile completion modal) -->
+                    <div class="enl-credits" onclick="document.getElementById('enlProfileModal').style.display='flex'" style="cursor:pointer;">
                         <i class="fa fa-coins"></i>
                         <span>Credits:</span>
                         <span class="enl-credits-val">{{ $account->credits ?? 0 }}</span>

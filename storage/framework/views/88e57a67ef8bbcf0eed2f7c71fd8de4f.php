@@ -1,4 +1,4 @@
-<?php
+-size<?php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
@@ -298,29 +298,6 @@
                             
                         </div>
                         <div class="extra-cell">
-                            <style>
-                            /* Fix button alignment */
-                            .header-nav-btn-section {
-                                display: flex !important;
-                                align-items: center !important;
-                            }
-                            .twm-nav-btn-left,
-                            .twm-nav-btn-right {
-                                display: flex !important;
-                                align-items: center !important;
-                            }
-                            .twm-nav-sign-up,
-                            .twm-nav-post-a-job {
-                                display: flex !important;
-                                align-items: center !important;
-                                vertical-align: middle !important;
-                            }
-                            .twm-nav-sign-up i,
-                            .twm-nav-post-a-job i {
-                                display: flex !important;
-                                align-items: center !important;
-                            }
-                            </style>
                             <div class="header-nav-btn-section">
                                 <?php if(auth('account')->check() && $account = auth('account')->user()): ?>
                                     <div>
@@ -362,7 +339,8 @@
                                                 <li>
                                                     <?php echo Form::open([
                                                         'route' => 'public.account.logout',
-                                                        'id' => 'logout-form']); ?>
+                                                        'id' => 'logout-form',
+                                                        'onsubmit' => 'return false;']); ?>
 
                                                         <button type="button" class="dropdown-item" id="logout-btn">
                                                             <i class="feather-log-out"></i>
@@ -378,7 +356,7 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <!-- Login Button -->
                                         <div class="twm-nav-btn-left">
-                                            <a class="twm-nav-sign-up" href="<?php echo e(route('public.account.login')); ?>">
+                                            <a class="twm-nav-sign-up d-inline-block" href="<?php echo e(route('public.account.login')); ?>">
                                                 <i class="feather-log-in"></i>
                                                 <span><?php echo e(__('Login')); ?></span>
                                             </a>
@@ -932,17 +910,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    /* padding: 12px; */
-    /* background: #fff; */
-    /* border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); */
-    /* transition: all 0.3s ease; */
+    padding: 12px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
 }
 
-/* .home-client-carousel3 .ow-client-logo:hover {
+.home-client-carousel3 .ow-client-logo:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     transform: translateY(-3px);
-} */
+}
 
 .home-client-carousel3 .client-logo {
     max-width: 100% !important;
@@ -1280,87 +1258,145 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(initNavbarScroll, 500);
 })();
 
-// Logout Button Handler - Enhanced with better dialog system detection
+// Logout Button Handler - Enhanced with proper dialog system detection
+// Ensure dialog-alert.js is loaded before this runs
 (function() {
+    // Quick check: if dialog system not loaded, wait a bit more
+    if (typeof window.showDialogConfirm === 'undefined' && typeof jQuery === 'undefined') {
+        // Scripts might not be loaded yet, wait and retry
+        setTimeout(function() {
+            if (typeof window.showDialogConfirm === 'undefined') {
+                console.warn('Dialog system not found, will use native confirm');
+            }
+        }, 2000);
+    }
+    
     function waitForDialogSystem(callback, maxAttempts) {
-        maxAttempts = maxAttempts || 50; // 5 seconds max (50 * 100ms)
+        maxAttempts = maxAttempts || 100; // 10 seconds max (100 * 100ms)
         let attempts = 0;
         
         function check() {
             attempts++;
-            if (typeof window.showDialogConfirm === 'function' && typeof jQuery !== 'undefined') {
-                callback();
-            } else if (attempts < maxAttempts) {
+            // Check if jQuery and dialog system are both ready
+            if (typeof jQuery !== 'undefined' && typeof window.showDialogConfirm === 'function') {
+                // Ensure dialog container exists (create if needed)
+                try {
+                    if (jQuery('#dialog-alert-container').length === 0) {
+                        jQuery('body').append('<div id="dialog-alert-container"></div>');
+                    }
+                } catch (e) {
+                    // If jQuery fails, try vanilla JS
+                    if (!document.getElementById('dialog-alert-container')) {
+                        const container = document.createElement('div');
+                        container.id = 'dialog-alert-container';
+                        document.body.appendChild(container);
+                    }
+                }
+                console.log('Dialog system ready, showing logout dialog');
+                callback(false); // Dialog system ready
+                return;
+            }
+            
+            if (attempts < maxAttempts) {
                 setTimeout(check, 100);
             } else {
-                // Fallback after max attempts
-                console.warn('Dialog system not loaded, using native confirm');
+                console.warn('Dialog system not loaded after ' + maxAttempts + ' attempts, using native confirm');
+                console.log('jQuery available:', typeof jQuery !== 'undefined');
+                console.log('showDialogConfirm available:', typeof window.showDialogConfirm === 'function');
                 callback(true); // Pass true to indicate fallback
             }
         }
         check();
     }
     
+                function showLogoutDialog() {
+        waitForDialogSystem(function(useFallback) {
+            if (useFallback) {
+                // Use native confirm as fallback
+                if (confirm('Do you want to logout?')) {
+                    const logoutForm = document.getElementById('logout-form');
+                    if (logoutForm) {
+                                logoutForm.submit();
+                            }
+                }
+                    } else {
+                // Use custom dialog
+                try {
+                                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                                    if (confirmed) {
+                            const logoutForm = document.getElementById('logout-form');
+                            if (logoutForm) {
+                                        logoutForm.submit();
+                            }
+                        }
+                    }).catch(function(error) {
+                        console.error('Dialog error:', error);
+                        // Fallback to native confirm on error
+                        if (confirm('Do you want to logout?')) {
+                            const logoutForm = document.getElementById('logout-form');
+                            if (logoutForm) {
+                                logoutForm.submit();
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error calling showDialogConfirm:', error);
+                    // Fallback to native confirm
+                                if (confirm('Do you want to logout?')) {
+                        const logoutForm = document.getElementById('logout-form');
+                        if (logoutForm) {
+                                    logoutForm.submit();
+                                }
+                            }
+                }
+            }
+        });
+    }
+    
     function initLogoutHandler() {
         const logoutBtn = document.getElementById('logout-btn');
         const logoutForm = document.getElementById('logout-form');
         
-        if (logoutBtn && logoutForm) {
-            // Check if already initialized
-            if (logoutBtn.dataset.dialogInitialized === 'true') {
-                return; // Already initialized
-            }
-            logoutBtn.dataset.dialogInitialized = 'true';
-            
-            // Remove any existing listeners by cloning
-            const newBtn = logoutBtn.cloneNode(true);
-            newBtn.dataset.dialogInitialized = 'true';
-            logoutBtn.parentNode.replaceChild(newBtn, logoutBtn);
-            
-            // Store allowSubmit flag
-            let allowSubmit = false;
-            
-            // Prevent form submission unless allowed
-            const submitHandler = function(e) {
-                if (!allowSubmit) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    return false;
-                }
-            };
-            logoutForm.addEventListener('submit', submitHandler, true);
-            
-            newBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                
-                // Wait for dialog system
-                waitForDialogSystem(function(useFallback) {
-                    if (useFallback) {
-                        // Use native confirm as fallback
-                        if (confirm('Do you want to logout?')) {
-                            allowSubmit = true;
-                            logoutForm.submit();
-                        }
-                    } else {
-                        // Use custom dialog
-                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
-                            if (confirmed) {
-                                allowSubmit = true;
-                                logoutForm.removeEventListener('submit', submitHandler, true);
-                                logoutForm.submit();
-                            }
-                        });
-                    }
-                });
-                
-                return false;
-            }, true); // Use capture phase
-        } else if (!logoutBtn || !logoutForm) {
+        if (!logoutBtn || !logoutForm) {
             // Retry if elements not found yet
             setTimeout(initLogoutHandler, 200);
+            return;
         }
+        
+        // Check if already initialized
+        if (logoutBtn.dataset.dialogInitialized === 'true') {
+            return; // Already initialized
+        }
+        
+        logoutBtn.dataset.dialogInitialized = 'true';
+        
+        // Remove any existing listeners by cloning
+        const newBtn = logoutBtn.cloneNode(true);
+        newBtn.dataset.dialogInitialized = 'true';
+        logoutBtn.parentNode.replaceChild(newBtn, logoutBtn);
+        
+        // Prevent default form submission
+        logoutForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return false;
+        }, true);
+        
+        // Add click handler
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            console.log('Logout button clicked');
+            console.log('jQuery available:', typeof jQuery !== 'undefined');
+            console.log('showDialogConfirm available:', typeof window.showDialogConfirm === 'function');
+            
+            showLogoutDialog();
+            return false;
+        });
+        
+        console.log('Logout handler initialized successfully');
     }
     
     // Initialize when DOM is ready
@@ -1373,8 +1409,9 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(initLogoutHandler, 300);
     }
     
-    // Also try after a longer delay to ensure all scripts are loaded
+    // Also try after longer delays to ensure all scripts are loaded
     setTimeout(initLogoutHandler, 1000);
+    setTimeout(initLogoutHandler, 2000);
 })();
 </script>
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/navbar.blade.php ENDPATH**/ ?>
