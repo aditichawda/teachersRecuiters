@@ -15,11 +15,7 @@
         <?php endif; ?>
      <?php $__env->endSlot(); ?>
 
-<<<<<<<< HEAD:storage/framework/views/aea30219928aff8839c25c74bdfb6979.php
-    <?php echo Form::editor($name, $options['value'], $options['attr']); ?>
-========
-    <?php echo Form::repeater($name, $options['value'] ?: Arr::get($options, 'selected'), $options['fields'] ?: []); ?>
->>>>>>>> d8be432e (himanshi 19 20 21 23 feb updates 1):storage/framework/views/5414331280661bf424ac9078c7f156db.php
+    <?php echo Form::editor($name, \Illuminate\Support\Arr::get($options, 'value'), \Illuminate\Support\Arr::get($options, 'attr', [])); ?>
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -31,8 +27,4 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
-<<<<<<<< HEAD:storage/framework/views/aea30219928aff8839c25c74bdfb6979.php
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/editor.blade.php ENDPATH**/ ?>
-========
-<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/repeater.blade.php ENDPATH**/ ?>
->>>>>>>> d8be432e (himanshi 19 20 21 23 feb updates 1):storage/framework/views/5414331280661bf424ac9078c7f156db.php

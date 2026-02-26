@@ -38,6 +38,10 @@ class SystemController extends BaseSystemController
     public function checkLicense(Core $core): BaseHttpResponse
     {
         try {
+            if (config('core.base.general.skip_license_check')) {
+                return $this->httpResponse()->setData(['verified' => true]);
+            }
+
             $cacheKey = 'license_check_time';
 
             if (! $core->hasLicenseData()) {

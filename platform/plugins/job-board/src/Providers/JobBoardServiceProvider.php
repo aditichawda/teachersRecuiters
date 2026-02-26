@@ -344,7 +344,7 @@ class JobBoardServiceProvider extends ServiceProvider
             if (! setting('job_board_disabled_public_profile')) {
                 SlugHelper::registerModule(Account::class, 'Candidates');
                 SlugHelper::setPrefix(Account::class, 'candidates');
-                SlugHelper::setColumnUsedForSlugGenerator(Account::class, 'first_name');
+                SlugHelper::setColumnUsedForSlugGenerator(Account::class, 'full_name');
             }
         });
 

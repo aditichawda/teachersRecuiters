@@ -54,7 +54,11 @@
             </x-core::table.body.row>
             <x-core::table.body.row class="payment-content-item hidden">
                 <x-core::table.body.cell colspan="3">
-                    <x-core::form>
+                    <x-core::form
+                        :url="route('payments.methods.post')"
+                        method="post"
+                    >
+                        @csrf
                         <input type="hidden" name="type" value="{{ $id }}" class="payment_type" />
 
                         <div class="row">

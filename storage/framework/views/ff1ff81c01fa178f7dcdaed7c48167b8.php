@@ -247,7 +247,33 @@
     .cd-sidebar-card { padding: 20px; }
     .cd-main { padding: 25px 0 50px; }
 }
+
+/* Review Avatar Size */
+.review-item .avatar-md,
+.review-item .rounded-circle.avatar-md {
+    width: 48px !important;
+    height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    object-fit: cover;
+}
+.review-listing .review-item .flex-shrink-0 {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
 </style>
+
+
+<?php if(is_plugin_active('ads') && function_exists('render_page_ads')): ?>
+    <?php $topAds = render_page_ads('company-detail', 'top'); ?>
+    <?php if(!empty($topAds)): ?>
+        <div class="company-detail-ads-top" style="margin: 20px auto; max-width: 1200px; padding: 0 15px;">
+            <?php echo $topAds; ?>
+
+        </div>
+    <?php endif; ?>
+<?php endif; ?>
 
 
 <section class="cd-hero">
@@ -376,6 +402,17 @@
             
             <div class="col-lg-4 col-md-12">
                 
+                <?php if(is_plugin_active('ads') && function_exists('render_page_ads')): ?>
+                    <?php $sidebarAds = render_page_ads('company-detail', 'sidebar-right'); ?>
+                    <?php if(!empty($sidebarAds)): ?>
+                        <div class="cd-sidebar-card" style="margin-bottom: 20px;">
+                            <?php echo $sidebarAds; ?>
+
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                
                 <div class="cd-sidebar-card">
                     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.company-map'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 </div>
@@ -446,6 +483,17 @@
                 <?php endif; ?>
             </div>
         </div>
+
+        
+        <?php if(is_plugin_active('ads') && function_exists('render_page_ads')): ?>
+            <?php $bottomAds = render_page_ads('company-detail', 'bottom'); ?>
+            <?php if(!empty($bottomAds)): ?>
+                <div class="company-detail-ads-bottom" style="margin: 30px 0;">
+                    <?php echo $bottomAds; ?>
+
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
     </div>
 </div>
 

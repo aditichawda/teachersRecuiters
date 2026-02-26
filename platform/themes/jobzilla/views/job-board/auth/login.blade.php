@@ -4,6 +4,8 @@
 @endphp
 
 <style>
+    /* Toast sirf form ke andar - global alert-container login page pe hide */
+    #alert-container.toast-container { display: none !important; }
     .login-wrapper {
         min-height: 100vh;
         background: #f5f7fa;
@@ -118,6 +120,33 @@
         transition: all 0.3s ease;
         color: #434343;
     }
+
+    /* Inline alert with form (toast shown inside form card) */
+    #login-alert.login-inline-alert {
+        margin-bottom: 16px;
+        display: none;
+    }
+    .login-inline-toast {
+        /* padding: 12px 16px; */
+        border-radius: 10px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        border: 1px solid transparent;
+    }
+    .login-inline-toast.text-success {
+        background: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+    }
+    .login-inline-toast.text-success .message-icon { color: #28a745; }
+    .login-inline-toast.text-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+    }
+    .login-inline-toast.text-danger .message-icon { color: #dc3545; }
+    .login-inline-toast .btn-close { font-size: 12px; opacity: 0.7; }
 
     .login-body .form-control:focus {
         border-color: #0073d1;
@@ -368,8 +397,8 @@
                 <span style="font-size: 20px; font-weight: 700; color: #434343;">Login here</span>
             </div>
 
-            <!-- Alert Messages -->
-            <div id="login-alert" style="display: none;"></div>
+            <!-- Alert/Toast: shown inside form (right with form) -->
+            <div id="login-alert" class="login-inline-alert" role="alert" aria-live="polite"></div>
 
             @if (session()->has('status'))
                 <div role="alert" class="alert alert-success">
@@ -756,35 +785,73 @@ document.addEventListener('DOMContentLoaded', function() {
     const whatsappOtpInputs = document.querySelectorAll('#whatsapp-otp-inputs .otp-input');
     setupOtpInputs(whatsappOtpInputs, document.getElementById('whatsapp-otp-value'));
 
-    // Show toast (right-side slide-in notification)
+    // Show email OTP step if user was redirected (e.g. unverified from password login)
+    @if(session('show_email_otp_step') && session('otp_email'))
+    (function() {
+        const otpEmail = '{{ session('otp_email') }}';
+        if (!otpEmail) return;
+        document.querySelectorAll('.login-method-btn').forEach(t => t.classList.remove('active'));
+        const emailOtpBtn = document.querySelector('.login-method-btn[data-method="email-otp"]');
+        if (emailOtpBtn) emailOtpBtn.classList.add('active');
+        document.querySelectorAll('.login-form-section').forEach(s => s.classList.remove('active'));
+        const emailSection = document.getElementById('email-otp-login');
+        if (emailSection) emailSection.classList.add('active');
+        document.getElementById('email-otp-step1').style.display = 'none';
+        document.getElementById('email-otp-step2').style.display = 'block';
+        document.getElementById('display-email').textContent = otpEmail;
+        const emailInput = document.getElementById('otp-email');
+        if (emailInput) emailInput.value = otpEmail;
+        setupOtpInputs(document.querySelectorAll('#email-otp-step2 .otp-input'), document.getElementById('email-otp-value'));
+        const firstOtp = document.querySelector('#email-otp-step2 .otp-input');
+        if (firstOtp) firstOtp.focus();
+        startTimer(document.getElementById('email-timer'), document.getElementById('resend-email-otp'));
+        showAlert({!! json_encode(session('message', __('Please verify your email. We have sent an OTP to your email address.'))) !!}, 'success');
+    })();
+    @endif
+
+    // Show WhatsApp OTP step if user was redirected (e.g. mobile not verified from password login)
+    @if(session('show_whatsapp_otp_step') && session('otp_phone'))
+    (function() {
+        const otpPhone = '{{ session('otp_phone') }}';
+        if (!otpPhone) return;
+        document.querySelectorAll('.login-method-btn').forEach(t => t.classList.remove('active'));
+        const waOtpBtn = document.querySelector('.login-method-btn[data-method="whatsapp-otp"]');
+        if (waOtpBtn) waOtpBtn.classList.add('active');
+        document.querySelectorAll('.login-form-section').forEach(s => s.classList.remove('active'));
+        const waSection = document.getElementById('whatsapp-otp-login');
+        if (waSection) waSection.classList.add('active');
+        document.getElementById('whatsapp-otp-step1').style.display = 'none';
+        document.getElementById('whatsapp-otp-step2').style.display = 'block';
+        var displayPhone = document.getElementById('display-phone');
+        if (displayPhone) displayPhone.textContent = otpPhone;
+        var phoneInput = document.getElementById('otp-phone');
+        if (phoneInput) phoneInput.value = otpPhone;
+        setupOtpInputs(document.querySelectorAll('#whatsapp-otp-inputs .otp-input'), document.getElementById('whatsapp-otp-value'));
+        var firstWaOtp = document.querySelector('#whatsapp-otp-step2 .otp-input');
+        if (firstWaOtp) firstWaOtp.focus();
+        startTimer(document.getElementById('whatsapp-timer'), document.getElementById('resend-whatsapp-otp'));
+        showAlert({!! json_encode(session('message', __('Please verify your mobile number. We have sent an OTP to your WhatsApp.'))) !!}, 'success');
+    })();
+    @endif
+
+    // Show alert inside the login form only (never use global toast - form ke andar hi dikhao)
     function showAlert(message, type = 'danger') {
         const toastType = type === 'success' ? 'text-success' : 'text-danger';
-        if (typeof window.showAlert === 'function') {
-            window.showAlert(toastType, message);
-            return;
-        }
-        let container = document.getElementById('alert-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'alert-container';
-            container.className = 'toast-container';
-            container.style.cssText = 'position:fixed;right:5px;top:20vh;z-index:9999999;';
-            document.body.appendChild(container);
-        }
-        const id = 'toast-' + Math.floor(Math.random() * 10000);
+        const container = document.getElementById('login-alert');
+        if (!container) return;
         const icon = toastType === 'text-success' ? 'feather-check-circle' : 'feather-alert-triangle';
-        const html = '<div class="toast align-items-center ' + toastType + '" id="' + id + '" role="alert"><div class="d-flex"><div class="toast-body"><i class="' + icon + ' message-icon"></i><span>' + (message || '').replace(/</g, '&lt;') + '</span></div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>';
-        container.insertAdjacentHTML('beforeend', html);
-        const el = document.getElementById(id);
-        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-            const t = new bootstrap.Toast(el);
-            t.show();
-            el.addEventListener('hidden.bs.toast', () => el.remove());
-        } else {
-            el.classList.add('show');
-            setTimeout(() => el.remove(), 5000);
-        }
+        const id = 'login-toast-' + Math.floor(Math.random() * 10000);
+        container.innerHTML = '<div class="login-inline-toast show align-items-center ' + toastType + '" id="' + id + '" role="alert"><div class="d-flex align-items-center"><div class="toast-body flex-grow-1"><i class="' + icon + ' message-icon me-2"></i><span>' + (message || '').replace(/</g, '&lt;') + '</span></div><button type="button" class="btn-close" onclick="this.closest(\'.login-inline-toast\').remove(); document.getElementById(\'login-alert\').style.display=\'none\'" aria-label="Close"></button></div></div>';
+        container.style.display = 'block';
+        setTimeout(function() {
+            const el = document.getElementById(id);
+            if (el && el.parentNode) {
+                el.remove();
+                if (!container.querySelector('.login-inline-toast')) container.style.display = 'none';
+            }
+        }, 6000);
     }
+    window.showAlert = showAlert;
 
     // Timer function
     function startTimer(timerElement, buttonElement, seconds = 60) {

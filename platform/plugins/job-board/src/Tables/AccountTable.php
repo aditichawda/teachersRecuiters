@@ -38,7 +38,7 @@ class AccountTable extends TableAbstract
     {
         $data = $this->table
             ->eloquent($this->query())
-            ->editColumn('first_name', function (Account $item) {
+            ->editColumn('name', function (Account $item) {
                 if (! $this->hasPermission('accounts.edit')) {
                     return $item->name;
                 }
@@ -93,8 +93,10 @@ class AccountTable extends TableAbstract
     {
         $columns = [
             IdColumn::make(),
-            Column::make('first_name')
+            Column::make('name')
                 ->title(trans('core/base::tables.name'))
+                ->orderable(false)
+                ->searchable(false)
                 ->alignLeft(),
             FormattedColumn::make('unique_id')
                 ->getValueUsing(function (FormattedColumn $column) {

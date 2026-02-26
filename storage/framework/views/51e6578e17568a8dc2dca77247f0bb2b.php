@@ -4,6 +4,8 @@
 ?>
 
 <style>
+    /* Toast sirf form ke andar - global alert-container login page pe hide */
+    #alert-container.toast-container { display: none !important; }
     .login-wrapper {
         min-height: 100vh;
         background: #f5f7fa;
@@ -118,6 +120,33 @@
         transition: all 0.3s ease;
         color: #434343;
     }
+
+    /* Inline alert with form (toast shown inside form card) */
+    #login-alert.login-inline-alert {
+        margin-bottom: 16px;
+        display: none;
+    }
+    .login-inline-toast {
+        /* padding: 12px 16px; */
+        border-radius: 10px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        border: 1px solid transparent;
+    }
+    .login-inline-toast.text-success {
+        background: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+    }
+    .login-inline-toast.text-success .message-icon { color: #28a745; }
+    .login-inline-toast.text-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+    }
+    .login-inline-toast.text-danger .message-icon { color: #dc3545; }
+    .login-inline-toast .btn-close { font-size: 12px; opacity: 0.7; }
 
     .login-body .form-control:focus {
         border-color: #0073d1;
@@ -368,8 +397,8 @@
                 <span style="font-size: 20px; font-weight: 700; color: #434343;">Login here</span>
             </div>
 
-            <!-- Alert Messages -->
-            <div id="login-alert" style="display: none;"></div>
+            <!-- Alert/Toast: shown inside form (right with form) -->
+            <div id="login-alert" class="login-inline-alert" role="alert" aria-live="polite"></div>
 
             <?php if(session()->has('status')): ?>
                 <div role="alert" class="alert alert-success">
@@ -403,15 +432,47 @@
 
             <!-- Password Login Form -->
             <div class="login-form-section active" id="password-login">
+                <!-- Password Login Step 1 -->
+                <div id="password-login-step1">
                 <?php echo $form
                        ->modify('submit', 'submit', [
                             'label' => __('Sign In'),
                             'attr' => [
                                 'class' => 'btn-login',
+                                    'id' => 'password-login-submit',
                             ],
                         ], true)
                        ->renderForm(); ?>
 
+                </div>
+                
+                <!-- WhatsApp OTP Step 2 (shown after OTP is sent) -->
+                <div id="password-login-otp-step" style="display: none;">
+                    <button type="button" class="btn-back" onclick="showPasswordStep1()">
+                        <i class="ti ti-arrow-left"></i> Back to Login
+                    </button>
+                    <div class="otp-info">
+                        <p>Enter the OTP sent to WhatsApp</p>
+                        <span class="email-display" id="display-whatsapp-phone"></span>
+                    </div>
+                    <form id="verify-password-whatsapp-otp-form">
+                        <div class="otp-input-group">
+                            <input type="text" class="otp-input" maxlength="1" data-index="0" id="password-otp-0">
+                            <input type="text" class="otp-input" maxlength="1" data-index="1" id="password-otp-1">
+                            <input type="text" class="otp-input" maxlength="1" data-index="2" id="password-otp-2">
+                            <input type="text" class="otp-input" maxlength="1" data-index="3" id="password-otp-3">
+                            <input type="text" class="otp-input" maxlength="1" data-index="4" id="password-otp-4">
+                            <input type="text" class="otp-input" maxlength="1" data-index="5" id="password-otp-5">
+                        </div>
+                        <input type="hidden" name="otp" id="password-otp-value">
+                        <button type="submit" class="btn-login" id="verify-password-otp-btn">
+                            <i class="ti ti-check me-2"></i>Verify & Login
+                        </button>
+                    </form>
+                    <div class="resend-otp">
+                        <button type="button" id="resend-password-whatsapp-otp" disabled>Resend OTP in <span id="password-otp-timer">60</span>s</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Email OTP Login Form -->
@@ -557,6 +618,130 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Check if WhatsApp OTP was sent from password form
+    <?php if(session('whatsapp_otp_sent')): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            const phone = '<?php echo e(session('whatsapp_phone')); ?>';
+            if (phone) {
+                document.getElementById('display-whatsapp-phone').textContent = phone;
+                document.getElementById('password-login-step1').style.display = 'none';
+                document.getElementById('password-login-otp-step').style.display = 'block';
+                
+                // Setup OTP inputs for password form
+                const passwordOtpInputs = document.querySelectorAll('#password-login-otp-step .otp-input');
+                const passwordOtpHidden = document.getElementById('password-otp-value');
+                setupOtpInputs(passwordOtpInputs, passwordOtpHidden);
+                if (passwordOtpInputs.length > 0) {
+                    passwordOtpInputs[0].focus();
+                }
+                
+                // Start timer
+                startTimer(document.getElementById('password-otp-timer'), document.getElementById('resend-password-whatsapp-otp'));
+                
+                // Show success message
+                showAlert('<?php echo e(session('message')); ?>', 'success');
+            }
+        });
+    <?php endif; ?>
+    
+    // Handle WhatsApp checkbox in password form
+    document.addEventListener('DOMContentLoaded', function() {
+        const whatsappCheckbox = document.getElementById('use-whatsapp-otp-checkbox');
+        const passwordField = document.getElementById('login-password');
+        
+        if (whatsappCheckbox && passwordField) {
+            whatsappCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    passwordField.style.display = 'none';
+                    passwordField.closest('.form-group').style.display = 'none';
+                } else {
+                    passwordField.style.display = 'block';
+                    passwordField.closest('.form-group').style.display = 'block';
+                }
+            });
+        }
+    });
+    
+    // Verify OTP for password form WhatsApp
+    document.getElementById('verify-password-whatsapp-otp-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const otp = document.getElementById('password-otp-value').value;
+        const btn = document.getElementById('verify-password-otp-btn');
+
+        if (otp.length !== 6) {
+            showAlert('Please enter the complete 6-digit OTP');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ti ti-loader me-2"></i>Verifying...';
+
+        try {
+            const response = await fetch('<?php echo e(route("public.account.login.verifyOtp")); ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ otp })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                showAlert(data.message);
+            } else {
+                showAlert(data.message, 'success');
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            }
+        } catch (error) {
+            showAlert('An error occurred. Please try again.');
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-check me-2"></i>Verify & Login';
+    });
+    
+    // Resend WhatsApp OTP for password form
+    document.getElementById('resend-password-whatsapp-otp').addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ti ti-loader me-2"></i>Sending...';
+
+        try {
+            const response = await fetch('<?php echo e(route("public.account.login.resendOtp")); ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                showAlert(data.message);
+            } else {
+                showAlert(data.message, 'success');
+                startTimer(document.getElementById('password-otp-timer'), btn);
+            }
+        } catch (error) {
+            showAlert('An error occurred. Please try again.');
+        }
+
+        btn.disabled = false;
+    });
+    
+    // Function to show password step 1
+    function showPasswordStep1() {
+        document.getElementById('password-login-step1').style.display = 'block';
+        document.getElementById('password-login-otp-step').style.display = 'none';
+    }
+
     // OTP Input handling
     function setupOtpInputs(inputs, hiddenInput) {
         inputs.forEach((input, index) => {
@@ -602,35 +787,73 @@ document.addEventListener('DOMContentLoaded', function() {
     const whatsappOtpInputs = document.querySelectorAll('#whatsapp-otp-inputs .otp-input');
     setupOtpInputs(whatsappOtpInputs, document.getElementById('whatsapp-otp-value'));
 
-    // Show toast (right-side slide-in notification)
+    // Show email OTP step if user was redirected (e.g. unverified from password login)
+    <?php if(session('show_email_otp_step') && session('otp_email')): ?>
+    (function() {
+        const otpEmail = '<?php echo e(session('otp_email')); ?>';
+        if (!otpEmail) return;
+        document.querySelectorAll('.login-method-btn').forEach(t => t.classList.remove('active'));
+        const emailOtpBtn = document.querySelector('.login-method-btn[data-method="email-otp"]');
+        if (emailOtpBtn) emailOtpBtn.classList.add('active');
+        document.querySelectorAll('.login-form-section').forEach(s => s.classList.remove('active'));
+        const emailSection = document.getElementById('email-otp-login');
+        if (emailSection) emailSection.classList.add('active');
+        document.getElementById('email-otp-step1').style.display = 'none';
+        document.getElementById('email-otp-step2').style.display = 'block';
+        document.getElementById('display-email').textContent = otpEmail;
+        const emailInput = document.getElementById('otp-email');
+        if (emailInput) emailInput.value = otpEmail;
+        setupOtpInputs(document.querySelectorAll('#email-otp-step2 .otp-input'), document.getElementById('email-otp-value'));
+        const firstOtp = document.querySelector('#email-otp-step2 .otp-input');
+        if (firstOtp) firstOtp.focus();
+        startTimer(document.getElementById('email-timer'), document.getElementById('resend-email-otp'));
+        showAlert(<?php echo json_encode(session('message', __('Please verify your email. We have sent an OTP to your email address.'))); ?>, 'success');
+    })();
+    <?php endif; ?>
+
+    // Show WhatsApp OTP step if user was redirected (e.g. mobile not verified from password login)
+    <?php if(session('show_whatsapp_otp_step') && session('otp_phone')): ?>
+    (function() {
+        const otpPhone = '<?php echo e(session('otp_phone')); ?>';
+        if (!otpPhone) return;
+        document.querySelectorAll('.login-method-btn').forEach(t => t.classList.remove('active'));
+        const waOtpBtn = document.querySelector('.login-method-btn[data-method="whatsapp-otp"]');
+        if (waOtpBtn) waOtpBtn.classList.add('active');
+        document.querySelectorAll('.login-form-section').forEach(s => s.classList.remove('active'));
+        const waSection = document.getElementById('whatsapp-otp-login');
+        if (waSection) waSection.classList.add('active');
+        document.getElementById('whatsapp-otp-step1').style.display = 'none';
+        document.getElementById('whatsapp-otp-step2').style.display = 'block';
+        var displayPhone = document.getElementById('display-phone');
+        if (displayPhone) displayPhone.textContent = otpPhone;
+        var phoneInput = document.getElementById('otp-phone');
+        if (phoneInput) phoneInput.value = otpPhone;
+        setupOtpInputs(document.querySelectorAll('#whatsapp-otp-inputs .otp-input'), document.getElementById('whatsapp-otp-value'));
+        var firstWaOtp = document.querySelector('#whatsapp-otp-step2 .otp-input');
+        if (firstWaOtp) firstWaOtp.focus();
+        startTimer(document.getElementById('whatsapp-timer'), document.getElementById('resend-whatsapp-otp'));
+        showAlert(<?php echo json_encode(session('message', __('Please verify your mobile number. We have sent an OTP to your WhatsApp.'))); ?>, 'success');
+    })();
+    <?php endif; ?>
+
+    // Show alert inside the login form only (never use global toast - form ke andar hi dikhao)
     function showAlert(message, type = 'danger') {
         const toastType = type === 'success' ? 'text-success' : 'text-danger';
-        if (typeof window.showAlert === 'function') {
-            window.showAlert(toastType, message);
-            return;
-        }
-        let container = document.getElementById('alert-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'alert-container';
-            container.className = 'toast-container';
-            container.style.cssText = 'position:fixed;right:5px;top:20vh;z-index:9999999;';
-            document.body.appendChild(container);
-        }
-        const id = 'toast-' + Math.floor(Math.random() * 10000);
+        const container = document.getElementById('login-alert');
+        if (!container) return;
         const icon = toastType === 'text-success' ? 'feather-check-circle' : 'feather-alert-triangle';
-        const html = '<div class="toast align-items-center ' + toastType + '" id="' + id + '" role="alert"><div class="d-flex"><div class="toast-body"><i class="' + icon + ' message-icon"></i><span>' + (message || '').replace(/</g, '&lt;') + '</span></div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>';
-        container.insertAdjacentHTML('beforeend', html);
-        const el = document.getElementById(id);
-        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-            const t = new bootstrap.Toast(el);
-            t.show();
-            el.addEventListener('hidden.bs.toast', () => el.remove());
-        } else {
-            el.classList.add('show');
-            setTimeout(() => el.remove(), 5000);
-        }
+        const id = 'login-toast-' + Math.floor(Math.random() * 10000);
+        container.innerHTML = '<div class="login-inline-toast show align-items-center ' + toastType + '" id="' + id + '" role="alert"><div class="d-flex align-items-center"><div class="toast-body flex-grow-1"><i class="' + icon + ' message-icon me-2"></i><span>' + (message || '').replace(/</g, '&lt;') + '</span></div><button type="button" class="btn-close" onclick="this.closest(\'.login-inline-toast\').remove(); document.getElementById(\'login-alert\').style.display=\'none\'" aria-label="Close"></button></div></div>';
+        container.style.display = 'block';
+        setTimeout(function() {
+            const el = document.getElementById(id);
+            if (el && el.parentNode) {
+                el.remove();
+                if (!container.querySelector('.login-inline-toast')) container.style.display = 'none';
+            }
+        }, 6000);
     }
+    window.showAlert = showAlert;
 
     // Timer function
     function startTimer(timerElement, buttonElement, seconds = 60) {

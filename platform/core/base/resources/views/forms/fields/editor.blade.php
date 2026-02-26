@@ -14,5 +14,5 @@
         @endif
     </x-slot:label>
 
-    {!! Form::editor($name, $options['value'], $options['attr']) !!}
+    {!! Form::editor($name, \Illuminate\Support\Arr::get($options, 'value'), \Illuminate\Support\Arr::get($options, 'attr', [])) !!}
 </x-core::form.field>

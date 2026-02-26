@@ -159,6 +159,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         
         // Email verification fields
         'email_verified_at',
+        'phone_verified_at',
         'email_verification_token',
         'email_verification_token_expires_at',
         'verification_code',
@@ -176,6 +177,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'type' => AccountTypeEnum::class,
         'dob' => 'datetime',
         'email_verified_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
         'email_verification_token_expires_at' => 'datetime',
         'verification_code_expires_at' => 'datetime',
         'confirmed_at' => 'datetime',
@@ -249,15 +251,27 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
 
     protected function name(): Attribute
     {
-        return Attribute::get(fn () => $this->first_name . ' ' . $this->last_name);
+        return Attribute::get(function () {
+            $full = trim((string) ($this->attributes['full_name'] ?? ''));
+            if ($full !== '') {
+                return $full;
+            }
+            $first = trim((string) ($this->first_name ?? ''));
+            $last = trim((string) ($this->last_name ?? ''));
+
+            return trim($first . ' ' . $last) ?: '';
+        });
     }
 
     protected function avatarUrl(): Attribute
     {
         return Attribute::make(
             get: function () {
-                if ($this->avatar->url) {
-                    return RvMedia::url($this->avatar->url);
+                if ($this->avatar_id) {
+                    $url = $this->avatar->url ?? null;
+                    if ($url) {
+                        return RvMedia::url($url);
+                    }
                 }
 
                 try {
@@ -265,7 +279,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
                         return RvMedia::getImageUrl(setting('job_board_default_account_avatar'));
                     }
 
-                    return (new Avatar())->create($this->name)->toBase64();
+                    return (new Avatar())->create($this->name ?: 'U')->toBase64();
                 } catch (Exception) {
                     return RvMedia::getDefaultImage();
                 }
@@ -277,8 +291,11 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
     {
         return Attribute::make(
             get: function () {
-                if ($this->avatar->url) {
-                    return RvMedia::getImageUrl($this->avatar->url, 'thumb');
+                if ($this->avatar_id) {
+                    $url = $this->avatar->url ?? null;
+                    if ($url) {
+                        return RvMedia::getImageUrl($url, 'thumb');
+                    }
                 }
 
                 try {
@@ -286,7 +303,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
                         return RvMedia::getImageUrl(setting('job_board_default_account_avatar'), 'thumb');
                     }
 
-                    return (new Avatar())->create($this->name)->toBase64();
+                    return (new Avatar())->create($this->name ?: 'U')->toBase64();
                 } catch (Exception) {
                     return RvMedia::getDefaultImage();
                 }

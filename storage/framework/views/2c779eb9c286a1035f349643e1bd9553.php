@@ -599,23 +599,35 @@
             })
             .then(res => res.json())
             .then(data => {
-                if (data.error === false) {
+                var isSuccess = data.error === false || data.resend_success === true || (data.data && data.data.resend_success === true);
+                if (isSuccess) {
                     successTextEl.textContent = <?php if(!empty($isWhatsappAvailable) && !empty($phone)): ?>
-                        'Verification code resent successfully to your WhatsApp & Email. Please enter the new 6-digit code below.';
+                        'Verification code sent again. Please enter the new 6-digit code below.'
                     <?php else: ?>
-                        'Verification code resent successfully to your Email. Please enter the new 6-digit code below.';
-                    <?php endif; ?>
+                        'Verification code sent again. Please enter the new 6-digit code below.'
+                    <?php endif; ?>;
                     successMsgEl.style.display = 'flex';
                     successMsgEl.style.background = '#ecfdf5';
                     successMsgEl.style.borderColor = '#a7f3d0';
                     successTextEl.style.color = '#047857';
+                    hideError();
                     startTimer();
                 } else {
-                    successTextEl.textContent = data.message || 'Failed to resend code';
+                    var msg = data.message || 'Failed to resend code';
+                    var nextUrl = data.next_url || (data.data && data.data.next_url) || '<?php echo e(route("public.account.login")); ?>';
+                    if (msg.toLowerCase().indexOf('already registered') !== -1) {
+                        msg = 'This email is already verified. Redirecting to login...';
+                        successMsgEl.style.background = '#fef3c7';
+                        successMsgEl.style.borderColor = '#fcd34d';
+                        successTextEl.style.color = '#92400e';
+                        setTimeout(function() { window.location.href = nextUrl; }, 2000);
+                    } else {
+                        successMsgEl.style.background = '#fef2f2';
+                        successMsgEl.style.borderColor = '#fecaca';
+                        successTextEl.style.color = '#b91c1c';
+                    }
+                    successTextEl.textContent = msg;
                     successMsgEl.style.display = 'flex';
-                    successMsgEl.style.background = '#fef2f2';
-                    successMsgEl.style.borderColor = '#fecaca';
-                    successTextEl.style.color = '#b91c1c';
                     resendBtn.disabled = false;
                 }
             })

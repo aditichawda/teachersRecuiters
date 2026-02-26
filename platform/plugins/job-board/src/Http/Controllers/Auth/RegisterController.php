@@ -270,36 +270,26 @@ class RegisterController extends BaseController
 
         $email = $request->input('email');
         
-        // Check if email already exists (for both employer and job-seeker)
-        $existingAccount = Account::where('email', $email)->first();
+        // Check if email already exists (case-insensitive, for both employer and job-seeker)
+        $existingAccount = Account::query()
+            ->whereRaw('LOWER(email) = ?', [strtolower($email)])
+            ->first();
         
         if ($existingAccount) {
-            // Check if email is verified - ONLY check email_verified_at (NOT NULL = verified)
+            // ONLY email_verified_at decides verified status (null = not verified)
             $emailVerifiedAt = $existingAccount->email_verified_at;
-            $isVerified = $emailVerifiedAt !== null && $emailVerifiedAt !== '';
-            
-            \Log::info('Email check result:', [
-                'email' => $email,
-                'exists' => true,
-                'email_verified_at' => $emailVerifiedAt,
-                'email_verified_at_is_null' => is_null($emailVerifiedAt),
-                'email_verified_at_is_empty' => empty($emailVerifiedAt),
-                'is_verified' => $isVerified,
-                'is_email_verified' => $existingAccount->is_email_verified
-            ]);
+            $isVerified = $emailVerifiedAt !== null && trim((string) $emailVerifiedAt) !== '';
             
             return $this
                 ->httpResponse()
                 ->setData([
                     'exists' => true,
                     'is_verified' => $isVerified,
-                    'email_verified_at' => $emailVerifiedAt,
-                    'email_verified_at_is_null' => is_null($emailVerifiedAt),
                     'account_type' => $existingAccount->type?->value ?? 'job-seeker',
                 ])
                 ->setMessage($isVerified
                     ? trans('plugins/job-board::messages.email_already_registered')
-                    : 'Email exists but not verified.');
+                    : trans('plugins/job-board::messages.email_exists_not_verified'));
         }
         
         return $this
@@ -324,12 +314,14 @@ class RegisterController extends BaseController
 
         $email = $request->input('email');
         
-        // Check if email already exists (use email_verified_at for verification status)
-        $existingAccount = Account::where('email', $email)->first();
+        // Check if email already exists (case-insensitive so Resend on verify page always finds the account)
+        $existingAccount = Account::query()
+            ->whereRaw('LOWER(email) = ?', [strtolower($email)])
+            ->first();
         
         if ($existingAccount) {
             $emailVerifiedAt = $existingAccount->email_verified_at;
-            $isVerified = $emailVerifiedAt !== null && $emailVerifiedAt !== '';
+            $isVerified = $emailVerifiedAt !== null && trim((string) $emailVerifiedAt) !== '';
             
             Log::info('sendVerificationCode - Email check:', [
                 'email' => $email,
@@ -342,11 +334,12 @@ class RegisterController extends BaseController
                 return $this
                     ->httpResponse()
                     ->setError()
+                    ->setData(['next_url' => route('public.account.login')])
                     ->setNextUrl(route('public.account.login'))
                     ->setMessage(trans('plugins/job-board::messages.email_already_registered'));
             }
             
-            // Email exists but NOT verified - redirect to OTP page (do not delete; let user complete verification)
+            // Email exists but NOT verified - resend OTP (user on verify step clicked Resend)
             $code = '123456';
             $expiresAt = now()->addMinutes(10);
             $existingAccount->verification_code = $code;
@@ -380,6 +373,8 @@ class RegisterController extends BaseController
             
             return $this
                 ->httpResponse()
+                ->setError(false)
+                ->setData(['resend_success' => true])
                 ->setMessage(trans('plugins/job-board::messages.verification_code_resent'))
                 ->setNextUrl(route('public.account.register.verifyEmailPage'));
         }
@@ -454,6 +449,29 @@ class RegisterController extends BaseController
             'phone' => $phone,
             'phone_country_code' => $phoneCountryCode,
         ]);
+        
+        // Phone uniqueness: if phone provided, must be unique (verified = show message; unverified = show message, ask to verify via login)
+        if ($phone !== '' && $phone !== '+') {
+            $normalizedPhone = preg_replace('/[^0-9]/', '', $phone);
+            if (strlen($normalizedPhone) >= 10) {
+                $existingByPhone = Account::query()
+                    ->whereNotNull('phone')
+                    ->where('phone', '!=', '')
+                    ->whereRaw("REPLACE(REPLACE(REPLACE(CONCAT(COALESCE(phone,'')), ' ', ''), '-', ''), '+', '') LIKE ?", ['%' . substr($normalizedPhone, -10) . '%'])
+                    ->first();
+                if ($existingByPhone) {
+                    $phoneVerified = $existingByPhone->email_verified_at !== null && trim((string) $existingByPhone->email_verified_at) !== '';
+                    return $this
+                        ->httpResponse()
+                        ->setError()
+                        ->setData(['next_url' => route('public.account.login')])
+                        ->setNextUrl(route('public.account.login'))
+                        ->setMessage($phoneVerified
+                            ? trans('plugins/job-board::messages.phone_already_registered')
+                            : trans('plugins/job-board::messages.phone_exists_not_verified'));
+                }
+            }
+        }
         
         // Set email_verified_at and confirmed_at only when email verification is disabled (same time)
         $verifiedAt = null;
@@ -1744,22 +1762,25 @@ class RegisterController extends BaseController
 
         $email = $request->input('email');
 
-        // Check if email already exists - use email_verified_at for verification status
-        $existingAccount = Account::where('email', $email)->first();
+        // Check if email already exists (case-insensitive) - ONLY email_verified_at = verified
+        $existingAccount = Account::query()
+            ->whereRaw('LOWER(email) = ?', [strtolower($email)])
+            ->first();
 
         if ($existingAccount) {
             $emailVerifiedAt = $existingAccount->email_verified_at;
-            $isVerified = $emailVerifiedAt !== null && $emailVerifiedAt !== '';
+            $isVerified = $emailVerifiedAt !== null && trim((string) $emailVerifiedAt) !== '';
 
             if ($isVerified) {
                 return $this
                     ->httpResponse()
                     ->setError()
+                    ->setData(['next_url' => route('public.account.login')])
                     ->setMessage(trans('plugins/job-board::messages.email_already_registered'))
                     ->setNextUrl(route('public.account.login'));
             }
 
-            // Email exists but NOT verified - redirect to OTP page (do not delete; let user complete verification)
+            // Email exists but NOT verified - send OTP and redirect to verify (do not create duplicate)
             $code = '123456';
             $expiresAt = now()->addMinutes(10);
             $existingAccount->email_verification_token = $code;
@@ -1798,6 +1819,8 @@ class RegisterController extends BaseController
 
             return $this
                 ->httpResponse()
+                ->setError(false)
+                ->setData(['resend_success' => true])
                 ->setMessage(trans('plugins/job-board::messages.verification_code_resent'))
                 ->setNextUrl(route('public.account.register.employer.verifyEmailPage'));
         }
@@ -1810,6 +1833,34 @@ class RegisterController extends BaseController
         $phone = $request->input('phone') ?: $request->input('phone_display', '');
         if ($phone && strpos($phone, '+') === 0) {
             $phone = '+' . preg_replace('/[^0-9]/', '', $phone);
+        } elseif ($phone) {
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+            if ($phone !== '') {
+                $phone = '+' . $phone;
+            }
+        }
+
+        // Phone uniqueness for employer (same as job seeker)
+        if ($phone !== '' && $phone !== '+') {
+            $normalizedPhone = preg_replace('/[^0-9]/', '', $phone);
+            if (strlen($normalizedPhone) >= 10) {
+                $existingByPhone = Account::query()
+                    ->whereNotNull('phone')
+                    ->where('phone', '!=', '')
+                    ->whereRaw("REPLACE(REPLACE(REPLACE(CONCAT(COALESCE(phone,'')), ' ', ''), '-', ''), '+', '') LIKE ?", ['%' . substr($normalizedPhone, -10) . '%'])
+                    ->first();
+                if ($existingByPhone) {
+                    $phoneVerified = $existingByPhone->email_verified_at !== null && trim((string) $existingByPhone->email_verified_at) !== '';
+                    return $this
+                        ->httpResponse()
+                        ->setError()
+                        ->setData(['next_url' => route('public.account.login')])
+                        ->setNextUrl(route('public.account.login'))
+                        ->setMessage($phoneVerified
+                            ? trans('plugins/job-board::messages.phone_already_registered')
+                            : trans('plugins/job-board::messages.phone_exists_not_verified'));
+                }
+            }
         }
 
         // Parse full name

@@ -14,5 +14,5 @@
         @endif
     </x-slot:label>
 
-    {!! Form::repeater($name, $options['value'] ?: Arr::get($options, 'selected'), $options['fields'] ?: []) !!}
+    {!! Form::repeater($name, $options['value'] ?? Arr::get($options, 'selected'), Arr::get($options, 'fields', [])) !!}
 </x-core::form.field>
