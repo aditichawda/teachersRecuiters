@@ -66,7 +66,7 @@
                 <input type="date" name="filter_values[]" class="form-control form-control-sm" value="{{ $dateTo }}" style="min-width:140px;">
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary btn-sm">{{ trans('core/table::table.apply') }}</button>
+                <button type="button" class="btn btn-primary btn-sm btn-apply">{{ trans('core/table::table.apply') }}</button>
                 <a href="{{ request()->url() }}" class="btn btn-outline-secondary btn-sm ms-1">{{ trans('core/table::table.clear') }}</a>
             </div>
         </div>

@@ -94,8 +94,11 @@ class ApplicantTable extends TableAbstract
         $key = preg_replace('/[^A-Za-z0-9_]/', '', str_replace(' ', '', $key));
         $table = $this->getModel()->getTable();
 
-        if ($key === 'job_id' && $value !== '') {
-            $query->where($table . '.job_id', '=', (int) $value);
+        if ($key === 'job_id') {
+            $jobId = (int) $value;
+            if ($jobId > 0) {
+                $query->where($table . '.job_id', '=', $jobId);
+            }
 
             return $query;
         }

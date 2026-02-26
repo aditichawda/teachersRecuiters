@@ -296,8 +296,8 @@ class RegisterController extends BaseController
                     'email_verified_at_is_null' => is_null($emailVerifiedAt),
                     'account_type' => $existingAccount->type?->value ?? 'job-seeker',
                 ])
-                ->setMessage($isVerified 
-                    ? 'This email is already registered. Please login to continue.' 
+                ->setMessage($isVerified
+                    ? trans('plugins/job-board::messages.email_already_registered')
                     : 'Email exists but not verified.');
         }
         
@@ -323,11 +323,10 @@ class RegisterController extends BaseController
 
         $email = $request->input('email');
         
-        // Check if email already exists
+        // Check if email already exists (use email_verified_at for verification status)
         $existingAccount = Account::where('email', $email)->first();
         
         if ($existingAccount) {
-            // Check verification status - ONLY check email_verified_at (NOT NULL = verified)
             $emailVerifiedAt = $existingAccount->email_verified_at;
             $isVerified = $emailVerifiedAt !== null && $emailVerifiedAt !== '';
             
@@ -338,17 +337,50 @@ class RegisterController extends BaseController
             ]);
             
             if ($isVerified) {
-                // Email is already verified - redirect to login
+                // Email already registered and verified - show message and redirect to login
                 return $this
                     ->httpResponse()
                     ->setError()
                     ->setNextUrl(route('public.account.login'))
-                    ->setMessage('This email is already registered. Redirecting to login...');
-            } else {
-                // Email exists but NOT verified - delete old unverified account and allow re-registration
-                Log::info('Deleting old unverified account for re-registration', ['email' => $email, 'account_id' => $existingAccount->id]);
-                $existingAccount->delete();
+                    ->setMessage(trans('plugins/job-board::messages.email_already_registered'));
             }
+            
+            // Email exists but NOT verified - redirect to OTP page (do not delete; let user complete verification)
+            $code = '123456';
+            $expiresAt = now()->addMinutes(10);
+            $existingAccount->verification_code = $code;
+            $existingAccount->verification_code_expires_at = $expiresAt;
+            $existingAccount->save();
+            
+            $formData = [
+                'full_name' => $existingAccount->full_name ?? $existingAccount->first_name ?? '',
+                'email' => $email,
+                'phone' => $existingAccount->phone ?? '',
+                'phone_display' => $existingAccount->phone ?? '',
+                'phone_country_code' => $existingAccount->phone_country_code ?? '',
+                'password' => $request->input('form_data.password') ?? $request->input('password'),
+                'is_whatsapp_available' => $existingAccount->is_whatsapp_available ?? false,
+                'account_type' => $existingAccount->type?->value ?? 'job-seeker',
+            ];
+            $request->session()->put('registration_email_verification', [
+                'email' => $email,
+                'code' => $code,
+                'expires_at' => $expiresAt,
+                'form_data' => $formData,
+                'temp_account_id' => $existingAccount->id,
+            ]);
+            $request->session()->put('verify_email_address', $email);
+            
+            try {
+                $existingAccount->notify(new EmailVerificationNotification($code));
+            } catch (\Exception $e) {
+                Log::warning('Resend OTP failed for existing unverified account: ' . $e->getMessage());
+            }
+            
+            return $this
+                ->httpResponse()
+                ->setMessage(trans('plugins/job-board::messages.verification_code_resent'))
+                ->setNextUrl(route('public.account.register.verifyEmailPage'));
         }
         
         // Get form data - support both nested (form_data[field]) and top-level (field) formats
@@ -1619,17 +1651,62 @@ class RegisterController extends BaseController
 
         $email = $request->input('email');
 
-        // Check if email already exists and is verified
-        $existingAccount = Account::where('email', $email)
-            ->where('is_email_verified', true)
-            ->first();
-            
+        // Check if email already exists - use email_verified_at for verification status
+        $existingAccount = Account::where('email', $email)->first();
+
         if ($existingAccount) {
+            $emailVerifiedAt = $existingAccount->email_verified_at;
+            $isVerified = $emailVerifiedAt !== null && $emailVerifiedAt !== '';
+
+            if ($isVerified) {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setMessage(trans('plugins/job-board::messages.email_already_registered'))
+                    ->setNextUrl(route('public.account.login'));
+            }
+
+            // Email exists but NOT verified - redirect to OTP page (do not delete; let user complete verification)
+            $code = '123456';
+            $expiresAt = now()->addMinutes(10);
+            $existingAccount->email_verification_token = $code;
+            $existingAccount->email_verification_token_expires_at = $expiresAt;
+            $existingAccount->save();
+
+            $request->session()->put('employer_registration', [
+                'email' => $email,
+                'code' => $code,
+                'expires_at' => $expiresAt,
+                'temp_account_id' => $existingAccount->id,
+            ]);
+            $request->session()->put('employer_verify_email', $email);
+
+            if (env('MAIL_HOST')) {
+                config([
+                    'mail.default' => 'smtp',
+                    'mail.mailers.smtp.host' => env('MAIL_HOST'),
+                    'mail.mailers.smtp.port' => env('MAIL_PORT', 587),
+                    'mail.mailers.smtp.username' => env('MAIL_USERNAME'),
+                    'mail.mailers.smtp.password' => env('MAIL_PASSWORD'),
+                    'mail.mailers.smtp.encryption' => env('MAIL_ENCRYPTION', 'tls'),
+                ]);
+                if (env('MAIL_FROM_ADDRESS')) {
+                    config([
+                        'mail.from.address' => env('MAIL_FROM_ADDRESS'),
+                        'mail.from.name' => env('MAIL_FROM_NAME', 'TeachersRecruiter'),
+                    ]);
+                }
+            }
+            try {
+                $existingAccount->notify(new EmailVerificationNotification($code));
+            } catch (\Exception $e) {
+                Log::warning('Resend OTP failed for existing unverified employer: ' . $e->getMessage());
+            }
+
             return $this
                 ->httpResponse()
-                ->setError()
-                ->setMessage('This email is already registered. Please login instead.')
-                ->setNextUrl(route('public.account.login'));
+                ->setMessage(trans('plugins/job-board::messages.verification_code_resent'))
+                ->setNextUrl(route('public.account.register.employer.verifyEmailPage'));
         }
 
         // Generate OTP - fixed code for testing (use 123456 to verify)
@@ -1647,9 +1724,6 @@ class RegisterController extends BaseController
         $nameParts = explode(' ', $fullName, 2);
         $firstName = $nameParts[0] ?? '';
         $lastName = $nameParts[1] ?? $firstName;
-
-        // Delete any existing unverified account with this email
-        Account::where('email', $email)->where('is_email_verified', false)->delete();
 
         // Create temp employer account
         $tempAccount = Account::create([
