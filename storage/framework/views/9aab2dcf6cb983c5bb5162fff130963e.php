@@ -27,4 +27,8 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
+<<<<<<<< HEAD:storage/framework/views/9aab2dcf6cb983c5bb5162fff130963e.php
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/text.blade.php ENDPATH**/ ?>
+========
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/text.blade.php ENDPATH**/ ?>
+>>>>>>>> 6b7ae336 (payment update):storage/framework/views/04fc037829a0ca1092fba7a09a763f1b.php

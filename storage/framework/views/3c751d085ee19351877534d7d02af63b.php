@@ -229,6 +229,7 @@
                     <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
                             <h4 class="footer-title">Social</h4>
+<<<<<<< HEAD
                             <?php($socialLinks = Theme::getSocialLinks())
                             @if ($socialLinks)
                                 <ul class="footer-links footer-social-links">
@@ -240,6 +241,19 @@
                                     @endforeach
                                 </ul>
                             @else
+=======
+                            <?php ($socialLinks = Theme::getSocialLinks()); ?>
+                            <?php if($socialLinks): ?>
+                                <ul class="footer-links footer-social-links">
+                                    <?php $__currentLoopData = $socialLinks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $socialLink): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php if(!$socialLink->getUrl() || !$socialLink->getIconHtml()) continue; ?>
+                                        <li>
+                                            <a href="<?php echo e($socialLink->getUrl()); ?>" target="_blank" rel="noopener"><?php echo $socialLink->getIconHtml(); ?> <?php echo e($socialLink->getName()); ?></a>
+                                        </li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </ul>
+                            <?php else: ?>
+>>>>>>> 6b7ae336 (payment update)
                                 <ul class="footer-links footer-social-links">
                                     <li><a href="https://www.facebook.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i> Facebook</a></li>
                                     <li><a href="https://www.google.com/search?q=teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-google"></i> Google</a></li>
@@ -247,7 +261,11 @@
                                     <li><a href="https://www.instagram.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-instagram"></i> Instagram</a></li>
                                     <li><a href="https://www.linkedin.com/company/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i> LinkedIn</a></li>
                                 </ul>
+<<<<<<< HEAD
                             @endif
+=======
+                            <?php endif; ?>
+>>>>>>> 6b7ae336 (payment update)
                         </div>
                     </div>
                 </div>
@@ -255,9 +273,15 @@
                 <div class="footer-partners-inner">
                     <span class="footer-partners-label">For You:</span>
                     <div class="footer-partners-list">
+<<<<<<< HEAD
                         <a href="{{ route('public.for-teachers') }}" class="footer-partner-item">For Teachers</a>
                         <a href="{{ route('public.for-schools') }}" class="footer-partner-item">For Schools</a>
                         <a href="{{ route('public.careers') }}" class="footer-partner-item">Careers</a>
+=======
+                        <a href="<?php echo e(route('public.for-teachers')); ?>" class="footer-partner-item">For Teachers</a>
+                        <a href="<?php echo e(route('public.for-schools')); ?>" class="footer-partner-item">For Schools</a>
+                        <a href="<?php echo e(route('public.careers')); ?>" class="footer-partner-item">Careers</a>
+>>>>>>> 6b7ae336 (payment update)
                     </div>
                     <a href="/companies" class="footer-see-all">See All →</a>
                 </div>
@@ -271,7 +295,12 @@
             <div class="footer-bottom">
                 <div class="footer-bottom-inner">
                     <div class="footer-copy-right">
+<<<<<<< HEAD
                         {!! Theme::getSiteCopyright() ?: 'Teachers Recruiter &copy; ' . date('Y') . '. All Right Reserved.' !!}
+=======
+                        <?php echo Theme::getSiteCopyright() ?: 'Teachers Recruiter &copy; ' . date('Y') . '. All Right Reserved.'; ?>
+
+>>>>>>> 6b7ae336 (payment update)
                     </div>
                     <!-- <div class="footer-legal">
                         <a href="/terms-conditions">Terms</a>
@@ -286,6 +315,7 @@
 
     <!-- WhatsApp Floating Button -->
     <a href="https://wa.me/919876543210" target="_blank" rel="noopener" class="whatsapp-float"
+<<<<<<< HEAD
         style="position: fixed; width: 60px; height: 60px; bottom: 20px; right: 20px; background-color: #25D366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3); z-index: 9998 !important; display: flex !important; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.3s; pointer-events: auto !important;">
         <i class="fab fa-whatsapp" style="color: #fff;"></i>
     </a>
@@ -336,6 +366,19 @@
             }
         }
     ?>
+=======
+        style="position: fixed; width: 60px; height: 60px; bottom: 20px; right: 20px; background-color: #25D366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.3s;">
+        <i class="fab fa-whatsapp" style="color: #fff;"></i>
+    </a>
+    <style>
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+    </style>
+<?php endif; ?>
+
+<?php if(is_plugin_active('job-board')): ?>
+>>>>>>> 6b7ae336 (payment update)
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.apply-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">
@@ -508,6 +551,7 @@
         'use strict';
         window.onload = function() {
             <?php if(session()->has('success_msg')): ?>
+<<<<<<< HEAD
                 window.showAlert("<?php echo addslashes(session('success_msg')); ?>", 'success');
             <?php endif; ?>
             <?php if(session()->has('status')): ?>
@@ -522,6 +566,22 @@
             <?php if(isset($errors)): ?>
                 <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     window.showAlert("<?php echo addslashes($error); ?>", 'danger');
+=======
+                window.showAlert('text-success', "<?php echo addslashes(session('success_msg')); ?>");
+            <?php endif; ?>
+            <?php if(session()->has('status')): ?>
+                window.showAlert('text-success', "<?php echo addslashes(session('status')); ?>");
+            <?php endif; ?>
+            <?php if(session()->has('error_msg')): ?>
+                window.showAlert('text-danger', "<?php echo addslashes(session('error_msg')); ?>");
+            <?php endif; ?>
+            <?php if(isset($error_msg)): ?>
+                window.showAlert('text-danger', "<?php echo addslashes($error_msg); ?>");
+            <?php endif; ?>
+            <?php if(isset($errors)): ?>
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    window.showAlert('text-danger', "<?php echo addslashes($error); ?>");
+>>>>>>> 6b7ae336 (payment update)
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             <?php endif; ?>
         };

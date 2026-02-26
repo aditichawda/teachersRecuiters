@@ -1,4 +1,5 @@
 <?php if(auth('account')->check() && $account && ! $account->isEmployer()): ?>
+<<<<<<< HEAD
 <style>
 /* Hide success alerts to prevent navbar overlap and page shift */
 .dialog-alert-overlay {
@@ -20,12 +21,15 @@
     white-space: nowrap;
 }
 </style>
+=======
+>>>>>>> 6b7ae336 (payment update)
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var applyNow = document.getElementById('applyNow');
     if (!applyNow) return;
     var screeningUrl = '<?php echo e(url("ajax/jobs/screening-questions")); ?>';
 
+<<<<<<< HEAD
     // Store reference to the button that opened the modal
     var modalTriggerButton = null;
     
@@ -46,12 +50,17 @@ document.addEventListener('DOMContentLoaded', function() {
         modalTriggerButton = button;
         console.log('Modal opened, stored button:', modalTriggerButton, 'jobId:', button ? button.getAttribute('data-job-id') : 'none');
         
+=======
+    applyNow.addEventListener('show.bs.modal', function(e) {
+        var button = e.relatedTarget;
+>>>>>>> 6b7ae336 (payment update)
         var jobId = button && button.getAttribute('data-job-id');
         var wrap = document.getElementById('job-screening-questions-wrap');
         var list = document.getElementById('job-screening-questions-list');
         var step1 = document.getElementById('apply-step-1');
         if (step1) step1.style.display = 'block';
         if (list) list.innerHTML = '';
+<<<<<<< HEAD
         
         var jobIdInput = applyNow.querySelector('input[name="job_id"]') || applyNow.querySelector('.modal-job-id');
         if (jobIdInput) jobIdInput.value = jobId || '';
@@ -81,17 +90,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     wrap.classList.add('loading');
                 }
             }, 10);
+=======
+        if (wrap) {
+            wrap.style.display = 'none';
+            wrap.classList.remove('loading');
+        }
+        var jobIdInput = applyNow.querySelector('input[name="job_id"]') || applyNow.querySelector('.modal-job-id');
+        if (jobIdInput) jobIdInput.value = jobId || '';
+        if (!jobId) return;
+        
+        // Show loader
+        if (wrap) {
+            wrap.style.display = 'block';
+            wrap.classList.add('loading');
+>>>>>>> 6b7ae336 (payment update)
         }
         
         fetch(screeningUrl + '/' + jobId, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 // Hide loader
+<<<<<<< HEAD
                 if (wrap) {
                     wrap.classList.remove('loading');
                     // Reset inline styles
                     wrap.style.minHeight = '';
                 }
+=======
+                if (wrap) wrap.classList.remove('loading');
+>>>>>>> 6b7ae336 (payment update)
                 
                 var questions = data.questions || [];
                 if (questions.length === 0) {
@@ -184,7 +211,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (wrap) {
                     wrap.classList.remove('loading');
                     wrap.style.display = 'none';
+<<<<<<< HEAD
                     wrap.style.minHeight = '';
+=======
+>>>>>>> 6b7ae336 (payment update)
                 }
                 console.error('Error loading screening questions:', error);
             });
@@ -211,6 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var jobIdInput = form.querySelector('input[name="job_id"]') || form.querySelector('.modal-job-id');
             var jobId = jobIdInput ? jobIdInput.value : '';
             var originalLabel = submitBtn ? submitBtn.innerHTML : '';
+<<<<<<< HEAD
             
             // Also try to get jobId from the stored button reference or find it
             if (!jobId && modalTriggerButton) {
@@ -227,15 +258,21 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('[JOB_APPLY] Job ID:', jobId);
             console.log('[JOB_APPLY] Form URL:', form.action || '<?php echo e(route("public.job.apply")); ?>');
             console.log('[JOB_APPLY] Stored button reference:', modalTriggerButton);
+=======
+>>>>>>> 6b7ae336 (payment update)
 
             if (submitBtn) {
                 submitBtn.disabled = true;
                 if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = '<?php echo e(__("Sending...")); ?>';
+<<<<<<< HEAD
                 console.log('[JOB_APPLY] Submit button disabled and label changed to "Sending..."');
+=======
+>>>>>>> 6b7ae336 (payment update)
             }
 
             var formData = new FormData(form);
             var applyUrl = form.action || '<?php echo e(route("public.job.apply")); ?>';
+<<<<<<< HEAD
             
             // Log form data (excluding sensitive info)
             var formDataEntries = [];
@@ -253,6 +290,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('[JOB_APPLY] Sending POST request to:', applyUrl);
             var requestStartTime = Date.now();
+=======
+>>>>>>> 6b7ae336 (payment update)
 
             fetch(applyUrl, {
                 method: 'POST',
@@ -260,6 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
             })
             .then(function(r) {
+<<<<<<< HEAD
                 var requestTime = Date.now() - requestStartTime;
                 console.log('[JOB_APPLY] Response received in', requestTime + 'ms');
                 console.log('[JOB_APPLY] Response status:', r.status, r.statusText);
@@ -584,10 +624,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('[JOB_APPLY] ❌ Error message:', error.message);
                 console.error('[JOB_APPLY] ❌ Error stack:', error.stack);
                 console.error('[JOB_APPLY] ❌ Full error object:', error);
+=======
+                if (!r.ok) return r.json().then(function(d) { throw new Error(d && d.message ? d.message : 'Request failed'); });
+                return r.json();
+            })
+            .then(function(data) {
+>>>>>>> 6b7ae336 (payment update)
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
                 }
+<<<<<<< HEAD
                 var errorMsg = error && error.message ? error.message : '<?php echo e(__("Application failed. Please try again.")); ?>';
                 console.error('Showing error to user:', errorMsg);
                 if (typeof Botble !== 'undefined') Botble.showError(errorMsg);
@@ -750,6 +797,46 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+=======
+                var isSuccess = data && (data.error === false || data.error === undefined);
+                if (isSuccess) {
+                    var modalEl = document.getElementById('applyNow');
+                    if (modalEl) {
+                        try {
+                            var bsModal = (typeof bootstrap !== 'undefined' && bootstrap.Modal)
+                                ? (bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl))
+                                : null;
+                            if (bsModal) bsModal.hide();
+                            modalEl.classList.remove('show');
+                            modalEl.style.display = 'none';
+                            modalEl.setAttribute('aria-hidden', 'true');
+                            document.body.classList.remove('modal-open');
+                            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+                            document.body.style.removeProperty('overflow');
+                            document.body.style.removeProperty('padding-right');
+                        } catch (err) {
+                            modalEl.classList.remove('show');
+                            modalEl.style.display = 'none';
+                            document.body.classList.remove('modal-open');
+                            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+                        }
+                    }
+                    if (typeof Botble !== 'undefined') Botble.showSuccess(data.message || '<?php echo e(__("Application submitted successfully.")); ?>');
+                    window.location.reload();
+                } else {
+                    if (typeof Botble !== 'undefined') Botble.showError((data && data.message) ? data.message : '<?php echo e(__("Application failed. Please try again.")); ?>');
+                }
+            })
+            .catch(function() {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
+                }
+                if (typeof Botble !== 'undefined') Botble.showError('<?php echo e(__("Application failed. Please try again.")); ?>');
+            });
+        });
+    }
+>>>>>>> 6b7ae336 (payment update)
 });
 </script>
     <div class="modal fade" id="applyExternalJob" tabindex="-1" aria-labelledby="applyExternalJob" aria-hidden="true">
@@ -765,6 +852,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
+<<<<<<< HEAD
     <style>
     /* Apply Modal Z-Index Fix - Above Header */
     #applyNow {
@@ -930,6 +1018,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-3">
+=======
+    <div class="modal fade" id="applyNow" aria-hidden="true" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-body p-3">
+                    <style>.apl-job-inpopup .form-label{font-size:0.9rem;margin-bottom:0.25rem}.apl-job-inpopup .form-control,.apl-job-inpopup .form-select{font-size:0.9rem;padding:0.35rem 0.5rem}.apl-job-inpopup .mb-3{margin-bottom:0.6rem!important}.apl-job-inpopup textarea.form-control{min-height:60px}</style>
+>>>>>>> 6b7ae336 (payment update)
                     <div class="apl-job-inpopup job-apply-form-compact">
                         <?php if($internalJobApplicationForm): ?>
                             <?php echo $internalJobApplicationForm->renderForm(); ?>
@@ -941,6 +1036,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 <?php endif; ?>
+<<<<<<< HEAD
 
 
 <?php if(is_plugin_active('job-board') && isset($jobSeekerCanApply) && $jobSeekerCanApply === false && !empty($jobSeekerApplyMessage ?? '')): ?>
@@ -964,4 +1060,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <?php endif; ?>
+=======
+>>>>>>> 6b7ae336 (payment update)
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/partials/apply-modal.blade.php ENDPATH**/ ?>

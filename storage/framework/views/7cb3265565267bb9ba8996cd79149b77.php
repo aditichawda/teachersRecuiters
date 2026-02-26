@@ -1,6 +1,7 @@
 <?php echo Theme::partial('header'); ?>
 
 
+<<<<<<< HEAD
 <style>
 /* Homepage Responsive Styles */
 .homepage-container {
@@ -83,6 +84,8 @@
 </style>
 
 <div class="homepage-container">
+=======
+>>>>>>> 6b7ae336 (payment update)
 <?php if(is_plugin_active('ads')): ?>
     <?php
         // Display ads at top of home page
@@ -112,6 +115,7 @@
 <?php echo Theme::content(); ?>
 
 
+<<<<<<< HEAD
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Find testimonials section
@@ -133,6 +137,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+=======
+>>>>>>> 6b7ae336 (payment update)
 <?php if(is_plugin_active('ads') && function_exists('render_page_ads')): ?>
     <?php $bottomAds = render_page_ads('home', 'bottom'); ?>
     <?php if(!empty($bottomAds)): ?>
@@ -143,8 +149,11 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php endif; ?>
 <?php endif; ?>
 
+<<<<<<< HEAD
 </div>
 
+=======
+>>>>>>> 6b7ae336 (payment update)
 <?php echo Theme::partial('footer'); ?>
 
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/layouts/homepage.blade.php ENDPATH**/ ?>

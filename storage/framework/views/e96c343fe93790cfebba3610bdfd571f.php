@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
@@ -21,6 +22,12 @@
     
     // Format count: show "9+" if more than 9
     $notificationBadge = $notificationCount > 9 ? '9+' : ($notificationCount > 0 ? $notificationCount : '');
+=======
+-size<?php
+    use Botble\Base\Enums\BaseStatusEnum;
+    use Botble\JobBoard\Facades\JobBoardHelper;
+    use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
+>>>>>>> 6b7ae336 (payment update)
     
     // Get featured categories with job counts
     $featuredCategories = collect();
@@ -104,8 +111,13 @@
                 <?php endif; ?>
 
                 <!-- NAV Toggle Button -->
+<<<<<<< HEAD
                 <button id="mobile-side-drawer" type="button"
                     class="navbar-toggler collapsed mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+=======
+                <button id="mobile-side-drawer" data-target=".header-nav" data-toggle="collapse" type="button"
+                    class="navbar-toggler collapsed">
+>>>>>>> 6b7ae336 (payment update)
                     <span class="sr-only"><?php echo e(__('Toggle navigation')); ?></span>
                     <span class="icon-bar icon-bar-first"></span>
                     <span class="icon-bar icon-bar-two"></span>
@@ -113,6 +125,7 @@
                 </button>
 
                 <!-- MAIN Nav -->
+<<<<<<< HEAD
                 <div class="nav-animation header-nav navbar-collapse d-flex justify-content-end" id="main-navbar-menu">
                     <!-- Mobile Menu Close Button -->
                     <button
@@ -124,6 +137,9 @@
                         onclick="var t = document.getElementById('mobile-side-drawer'); if (t) { t.click(); }">
                         <i class="feather-x"></i>
                     </button>
+=======
+                <div class="nav-animation header-nav navbar-collapse collapse d-flex justify-content-end">
+>>>>>>> 6b7ae336 (payment update)
                     <ul class="nav navbar-nav">
                         <?php
                             $isJobSeeker = auth('account')->check() && auth('account')->user()->isJobSeeker();
@@ -134,7 +150,10 @@
                         <li class="nav-item">
                             <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="<?php echo e(BaseHelper::getHomepageUrl()); ?>" title="<?php echo e(__('Home')); ?>">
                                 <i class="feather-home" style="font-size: 20px !important;"></i>
+<<<<<<< HEAD
                                 <span><?php echo e(__('Home')); ?></span>
+=======
+>>>>>>> 6b7ae336 (payment update)
                             </a>
                         </li>
 
@@ -160,6 +179,7 @@
                                     <span><?php echo e(__('Premium Service')); ?></span>
                                 </a>
                             </li>
+<<<<<<< HEAD
                             <li class="nav-item" style="position: relative;">
                                 <a class="nav-link" style="color: black; font-size: 20px; !important" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
                                     
@@ -171,6 +191,11 @@
                                     <?php if($notificationBadge): ?>
                                         <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;"><?php echo e($notificationBadge); ?></span>
                                     <?php endif; ?>
+=======
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
+                                    <i class="feather-bell" style="font-size: 20px !important"></i>
+>>>>>>> 6b7ae336 (payment update)
                                 </a>
                             </li>
                         <?php elseif($isEmployer): ?>
@@ -185,12 +210,18 @@
                                     <span><?php echo e(__('Plans')); ?></span>
                                 </a>
                             </li>
+<<<<<<< HEAD
                             <li class="nav-item" style="position: relative;">
                                 <a class="nav-link" style="color: black; font-size: 20px; !important" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
                                     <i class="feather-bell" style="font-size: 20px !important"></i>
                                     <?php if($notificationBadge): ?>
                                         <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;"><?php echo e($notificationBadge); ?></span>
                                     <?php endif; ?>
+=======
+                            <li class="nav-item">
+                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
+                                    <i class="feather-bell" style="font-size: 20px !important"></i>
+>>>>>>> 6b7ae336 (payment update)
                                 </a>
                             </li>
                         <?php else: ?>
@@ -339,6 +370,7 @@
                             
                         </div>
                         <div class="extra-cell">
+<<<<<<< HEAD
                             <style>
                             /* Fix button alignment */
                             .header-nav-btn-section {
@@ -362,6 +394,8 @@
                                 align-items: center !important;
                             }
                             </style>
+=======
+>>>>>>> 6b7ae336 (payment update)
                             <div class="header-nav-btn-section">
                                 <?php if(auth('account')->check() && $account = auth('account')->user()): ?>
                                     <div>
@@ -405,7 +439,11 @@
                                                         'route' => 'public.account.logout',
                                                         'id' => 'logout-form']); ?>
 
+<<<<<<< HEAD
                                                         <button type="button" class="dropdown-item" id="logout-btn" onclick="event.preventDefault(); if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form'); if (f) f.submit(); }">
+=======
+                                                        <button type="button" class="dropdown-item" id="logout-btn">
+>>>>>>> 6b7ae336 (payment update)
                                                             <i class="feather-log-out"></i>
                                                             <span><?php echo e(__('Logout')); ?></span>
                                                         </button>
@@ -419,7 +457,11 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <!-- Login Button -->
                                         <div class="twm-nav-btn-left">
+<<<<<<< HEAD
                                             <a class="twm-nav-sign-up" href="<?php echo e(route('public.account.login')); ?>">
+=======
+                                            <a class="twm-nav-sign-up d-inline-block" href="<?php echo e(route('public.account.login')); ?>">
+>>>>>>> 6b7ae336 (payment update)
                                                 <i class="feather-log-in"></i>
                                                 <span><?php echo e(__('Login')); ?></span>
                                             </a>
@@ -806,6 +848,7 @@
     transform: translateX(5px);
 }
 
+<<<<<<< HEAD
 /* Notification Badge Styles */
 .nav-item[style*="position: relative"] .nav-link {
     position: relative;
@@ -1115,12 +1158,17 @@
         order: 1;
     }
     
+=======
+/* Mobile Responsive */
+@media (max-width: 991px) {
+>>>>>>> 6b7ae336 (payment update)
     .mega-menu {
         position: static !important;
         transform: none !important;
         left: auto !important;
         width: 100%;
         max-width: 100%;
+<<<<<<< HEAD
         margin-top: 0;
         margin-left: 0;
         margin-right: 0;
@@ -1129,10 +1177,14 @@
         border-top: 1px solid #e2e8f0;
         border-bottom: 1px solid #e2e8f0;
         background: #f8fafc;
+=======
+        margin-top: 10px;
+>>>>>>> 6b7ae336 (payment update)
     }
     
     .mega-menu-tabs-wrapper {
         flex-wrap: wrap;
+<<<<<<< HEAD
         padding: 15px;
         gap: 10px;
         background: #ffffff;
@@ -1144,16 +1196,30 @@
         font-size: 12px;
         border-radius: 8px;
         font-weight: 600;
+=======
+        padding: 12px 15px;
+        gap: 8px;
+    }
+    
+    .mega-menu-tab-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+>>>>>>> 6b7ae336 (payment update)
     }
     
     .mega-menu-content-wrapper {
         padding: 15px;
+<<<<<<< HEAD
         max-height: 400px;
         overflow-y: auto;
+=======
+        max-height: 350px;
+>>>>>>> 6b7ae336 (payment update)
     }
     
     .mega-menu-grid {
         grid-template-columns: 1fr;
+<<<<<<< HEAD
         gap: 12px;
     }
     
@@ -1162,6 +1228,13 @@
         border-radius: 8px;
         background: #ffffff;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+=======
+        gap: 10px;
+    }
+    
+    .mega-menu-grid-item {
+        padding: 10px;
+>>>>>>> 6b7ae336 (payment update)
     }
     
     .mega-menu-grid-icon {
@@ -1180,6 +1253,7 @@
     .mega-menu-grid-count {
         font-size: 11px;
     }
+<<<<<<< HEAD
     
     /* Header buttons mobile */
     .header-nav-btn-section {
@@ -1208,6 +1282,8 @@
     .header-nav {
         width: 260px;
     }
+=======
+>>>>>>> 6b7ae336 (payment update)
 }
 
 /* Dropdown Animation */
@@ -1282,7 +1358,10 @@
     display: inline-block;
     vertical-align: middle;
     line-height: 1.5;
+<<<<<<< HEAD
     font-size: 16px;
+=======
+>>>>>>> 6b7ae336 (payment update)
 }
 
 /* Ensure consistent alignment for all nav items */
@@ -1324,6 +1403,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+<<<<<<< HEAD
     /* padding: 12px; */
     /* background: #fff; */
     /* border-radius: 8px;
@@ -1335,6 +1415,19 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     transform: translateY(-3px);
 } */
+=======
+    padding: 12px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.home-client-carousel3 .ow-client-logo:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-3px);
+}
+>>>>>>> 6b7ae336 (payment update)
 
 .home-client-carousel3 .client-logo {
     max-width: 100% !important;
@@ -1364,7 +1457,11 @@
 }
 
 .section-full.p-t120.p-b90 {
+<<<<<<< HEAD
     padding-top: 100px !important;
+=======
+    padding-top: 60px !important;
+>>>>>>> 6b7ae336 (payment update)
     padding-bottom: 50px !important;
 }
 
@@ -1386,6 +1483,7 @@
     opacity: 1 !important;
     visibility: visible !important;
 }
+<<<<<<< HEAD
 
 /* ===== LOGOUT MODAL (Same as Employer Dashboard) ===== */
 .enl-logout-overlay {
@@ -1463,6 +1561,8 @@
     order: 2;
 }
 .enl-logout-btn-primary:hover { background: #2563eb; }
+=======
+>>>>>>> 6b7ae336 (payment update)
 </style>
 
 <script>
@@ -1545,6 +1645,7 @@ function switchMegaMenuTab(tabName) {
     }
 }
 
+<<<<<<< HEAD
 // Mobile Menu Toggle Functionality - Enhanced to work with existing system
 (function() {
     function initMobileMenu() {
@@ -1732,6 +1833,8 @@ function switchMegaMenuTab(tabName) {
     setTimeout(initMobileMenu, 500);
 })();
 
+=======
+>>>>>>> 6b7ae336 (payment update)
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     const dropdown = document.querySelector('.mega-menu-dropdown');
@@ -1939,11 +2042,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // Logout Button Handler - Enhanced with better dialog system detection
 (function() {
     function waitForDialogSystem(callback, maxAttempts) {
+<<<<<<< HEAD
         maxAttempts = maxAttempts || 150; // 15 seconds max (150 * 100ms)
+=======
+        maxAttempts = maxAttempts || 50; // 5 seconds max (50 * 100ms)
+>>>>>>> 6b7ae336 (payment update)
         let attempts = 0;
         
         function check() {
             attempts++;
+<<<<<<< HEAD
             // Check if jQuery is loaded first (dialog system depends on it)
             if (typeof jQuery === 'undefined' && attempts < 50) {
                 // Wait for jQuery to load first
@@ -1962,6 +2070,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.body.appendChild(container);
                 }
                 callback(false); // Pass false to indicate dialog system is ready
+=======
+            if (typeof window.showDialogConfirm === 'function' && typeof jQuery !== 'undefined') {
+                callback();
+>>>>>>> 6b7ae336 (payment update)
             } else if (attempts < maxAttempts) {
                 setTimeout(check, 100);
             } else {
@@ -2007,6 +2119,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.stopPropagation();
                 e.stopImmediatePropagation();
                 
+<<<<<<< HEAD
                 // Use showDialogConfirm if available, otherwise fallback to native confirm
                 function performLogout() {
                     allowSubmit = true;
@@ -2023,6 +2136,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         performLogout();
                     }
                 }
+=======
+                // Wait for dialog system
+                waitForDialogSystem(function(useFallback) {
+                    if (useFallback) {
+                        // Use native confirm as fallback
+                        if (confirm('Do you want to logout?')) {
+                            allowSubmit = true;
+                            logoutForm.submit();
+                        }
+                    } else {
+                        // Use custom dialog
+                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                            if (confirmed) {
+                                allowSubmit = true;
+                                logoutForm.removeEventListener('submit', submitHandler, true);
+                                logoutForm.submit();
+                            }
+                        });
+                    }
+                });
+>>>>>>> 6b7ae336 (payment update)
                 
                 return false;
             }, true); // Use capture phase
@@ -2035,6 +2169,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
+<<<<<<< HEAD
             setTimeout(initLogoutHandler, 500);
         });
     } else {
@@ -2110,6 +2245,17 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         setTimeout(initNavbarLogoutModal, 100);
     }
+=======
+            setTimeout(initLogoutHandler, 300);
+        });
+    } else {
+        // DOM already loaded
+        setTimeout(initLogoutHandler, 300);
+    }
+    
+    // Also try after a longer delay to ensure all scripts are loaded
+    setTimeout(initLogoutHandler, 1000);
+>>>>>>> 6b7ae336 (payment update)
 })();
 </script>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/partials/navbar.blade.php ENDPATH**/ ?>

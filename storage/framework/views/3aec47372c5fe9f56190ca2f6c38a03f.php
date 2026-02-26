@@ -1,6 +1,7 @@
 <?php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
+<<<<<<< HEAD
     use Botble\JobBoard\Models\Company;
     use Botble\JobBoard\Models\Transaction;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
@@ -8,17 +9,28 @@
     
     $account = auth('account')->user();
     $company = $account ? $account->companies()->with('slugable')->first() : null;
+=======
+    use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
+    
+    $account = auth('account')->user();
+    $company = $account->companies()->with('slugable')->first();
+>>>>>>> 55002ce3 (payment update)
     $employerPublicProfileUrl = null;
     if ($account->isEmployer() && $company) {
         $companySlugKey = $company->slugable?->key ?? null;
         if (!$companySlugKey) {
             try {
+<<<<<<< HEAD
                 $slugModel = SlugHelper::getSlug(null, SlugHelper::getPrefix(Company::class), Company::class, $company->id);
+=======
+                $slugModel = \Botble\Slug\Facades\SlugHelper::getSlug(null, \Botble\Slug\Facades\SlugHelper::getPrefix(\Botble\JobBoard\Models\Company::class), \Botble\JobBoard\Models\Company::class, $company->id);
+>>>>>>> 55002ce3 (payment update)
                 $companySlugKey = $slugModel?->key ?? null;
             } catch (\Throwable $e) {
                 $companySlugKey = null;
             }
         }
+<<<<<<< HEAD
         if (!$companySlugKey && SlugHelper::isSupportedModel(Company::class) && !empty($company->name)) {
             try {
                 SlugHelper::createSlug($company);
@@ -44,12 +56,31 @@
         ['field' => 'campus_type', 'label' => 'Campus Type', 'filled' => !empty($company?->campus_type)],
         ['field' => 'standard_level', 'label' => 'Standard Level', 'filled' => !empty($company?->standard_level)],
         ['field' => 'staff_facilities', 'label' => 'Staff Facilities', 'filled' => !empty($company?->staff_facilities)],
+=======
+        $employerPublicProfileUrl = $companySlugKey ? route('public.company', $companySlugKey) : route('public.account.companies.index');
+    }
+    
+    // Profile completion
+    $profileFields = [
+        ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company->name)],
+        ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company->email)],
+        ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company->phone)],
+        ['field' => 'logo', 'label' => 'Institution Logo', 'filled' => !empty($company->logo)],
+        ['field' => 'description', 'label' => 'About Us', 'filled' => !empty($company->description)],
+        ['field' => 'address', 'label' => 'Address', 'filled' => !empty($company->address)],
+        ['field' => 'institution_type', 'label' => 'Institution Type', 'filled' => !empty($company->institution_type)],
+        ['field' => 'year_founded', 'label' => 'Established Year', 'filled' => !empty($company->year_founded)],
+        ['field' => 'campus_type', 'label' => 'Campus Type', 'filled' => !empty($company->campus_type)],
+        ['field' => 'standard_level', 'label' => 'Standard Level', 'filled' => !empty($company->standard_level)],
+        ['field' => 'staff_facilities', 'label' => 'Staff Facilities', 'filled' => !empty($company->staff_facilities)],
+>>>>>>> 55002ce3 (payment update)
     ];
     $filledCount = collect($profileFields)->where('filled', true)->count();
     $empCompletion = count($profileFields) > 0 ? round(($filledCount / count($profileFields)) * 100) : 0;
     
     $currentUrl = url()->current();
     $menuItems = DashboardMenu::getAll('account');
+<<<<<<< HEAD
 
     // Post Job: lock when no package ever purchased (credits system enabled). Allow when package slot or credits (PackageContext).
     $hasPurchasedPackage = false;
@@ -126,6 +157,9 @@
         }
     }
 
+=======
+    
+>>>>>>> 55002ce3 (payment update)
     // Get featured categories with job counts
     $featuredCategories = collect();
     try {
@@ -310,6 +344,7 @@
     .enl-header-user-btn span { display: none; }
 }
 
+<<<<<<< HEAD
 /* ===== LOGOUT MODAL (2nd screenshot - exact same UI) ===== */
 .enl-logout-overlay {
     display: none;
@@ -389,6 +424,8 @@
 }
 .enl-logout-btn-primary:hover { background: #2563eb; }
 
+=======
+>>>>>>> 55002ce3 (payment update)
 /* ===== MEGA MENU STYLES ===== */
 .mega-menu-dropdown {
     position: static !important;
@@ -837,13 +874,21 @@
                         <img src="<?php echo e($account->avatar_url); ?>" alt="<?php echo e($account->name); ?>">
                     <?php endif; ?>
                     <span><?php echo e($account->first_name ?? $account->name); ?></span>
+<<<<<<< HEAD
                     <i class="fa fa-chevron-down enl-chevron"></i>
+=======
+                    <i class="fa fa-chevron-down"></i>
+>>>>>>> 55002ce3 (payment update)
                 </button>
                 <div class="enl-header-dropdown" id="enlUserDropdown">
                     <a href="<?php echo e(route('public.account.dashboard')); ?>"><i class="fa fa-home"></i> Dashboard</a>
                     <a href="<?php echo e(route('public.account.employer.settings.edit')); ?>"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
+<<<<<<< HEAD
                     <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
+=======
+                    <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); var f = document.getElementById('logout-form-enl'); if (!f) return false; if (typeof window.showDialogConfirm === 'function') { window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(ok) { if (ok) f.submit(); }).catch(function() { if (confirm('Do you want to logout?')) f.submit(); }); } else { if (confirm('Do you want to logout?')) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
+>>>>>>> 55002ce3 (payment update)
                 </div>
             </div>
         </div>
@@ -852,6 +897,7 @@
 
 <form id="logout-form-enl" style="display:none;" action="<?php echo e(route('public.account.logout')); ?>" method="POST"><?php echo csrf_field(); ?></form>
 
+<<<<<<< HEAD
 <!-- Logout confirmation modal - reference UI (icon blue circle, Logout left / Cancel right) -->
 <div id="enl-logout-modal-overlay" class="enl-logout-overlay">
     <div id="enl-logout-modal-box" class="enl-logout-modal-box">
@@ -891,6 +937,32 @@
     };
     window.showEnlLogoutModal = showEnlLogoutModal;
 })();
+=======
+<!-- Dialog Alert Container - Required for logout dialog -->
+<div id="dialog-alert-container"></div>
+
+<!-- Ensure Dialog System is Loaded -->
+<?php if(!isset($dialogSystemLoaded)): ?>
+    <?php
+        Theme::asset()->usePath()->add('dialog-alert-css', 'css/dialog-alert.css', [], [], '1.0');
+        Theme::asset()->container('footer')->usePath()->add('dialog-alert-js', 'js/dialog-alert.js', ['jquery'], [], '1.0');
+        $dialogSystemLoaded = true;
+    ?>
+<?php endif; ?>
+
+<!-- Ensure jQuery is loaded before dialog system -->
+<script>
+    // Ensure jQuery is available
+    if (typeof jQuery === 'undefined' && typeof $ === 'undefined') {
+        console.warn('jQuery not found, loading from CDN');
+        var script = document.createElement('script');
+        script.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+        script.onload = function() {
+            console.log('jQuery loaded from CDN');
+        };
+        document.head.appendChild(script);
+    }
+>>>>>>> 55002ce3 (payment update)
 </script>
 
 <div class="emp-new-layout">
@@ -936,6 +1008,7 @@
                         <span class="enl-comp-text" onclick="document.getElementById('enlProfileModal').style.display='flex'"><?php echo e($empCompletion); ?>% Complete</span>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Post Job Button (locked: show limit-over popup with "Use credits for 1 Job Post"; no auto-deduct) -->
                     <?php $postJobLocked = !($canPost ?? true); ?>
                     <a href="<?php echo e($postJobLocked ? route('public.account.wallet') : route('public.account.jobs.create')); ?>" class="enl-postjob <?php echo e($postJobLocked ? 'enl-postjob-locked' : ''); ?> <?php if($postJobLocked && $account->isEmployer() && $jobPostCreditsRequired > 0): ?> enl-limit-over-trigger <?php endif; ?>" data-limit-over="job_post" data-credits-required="<?php echo e($jobPostCreditsRequired); ?>" data-wallet-url="<?php echo e(route('public.account.wallet')); ?>" data-job-create-url="<?php echo e(route('public.account.jobs.create')); ?>" data-purchase-url="<?php echo e(route('public.account.wallet.purchase_job_post_slot')); ?>" title="<?php echo e($postJobLocked ? trans('plugins/job-board::messages.insufficient_credits') : ''); ?>">
@@ -957,6 +1030,17 @@
                             <i class="fa fa-graduation-cap"></i> <?php echo e(__('Admission')); ?>
 
                         <?php endif; ?>
+=======
+                    <!-- Post Job Button -->
+                    <a href="<?php echo e(route('public.account.jobs.create')); ?>" class="enl-postjob">
+                        <i class="fa fa-plus-circle"></i> Post Job
+                    </a>
+
+                    <!-- Admission Button (employer only) -->
+                    <a href="<?php echo e(route('public.account.admission.edit')); ?>" class="enl-postjob" style="background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;">
+                        <i class="fa fa-graduation-cap"></i> <?php echo e(__('Admission')); ?>
+
+>>>>>>> 55002ce3 (payment update)
                     </a>
                     
                     <!-- Navigation -->
@@ -964,7 +1048,11 @@
                         <?php $__currentLoopData = $menuItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php if(! $item['name']) continue; ?>
                             <?php
+<<<<<<< HEAD
                                 $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages'];
+=======
+                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages', 'cms-account-invoices'];
+>>>>>>> 55002ce3 (payment update)
                                 if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
                                     continue;
                                 }
@@ -1119,6 +1207,7 @@
     </div>
 </div>
 
+<<<<<<< HEAD
 <?php if($account && $account->isEmployer() && $jobPostCreditsRequired > 0): ?>
 <!-- Limit over popup: message + Use credits for 1 Job Post (no auto-deduct) -->
 <div id="enlLimitOverModal" class="enl-pm-overlay" style="display:none;">
@@ -1181,6 +1270,8 @@
 </script>
 <?php endif; ?>
 
+=======
+>>>>>>> 55002ce3 (payment update)
 <script>
 var enlSelectedFile = null;
 
@@ -1422,6 +1513,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Attach to document to catch all clicks
     document.addEventListener('click', function(e) {
+<<<<<<< HEAD
         // Never intercept invoice download/print - they must do full navigation to get PDF
         const anyLink = e.target.closest('a');
         if (anyLink) {
@@ -1435,6 +1527,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const link = e.target.closest('.enl-nav a');
         if (!link) return;
 
+=======
+        // Find the closest link
+        const link = e.target.closest('.enl-nav a');
+        if (!link) return;
+        
+>>>>>>> 55002ce3 (payment update)
         const href = link.getAttribute('href');
         
         // Skip if it's an external link, logout, or special action
@@ -1559,6 +1657,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+<<<<<<< HEAD
+=======
+        }
+>>>>>>> 55002ce3 (payment update)
     });
     
     // Handle browser back/forward buttons
@@ -1578,14 +1680,49 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+<<<<<<< HEAD
         // Use native alert for now (except employer dashboard)
         if (confirm('Do you want to logout?')) {
             logoutForm.submit();
         }
+=======
+        // Wait for dialog system to be available
+        function tryShowDialog(attempts) {
+            attempts = attempts || 0;
+            
+            if (typeof window.showDialogConfirm === 'function') {
+                // Use custom dialog
+                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                    if (confirmed) {
+                        logoutForm.submit();
+                    }
+                }).catch(function(error) {
+                    console.error('Dialog error:', error);
+                    // Fallback to native confirm
+                    if (confirm('Do you want to logout?')) {
+                        logoutForm.submit();
+                    }
+                });
+            } else if (attempts < 50) {
+                // Retry after 100ms
+                setTimeout(function() {
+                    tryShowDialog(attempts + 1);
+                }, 100);
+            } else {
+                // Fallback to native confirm after max attempts
+                if (confirm('Do you want to logout?')) {
+                    logoutForm.submit();
+                }
+            }
+        }
+        
+        tryShowDialog();
+>>>>>>> 55002ce3 (payment update)
     }
     
     function initLogoutHandler() {
         const logoutLink = document.getElementById('logout-link-enl');
+<<<<<<< HEAD
         if (logoutLink) {
             const newLogoutLink = logoutLink.cloneNode(true);
             newLogoutLink.removeAttribute('onclick');
@@ -1611,6 +1748,42 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(initLogoutHandler, 100);
     }
     window.addEventListener('load', function() { setTimeout(initLogoutHandler, 100); });
+=======
+        
+        if (logoutLink) {
+            // Remove any existing listeners by cloning
+            const newLogoutLink = logoutLink.cloneNode(true);
+            logoutLink.parentNode.replaceChild(newLogoutLink, logoutLink);
+            
+            // Add click handler
+            newLogoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showLogoutDialog();
+                return false;
+            });
+            
+            console.log('Employer dashboard logout handler initialized');
+        } else {
+            // Retry if element not found
+            setTimeout(initLogoutHandler, 200);
+        }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initLogoutHandler, 500);
+        });
+    } else {
+        setTimeout(initLogoutHandler, 500);
+    }
+    
+    // Also try after window load
+    window.addEventListener('load', function() {
+        setTimeout(initLogoutHandler, 500);
+    });
+>>>>>>> 55002ce3 (payment update)
 })();
 </script>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/dashboard/layouts/body.blade.php ENDPATH**/ ?>

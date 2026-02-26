@@ -1,13 +1,17 @@
 <div class="job-card-modern">
+<<<<<<< HEAD
     <?php if($job->is_featured): ?>
         <span class="job-featured-badge">★ <?php echo e(__('Featured')); ?></span>
     <?php endif; ?>
+=======
+>>>>>>> 6b7ae336 (payment update)
     <div class="jcm-location-logo">
         <div class="jcm-logo">
             <img src="<?php echo e($job->company_logo_thumb); ?>" alt="<?php echo e($job->name); ?>">
         </div>
     </div>
     <div class="jcm-info">
+<<<<<<< HEAD
         <a href="<?php echo e($job->url); ?>" class="jcm-title" title="<?php echo e($job->name); ?>" style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">
             <?php
                 $jobName = BaseHelper::clean($job->name);
@@ -49,6 +53,25 @@
         </div>
 
         <div class="jcm-tags" style="margin-top: 8px;">
+=======
+        <a href="<?php echo e($job->url); ?>" class="jcm-title" title="<?php echo e($job->name); ?>">
+            <?php echo BaseHelper::clean($job->name); ?>
+
+        </a>
+        <div class="jcm-meta">
+            <?php if($job->has_company): ?>
+                <a href="<?php echo e($job->company_url); ?>"><?php echo e($job->company_name); ?> <?php echo $job->company->badge; ?></a>
+            <?php endif; ?>
+        </div>
+
+        <span class="jcm-location"><i class="feather-map-pin"></i> <?php echo e($job->location ?: 'India'); ?></span>
+        <span class="jcm-salary-mobile"><?php echo e(JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text); ?></span>
+    </div>
+    <div class="jcm-right">
+        <div class="jcm-salary"><?php echo e(JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text); ?></div>
+        <span class="jcm-time"><?php echo e($job->created_at->diffForHumans()); ?></span>
+        <div class="jcm-tags">
+>>>>>>> 6b7ae336 (payment update)
             <?php $__currentLoopData = $job->jobTypes->loadMissing('metadata'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $jobType): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <?php
                     $jobType->background_color = $jobType->getMetaData('background_color', true);
@@ -56,6 +79,7 @@
                 <span class="jcm-tag" <?php if($jobType->background_color): ?> style="background-color: <?php echo e($jobType->background_color); ?>20; color: <?php echo e($jobType->background_color); ?>; border-color: <?php echo e($jobType->background_color); ?>40;" <?php endif; ?>><?php echo e($jobType->name); ?></span>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
+<<<<<<< HEAD
 
         <?php if(!empty($job->gender_preference)): ?>
             <?php
@@ -86,6 +110,9 @@
     <div class="jcm-right">
         <div class="jcm-salary"><?php echo e(JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text); ?></div>
         <a href="<?php echo e($job->url); ?>" class="jcm-apply"><?php echo e(__('View Job')); ?> & <?php echo e(__('Apply')); ?></a>
+=======
+        <a href="<?php echo e($job->url); ?>" class="jcm-apply"><?php echo e(__('View Job')); ?> →</a>
+>>>>>>> 6b7ae336 (payment update)
     </div>
 </div>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/partials/jobs/style-1.blade.php ENDPATH**/ ?>

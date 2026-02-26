@@ -293,6 +293,7 @@
             <div class="cd-hero-info">
                 <h1><?php echo e($company->name); ?> <?php echo $company->badge; ?></h1>
                 <div class="cd-hero-meta">
+<<<<<<< HEAD
                     <?php if($canViewSchoolContactInfo ?? true): ?>
                         <?php if($company->full_address): ?>
                             <span><i class="feather-map-pin"></i> <?php echo e($company->full_address); ?></span>
@@ -308,6 +309,22 @@
                     <p class="cd-hero-desc"><?php echo e(Str::limit($company->description, 200)); ?></p>
                 <?php endif; ?>
                 <?php if(!empty($showAdmissionOnProfile) && $company->admission): ?>
+=======
+                    <?php if($company->address): ?>
+                        <span><i class="feather-map-pin"></i> <?php echo e($company->address); ?></span>
+                    <?php endif; ?>
+                    <?php if($company->website): ?>
+                        <a href="<?php echo e($company->website); ?>" target="_blank"><i class="feather-globe"></i> <?php echo e($company->website); ?></a>
+                    <?php endif; ?>
+                </div>
+                <?php if($company->description): ?>
+                    <p class="cd-hero-desc"><?php echo e(Str::limit($company->description, 200)); ?></p>
+                <?php endif; ?>
+                <?php
+                    $admissionOpen = $company->admission && $company->admission->status === 'published' && trim($company->admission->content ?? '') !== '' && $company->admission->admission_deadline && !\Carbon\Carbon::parse($company->admission->admission_deadline)->endOfDay()->isPast();
+                ?>
+                <?php if($admissionOpen): ?>
+>>>>>>> 6b7ae336 (payment update)
                 <div class="mt-3">
                     <button type="button" class="btn btn-primary px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#admissionEnquiryModal" style="background: linear-gradient(135deg, #059669, #047857); border: none;">
                         <i class="fas fa-graduation-cap me-2"></i><?php echo e(__('Admission Enquiry')); ?>
@@ -346,6 +363,7 @@
                 <?php endif; ?>
 
                 
+<<<<<<< HEAD
                 <div class="cd-content-card">
                     <h4 class="cd-section-title"><?php echo e(__('Company Details')); ?></h4>
                     
@@ -649,6 +667,8 @@
                 </div>
 
                 
+=======
+>>>>>>> 6b7ae336 (payment update)
                 <?php if($company->facebook || $company->twitter || $company->linkedin || $company->instagram): ?>
                     <div class="cd-content-card">
                         <h4 class="cd-section-title"><?php echo e(__('Social Links')); ?></h4>
@@ -670,12 +690,20 @@
                 <?php endif; ?>
 
                 
+<<<<<<< HEAD
                 <?php if(isset($jobs) && $jobs && method_exists($jobs, 'isNotEmpty') && $jobs->isNotEmpty()): ?>
+=======
+                <?php if($jobs->isNotEmpty()): ?>
+>>>>>>> 6b7ae336 (payment update)
                     <div class="cd-content-card">
                         <h4 class="cd-section-title"><?php echo e(__('Available Jobs')); ?> (<?php echo e($jobs->count()); ?>)</h4>
                         <div class="twm-jobs-list-wrap">
                             <ul style="list-style:none; padding:0; margin:0;">
+<<<<<<< HEAD
                                 <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.job-items'), ['jobs' => $jobs, 'layout'=> 'list'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+=======
+                                <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.job-items'), ['job' => $jobs, 'layout'=> 'list'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+>>>>>>> 6b7ae336 (payment update)
                             </ul>
                         </div>
                     </div>
@@ -690,18 +718,27 @@
                 <?php endif; ?>
 
                 
+<<<<<<< HEAD
                 <?php if(!empty($showAdmissionOnProfile) && $company->admission): ?>
+=======
+                <?php if($admissionOpen): ?>
+>>>>>>> 6b7ae336 (payment update)
                 <div class="cd-content-card">
                     <h4 class="cd-section-title"><?php echo e(__('Get Admission with :name', ['name' => $company->name])); ?></h4>
                     <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;"><?php echo e(__('About School / Institution')); ?></h5>
                     <p class="text-muted small mb-2" style="font-size: 0.85rem;"><?php echo e(__('Details added by the institution for admission.')); ?></p>
+<<<<<<< HEAD
                     <?php if($company->admission->content): ?>
                         <div class="mb-4" style="color: #475569; line-height: 1.6;"><?php echo BaseHelper::clean($company->admission->content); ?></div>
                     <?php endif; ?>
+=======
+                    <div class="mb-4" style="color: #475569; line-height: 1.6;"><?php echo BaseHelper::clean($company->admission->content); ?></div>
+>>>>>>> 6b7ae336 (payment update)
                     <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;"><?php echo e(__('Enquiry Form')); ?></h5>
                     <p class="text-muted small mb-3"><?php echo e(__('Submit your admission enquiry using the form below or use the button above.')); ?></p>
                     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 </div>
+<<<<<<< HEAD
                 <?php elseif(!empty($admissionFormLocked)): ?>
                 
                 <div class="cd-content-card" style="border: 2px dashed #e2e8f0; background: #f8fafc;">
@@ -719,6 +756,8 @@
                         </p>
                     <?php endif; ?>
                 </div>
+=======
+>>>>>>> 6b7ae336 (payment update)
                 <?php endif; ?>
             </div>
 
@@ -736,11 +775,17 @@
                 <?php endif; ?>
 
                 
+<<<<<<< HEAD
                 <?php if($company->latitude && $company->longitude): ?>
                     <div class="cd-sidebar-card">
                         <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.company-map'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                     </div>
                 <?php endif; ?>
+=======
+                <div class="cd-sidebar-card">
+                    <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.company-map'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                </div>
+>>>>>>> 6b7ae336 (payment update)
 
                 
                 <?php if(! JobBoardHelper::hideCompanyEmailEnabled()): ?>
@@ -775,7 +820,11 @@
                                         </div>
                                     </li>
                                 <?php endif; ?>
+<<<<<<< HEAD
                                 <?php if(($canViewSchoolContactInfo ?? true) && $company->phone): ?>
+=======
+                                <?php if($company->phone): ?>
+>>>>>>> 6b7ae336 (payment update)
                                     <li>
                                         <span class="cd-info-icon"><i class="fas fa-mobile-alt"></i></span>
                                         <div class="cd-info-text">
@@ -823,7 +872,11 @@
 </div>
 
 
+<<<<<<< HEAD
 <?php if(!empty($showAdmissionOnProfile) && $company->admission): ?>
+=======
+<?php if(isset($admissionOpen) && $admissionOpen): ?>
+>>>>>>> 6b7ae336 (payment update)
 <style>
 #admissionEnquiryModal .modal-dialog { max-width: 520px; }
 #admissionEnquiryModal .modal-body { padding: 1rem 1.25rem 1.5rem; }

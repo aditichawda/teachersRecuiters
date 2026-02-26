@@ -4,8 +4,11 @@
     Theme::set('withPageHeader', false);
     Theme::layout('default');
     $formatLabel = function($v) { return ucwords(str_replace('_', ' ', (string)$v)); };
+<<<<<<< HEAD
     $profileLocked = $profileLocked ?? false;
     $candidateIsFeatured = $candidateIsFeatured ?? false;
+=======
+>>>>>>> 6b7ae336 (payment update)
 ?>
 
 <?php echo Theme::partial('candidate-card-styles'); ?>
@@ -524,6 +527,7 @@
     .cdt-tabs-nav { flex-wrap: wrap; }
     .cdt-tab-btn { flex: 1; min-width: 120px; }
 }
+<<<<<<< HEAD
 /* Locked profile: blur overlay on content */
 .cdt-profile-locked-wrap {
     position: relative;
@@ -567,6 +571,8 @@
     margin-bottom: 20px;
     line-height: 1.5;
 }
+=======
+>>>>>>> 6b7ae336 (payment update)
 </style>
 
 
@@ -593,6 +599,7 @@
                 <img src="<?php echo e($candidate->avatar_url ?? ''); ?>" alt="<?php echo e($candidate->name ?? 'Candidate'); ?>">
             </div>
             <div class="cdt-hero-info">
+<<<<<<< HEAD
                 <h1 class="d-flex align-items-center gap-2 flex-wrap">
                     <?php echo e($candidate->name ?? 'Candidate'); ?>
 
@@ -611,6 +618,14 @@
                         <?php if(isset($account) && $account && $account->isEmployer() && ($employerJobs ?? collect())->isNotEmpty()): ?>
                             <button type="button" class="cdt-btn-primary" data-bs-toggle="modal" data-bs-target="#cdtInviteToApplyModal" title="<?php echo e(__('25 credits per invite')); ?>"><i class="feather-send"></i> <?php echo e(__('Invite to Apply')); ?></button>
                         <?php endif; ?>
+=======
+                <h1><?php echo e($candidate->name ?? 'Candidate'); ?></h1>
+                <?php if($candidate->description ?? null): ?>
+                    <p class="cdt-hero-desc"><?php echo BaseHelper::clean($candidate->description); ?></p>
+                <?php endif; ?>
+                <?php if(JobBoardHelper::canViewCandidateInformation()): ?>
+                    <div class="cdt-hero-actions">
+>>>>>>> 6b7ae336 (payment update)
                         <?php if($candidate->phone ?? null): ?>
                             <a href="tel:<?php echo e($candidate->phone); ?>" class="cdt-btn-primary"><i class="feather-phone"></i> <?php echo e(__('Hire Me Now')); ?></a>
                         <?php endif; ?>
@@ -624,7 +639,10 @@
     </div>
 </section>
 
+<<<<<<< HEAD
 <?php if(!$profileLocked): ?>
+=======
+>>>>>>> 6b7ae336 (payment update)
 <?php
                     $posType = $candidate->position_type ?? null;
                     $positionTypeStr = is_array($posType) ? implode(', ', $posType) : (string)$posType;
@@ -904,6 +922,7 @@
         <?php endif; ?>
     </div>
 </div>
+<<<<<<< HEAD
 <?php else: ?>
 
 <div class="cdt-main">
@@ -1006,6 +1025,8 @@
 })();
 </script>
 <?php endif; ?>
+=======
+>>>>>>> 6b7ae336 (payment update)
 
 <script>
 (function() {
