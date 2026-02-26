@@ -223,6 +223,7 @@
     .enl-header-user-btn span { display: none; }
 }
 
+<<<<<<< HEAD
 /* ===== LOGOUT MODAL (2nd screenshot - exact same UI) ===== */
 .enl-logout-overlay {
     display: none;
@@ -302,6 +303,8 @@
 }
 .enl-logout-btn-primary:hover { background: #2563eb; }
 
+=======
+>>>>>>> 6b7ae336 (payment update)
 /* ===== MEGA MENU STYLES ===== */
 .mega-menu-dropdown {
     position: static !important;
@@ -750,13 +753,21 @@
                         <img src="<?php echo e($account->avatar_url); ?>" alt="<?php echo e($account->name); ?>">
                     <?php endif; ?>
                     <span><?php echo e($account->first_name ?? $account->name); ?></span>
+<<<<<<< HEAD
                     <i class="fa fa-chevron-down enl-chevron"></i>
+=======
+                    <i class="fa fa-chevron-down"></i>
+>>>>>>> 6b7ae336 (payment update)
                 </button>
                 <div class="enl-header-dropdown" id="enlUserDropdown">
                     <a href="<?php echo e(route('public.account.dashboard')); ?>"><i class="fa fa-home"></i> Dashboard</a>
                     <a href="<?php echo e(route('public.account.employer.settings.edit')); ?>"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
+<<<<<<< HEAD
                     <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
+=======
+                    <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); var f = document.getElementById('logout-form-enl'); if (!f) return false; if (typeof window.showDialogConfirm === 'function') { window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(ok) { if (ok) f.submit(); }).catch(function() { if (confirm('Do you want to logout?')) f.submit(); }); } else { if (confirm('Do you want to logout?')) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
+>>>>>>> 6b7ae336 (payment update)
                 </div>
             </div>
         </div>
@@ -765,6 +776,7 @@
 
 <form id="logout-form-enl" style="display:none;" action="<?php echo e(route('public.account.logout')); ?>" method="POST"><?php echo csrf_field(); ?></form>
 
+<<<<<<< HEAD
 <!-- Logout confirmation modal - reference UI (icon blue circle, Logout left / Cancel right) -->
 <div id="enl-logout-modal-overlay" class="enl-logout-overlay">
     <div id="enl-logout-modal-box" class="enl-logout-modal-box">
@@ -804,6 +816,32 @@
     };
     window.showEnlLogoutModal = showEnlLogoutModal;
 })();
+=======
+<!-- Dialog Alert Container - Required for logout dialog -->
+<div id="dialog-alert-container"></div>
+
+<!-- Ensure Dialog System is Loaded -->
+<?php if(!isset($dialogSystemLoaded)): ?>
+    <?php
+        Theme::asset()->usePath()->add('dialog-alert-css', 'css/dialog-alert.css', [], [], '1.0');
+        Theme::asset()->container('footer')->usePath()->add('dialog-alert-js', 'js/dialog-alert.js', ['jquery'], [], '1.0');
+        $dialogSystemLoaded = true;
+    ?>
+<?php endif; ?>
+
+<!-- Ensure jQuery is loaded before dialog system -->
+<script>
+    // Ensure jQuery is available
+    if (typeof jQuery === 'undefined' && typeof $ === 'undefined') {
+        console.warn('jQuery not found, loading from CDN');
+        var script = document.createElement('script');
+        script.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+        script.onload = function() {
+            console.log('jQuery loaded from CDN');
+        };
+        document.head.appendChild(script);
+    }
+>>>>>>> 6b7ae336 (payment update)
 </script>
 
 <div class="emp-new-layout">
@@ -1432,16 +1470,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     tryShowDialog(attempts + 1);
                 }, 100);
             } else {
+<<<<<<< HEAD
+=======
+                // Fallback to native confirm after max attempts
+>>>>>>> 6b7ae336 (payment update)
                 if (confirm('Do you want to logout?')) {
                     logoutForm.submit();
                 }
             }
         }
+<<<<<<< HEAD
+=======
+        
+>>>>>>> 6b7ae336 (payment update)
         tryShowDialog();
     }
     
     function initLogoutHandler() {
         const logoutLink = document.getElementById('logout-link-enl');
+<<<<<<< HEAD
         if (logoutLink) {
             const newLogoutLink = logoutLink.cloneNode(true);
             newLogoutLink.removeAttribute('onclick');
@@ -1467,6 +1514,42 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(initLogoutHandler, 100);
     }
     window.addEventListener('load', function() { setTimeout(initLogoutHandler, 100); });
+=======
+        
+        if (logoutLink) {
+            // Remove any existing listeners by cloning
+            const newLogoutLink = logoutLink.cloneNode(true);
+            logoutLink.parentNode.replaceChild(newLogoutLink, logoutLink);
+            
+            // Add click handler
+            newLogoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showLogoutDialog();
+                return false;
+            });
+            
+            console.log('Employer dashboard logout handler initialized');
+        } else {
+            // Retry if element not found
+            setTimeout(initLogoutHandler, 200);
+        }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initLogoutHandler, 500);
+        });
+    } else {
+        setTimeout(initLogoutHandler, 500);
+    }
+    
+    // Also try after window load
+    window.addEventListener('load', function() {
+        setTimeout(initLogoutHandler, 500);
+    });
+>>>>>>> 6b7ae336 (payment update)
 })();
 </script>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/dashboard/layouts/body.blade.php ENDPATH**/ ?>
