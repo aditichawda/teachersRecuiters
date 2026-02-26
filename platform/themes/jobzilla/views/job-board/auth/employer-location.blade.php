@@ -300,7 +300,7 @@
 
                 <!-- State (Auto-filled) -->
                 <div class="mb-3">
-                    <label class="form-label">State <span class="text-muted">(Auto-filled)</span></label>
+                    <label class="form-label">State</label>
                     <select name="state_id" id="state_id" class="form-select" disabled>
                         <option value="">Select State</option>
                     </select>
@@ -308,7 +308,7 @@
 
                 <!-- Country (Auto-filled) -->
                 <div class="mb-3">
-                    <label class="form-label">Country <span class="text-muted">(Auto-filled)</span></label>
+                    <label class="form-label">Country</label>
                     <select name="country_id" id="country_id" class="form-select" disabled>
                         <option value="">Select Country</option>
                         @foreach($countries as $id => $name)

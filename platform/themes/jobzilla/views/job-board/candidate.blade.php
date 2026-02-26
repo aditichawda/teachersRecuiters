@@ -599,6 +599,14 @@
                     $firstRole = (isset($experiences) && $experiences->isNotEmpty() && !empty($experiences->first()->position)) ? ucwords($experiences->first()->position) : __('Teaching Professional');
                     $socialLinks = is_array($candidate->social_links ?? null) ? $candidate->social_links : [];
                     $youtubeUrl = $socialLinks['youtube'] ?? $candidate->introductory_video_url ?? null;
+                    $youtubeEmbedUrl = null;
+                    if (!empty($youtubeUrl) && is_string($youtubeUrl)) {
+                        $yt = trim($youtubeUrl);
+                        if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]{11})/', $yt, $m)) $youtubeEmbedUrl = 'https://www.youtube.com/embed/' . $m[1];
+                        elseif (preg_match('/(?:youtube\.com\/watch\?v=|youtube\.com\/watch\?.*&v=)([a-zA-Z0-9_-]{11})/', $yt, $m)) $youtubeEmbedUrl = 'https://www.youtube.com/embed/' . $m[1];
+                        elseif (preg_match('/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/', $yt, $m)) $youtubeEmbedUrl = 'https://www.youtube.com/embed/' . $m[1];
+                        elseif (strpos($yt, 'youtube.com/embed/') !== false) $youtubeEmbedUrl = $yt;
+                    }
                 @endphp
 
 {{-- Main --}}
@@ -607,15 +615,11 @@
         <a href="javascript:history.back()" class="cdt-back-btn">← {{ __('Back') }}</a>
         <div class="row">
             <div class="@if(JobBoardHelper::canViewCandidateInformation()) col-lg-8 @else col-lg-12 @endif col-md-12">
-                {{-- Personal Details (reference UI) --}}
+                {{-- Personal Details (no avatar/name repeat - already in hero) --}}
                 <div class="cdt-card">
                     <h4 class="cdt-block-heading">{{ __('Personal Details') }}</h4>
                     <div class="cdt-personal-card">
-                        <div class="cdt-personal-avatar">
-                            <img src="{{ $candidate->avatar_url ?? '' }}" alt="{{ $candidate->name ?? 'Candidate' }}">
-                        </div>
-                        <div class="cdt-personal-info">
-                            <div class="cdt-personal-name">{{ $candidate->name ?? 'Candidate' }}</div>
+                        <div class="cdt-personal-info" style="flex: 1;">
                             <div class="cdt-personal-role">{{ $firstRole }}</div>
                             @if($candidate->gender ?? null)<div class="text-muted small">{{ __('Gender') }}: {{ ucfirst($candidate->gender) }}</div>@endif
                             @if(is_array($teachSubjects) && !empty($teachSubjects))
@@ -669,15 +673,15 @@
                     @endif
                 </div>
 
-                {{-- YouTube Link (card) --}}
+                {{-- YouTube Video (embed preview only, no link) --}}
+                @if(!empty($youtubeEmbedUrl))
                 <div class="cdt-card">
-                    <h4 class="cdt-block-heading">{{ __('YouTube Link') }}</h4>
-                    @if(!empty($youtubeUrl))
-                        <a href="{{ $youtubeUrl }}" target="_blank" rel="noopener noreferrer" class="cdt-link-yt"><i class="fab fa-youtube"></i> {{ __('Watch on YouTube') }}</a>
-                    @else
-                        <p class="cdt-empty-msg">— {{ __('No YouTube link added') }}</p>
-                    @endif
+                    <h4 class="cdt-block-heading">{{ __('Intro Video') }}</h4>
+                    <div class="cdt-yt-embed-wrap" style="position:relative;display:block;height:0;padding-bottom:56.25%;overflow:hidden;border-radius:8px;background:#000;">
+                        <iframe src="{{ $youtubeEmbedUrl }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+                    </div>
                 </div>
+                @endif
 
                 {{-- Tabs: Work Experience | Education Details | Other Details --}}
                 <div class="cdt-card">
@@ -729,30 +733,6 @@
                         </div>
 
                         <div id="cdt-pane-other" class="cdt-tab-pane" role="tabpanel">
-                            @if(!empty(trim($candidate->interests ?? '')))
-                                <div class="mb-4">
-                                    <div class="cdt-section-title mb-2">{{ __('Interests') }}</div>
-                                    <div class="cdt-text-block">{!! nl2br(e($candidate->interests)) !!}</div>
-                                </div>
-                            @endif
-                            @if(!empty(trim($candidate->achievements ?? '')))
-                                <div class="mb-4">
-                                    <div class="cdt-section-title mb-2">{{ __('Achievements') }}</div>
-                                    <div class="cdt-text-block">{!! nl2br(e($candidate->achievements)) !!}</div>
-                                </div>
-                            @endif
-                            @if(!empty(trim($candidate->activities ?? '')))
-                                <div class="mb-4">
-                                    <div class="cdt-section-title mb-2">{{ __('Activities') }}</div>
-                                    <div class="cdt-text-block">{!! nl2br(e($candidate->activities)) !!}</div>
-                                </div>
-                            @endif
-                            @if(!empty($youtubeUrl ?? null))
-                                <div class="mb-4">
-                                    <div class="cdt-section-title mb-2">{{ __('YouTube Link') }}</div>
-                                    <a href="{{ $youtubeUrl }}" target="_blank" rel="noopener noreferrer" class="cdt-link-yt"><i class="fab fa-youtube"></i> {{ __('Watch on YouTube') }}</a>
-                                </div>
-                            @endif
                             <div class="cdt-detail-list mb-4">
                                 <div class="cdt-section-title mb-3">{{ __('Job Preferences') }}</div>
                                 <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Preferred Institution Type') }}</span><span class="cdt-detail-value">{{ $instTypesDisplay }}</span></div>
@@ -842,68 +822,6 @@
                             @if($candidate->phone ?? null)<li><span class="cdt-info-icon"><i class="fas fa-mobile-alt"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Phone') }}</div><div class="cdt-info-value">{{ $candidate->phone }}</div></div></li>@endif
                             @if($candidate->email ?? null)<li><span class="cdt-info-icon"><i class="fas fa-at"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Email') }}</div><div class="cdt-info-value">{{ $candidate->email }}</div></div></li>@endif
                             @if($candidate->address ?? $candidate->city_name ?? $candidate->state_name ?? null)<li><span class="cdt-info-icon"><i class="fas fa-map-marker-alt"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Location') }}</div><div class="cdt-info-value">{{ $candidate->address ?? '' }}{{ ($candidate->city_name ?? null) ? ', ' . $candidate->city_name : '' }}{{ ($candidate->state_name ?? null) ? ', ' . $candidate->state_name : '' }}{{ ($candidate->country_name ?? null) ? ', ' . $candidate->country_name : '' }}</div></div></li>@endif
-                        </ul>
-                    </div>
-
-                    {{-- Interests (right card - same style as Profile Info) --}}
-                    <div class="cdt-sidebar-card">
-                        <h4>{{ __('Interests') }}</h4>
-                        <ul class="cdt-info-list">
-                            <li>
-                                <span class="cdt-info-icon"><i class="fas fa-star"></i></span>
-                                <div class="cdt-info-text">
-                                    <div class="cdt-info-label">{{ __('Interests') }}</div>
-                                    <div class="cdt-info-value cdt-info-value-block">{{ !empty(trim($candidate->interests ?? '')) ? Str::limit(strip_tags($candidate->interests), 120) : '—' }}</div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {{-- Achievements (right card) --}}
-                    <div class="cdt-sidebar-card">
-                        <h4>{{ __('Achievements') }}</h4>
-                        <ul class="cdt-info-list">
-                            <li>
-                                <span class="cdt-info-icon"><i class="fas fa-trophy"></i></span>
-                                <div class="cdt-info-text">
-                                    <div class="cdt-info-label">{{ __('Achievements') }}</div>
-                                    <div class="cdt-info-value cdt-info-value-block">{{ !empty(trim($candidate->achievements ?? '')) ? Str::limit(strip_tags($candidate->achievements), 120) : '—' }}</div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {{-- Activities (right card) --}}
-                    <div class="cdt-sidebar-card">
-                        <h4>{{ __('Activities') }}</h4>
-                        <ul class="cdt-info-list">
-                            <li>
-                                <span class="cdt-info-icon"><i class="fas fa-tasks"></i></span>
-                                <div class="cdt-info-text">
-                                    <div class="cdt-info-label">{{ __('Activities') }}</div>
-                                    <div class="cdt-info-value cdt-info-value-block">{{ !empty(trim($candidate->activities ?? '')) ? Str::limit(strip_tags($candidate->activities), 120) : '—' }}</div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {{-- YouTube Link (right card) --}}
-                    <div class="cdt-sidebar-card">
-                        <h4>{{ __('YouTube Link') }}</h4>
-                        <ul class="cdt-info-list">
-                            <li>
-                                <span class="cdt-info-icon"><i class="fab fa-youtube"></i></span>
-                                <div class="cdt-info-text">
-                                    <div class="cdt-info-label">{{ __('YouTube') }}</div>
-                                    <div class="cdt-info-value">
-                                        @if(!empty($youtubeUrl))
-                                            <a href="{{ $youtubeUrl }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">{{ __('Watch on YouTube') }}</a>
-                                        @else
-                                            —
-                                        @endif
-                                    </div>
-                                </div>
-                            </li>
                         </ul>
                     </div>
                     </div>

@@ -14,6 +14,7 @@ class AdmissionEnquiry extends BaseModel
         'student_name',
         'contact_number',
         'email',
+        'age',
         'admission_for_standard',
         'address',
         'message',

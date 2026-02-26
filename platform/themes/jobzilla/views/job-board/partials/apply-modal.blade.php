@@ -173,7 +173,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     submitBtn.disabled = false;
                     if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
                 }
-                if (data && data.error === false) {
+                var isSuccess = data && (data.error === false || data.error === undefined);
+                if (isSuccess) {
                     var modalEl = document.getElementById('applyNow');
                     if (modalEl) {
                         try {
@@ -181,34 +182,22 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ? (bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl))
                                 : null;
                             if (bsModal) bsModal.hide();
-                            else {
-                                modalEl.classList.remove('show');
-                                modalEl.style.display = 'none';
-                                modalEl.setAttribute('aria-hidden', 'true');
-                                document.body.classList.remove('modal-open');
-                                var backdrop = document.querySelector('.modal-backdrop');
-                                if (backdrop) backdrop.remove();
-                                document.body.style.removeProperty('overflow');
-                                document.body.style.removeProperty('padding-right');
-                            }
+                            modalEl.classList.remove('show');
+                            modalEl.style.display = 'none';
+                            modalEl.setAttribute('aria-hidden', 'true');
+                            document.body.classList.remove('modal-open');
+                            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+                            document.body.style.removeProperty('overflow');
+                            document.body.style.removeProperty('padding-right');
                         } catch (err) {
                             modalEl.classList.remove('show');
                             modalEl.style.display = 'none';
                             document.body.classList.remove('modal-open');
-                            var back = document.querySelector('.modal-backdrop');
-                            if (back) back.remove();
+                            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
                         }
                     }
                     if (typeof Botble !== 'undefined') Botble.showSuccess(data.message || '{{ __("Application submitted successfully.") }}');
-                    var applyBtn = document.querySelector('a[data-job-id="' + jobId + '"]');
-                    if (applyBtn && !applyBtn.classList.contains('disabled')) {
-                        applyBtn.classList.add('disabled');
-                        applyBtn.removeAttribute('data-bs-toggle');
-                        applyBtn.removeAttribute('href');
-                        applyBtn.setAttribute('href', '#');
-                        var span = applyBtn.querySelector('span');
-                        if (span) span.textContent = '{{ __("Applied") }}'; else applyBtn.textContent = '{{ __("Applied") }}';
-                    }
+                    window.location.reload();
                 } else {
                     if (typeof Botble !== 'undefined') Botble.showError((data && data.message) ? data.message : '{{ __("Application failed. Please try again.") }}');
                 }

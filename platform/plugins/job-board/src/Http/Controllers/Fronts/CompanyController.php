@@ -18,6 +18,7 @@ use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Tables\Fronts\CompanyTable;
 use Botble\Media\Facades\RvMedia;
 use Botble\SeoHelper\Facades\SeoHelper;
+use Botble\Slug\Facades\SlugHelper;
 use Botble\Slug\Services\SlugService;
 use Botble\Theme\Facades\Theme;
 use Closure;
@@ -105,6 +106,14 @@ class CompanyController extends BaseController
         $slug = app(SlugService::class)->create($request->input('name'), 0, Company::class);
 
         $request->merge(compact('slug'));
+
+        if (SlugHelper::isSupportedModel(Company::class)) {
+            try {
+                SlugHelper::createSlug($company, $slug);
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
 
         event(new CreatedContentEvent(COMPANY_MODULE_SCREEN_NAME, $request, $company));
 

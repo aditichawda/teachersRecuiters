@@ -6,7 +6,17 @@
     Theme::asset()->container('footer')->add('editor-js', 'vendor/core/core/base/js/editor.js');
     
     $account = auth('account')->user();
-    $company = $account->companies()->first();
+    $company = $account->companies()->with('slugable')->first();
+    $companySlugKey = $company && $company->slugable ? $company->slugable->key : null;
+    if ($company && !$companySlugKey) {
+        try {
+            $slugModel = \Botble\Slug\Facades\SlugHelper::getSlug(null, \Botble\Slug\Facades\SlugHelper::getPrefix(\Botble\JobBoard\Models\Company::class), \Botble\JobBoard\Models\Company::class, $company->id);
+            $companySlugKey = $slugModel?->key ?? null;
+        } catch (\Throwable $e) {
+            $companySlugKey = null;
+        }
+    }
+    $employerPublicProfileUrl = $companySlugKey ? route('public.company', $companySlugKey) : null;
     
     // Profile completion with per-field tracking
     $profileFields = [
@@ -359,13 +369,13 @@
                         <h5 class="emp-name">Hello, {{ $account->first_name ?? $account->name }}</h5>
                         <p class="emp-date">Joined {{ $account->created_at->format('M d, Y') }}</p>
                         <p class="emp-updated">Last Updated: {{ $account->updated_at->format('M d, Y') }}</p>
-                        <!-- <button type="button" class="emp-view-profile-btn" onclick="document.getElementById('empProfileModal').style.display='flex'">
+                        <a href="{{ $employerPublicProfileUrl ?? route('public.account.companies.index') }}" {{ $employerPublicProfileUrl ? 'target="_blank" rel="noopener"' : '' }} class="emp-view-profile-btn" style="display:inline-block;text-decoration:none;">
                             <i class="fa fa-eye"></i> {{ __('View Profile') }}
-                        </button> -->
+                        </a>
                     </div>
                     
-                    <!-- Credits Badge -->
-                    <div class="emp-credits-badge" onclick="document.getElementById('empProfileModal').style.display='flex'">>
+                    <!-- Credits Badge (click opens profile completion modal) -->
+                    <div class="emp-credits-badge" onclick="document.getElementById('empProfileModal').style.display='flex'" style="cursor:pointer;">
                         <i class="fa fa-coins"></i>
                         <span>Credits:</span>
                         <span class="emp-credits-points">{{ $account->credits ?? 0 }}</span>
@@ -389,6 +399,7 @@
                         <li><a href="{{ route('public.account.jobs.create') }}" @class(['active' => $currentUrl == route('public.account.jobs.create')])><i class="fa fa-plus-circle"></i> {{ __('Post Job') }}</a></li>
                         <li><a href="{{ route('public.account.employer.settings.edit') }}" @class(['active' => $currentUrl == route('public.account.employer.settings.edit')])><i class="fa fa-building"></i> {{ __('Settings') }}</a></li>
                         <li><a href="{{ route('public.account.jobs.index') }}" @class(['active' => str_contains($currentUrl, '/jobs') && !str_contains($currentUrl, '/create')])><i class="fa fa-briefcase"></i> {{ __('Jobs') }}</a></li>
+                        <li><a href="{{ route('public.account.admission.edit') }}" @class(['active' => str_contains($currentUrl, 'admission')])><i class="fa fa-graduation-cap"></i> {{ __('Admission') }}</a></li>
                         <li><a href="{{ route('public.account.companies.index') }}" @class(['active' => str_contains($currentUrl, 'companies')])><i class="fa fa-university"></i> {{ __('Institution') }}</a></li>
                         @if(JobBoardHelper::isEnabledReview())
                         <li><a href="{{ route('public.account.reviews.index') }}" @class(['active' => str_contains($currentUrl, 'reviews')])><i class="fa fa-star"></i> {{ __('Reviews') }}</a></li>

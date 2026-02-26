@@ -12,6 +12,8 @@ return [
     'form' => [
         'first_name' => 'First name',
         'last_name' => 'Last name',
+        'full_name' => 'Full name',
+        'full_name_placeholder' => 'Enter full name',
         'email' => 'Email',
         'password' => 'Password',
         'password_confirmation' => 'Password confirmation',

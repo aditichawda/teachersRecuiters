@@ -16,6 +16,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         @yield('header', view(JobBoardHelper::viewPath('dashboard.layouts.header')))
+        @stack('header')
 
         <script type="text/javascript">
             'use strict';
@@ -51,13 +52,14 @@
                     @if (Session::has('success_msg'))
                         Botble.showSuccess('{{ session('success_msg') }}');
                     @endif
-                    @if (Session::has('error_msg'))
+                    @if (Session::has('error_msg') && !request()->routeIs('public.account.admission.*'))
                         Botble.showError('{{ session('error_msg') }}');
                     @endif
-                    @if (isset($error_msg))
+                    @if (isset($error_msg) && !request()->routeIs('public.account.admission.*'))
                         Botble.showError('{{ $error_msg }}');
                     @endif
-                    @if (isset($errors))
+                    {{-- On admission edit page, validation errors are shown inline below fields, not in alert --}}
+                    @if (isset($errors) && $errors->any() && !request()->routeIs('public.account.admission.*'))
                         @foreach ($errors->all() as $error)
                             Botble.showError('{{ $error }}');
                         @endforeach

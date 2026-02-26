@@ -164,6 +164,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'verification_code',
         'verification_code_expires_at',
         'is_email_verified',
+        'confirmed_at',
     ];
 
     protected $hidden = [
@@ -177,6 +178,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'email_verified_at' => 'datetime',
         'email_verification_token_expires_at' => 'datetime',
         'verification_code_expires_at' => 'datetime',
+        'confirmed_at' => 'datetime',
         'is_email_verified' => 'boolean',
         'is_whatsapp_available' => 'boolean',
         'is_alternate_whatsapp_available' => 'boolean',
@@ -487,15 +489,31 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
 
     protected static function booted(): void
     {
-        // Auto-create slug for job seekers when saved
+        // confirmed_at only when email_verified_at is set; clear confirmed_at if email not verified
+        static::saving(function (Account $account): void {
+            if ($account->email_verified_at === null) {
+                $account->confirmed_at = null;
+            }
+        });
+
+        // Auto-create slug only when email is verified (email_verified_at set); until then no slug
         static::saved(function (Account $account): void {
-            if ($account->isJobSeeker() 
-                && $account->is_public_profile 
-                && !JobBoardHelper::isDisabledPublicProfile()
-                && SlugHelper::isSupportedModel(Account::class)) {
-                // Check if slug doesn't exist
-                if (!SlugHelper::getSlug($account->id, Account::class)) {
-                    SlugHelper::createSlug($account);
+            if (! SlugHelper::isSupportedModel(Account::class)) {
+                return;
+            }
+            if ($account->email_verified_at === null || $account->confirmed_at === null) {
+                return;
+            }
+            $forJobSeeker = $account->isJobSeeker() && $account->is_public_profile && ! JobBoardHelper::isDisabledPublicProfile();
+            $forEmployer = $account->isEmployer();
+            if ($forJobSeeker || $forEmployer) {
+                $existing = SlugHelper::getSlug(null, SlugHelper::getPrefix(Account::class), Account::class, $account->id);
+                if (! $existing) {
+                    try {
+                        SlugHelper::createSlug($account);
+                    } catch (\Throwable $e) {
+                        // ignore
+                    }
                 }
             }
         });

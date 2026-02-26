@@ -213,7 +213,9 @@ class AccountImporter extends Importer implements WithMapping
             }
 
             if ($wasRecentlyCreated && empty($row['confirmed_at'])) {
-                $row['confirmed_at'] = Carbon::now();
+                $verifiedAt = Carbon::now();
+                $row['email_verified_at'] = $verifiedAt;
+                $row['confirmed_at'] = $verifiedAt;
             }
 
             if (isset($row['dob']) && $row['dob'] === '') {

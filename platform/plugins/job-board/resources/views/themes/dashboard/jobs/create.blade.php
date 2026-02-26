@@ -189,8 +189,11 @@
         <div class="jp-group">
             <label class="jp-label">
                 Detailed Job Description <span class="required">*</span>
-                <button type="button" class="jp-ai-btn ms-2" id="aiGenerateBtn" title="Generate description based on job title">
+                <button type="button" class="jp-ai-btn ms-2" id="aiGenerateBtn" title="Generate description based on job title and institution">
                     <i class="ti ti-sparkles"></i> Generate with AI
+                </button>
+                <button type="button" class="jp-ai-btn jp-clear-btn ms-2" id="aiClearBtn" title="Clear AI-generated description">
+                    <i class="ti ti-eraser"></i> Clear
                 </button>
             </label>
             <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required></textarea>
@@ -1019,42 +1022,61 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('application_locations').value = JSON.stringify(locs);
     }
 
-    // ===== AI GENERATE DESCRIPTION =====
+    // ===== AI GENERATE DESCRIPTION – only job title + institution name/type sent to AI =====
     document.getElementById('aiGenerateBtn').addEventListener('click', function() {
-        const title = document.getElementById('job_title').value;
+        const title = document.getElementById('job_title').value.trim();
         if (!title) { alert('Please enter a job title first.'); return; }
 
-        this.disabled = true;
-        this.innerHTML = '<i class="ti ti-loader"></i> Generating...';
+        var instTitle = '';
+        var companySelect = document.getElementById('company_id');
+        if (companySelect && companySelect.selectedOptions && companySelect.selectedOptions.length) {
+            var opt = companySelect.selectedOptions[0];
+            instTitle = (opt.getAttribute('data-institution-type') || opt.textContent || '').trim();
+            if (!instTitle) { instTitle = opt.textContent ? opt.textContent.trim() : ''; }
+        }
 
-        // Simple template-based generation (no actual AI API call)
-        const desc = generateJobDescription(title);
-        document.getElementById('job_description').value = desc;
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ti ti-loader"></i> Generating...';
 
-        this.disabled = false;
-        this.innerHTML = '<i class="ti ti-sparkles"></i> Generate with AI';
+        const url = '{{ route("public.account.jobs.generate-description") }}';
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ title: title, institution_title: instTitle })
+        })
+        .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, status: res.status, data: data }; }); })
+        .then(function(result) {
+            if (result.ok && result.data.success && result.data.description) {
+                document.getElementById('job_description').value = result.data.description;
+                if (result.data.fallback && result.data.api_error) {
+                    console.warn('AI fallback used:', result.data.api_error);
+                }
+            } else {
+                var msg = (result.data && result.data.message) ? result.data.message : 'Unable to generate description. Please try again or write it manually.';
+                alert(msg);
+            }
+        })
+        .catch(function() {
+            alert('Network error. Please try again or write the description manually.');
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ti ti-sparkles"></i> Generate with AI';
+        });
     });
 
-    function generateJobDescription(title) {
-        return `We are looking for a dedicated and passionate ${title} to join our educational institution.
-
-Key Responsibilities:
-• Plan, prepare, and deliver high-quality lessons in accordance with the curriculum
-• Create a positive and engaging learning environment for students
-• Assess and evaluate student progress and provide constructive feedback
-• Collaborate with fellow teachers and staff to enhance the educational experience
-• Participate in professional development activities and staff meetings
-• Maintain accurate records of student attendance, grades, and performance
-• Communicate effectively with parents/guardians regarding student progress
-
-What We Offer:
-• Competitive salary package
-• Professional development opportunities
-• Supportive and collaborative work environment
-• Modern teaching facilities and resources
-
-If you are passionate about education and want to make a meaningful impact on students' lives, we encourage you to apply.`;
-    }
+    document.getElementById('aiClearBtn').addEventListener('click', function() {
+        var descEl = document.getElementById('job_description');
+        if (descEl) descEl.value = '';
+    });
 
     // ===== FORM VALIDATION =====
     document.getElementById('jobPostForm').addEventListener('submit', function(e) {

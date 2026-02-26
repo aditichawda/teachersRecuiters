@@ -204,7 +204,9 @@ class RegisterController extends BaseController
             ->where('email', $email)
             ->firstOrFail();
 
-        $account->confirmed_at = Carbon::now();
+        $verifiedAt = Carbon::now();
+        $account->email_verified_at = $verifiedAt;
+        $account->confirmed_at = $verifiedAt;
         $account->save();
 
         $this->guard()->login($account);
@@ -295,8 +297,8 @@ class RegisterController extends BaseController
                     'email_verified_at_is_null' => is_null($emailVerifiedAt),
                     'account_type' => $existingAccount->type?->value ?? 'job-seeker',
                 ])
-                ->setMessage($isVerified 
-                    ? 'This email is already registered. Please login to continue.' 
+                ->setMessage($isVerified
+                    ? trans('plugins/job-board::messages.email_already_registered')
                     : 'Email exists but not verified.');
         }
         
@@ -322,11 +324,10 @@ class RegisterController extends BaseController
 
         $email = $request->input('email');
         
-        // Check if email already exists
+        // Check if email already exists (use email_verified_at for verification status)
         $existingAccount = Account::where('email', $email)->first();
         
         if ($existingAccount) {
-            // Check verification status - ONLY check email_verified_at (NOT NULL = verified)
             $emailVerifiedAt = $existingAccount->email_verified_at;
             $isVerified = $emailVerifiedAt !== null && $emailVerifiedAt !== '';
             
@@ -337,17 +338,50 @@ class RegisterController extends BaseController
             ]);
             
             if ($isVerified) {
-                // Email is already verified - redirect to login
+                // Email already registered and verified - show message and redirect to login
                 return $this
                     ->httpResponse()
                     ->setError()
                     ->setNextUrl(route('public.account.login'))
-                    ->setMessage('This email is already registered. Redirecting to login...');
-            } else {
-                // Email exists but NOT verified - delete old unverified account and allow re-registration
-                Log::info('Deleting old unverified account for re-registration', ['email' => $email, 'account_id' => $existingAccount->id]);
-                $existingAccount->delete();
+                    ->setMessage(trans('plugins/job-board::messages.email_already_registered'));
             }
+            
+            // Email exists but NOT verified - redirect to OTP page (do not delete; let user complete verification)
+            $code = '123456';
+            $expiresAt = now()->addMinutes(10);
+            $existingAccount->verification_code = $code;
+            $existingAccount->verification_code_expires_at = $expiresAt;
+            $existingAccount->save();
+            
+            $formData = [
+                'full_name' => $existingAccount->full_name ?? $existingAccount->first_name ?? '',
+                'email' => $email,
+                'phone' => $existingAccount->phone ?? '',
+                'phone_display' => $existingAccount->phone ?? '',
+                'phone_country_code' => $existingAccount->phone_country_code ?? '',
+                'password' => $request->input('form_data.password') ?? $request->input('password'),
+                'is_whatsapp_available' => $existingAccount->is_whatsapp_available ?? false,
+                'account_type' => $existingAccount->type?->value ?? 'job-seeker',
+            ];
+            $request->session()->put('registration_email_verification', [
+                'email' => $email,
+                'code' => $code,
+                'expires_at' => $expiresAt,
+                'form_data' => $formData,
+                'temp_account_id' => $existingAccount->id,
+            ]);
+            $request->session()->put('verify_email_address', $email);
+            
+            try {
+                $existingAccount->notify(new EmailVerificationNotification($code));
+            } catch (\Exception $e) {
+                Log::warning('Resend OTP failed for existing unverified account: ' . $e->getMessage());
+            }
+            
+            return $this
+                ->httpResponse()
+                ->setMessage(trans('plugins/job-board::messages.verification_code_resent'))
+                ->setNextUrl(route('public.account.register.verifyEmailPage'));
         }
         
         // Get form data - support both nested (form_data[field]) and top-level (field) formats
@@ -421,10 +455,10 @@ class RegisterController extends BaseController
             'phone_country_code' => $phoneCountryCode,
         ]);
         
-        // Set confirmed_at if email verification is disabled
-        $confirmedAt = null;
+        // Set email_verified_at and confirmed_at only when email verification is disabled (same time)
+        $verifiedAt = null;
         if (!setting('verify_account_email', 0)) {
-            $confirmedAt = Carbon::now();
+            $verifiedAt = Carbon::now();
         }
         
         // Create temporary account record for draft registration
@@ -438,13 +472,14 @@ class RegisterController extends BaseController
             'is_whatsapp_available' => $formData['is_whatsapp_available'] ?? false,
             'type' => $formData['account_type'] ?? 'job-seeker',
             'password' => Hash::make($formData['password'] ?? 'temp_password'),
-            'is_email_verified' => false, // Mark as not verified yet
+            'is_email_verified' => $verifiedAt !== null,
             'verification_code' => $code,
             'verification_code_expires_at' => $expiresAt,
             'email_verification_token' => Str::random(64),
             'email_verification_token_expires_at' => $expiresAt,
-            'is_public_profile' => true, // Set public profile for candidates
-            'confirmed_at' => $confirmedAt, // Set confirmed_at if email verification is disabled
+            'is_public_profile' => true,
+            'email_verified_at' => $verifiedAt,
+            'confirmed_at' => $verifiedAt,
         ]);
 
         // Handle resume upload if file is provided
@@ -699,32 +734,24 @@ class RegisterController extends BaseController
                 ->setMessage('The verification code is invalid. Please check and try again.');
         }
 
-        // Update the temporary account to mark email as verified
-        // Keep verification_code and verification_code_expires_at (don't clear them)
+        // Update the temporary account: set email_verified_at first (same value in confirmed_at); slug only when both set
         if ($tempAccountId) {
             $tempAccount = Account::find($tempAccountId);
             if ($tempAccount) {
-                $updateData = [
-                    'email_verified_at' => now(),
-                    'is_email_verified' => true,
-                    // Keep verification_code and verification_code_expires_at for reference
-                ];
-                
-                // Set confirmed_at when email is verified (for candidates to show in listing)
+                $verifiedAt = Carbon::now();
+                $tempAccount->email_verified_at = $verifiedAt;
+                $tempAccount->confirmed_at = $verifiedAt;
+                $tempAccount->is_email_verified = true;
                 if ($tempAccount->type === AccountTypeEnum::JOB_SEEKER) {
-                    $updateData['confirmed_at'] = Carbon::now();
-                    $updateData['is_public_profile'] = true;
+                    $tempAccount->is_public_profile = true;
                 }
-                
-                // If institution_type is provided in request, save it too
                 if ($request->has('institution_type') && $request->input('institution_type')) {
-                    $updateData['institution_type'] = $request->input('institution_type');
+                    $tempAccount->institution_type = $request->input('institution_type');
                     \Log::info('Institution type will be saved with email verification', [
                         'institution_type' => $request->input('institution_type'),
                     ]);
                 }
-                
-                $tempAccount->update($updateData);
+                $tempAccount->save();
                 \Log::info('Email verified successfully', [
                     'email' => $email,
                     'temp_account_id' => $tempAccountId,
@@ -1474,16 +1501,7 @@ class RegisterController extends BaseController
 
         event(new Registered($account));
 
-        // Create slug for job seekers to ensure public URL is available
-        if ($account->isJobSeeker() && !JobBoardHelper::isDisabledPublicProfile()) {
-            try {
-                if (!SlugHelper::getSlug($account->id, Account::class)) {
-                    SlugHelper::createSlug($account);
-                }
-            } catch (\Exception $e) {
-                \Log::warning('Failed to create slug for account: ' . $account->id, ['error' => $e->getMessage()]);
-            }
-        }
+        // Slug is created only after email is verified (see Account::saved and after confirmed_at set below)
 
         $request->merge(['slug' => $account->name, 'is_slug_editable' => 1]);
 
@@ -1511,11 +1529,13 @@ class RegisterController extends BaseController
                 ->setMessage($message);
         }
 
-        $account->confirmed_at = Carbon::now();
-
+        $verifiedAt = Carbon::now();
+        $account->email_verified_at = $verifiedAt;
+        $account->confirmed_at = $verifiedAt;
         $account->is_public_profile = true;
-
         $account->save();
+
+        // Slug created in Account::saved() when email_verified_at and confirmed_at are set
 
         $this->guard()->login($account);
 
@@ -1602,17 +1622,22 @@ class RegisterController extends BaseController
                     'is_public_profile' => true,
                 ];
                 
-                // Set confirmed_at if email verification is disabled
+                // Set email_verified_at and confirmed_at only when email verification is disabled
                 if (!setting('verify_account_email', 0)) {
-                    $updateData['confirmed_at'] = Carbon::now();
+                    $verifiedAt = Carbon::now();
+                    $updateData['email_verified_at'] = $verifiedAt;
+                    $updateData['confirmed_at'] = $verifiedAt;
                 }
                 
                 $account->update($updateData);
-                
-                // Create slug for job seekers to ensure public URL
-                if ($account->isJobSeeker() && !JobBoardHelper::isDisabledPublicProfile()) {
+
+                $account->refresh();
+
+                // Create slug only when email is verified (email_verified_at and confirmed_at set)
+                if ($account->email_verified_at !== null && $account->confirmed_at !== null && SlugHelper::isSupportedModel(Account::class)) {
                     try {
-                        if (!SlugHelper::getSlug($account->id, Account::class)) {
+                        $existing = SlugHelper::getSlug(null, SlugHelper::getPrefix(Account::class), Account::class, $account->id);
+                        if (! $existing) {
                             SlugHelper::createSlug($account);
                         }
                     } catch (\Exception $e) {
@@ -1660,11 +1685,8 @@ class RegisterController extends BaseController
             'phone_country_code' => $phoneCountryCode,
         ]);
         
-        // Set confirmed_at if email verification is disabled
-        $confirmedAt = null;
-        if (!setting('verify_account_email', 0)) {
-            $confirmedAt = Carbon::now();
-        }
+        // confirmed_at only when email_verified_at is set (same time)
+        $verifiedAt = now();
         
         return Account::query()->forceCreate([
             'type' => $data['type'],
@@ -1684,12 +1706,11 @@ class RegisterController extends BaseController
             'location_type' => Arr::get($data, 'location_type'),
             'password' => Hash::make($data['password']),
             'is_public_profile' => true,
-            // Email verification fields
-            'email_verified_at' => now(),
+            // Email verification fields; confirmed_at only when email_verified_at set (same time)
+            'email_verified_at' => $verifiedAt,
             'is_email_verified' => true,
             'verification_code' => Arr::get($data, 'verification_code'),
-            // Set confirmed_at if email verification is disabled
-            'confirmed_at' => $confirmedAt,
+            'confirmed_at' => $verifiedAt,
         ]);
     }
 
@@ -1723,17 +1744,62 @@ class RegisterController extends BaseController
 
         $email = $request->input('email');
 
-        // Check if email already exists and is verified
-        $existingAccount = Account::where('email', $email)
-            ->where('is_email_verified', true)
-            ->first();
-            
+        // Check if email already exists - use email_verified_at for verification status
+        $existingAccount = Account::where('email', $email)->first();
+
         if ($existingAccount) {
+            $emailVerifiedAt = $existingAccount->email_verified_at;
+            $isVerified = $emailVerifiedAt !== null && $emailVerifiedAt !== '';
+
+            if ($isVerified) {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setMessage(trans('plugins/job-board::messages.email_already_registered'))
+                    ->setNextUrl(route('public.account.login'));
+            }
+
+            // Email exists but NOT verified - redirect to OTP page (do not delete; let user complete verification)
+            $code = '123456';
+            $expiresAt = now()->addMinutes(10);
+            $existingAccount->email_verification_token = $code;
+            $existingAccount->email_verification_token_expires_at = $expiresAt;
+            $existingAccount->save();
+
+            $request->session()->put('employer_registration', [
+                'email' => $email,
+                'code' => $code,
+                'expires_at' => $expiresAt,
+                'temp_account_id' => $existingAccount->id,
+            ]);
+            $request->session()->put('employer_verify_email', $email);
+
+            if (env('MAIL_HOST')) {
+                config([
+                    'mail.default' => 'smtp',
+                    'mail.mailers.smtp.host' => env('MAIL_HOST'),
+                    'mail.mailers.smtp.port' => env('MAIL_PORT', 587),
+                    'mail.mailers.smtp.username' => env('MAIL_USERNAME'),
+                    'mail.mailers.smtp.password' => env('MAIL_PASSWORD'),
+                    'mail.mailers.smtp.encryption' => env('MAIL_ENCRYPTION', 'tls'),
+                ]);
+                if (env('MAIL_FROM_ADDRESS')) {
+                    config([
+                        'mail.from.address' => env('MAIL_FROM_ADDRESS'),
+                        'mail.from.name' => env('MAIL_FROM_NAME', 'TeachersRecruiter'),
+                    ]);
+                }
+            }
+            try {
+                $existingAccount->notify(new EmailVerificationNotification($code));
+            } catch (\Exception $e) {
+                Log::warning('Resend OTP failed for existing unverified employer: ' . $e->getMessage());
+            }
+
             return $this
                 ->httpResponse()
-                ->setError()
-                ->setMessage('This email is already registered. Please login instead.')
-                ->setNextUrl(route('public.account.login'));
+                ->setMessage(trans('plugins/job-board::messages.verification_code_resent'))
+                ->setNextUrl(route('public.account.register.employer.verifyEmailPage'));
         }
 
         // Generate random 6-digit OTP code
@@ -1751,9 +1817,6 @@ class RegisterController extends BaseController
         $nameParts = explode(' ', $fullName, 2);
         $firstName = $nameParts[0] ?? '';
         $lastName = $nameParts[1] ?? $firstName;
-
-        // Delete any existing unverified account with this email
-        Account::where('email', $email)->where('is_email_verified', false)->delete();
 
         // Create temp employer account
         $tempAccount = Account::create([
@@ -1958,13 +2021,14 @@ class RegisterController extends BaseController
             return $this->httpResponse()->setError()->setMessage('Verification code has expired.');
         }
 
-        // Mark email as verified
+        // Mark email as verified; set email_verified_at and confirmed_at (same time); slug only when both set
         $account = Account::find($sessionData['temp_account_id']);
         if ($account) {
-            $account->update([
-                'is_email_verified' => true,
-                'email_verified_at' => now(),
-            ]);
+            $verifiedAt = Carbon::now();
+            $account->email_verified_at = $verifiedAt;
+            $account->confirmed_at = $verifiedAt;
+            $account->is_email_verified = true;
+            $account->save();
         }
 
         $request->session()->put('employer_email_verified', true);

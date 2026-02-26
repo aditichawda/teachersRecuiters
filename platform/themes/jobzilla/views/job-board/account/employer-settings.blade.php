@@ -74,6 +74,7 @@
     .emp-section-body select option {
         background-color: #fff !important;
     }
+    .emp-city-item:hover { background: #f0f7ff !important; }
     .btn-save-profile {
         background: linear-gradient(135deg, #0073d1, #005bb5);
         color: #fff;
@@ -412,9 +413,9 @@
                 {{-- City first: type to search city then State & Country auto-fill (no required) --}}
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('City') }}</label>
-                    <div style="position:relative;">
+                    <div class="emp-city-wrapper" style="position:relative;">
                         <input type="text" id="emp-city-search" class="form-control" value="{{ $empCityName }}" placeholder="{{ __('Type city name to search...') }}" autocomplete="off">
-                        <div id="emp-city-suggestions" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:100; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+                        <div id="emp-city-suggestions" class="emp-city-suggestions" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:1050; margin-top:2px; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
                     </div>
                     <small class="text-muted">{{ __('Change city first; State and Country will auto-fill.') }}</small>
                     <input type="hidden" name="city_id" id="emp-city-id" value="{{ old('city_id', $company->city_id ?? '') }}">
@@ -669,10 +670,70 @@ document.addEventListener('DOMContentLoaded', function() {
     const empStateDisplay = document.getElementById('emp-state-display');
     const empCountryDisplay = document.getElementById('emp-country-display');
 
+    function renderEmpCityItems(cities) {
+        if (!cities || cities.length === 0) return '';
+        let html = '';
+        cities.forEach(function(c) {
+            var parts = [];
+            if (c.state_name) parts.push(c.state_name);
+            if (c.country_name) parts.push(c.country_name);
+            html += '<div class="emp-city-item p-2 border-bottom" style="cursor:pointer;" data-id="' + (c.id || '') + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '"><strong>' + (c.name || '') + '</strong>' + (parts.length ? ' <span class="text-muted">' + parts.join(', ') + '</span>' : '') + '</div>';
+        });
+        return html;
+    }
+    function selectEmpCity(el) {
+        empCitySearch.value = el.getAttribute('data-name');
+        if (empCityId) empCityId.value = el.getAttribute('data-id');
+        if (empStateId) empStateId.value = el.getAttribute('data-state-id');
+        if (empCountryId) empCountryId.value = el.getAttribute('data-country-id');
+        if (empStateDisplay) empStateDisplay.value = el.getAttribute('data-state-name') || '';
+        if (empCountryDisplay) empCountryDisplay.value = el.getAttribute('data-country-name') || '';
+        empCitySuggestions.style.display = 'none';
+    }
+    function loadEmpCities(keyword, page) {
+        page = page || 1;
+        var url = '{{ route("ajax.search-cities") }}';
+        if (keyword && keyword.length >= 2) {
+            url += '?k=' + encodeURIComponent(keyword);
+        } else {
+            url += '?default_country=1&page=' + page;
+        }
+        empCitySuggestions.innerHTML = '<div class="p-2 text-muted">{{ __("Loading...") }}</div>';
+        empCitySuggestions.style.display = 'block';
+        fetch(url)
+            .then(function(r) {
+                if (!r.ok) return { data: [] };
+                return r.json().catch(function() { return { data: [] }; });
+            })
+            .then(function(res) {
+                var raw = res && res.data;
+                var cities = Array.isArray(raw) ? raw : (raw && raw.cities ? raw.cities : []);
+                if (cities.length === 0) {
+                    empCitySuggestions.innerHTML = '<div class="p-2 text-muted">{{ __("No cities found. Add cities in Admin → Location → Cities.") }}</div>';
+                    return;
+                }
+                empCitySuggestions.innerHTML = renderEmpCityItems(cities);
+                empCitySuggestions.querySelectorAll('.emp-city-item').forEach(function(item) {
+                    item.addEventListener('click', function() { selectEmpCity(this); });
+                });
+            })
+            .catch(function() {
+                empCitySuggestions.innerHTML = '<div class="p-2 text-muted">{{ __("Search unavailable. Please try again.") }}</div>';
+            });
+    }
+
     if (empCitySearch && empCitySuggestions) {
-        let empSearchTimeout = null;
+        var empSearchTimeout = null;
+        empCitySearch.addEventListener('focus', function() {
+            var k = this.value.trim();
+            if (k.length >= 2) {
+                loadEmpCities(k);
+            } else {
+                loadEmpCities('', 1);
+            }
+        });
         empCitySearch.addEventListener('input', function() {
-            const k = this.value.trim();
+            var k = this.value.trim();
             if (empSearchTimeout) clearTimeout(empSearchTimeout);
             if (empCityId) empCityId.value = '';
             if (empStateId) empStateId.value = '';
@@ -682,45 +743,11 @@ document.addEventListener('DOMContentLoaded', function() {
             empCitySuggestions.style.display = 'none';
             empCitySuggestions.innerHTML = '';
             if (k.length < 2) return;
-            empSearchTimeout = setTimeout(function() {
-                empCitySuggestions.innerHTML = '<div class="p-2 text-muted">Searching...</div>';
-                empCitySuggestions.style.display = 'block';
-                fetch('{{ route("ajax.search-cities") }}?k=' + encodeURIComponent(k))
-                    .then(function(r) {
-                        if (!r.ok) return { data: [] };
-                        return r.json().catch(function() { return { data: [] }; });
-                    })
-                    .then(function(res) {
-                        const cities = (res && res.data) ? res.data : [];
-                        if (cities.length === 0) {
-                            empCitySuggestions.innerHTML = '<div class="p-2 text-muted">No cities found. Add cities in Admin → Location → Cities.</div>';
-                            return;
-                        }
-                        let html = '';
-                        cities.forEach(function(c) {
-                            const parts = [];
-                            if (c.state_name) parts.push(c.state_name);
-                            if (c.country_name) parts.push(c.country_name);
-                            html += '<div class="p-2 border-bottom" style="cursor:pointer;" data-id="' + (c.id || '') + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '"><strong>' + (c.name || '') + '</strong>' + (parts.length ? ' <span class="text-muted">' + parts.join(', ') + '</span>' : '') + '</div>';
-                        });
-                        empCitySuggestions.innerHTML = html;
-                        empCitySuggestions.querySelectorAll('[data-id]').forEach(function(el) {
-                            el.addEventListener('click', function() {
-                                empCitySearch.value = this.getAttribute('data-name');
-                                if (empCityId) empCityId.value = this.getAttribute('data-id');
-                                if (empStateId) empStateId.value = this.getAttribute('data-state-id');
-                                if (empCountryId) empCountryId.value = this.getAttribute('data-country-id');
-                                if (empStateDisplay) empStateDisplay.value = this.getAttribute('data-state-name') || '';
-                                if (empCountryDisplay) empCountryDisplay.value = this.getAttribute('data-country-name') || '';
-                                empCitySuggestions.style.display = 'none';
-                            });
-                        });
-                    })
-                    .catch(function() { empCitySuggestions.innerHTML = '<div class="p-2 text-muted">Search unavailable. Please try again.</div>'; });
-            }, 300);
+            empSearchTimeout = setTimeout(function() { loadEmpCities(k); }, 300);
         });
         document.addEventListener('click', function(e) {
-            if (!empCitySearch.contains(e.target) && !empCitySuggestions.contains(e.target)) {
+            var wrapper = document.querySelector('.emp-city-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
                 empCitySuggestions.style.display = 'none';
             }
         });

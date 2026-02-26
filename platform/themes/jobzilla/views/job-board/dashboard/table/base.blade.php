@@ -39,10 +39,17 @@
     background: #f8fafc;
 }
 .table-wrapper .table tbody td {
-    padding: 14px;
+    padding: 8px 5px;
     vertical-align: middle;
     border-bottom: 1px solid #f1f5f9;
     color: #334155;
+}
+.table-wrapper .table thead th:nth-child(4),
+.table-wrapper .table tbody td:nth-child(4) {
+    max-width: 110px;
+    width: 110px;
+    word-break: break-all;
+    overflow-wrap: break-word;
 }
 .table-wrapper .table tbody tr:hover {
     background: #fafbfc;
@@ -51,6 +58,7 @@
 .table-wrapper .table a:not(.btn) {
     color: var(--primary-color, #0073d1);
     text-decoration: none;
+    font-size: 14px;
 }
 .table-wrapper .table .btn-link:hover,
 .table-wrapper .table a:not(.btn):hover {
@@ -71,6 +79,26 @@
 .table-wrapper .dataTables_paginate {
     font-size: 0.875rem;
     color: #64748b;
+}
+
+/* Selected row: lighter blue background, white text (name + all columns) */
+.table-wrapper .table.dataTable tbody tr.selected td {
+    background-color: #6ba3e0 !important;
+    color: #fff !important;
+}
+.table-wrapper .table.dataTable tbody tr.selected td a,
+.table-wrapper .table.dataTable tbody tr.selected td a.text-primary,
+.table-wrapper .table.dataTable tbody tr.selected td a.text-decoration-none,
+.table-wrapper .table.dataTable tbody tr.selected td span,
+.table-wrapper .table.dataTable tbody tr.selected td .text-primary {
+    color: #fff !important;
+}
+.table-wrapper .table.dataTable tbody tr.selected td a:hover {
+    color: #e8f0f8 !important;
+}
+.table-wrapper .table.dataTable tbody tr.selected .form-select {
+    color: #333;
+    background-color: #fff;
 }
 </style>
 

@@ -20,7 +20,12 @@ class ForgotPasswordController extends Controller
 
         Theme::breadcrumb()->add(trans('plugins/job-board::messages.forgot_password'), route('public.account.register'));
 
-        return Theme::scope('job-board.auth.passwords.email', ['form' => ForgotPasswordForm::create()], 'plugins/job-board::themes.auth.passwords.email')->render();
+        $form = ForgotPasswordForm::create();
+        if (session()->has('password_reset_email')) {
+            $form->setModel(['email' => session('password_reset_email')]);
+        }
+
+        return Theme::scope('job-board.auth.passwords.email', ['form' => $form], 'plugins/job-board::themes.auth.passwords.email')->render();
     }
 
     public function sendResetLinkEmail(ForgotPasswordRequest $request)
@@ -37,6 +42,17 @@ class ForgotPasswordController extends Controller
         return $response == Password::RESET_LINK_SENT
             ? $this->sendResetLinkResponse($request, $response)
             : $this->sendResetLinkFailedResponse($request, $response);
+    }
+
+    protected function sendResetLinkResponse($request, $response)
+    {
+        if ($request->wantsJson()) {
+            return new \Illuminate\Http\JsonResponse(['message' => trans($response)], 200);
+        }
+
+        return back()
+            ->with('status', trans($response))
+            ->with('password_reset_email', $request->email);
     }
 
     public function broker()

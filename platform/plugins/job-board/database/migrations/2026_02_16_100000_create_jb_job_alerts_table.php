@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class () extends Migration {
     public function up(): void
     {
+        if (Schema::hasTable('jb_job_alerts')) {
+            return;
+        }
+
         Schema::create('jb_job_alerts', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('account_id')->constrained('jb_accounts')->onDelete('cascade');
@@ -29,6 +33,9 @@ return new class () extends Migration {
         });
 
         // Pivot table to track which jobs have been sent to which alerts
+        if (Schema::hasTable('jb_job_alert_jobs')) {
+            return;
+        }
         Schema::create('jb_job_alert_jobs', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('job_alert_id')->constrained('jb_job_alerts')->onDelete('cascade');

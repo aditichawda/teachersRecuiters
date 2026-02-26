@@ -413,6 +413,15 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => route('companies.index'),
                     'permissions' => ['companies.index'],
                 ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-admission-enquiries',
+                    'priority' => 5.5,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Admission Enquiries'),
+                    'icon' => 'ti ti-school',
+                    'url' => route('admission-enquiries.index'),
+                    'permissions' => ['admission-enquiries.index'],
+                ])
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), static function (DashboardMenuSupport $dashboardMenu): void {
                     $dashboardMenu
                         ->registerItem([
@@ -620,7 +629,9 @@ class JobBoardServiceProvider extends ServiceProvider
                     'priority' => 4,
                     'parent_id' => null,
                     'name' => 'plugins/job-board::dashboard.menu.applicants',
-                    'url' => fn () => route('public.account.applicants.index'),
+                    'url' => fn () => \Illuminate\Support\Facades\Route::has('public.account.applicants.index')
+                        ? route('public.account.applicants.index')
+                        : url('/account/applicants'),
                     'icon' => 'ti ti-users-group',
                 ])
                 ->registerItem([

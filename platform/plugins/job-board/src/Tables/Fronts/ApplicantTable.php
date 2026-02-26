@@ -3,38 +3,126 @@
 namespace Botble\JobBoard\Tables\Fronts;
 
 use Botble\Base\Facades\BaseHelper;
-use Botble\Base\Facades\Html;
 use Botble\JobBoard\Enums\JobApplicationStatusEnum;
 use Botble\JobBoard\Models\Account;
+use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
+use Botble\JobBoard\Tables\Fronts\BulkActions\ExportResumesBulkAction;
 use Botble\Table\Abstracts\TableAbstract;
 use Botble\Table\Actions\Action;
 use Botble\Table\Columns\Column;
 use Botble\Table\Columns\CreatedAtColumn;
 use Botble\Table\Columns\FormattedColumn;
-use Botble\Table\Columns\IdColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class ApplicantTable extends TableAbstract
 {
     protected bool $bStateSave = false;
 
-    protected array $defaultVisibleColumns = ['id', 'first_name', 'email', 'phone', 'status', 'job_id', 'created_at'];
+    protected string $filterTemplate = 'plugins/job-board::themes.dashboard.table.applicant-filter';
+
+    protected array $defaultVisibleColumns = ['first_name', 'job_id', 'email', 'created_at', 'status'];
 
     public function setup(): void
     {
+        $this->hasResponsive = false;
+
         $this
             ->model(JobApplication::class)
+            ->addBulkAction(new ExportResumesBulkAction())
             ->addActions([
                 Action::make('view')
                     ->route('public.account.applicants.edit')
                     ->label(trans('plugins/job-board::messages.view'))
                     ->icon('ti ti-eye')
                     ->color('primary'),
+                Action::make('download_cv')
+                    ->label(trans('plugins/job-board::job-application.tables.download_resume'))
+                    ->icon('ti ti-download')
+                    ->color('secondary')
+                    ->url(fn ($action) => route('public.account.applicants.download-cv', $action->getItem()->id))
+                    ->openUrlInNewTable(true),
             ]);
+    }
+
+    public function getFilters(): array
+    {
+        $account = auth('account')->user();
+        $jobChoices = ['' => trans('core/table::table.select_field')];
+        if ($account) {
+            $jobs = Job::query()
+                ->whereHas('company.accounts', fn (Builder $q) => $q->where('account_id', $account->getKey()))
+                ->pluck('name', 'id')
+                ->toArray();
+            $jobChoices = array_merge($jobChoices, $jobs);
+        }
+        return [
+            'job_id' => [
+                'title' => trans('plugins/job-board::dashboard.filter_by_job'),
+                'type' => 'select',
+                'choices' => $jobChoices,
+            ],
+            'status' => [
+                'title' => trans('plugins/job-board::dashboard.filter_by_status'),
+                'type' => 'select',
+                'choices' => array_merge(['' => trans('core/table::table.select_field')], JobApplicationStatusEnum::labels()),
+            ],
+            'created_at_from' => [
+                'title' => trans('plugins/job-board::dashboard.filter_date_from'),
+                'type' => 'datePicker',
+            ],
+            'created_at_to' => [
+                'title' => trans('plugins/job-board::dashboard.filter_date_to'),
+                'type' => 'datePicker',
+            ],
+        ];
+    }
+
+    public function applyFilterCondition(
+        \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Relations\Relation $query,
+        string $key,
+        string $operator,
+        ?string $value
+    ) {
+        if ($value === null || $value === '') {
+            return $query;
+        }
+        $key = preg_replace('/[^A-Za-z0-9_]/', '', str_replace(' ', '', $key));
+        $table = $this->getModel()->getTable();
+
+        if ($key === 'job_id') {
+            $jobId = (int) $value;
+            if ($jobId > 0) {
+                $query->where($table . '.job_id', '=', $jobId);
+            }
+
+            return $query;
+        }
+        if ($key === 'status' && $value !== '') {
+            $query->where($table . '.status', '=', $value);
+
+            return $query;
+        }
+        if ($key === 'created_at_from' && $value) {
+            $validator = Validator::make([$key => $value], [$key => ['date']]);
+            if (! $validator->fails()) {
+                $query->whereDate($table . '.created_at', '>=', BaseHelper::formatDate($value));
+            }
+            return $query;
+        }
+        if ($key === 'created_at_to' && $value) {
+            $validator = Validator::make([$key => $value], [$key => ['date']]);
+            if (! $validator->fails()) {
+                $query->whereDate($table . '.created_at', '<=', BaseHelper::formatDate($value));
+            }
+            return $query;
+        }
+
+        return parent::applyFilterCondition($query, $key, $operator, $value);
     }
 
     public function ajax(): JsonResponse
@@ -46,18 +134,7 @@ class ApplicantTable extends TableAbstract
                 if (! $job || ! $job->name) {
                     return '&mdash;';
                 }
-                try {
-                    $url = $job->url ?? '#';
-                    return Html::link(
-                        $url,
-                        $job->name . ' ' . BaseHelper::renderIcon('ti ti-external-link'),
-                        ['target' => '_blank'],
-                        null,
-                        false
-                    );
-                } catch (\Throwable $e) {
-                    return e($job->name);
-                }
+                return e($job->name);
             })
             ->editColumn('is_external_apply', function (JobApplication $item) {
                 return $item->is_external_apply ? trans('plugins/job-board::messages.external') : trans('plugins/job-board::messages.internal');
@@ -69,7 +146,12 @@ class ApplicantTable extends TableAbstract
             })
             ->editColumn('status', function (JobApplication $item) {
                 try {
-                    $rawStatus = $item->status?->getValue() ?? $item->getAttribute('status') ?? 'pending';
+                    $rawStatus = $item->getRawOriginal('status') ?? $item->getAttribute('status');
+                    if (is_object($rawStatus) && method_exists($rawStatus, 'getValue')) {
+                        $rawStatus = $rawStatus->getValue();
+                    }
+                    $rawStatus = $rawStatus ?? 'pending';
+                    $rawStatus = is_string($rawStatus) ? $rawStatus : 'pending';
                     $validStatuses = ['pending', 'hired', 'rejected', 'short_list'];
                     $current = in_array($rawStatus, $validStatuses) ? $rawStatus : 'pending';
                     $updateUrl = route('public.account.applicants.update', $item->id);
@@ -81,15 +163,19 @@ class ApplicantTable extends TableAbstract
                     ];
                     $options = collect($validStatuses)->map(function ($val) use ($current, $statusLabels) {
                         $label = $statusLabels[$val] ?? ucfirst(str_replace('_', ' ', $val));
-                        if (strpos((string) $label, 'plugins/job-board::') === 0) {
+                        if (is_string($label) && strpos($label, 'plugins/job-board::') === 0) {
                             $label = ucfirst(str_replace('_', ' ', $val));
                         }
                         return '<option value="' . e($val) . '"' . ($val === $current ? ' selected' : '') . '>' . e($label) . '</option>';
                     })->implode('');
-                    return '<select class="form-select form-select-sm applicant-status-select" data-id="' . $item->id . '" data-url="' . e($updateUrl) . '" style="min-width:140px;">' . $options . '</select>';
+                    return '<select class="form-select form-select-sm applicant-status-select" data-id="' . $item->id . '" data-url="' . e($updateUrl) . '" style="max-width:140px;">' . $options . '</select>';
                 } catch (\Throwable $e) {
-                    return e($item->getAttribute('status') ?? '—');
+                    return e($item->getRawOriginal('status') ?? $item->getAttribute('status') ?? '—');
                 }
+            })
+            ->editColumn('created_at', function (JobApplication $item) {
+                $date = $item->created_at;
+                return $date ? BaseHelper::formatDate($date) : '—';
             });
 
         $data = $data
@@ -154,7 +240,6 @@ class ApplicantTable extends TableAbstract
     public function columns(): array
     {
         return [
-            IdColumn::make(),
             FormattedColumn::make('first_name')
                 ->title(trans('plugins/job-board::job-application.tables.name'))
                 ->alignLeft()
@@ -179,12 +264,19 @@ class ApplicantTable extends TableAbstract
                         return '&mdash;';
                     }
                 }),
+            Column::make('job_id')
+                ->title(trans('plugins/job-board::dashboard.applied_for_job'))
+                ->alignLeft()
+                ->visible(true)
+                ->orderable(false),
             Column::make('email')
                 ->title(trans('plugins/job-board::job-application.tables.email'))
-                ->alignLeft(),
-            Column::make('phone')
-                ->title(trans('plugins/job-board::job-application.tables.phone'))
-                ->alignLeft(),
+                ->alignLeft()
+                ->visible(true)
+                ->width(100),
+            CreatedAtColumn::make()
+                ->title(trans('plugins/job-board::dashboard.applied_at'))
+                ->visible(true),
             Column::make('status')
                 ->title(trans('plugins/job-board::job-application.tables.status'))
                 ->orderable(true)
@@ -192,10 +284,6 @@ class ApplicantTable extends TableAbstract
                 ->width(160)
                 ->visible(true)
                 ->columnVisibility(true),
-            Column::make('job_id')
-                ->title(trans('plugins/job-board::messages.job_name'))
-                ->alignLeft(),
-            CreatedAtColumn::make(),
         ];
     }
 

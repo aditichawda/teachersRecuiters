@@ -35,14 +35,17 @@ use Botble\JobBoard\Models\JobSkill;
 use Botble\JobBoard\Models\JobType;
 use Botble\JobBoard\Models\Tag;
 use Botble\JobBoard\Repositories\Interfaces\AnalyticsInterface;
+use Botble\JobBoard\Services\JobDescriptionAiService;
 use Botble\JobBoard\Services\StoreTagService;
 use Botble\JobBoard\Tables\Fronts\JobTable;
 use Botble\Media\Facades\RvMedia;
 use Botble\Optimize\Facades\OptimizerHelper;
 use Botble\SeoHelper\Facades\SeoHelper;
+use Botble\Slug\Facades\SlugHelper;
 use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class AccountJobController extends BaseController
@@ -64,6 +67,56 @@ class AccountJobController extends BaseController
         SeoHelper::setTitle(trans('plugins/job-board::messages.manage_jobs'));
 
         return $table->render(JobBoardHelper::viewPath('dashboard.table.base'));
+    }
+
+    /**
+     * Generate job description using AI (Gemini or OpenAI). Called via AJAX from job create form.
+     * Uses title, optional short_description, and optional institution_title (institle) for the prompt.
+     */
+    public function generateDescription(Request $request, JobDescriptionAiService $aiService)
+    {
+        try {
+            $title = is_string($request->input('title')) ? trim($request->input('title')) : '';
+            $institutionTitle = is_string($request->input('institution_title')) ? trim($request->input('institution_title')) : '';
+
+            if ($title === '') {
+                return response()->json(['success' => false, 'message' => __('Please enter a job title first.')], 422);
+            }
+
+            if (! $aiService->isEnabled()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('AI is not configured. Set GEMINI_API_KEY or OPENAI_API_KEY in .env and JOB_BOARD_AI_PROVIDER to gemini or openai.'),
+                ], 503);
+            }
+
+            $result = $aiService->generateFromTitle($title, '', $institutionTitle);
+
+            if ($result['error'] !== null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['error'],
+                ], 502);
+            }
+
+            return response()->json([
+                'success' => true,
+                'description' => $result['description'],
+                'fallback' => $result['fallback'] ?? false,
+                'api_error' => $result['api_error'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('JobBoard AI generate-description failed.', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function create()
@@ -92,6 +145,16 @@ class AccountJobController extends BaseController
                     'status' => 'published',
                 ]);
                 $account->companies()->attach($company->id);
+                if (SlugHelper::isSupportedModel(Company::class)) {
+                    try {
+                        $existing = SlugHelper::getSlug(null, SlugHelper::getPrefix(Company::class), Company::class, $company->id);
+                        if (! $existing) {
+                            SlugHelper::createSlug($company);
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('JobBoard: Failed to create slug for company ' . $company->id, ['error' => $e->getMessage()]);
+                    }
+                }
             } else {
                 return $this
                     ->httpResponse()
@@ -264,7 +327,18 @@ class AccountJobController extends BaseController
         }
 
         $job->save();
-        
+
+        if (SlugHelper::isSupportedModel(Job::class)) {
+            try {
+                $existing = SlugHelper::getSlug(null, SlugHelper::getPrefix(Job::class), Job::class, $job->id);
+                if (! $existing) {
+                    SlugHelper::createSlug($job);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('JobBoard: Failed to create slug for job ' . $job->id, ['error' => $e->getMessage()]);
+            }
+        }
+
         // Reload to ensure status is correct
         $job->refresh();
         

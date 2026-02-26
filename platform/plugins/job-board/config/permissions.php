@@ -489,4 +489,14 @@ return [
         'flag' => 'job-board.reports',
         'parent_flag' => 'plugins.job-board',
     ],
+    [
+        'name' => 'Admission Enquiries',
+        'flag' => 'admission-enquiries.index',
+        'parent_flag' => 'plugins.job-board',
+    ],
+    [
+        'name' => 'Delete',
+        'flag' => 'admission-enquiries.destroy',
+        'parent_flag' => 'admission-enquiries.index',
+    ],
 ];

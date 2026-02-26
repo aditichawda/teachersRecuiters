@@ -6,6 +6,7 @@ use Botble\JobBoard\Http\Controllers\Fronts\AccountEducationController;
 use Botble\JobBoard\Http\Controllers\Fronts\AccountExperienceController;
 use Botble\JobBoard\Http\Controllers\Fronts\AccountLanguageController;
 use Botble\JobBoard\Http\Controllers\Fronts\CouponController;
+use Botble\JobBoard\Http\Controllers\Fronts\ApplicantController;
 use Botble\JobBoard\Http\Controllers\JobApplicationController;
 use Botble\JobBoard\Http\Middleware\LocaleMiddleware;
 use Botble\Theme\Facades\Theme;
@@ -340,6 +341,12 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     Route::delete('{id}', 'JobAlertController@destroy')->name('destroy');
                     Route::post('{id}/toggle', 'JobAlertController@toggle')->name('toggle');
                 });
+
+                // Job seeker wallet only (separate from employer wallet)
+                Route::get('jobseeker/wallet', [
+                    'as' => 'jobseeker.wallet',
+                    'uses' => 'WalletController@index',
+                ])->middleware(['account:' . AccountTypeEnum::JOB_SEEKER, 'enable-credits', LocaleMiddleware::class]);
             });
         });
     });
@@ -387,46 +394,33 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 'prefix' => 'applicants',
                 'as' => 'applicants.',
             ], function (): void {
+                Route::match(['get', 'post'], '', ['as' => 'index', 'uses' => 'ApplicantController@index']);
                 Route::resource('', 'ApplicantController')
                     ->parameters(['' => 'applicant'])
-                    ->only(['index', 'edit', 'update']);
+                    ->only(['edit', 'update']);
             });
 
             Route::get('applicants/download-cv/{application}', [JobApplicationController::class, 'downloadCv'])
                 ->name('applicants.download-cv')->wherePrimaryKey('application');
 
-            Route::get('candidates', [
-                'as' => 'candidates.index',
-                'uses' => 'DashboardController@candidates',
-            ]);
+            Route::get('applicants/export-resumes', [JobApplicationController::class, 'exportResumes'])
+                ->name('applicants.export-resumes');
 
             Route::group([
                 'prefix' => 'jobs',
                 'as' => 'jobs.',
             ], function (): void {
-                Route::resource('', 'AccountJobController')->parameters(['' => 'job']);
+                // Explicit routes first to avoid 404 - edit/update use {job} with whereNumber
+                Route::get('create', ['as' => 'create', 'uses' => 'AccountJobController@create']);
+                Route::post('generate-description', ['as' => 'generate-description', 'uses' => 'AccountJobController@generateDescription']);
+                Route::get('tags/all', ['as' => 'tags.all', 'uses' => 'AccountJobController@getAllTags']);
+                Route::post('renew/{id}', ['as' => 'renew', 'uses' => 'AccountJobController@renew'])->whereNumber('id');
+                Route::get('{id}/analytics', ['as' => 'analytics', 'uses' => 'AccountJobController@analytics'])->whereNumber('id');
+                Route::get('{id}/view', ['as' => 'view', 'uses' => 'AccountJobController@view'])->whereNumber('id');
+                Route::get('{job}/edit', ['as' => 'edit', 'uses' => 'AccountJobController@edit'])->whereNumber('job');
+                Route::match(['put', 'patch'], '{job}', ['as' => 'update', 'uses' => 'AccountJobController@update'])->whereNumber('job');
 
-                Route::controller('AccountJobController')->group(function (): void {
-                    Route::post('renew/{id}', [
-                        'as' => 'renew',
-                        'uses' => 'renew',
-                    ])->wherePrimaryKey();
-
-                    Route::get('{id}/analytics', [
-                        'as' => 'analytics',
-                        'uses' => 'analytics',
-                    ])->wherePrimaryKey();
-
-                    Route::get('{id}/view', [
-                        'as' => 'view',
-                        'uses' => 'view',
-                    ])->wherePrimaryKey();
-
-                    Route::get('tags/all', [
-                        'as' => 'tags.all',
-                        'uses' => 'getAllTags',
-                    ]);
-                });
+                Route::resource('', 'AccountJobController')->parameters(['' => 'job'])->only(['index', 'store', 'show', 'destroy']);
             });
 
             Route::group([
@@ -452,11 +446,6 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'as' => 'package.subscribe.callback',
                         'uses' => 'getPackageSubscribeCallback',
                     ])->wherePrimaryKey();
-
-                    Route::put('/', [
-                        'as' => 'package.subscribe.put',
-                        'uses' => 'subscribePackage',
-                    ]);
                 });
             });
 
@@ -472,20 +461,10 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     'as' => 'admission.update',
                     'uses' => 'AdmissionAccountController@update',
                 ]);
-            });
-
-            Route::group([
-                'prefix' => 'wallet',
-                'middleware' => [
-                    'account:' . AccountTypeEnum::EMPLOYER,
-                    'enable-credits',
-                    LocaleMiddleware::class,
-                ],
-            ], function (): void {
-                Route::get('/', [
-                    'as' => 'wallet',
-                    'uses' => 'WalletController@index',
-                ]);
+                Route::get('enquiries/{enquiry}', [
+                    'as' => 'admission.enquiry.show',
+                    'uses' => 'AdmissionAccountController@showEnquiry',
+                ])->whereNumber('enquiry');
             });
 
             Route::group([
@@ -500,6 +479,27 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     ->name('generate_invoice')
                     ->wherePrimaryKey();
             });
+
+            // Employer wallet only (job seeker has separate route: jobseeker.wallet)
+            Route::group([
+                'middleware' => ['enable-credits', LocaleMiddleware::class],
+            ], function (): void {
+                Route::get('wallet', [
+                    'as' => 'wallet',
+                    'uses' => 'WalletController@index',
+                ]);
+            });
+        });
+
+        // Package subscribe (PUT): shared so both employer & job seeker wallet can submit
+        Route::group([
+            'prefix' => 'account',
+            'middleware' => ['account', 'enable-credits', LocaleMiddleware::class],
+        ], function (): void {
+            Route::put('packages', [
+                'as' => 'package.subscribe.put',
+                'uses' => 'DashboardController@subscribePackage',
+            ]);
         });
 
         Route::group(['prefix' => 'ajax/accounts'], function (): void {

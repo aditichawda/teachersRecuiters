@@ -76,6 +76,8 @@ return [
     // Navigation and pages
     'register' => 'Register',
     'login' => 'Login',
+    'email_already_registered' => 'This email is already registered. Please login to continue.',
+    'verification_code_resent' => 'Verification code sent again. Please verify your email to continue.',
     'logout' => 'Logout',
     'forgot_password' => 'Forgot Password',
     'reset_password' => 'Reset Password',
