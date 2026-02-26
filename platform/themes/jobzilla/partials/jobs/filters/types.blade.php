@@ -14,7 +14,7 @@
 @endphp
 
 <div class="twm-sidebar-ele-filter">
-    <h4 class="section-head-small mb-4">{{ __('Type of employment') }}</h4>
+    <h4 class="section-head-small mb-4">{{ __('Job Type') }}</h4>
     <ul>
         @foreach($jobTypes as $jobType)
             <li>

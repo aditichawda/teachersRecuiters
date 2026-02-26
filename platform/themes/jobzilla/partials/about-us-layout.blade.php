@@ -28,7 +28,7 @@
             </div>
             <div class="col-lg-6">
                 <div class="hiw-hero-images">
-                    <img src="/themes/jobzilla/images/about-hero.png" alt="Teachers Recruiter" class="img-fluid rounded-4">
+                    <img src="/themes/jobzilla/images/about-us.png" alt="Teachers Recruiter" class="img-fluid rounded-4">
                 </div>
             </div>
         </div>
@@ -115,7 +115,7 @@
         <div class="row align-items-center hiw-alt-row">
             <div class="col-lg-6">
                 <div class="hiw-alt-image">
-                    <img src="{{ Theme::asset()->url('images/gir-large-2.png') }}" alt="For Teachers" class="img-fluid rounded-4">
+                    <img src="/themes/jobzilla/images/Connecting_Teachers.png" alt="For Teachers" class="img-fluid rounded-4">
                 </div>
             </div>
             <div class="col-lg-6">
@@ -138,7 +138,7 @@
         <div class="row align-items-center hiw-alt-row flex-lg-row-reverse">
             <div class="col-lg-6">
                 <div class="hiw-alt-image">
-                    <img src="{{ Theme::asset()->url('images/boy-large.png') }}" alt="For Schools" class="img-fluid rounded-4">
+                    <img src="/themes/jobzilla/images/Supporting_Schools.png" alt="For Schools" class="img-fluid rounded-4">
                 </div>
             </div>
             <div class="col-lg-6">

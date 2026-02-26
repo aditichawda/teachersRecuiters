@@ -19,10 +19,15 @@ class SendJobSeekerApplicationConfirmationJob implements ShouldQueue
     public int $tries = 3;
     public int $timeout = 60;
 
+    public JobApplication $application;
+    public Job $jobModel;
+
     public function __construct(
-        public JobApplication $application,
-        public Job $job
+        JobApplication $application,
+        Job $job
     ) {
+        $this->application = $application;
+        $this->jobModel = $job;
         $this->onQueue('emails');
     }
 
@@ -40,20 +45,20 @@ class SendJobSeekerApplicationConfirmationJob implements ShouldQueue
             }
 
             $jobSeekerName = $this->application->full_name;
-            $jobUrl = $this->job->url;
+            $jobUrl = $this->jobModel->url;
             if (!filter_var($jobUrl, FILTER_VALIDATE_URL)) {
                 $jobUrl = url($jobUrl);
             }
 
             $emailContent = $this->buildEmailContent([
                 'job_seeker_name' => $jobSeekerName,
-                'job_name' => $this->job->name,
-                'company_name' => $this->job->company->name ?? 'N/A',
+                'job_name' => $this->jobModel->name,
+                'company_name' => $this->jobModel->company->name ?? 'N/A',
                 'job_url' => $jobUrl,
                 'view_applications_url' => route('public.account.jobs.applied-jobs'),
             ]);
 
-            $emailSubject = 'Application Confirmed: ' . $this->job->name;
+            $emailSubject = 'Application Confirmed: ' . $this->jobModel->name;
 
             Mail::send([], [], function ($message) use ($emailSubject, $emailContent, $jobSeekerEmail) {
                 $message->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'TeachersRecruiter'))
@@ -64,14 +69,14 @@ class SendJobSeekerApplicationConfirmationJob implements ShouldQueue
 
             Log::info('Job seeker application confirmation email sent', [
                 'application_id' => $this->application->id,
-                'job_id' => $this->job->id,
+                'job_id' => $this->jobModel->id,
                 'email' => $jobSeekerEmail,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to send job seeker application confirmation email', [
                 'application_id' => $this->application->id,
-                'job_id' => $this->job->id,
+                'job_id' => $this->jobModel->id,
                 'error' => $e->getMessage(),
             ]);
 

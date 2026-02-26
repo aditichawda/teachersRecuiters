@@ -1,4 +1,4 @@
--size<?php
+<?php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
@@ -298,6 +298,29 @@
                             
                         </div>
                         <div class="extra-cell">
+                            <style>
+                            /* Fix button alignment */
+                            .header-nav-btn-section {
+                                display: flex !important;
+                                align-items: center !important;
+                            }
+                            .twm-nav-btn-left,
+                            .twm-nav-btn-right {
+                                display: flex !important;
+                                align-items: center !important;
+                            }
+                            .twm-nav-sign-up,
+                            .twm-nav-post-a-job {
+                                display: flex !important;
+                                align-items: center !important;
+                                vertical-align: middle !important;
+                            }
+                            .twm-nav-sign-up i,
+                            .twm-nav-post-a-job i {
+                                display: flex !important;
+                                align-items: center !important;
+                            }
+                            </style>
                             <div class="header-nav-btn-section">
                                 <?php if(auth('account')->check() && $account = auth('account')->user()): ?>
                                     <div>
@@ -355,7 +378,7 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <!-- Login Button -->
                                         <div class="twm-nav-btn-left">
-                                            <a class="twm-nav-sign-up d-inline-block" href="<?php echo e(route('public.account.login')); ?>">
+                                            <a class="twm-nav-sign-up" href="<?php echo e(route('public.account.login')); ?>">
                                                 <i class="feather-log-in"></i>
                                                 <span><?php echo e(__('Login')); ?></span>
                                             </a>
@@ -909,17 +932,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
+    /* padding: 12px; */
+    /* background: #fff; */
+    /* border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); */
+    /* transition: all 0.3s ease; */
 }
 
-.home-client-carousel3 .ow-client-logo:hover {
+/* .home-client-carousel3 .ow-client-logo:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     transform: translateY(-3px);
-}
+} */
 
 .home-client-carousel3 .client-logo {
     max-width: 100% !important;

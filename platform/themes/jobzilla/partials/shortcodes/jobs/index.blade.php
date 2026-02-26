@@ -146,11 +146,18 @@
 
 .jobs-top-filter .filter-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 24px;
     margin-bottom: 24px;
     position: relative;
     z-index: 1;
+}
+
+@media(max-width: 767px) {
+    .jobs-top-filter .filter-row {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
 }
 
 .jobs-top-filter .filter-group {
@@ -533,11 +540,13 @@
     font-weight: 400;
 }
 
-.jobs-top-filter .filter-group .location-input-wrapper {
+.jobs-top-filter .filter-group .location-input-wrapper,
+.jobs-top-filter .filter-group .keyword-input-wrapper {
     position: relative;
 }
 
-.jobs-top-filter .filter-group .location-input-wrapper i {
+.jobs-top-filter .filter-group .location-input-wrapper i,
+.jobs-top-filter .filter-group .keyword-input-wrapper i {
     position: absolute;
     left: 16px;
     top: 50%;
@@ -547,7 +556,8 @@
     z-index: 1;
 }
 
-.jobs-top-filter .filter-group .location-input-wrapper input {
+.jobs-top-filter .filter-group .location-input-wrapper input,
+.jobs-top-filter .filter-group .keyword-input-wrapper input {
     padding-left: 45px;
 }
 
@@ -1333,6 +1343,314 @@ html {
         padding: 5px 12px;
     }
 }
+/* ===== Job City Search Autocomplete Styling ===== */
+.job-city-search-wrapper {
+    position: relative;
+}
+.job-city-search-input {
+    width: 100% !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    color: #1e293b !important;
+    background: #fff !important;
+    transition: all 0.2s ease !important;
+    height: 44px !important;
+    line-height: 24px !important;
+}
+.job-city-search-input:focus {
+    border-color: #0073d1 !important;
+    box-shadow: 0 0 0 3px rgba(0,115,209,.1) !important;
+    outline: none !important;
+}
+.job-city-search-input::placeholder {
+    color: #94a3b8 !important;
+}
+.job-city-suggestions {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-top: none !important;
+    border-radius: 0 0 10px 10px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    z-index: 9999 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    margin-top: 0 !important;
+}
+.job-city-search-wrapper {
+    position: relative !important;
+    z-index: 10000 !important;
+}
+.job-city-suggestion-item {
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: #1e293b !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background 0.15s ease !important;
+    background: #ffffff !important;
+}
+.job-city-suggestion-item:last-child {
+    border-bottom: none !important;
+}
+.job-city-suggestion-item:hover,
+.job-city-suggestion-item.active {
+    background: #f0f7ff !important;
+    color: #0073d1 !important;
+}
+.job-city-suggestion-item .city-name {
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    margin-bottom: 2px !important;
+}
+.job-city-suggestion-item:hover .city-name,
+.job-city-suggestion-item.active .city-name {
+    color: #0073d1 !important;
+}
+.job-city-suggestion-item .city-location {
+    font-size: 12px !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+}
+.job-city-loading,
+.job-city-no-results {
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    color: #64748b !important;
+    text-align: center !important;
+    background: #ffffff !important;
+}
+
+/* Job Role Search Suggestions */
+/* Home Category Search (Same as Homepage) */
+.home-category-search-wrapper {
+    position: relative;
+}
+.home-category-suggestions {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    margin-top: 0 !important;
+}
+.home-category-suggestion-item {
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: #000000 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background 0.15s ease !important;
+    background: #ffffff !important;
+}
+.home-category-suggestion-item:last-child {
+    border-bottom: none !important;
+}
+.home-category-suggestion-item:hover,
+.home-category-suggestion-item.active {
+    background: #f0f7ff !important;
+    color: #000000 !important;
+}
+.home-category-suggestion-item .city-name {
+    font-weight: 500 !important;
+    color: #000000 !important;
+    margin-bottom: 2px !important;
+}
+.home-category-suggestion-item:hover .city-name,
+.home-category-suggestion-item.active .city-name {
+    color: #000000 !important;
+}
+.home-category-loading,
+.home-category-no-results {
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    color: #64748b !important;
+    text-align: center !important;
+    background: #ffffff !important;
+}
+
+/* Home City Search (Same as Homepage) */
+.home-city-search-wrapper {
+    position: relative;
+    z-index: 1001;
+}
+.home-city-suggestions {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    margin-top: 0 !important;
+}
+.home-city-suggestion-item {
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: #000000 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background 0.15s ease !important;
+    background: #ffffff !important;
+}
+.home-city-suggestion-item:last-child {
+    border-bottom: none !important;
+}
+.home-city-suggestion-item:hover,
+.home-city-suggestion-item.active {
+    background: #f0f7ff !important;
+    color: #000000 !important;
+}
+.home-city-suggestion-item .city-name {
+    font-weight: 500 !important;
+    color: #000000 !important;
+    margin-bottom: 2px !important;
+}
+.home-city-suggestion-item:hover .city-name,
+.home-city-suggestion-item.active .city-name {
+    color: #000000 !important;
+}
+.home-city-suggestion-item .city-location {
+    font-size: 12px !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+}
+.home-city-loading,
+.home-city-no-results {
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    color: #64748b !important;
+    text-align: center !important;
+    background: #ffffff !important;
+}
+.job-role-search-wrapper {
+    position: relative;
+}
+.job-role-suggestions {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    margin-top: 0 !important;
+}
+.job-role-suggestion-item {
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: #000000 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background 0.15s ease !important;
+    background: #ffffff !important;
+}
+.job-role-suggestion-item:last-child {
+    border-bottom: none !important;
+}
+.job-role-suggestion-item:hover,
+.job-role-suggestion-item.active {
+    background: #f0f7ff !important;
+    color: #000000 !important;
+}
+.job-role-suggestion-item .role-name {
+    font-weight: 500 !important;
+    color: #000000 !important;
+    margin-bottom: 2px !important;
+}
+.job-role-suggestion-item:hover .role-name,
+.job-role-suggestion-item.active .role-name {
+    color: #000000 !important;
+}
+.job-role-loading,
+.job-role-no-results {
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    color: #64748b !important;
+    text-align: center !important;
+    background: #ffffff !important;
+}
+
+/* Job Location Search Suggestions (Same as signin/login) */
+.job-location-search-wrapper {
+    position: relative;
+}
+.job-location-suggestions {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    margin-top: 0 !important;
+}
+.job-location-suggestion-item {
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: #000000 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background 0.15s ease !important;
+    background: #ffffff !important;
+}
+.job-location-suggestion-item:last-child {
+    border-bottom: none !important;
+}
+.job-location-suggestion-item:hover,
+.job-location-suggestion-item.active {
+    background: #f0f7ff !important;
+    color: #000000 !important;
+}
+.job-location-suggestion-item .city-name {
+    font-weight: 500 !important;
+    color: #000000 !important;
+    margin-bottom: 2px !important;
+}
+.job-location-suggestion-item:hover .city-name,
+.job-location-suggestion-item.active .city-name {
+    color: #000000 !important;
+}
+.job-location-suggestion-item .city-location {
+    font-size: 12px !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+}
+.job-location-loading,
+.job-location-no-results {
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    color: #64748b !important;
+    text-align: center !important;
+    background: #ffffff !important;
+}
 </style>
 
 <div class="section-full p-t120 p-b90 site-bg-white jobs-container">
@@ -1349,39 +1667,25 @@ html {
                 <div class="filter-group">
                     <label>
                         <i class="feather-briefcase"></i>
-                        <span>{{ __('Select Job Role') }}</span>
+                        <span>{{ __('Keyword') }}</span>
                     </label>
-                    <select name="job_categories[]" class="selectpicker" data-live-search="true" data-size="8" title="{{ __('Select Job Role') }}">
-                        <option value="">{{ __('All Job Roles') }}</option>
-                        @foreach($jobRoles as $jobRole)
-                            <option value="{{ $jobRole->id }}" @selected(in_array($jobRole->id, (array) request()->query('job_categories', [])))>{{ $jobRole->name }}</option>
-                        @endforeach
-                    </select>
-                    <!-- <input type="text" name="keyword" value="{{ BaseHelper::stringify(request()->query('keyword')) }}" placeholder="{{ __('Or Enter Teaching Subject or Post') }}" class="keyword-input-below"> -->
-                </div>
-                
-                <div class="filter-group">
-                    <label>
-                        <i class="feather-map-pin"></i>
-                        <span>{{ __('Enter City or State') }}</span>
-                    </label>
-                    <div class="location-input-wrapper">
-                        <i class="feather-map-pin"></i>
-                        <input type="text" name="location" value="{{ BaseHelper::stringify(request()->query('location')) }}" placeholder="{{ __('Enter City or State') }}">
+                    <div class="home-category-search-wrapper" style="position: relative;">
+                        <input type="text" id="home_category_search" name="keyword" value="{{ BaseHelper::stringify(request()->query('keyword')) }}" placeholder="{{ __('Type to search...') }}" autocomplete="off" class="wt-search-bar-select">
+                        <input type="hidden" id="home_keyword_id" name="job_categories[]" value="{{ BaseHelper::stringify(request()->query('job_categories.0')) }}">
+                        <div id="home-category-suggestions" class="home-category-suggestions" style="display: none;"></div>
                     </div>
                 </div>
                 
                 <div class="filter-group">
                     <label>
-                        <i class="feather-building"></i>
-                        <span>{{ __('Select Institution Type') }}</span>
+                        <i class="feather-map-pin"></i>
+                        <span>{{ __('Location') }}</span>
                     </label>
-                    <select name="institution_type" class="selectpicker">
-                        <option value="">{{ __('All Institution Types') }}</option>
-                        @foreach($institutionTypes as $institutionType)
-                            <option value="{{ $institutionType->id }}" @selected($institutionType->id == request()->query('institution_type'))>{{ $institutionType->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="home-city-search-wrapper" style="position: relative;">
+                        <input type="text" name="city_search" id="home_city_search" class="wt-search-bar-select home-city-search-input" placeholder="{{ __('Select Your Location') }}" autocomplete="off" value="{{ request('city_search', BaseHelper::stringify(request()->query('location'))) }}" />
+                        <input type="hidden" name="city_id" id="home_city_id" value="{{ request('city_id', BaseHelper::stringify(request()->query('city_id'))) }}" />
+                        <div class="home-city-suggestions" id="home-city-suggestions" style="display: none;"></div>
+                    </div>
                 </div>
             </div>
             
@@ -1435,10 +1739,10 @@ html {
             </div>
             
             <div class="filter-actions">
-                <a href="#" class="advance-search-link" id="toggle-advance-search">
+                <!-- <a href="#" class="advance-search-link" id="toggle-advance-search">
                     <i class="feather-plus"></i>
                     {{ __('Advance Search') }}
-                </a>
+                </a> -->
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <button type="button" class="clear-filter-btn" id="clear-top-filters">
                         <i class="feather-x-circle"></i>
@@ -1475,13 +1779,12 @@ html {
                             </div>
                             
                                 <form action="{{ JobBoardHelper::getJobsPageURL() }}" method="get" id="jobs-filter-form" data-ajax-url="{{ route('public.ajax.jobs') }}">
-                                        {!! Theme::partial('jobs.filters.keyword') !!}
-                                        {!! Theme::partial('jobs.filters.categories') !!}
+                                        {!! Theme::partial('jobs.filters.institute-name') !!}
+                                        {!! Theme::partial('jobs.filters.institute-type') !!}
                                         {!! Theme::partial('jobs.filters.city') !!}
                                         {!! Theme::partial('jobs.filters.types') !!}
                                         {!! Theme::partial('jobs.filters.date_posted') !!}
-                                        {!! Theme::partial('jobs.filters.experiences') !!}
-                                        {!! Theme::partial('jobs.filters.skills') !!}
+                                        {!! Theme::partial('jobs.filters.categories') !!}
                                 
                                 <input type="hidden" name="per_page" value="{{ BaseHelper::stringify(request()->query('per_page', 12)) }}">
                                 <input type="hidden" name="page" value="1">
@@ -1678,10 +1981,7 @@ html {
                             @endif
                     </span>
                     </div>
-                    <button type="button" class="layout-toggle-btn-small" id="layout-toggle-sidebar" data-layout="{{ $layout }}">
-                        <i class="feather-grid" id="layout-icon-sidebar"></i>
-                        <span id="layout-text-sidebar">{{ $layout === 'list' ? __('List') : __('Grid') }}</span>
-                    </button>
+                    
                 </div>
 
                 <div class="twm-jobs-list-wrap jobs-listing" id="jobs-listing-container">
@@ -2035,5 +2335,297 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+
+// Load job categories for jobs page (like homepage)
+@php
+    $jobCategories = app(\Botble\JobBoard\Repositories\Interfaces\CategoryInterface::class)
+        ->allBy(['status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED])
+        ->map(function($category) {
+            return [
+                'id' => $category->id,
+                'name' => $category->name,
+            ];
+        })
+        ->values()
+        ->toArray();
+@endphp
+<script>
+// Set window.jobCategories for jobs page (required by home_category_search)
+window.jobCategories = @json($jobCategories);
+
+// Use homepage functions for jobs page filters
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit for window.jobCategories to be set
+    setTimeout(function() {
+        // Initialize homepage category search if element exists
+        if (typeof home_category_search === 'function') {
+            home_category_search();
+        }
+        
+        // Initialize homepage city search if element exists
+        if (typeof home_city_search === 'function') {
+            home_city_search();
+        }
+    }, 100);
+});
+</script>
+
+// Fallback: Initialize Job Role Search (Like Homepage - Show dropdown on focus/click)
+document.addEventListener('DOMContentLoaded', function() {
+    const roleInput = document.getElementById('home_category_search');
+    const roleId = document.getElementById('home_keyword_id');
+    const suggestions = document.getElementById('home-category-suggestions');
+    let allRoles = [];
+    let activeSuggestionIndex = -1;
+    let searchTimeout = null;
+
+    if (!roleInput || !suggestions) return;
+
+    // Function to show job roles (like homepage)
+    function showRoles(keyword) {
+        keyword = (keyword || '').trim().toLowerCase();
+        activeSuggestionIndex = -1;
+
+        let filtered;
+        if (keyword.length === 0) {
+            // Show all job roles when no keyword
+            filtered = allRoles;
+        } else {
+            // Filter job roles locally
+            filtered = allRoles.filter(function(role) {
+                return role.name.toLowerCase().includes(keyword);
+            });
+        }
+
+        if (filtered.length === 0) {
+            suggestions.innerHTML = '<div class="job-role-no-results">No job roles found</div>';
+            suggestions.style.display = 'block';
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(function(role) {
+            html += '<div class="job-role-suggestion-item" data-id="' + role.id + '" data-name="' + role.name + '">' +
+                '<div class="role-name">' + role.name + '</div>' +
+                '</div>';
+        });
+
+        suggestions.innerHTML = html;
+        suggestions.style.display = 'block';
+    }
+
+    // Load all job roles first
+    const apiUrl = (window.siteUrl || window.location.origin) + '/ajax/job-roles';
+    fetch(apiUrl + '?k=')
+        .then(response => response.json())
+        .then(data => {
+            allRoles = data.data || [];
+            
+            // Show all roles on focus or click (like homepage)
+            roleInput.addEventListener('focus', function() {
+                const currentVal = this.value;
+                if (!currentVal) {
+                    showRoles('');
+                } else {
+                    showRoles(currentVal);
+                }
+            });
+
+            roleInput.addEventListener('click', function() {
+                const currentVal = this.value;
+                if (!currentVal) {
+                    showRoles('');
+                } else {
+                    showRoles(currentVal);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Job role load error:', error);
+        });
+
+    // Filter roles on input (like homepage)
+    roleInput.addEventListener('input', function() {
+        const keyword = this.value.trim().toLowerCase();
+
+        // Clear role selection when user types
+        if (keyword.length > 0) {
+            if (roleId) roleId.value = '';
+        }
+
+        if (searchTimeout) clearTimeout(searchTimeout);
+
+        searchTimeout = setTimeout(function() {
+            showRoles(keyword);
+        }, 100);
+    });
+
+    // Keyboard navigation
+    roleInput.addEventListener('keydown', function(e) {
+        const items = Array.from(suggestions.querySelectorAll('.job-role-suggestion-item:not([style*="display: none"])'));
+        
+        if (suggestions.style.display === 'none' || items.length === 0) {
+            if (e.key !== 'Escape' && e.key !== 'Tab') {
+                roleInput.click();
+            }
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, items.length - 1);
+            items.forEach(item => item.classList.remove('active'));
+            if (items[activeSuggestionIndex]) {
+                items[activeSuggestionIndex].classList.add('active');
+                items[activeSuggestionIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
+            items.forEach(item => item.classList.remove('active'));
+            if (activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
+                items[activeSuggestionIndex].classList.add('active');
+                items[activeSuggestionIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        } else if (e.key === 'Enter' && activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
+            e.preventDefault();
+            items[activeSuggestionIndex].click();
+        } else if (e.key === 'Escape') {
+            suggestions.style.display = 'none';
+        }
+    });
+
+    // Click on suggestion (like homepage)
+    suggestions.addEventListener('click', function(e) {
+        const item = e.target.closest('.job-role-suggestion-item');
+        if (item) {
+            const roleName = item.getAttribute('data-name');
+            
+            // Set job role as keyword (like homepage)
+            roleInput.value = roleName;
+            if (roleId) roleId.value = roleName;
+            suggestions.style.display = 'none';
+        }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.home-category-search-wrapper')) {
+            suggestions.style.display = 'none';
+        }
+    });
+});
+
+// Fallback: Initialize Job Location Search (City autocomplete like homepage)
+document.addEventListener('DOMContentLoaded', function() {
+    const locationInput = document.getElementById('home_city_search');
+    const cityId = document.getElementById('home_city_id');
+    const suggestions = document.getElementById('home-city-suggestions');
+    let searchTimeout = null;
+    let activeSuggestionIndex = -1;
+
+    if (!locationInput || !suggestions) return;
+
+    locationInput.addEventListener('input', function() {
+        const keyword = this.value.trim();
+        activeSuggestionIndex = -1;
+
+        if (cityId) cityId.value = '';
+
+        if (searchTimeout) clearTimeout(searchTimeout);
+
+        if (keyword.length < 2) {
+            suggestions.style.display = 'none';
+            suggestions.innerHTML = '';
+            return;
+        }
+
+        suggestions.innerHTML = '<div class="job-location-loading">Searching...</div>';
+        suggestions.style.display = 'block';
+
+        searchTimeout = setTimeout(function() {
+            const apiUrl = (window.siteUrl || window.location.origin) + '/ajax/search-cities';
+            
+            fetch(apiUrl + '?k=' + encodeURIComponent(keyword))
+                .then(response => response.json())
+                .then(data => {
+                    const cities = data.data || [];
+                    
+                    if (cities.length === 0) {
+                        suggestions.innerHTML = '<div class="job-location-no-results">No cities found</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    cities.forEach(function(city) {
+                        const locationParts = [];
+                        if (city.state_name) locationParts.push(city.state_name);
+                        if (city.country_name) locationParts.push(city.country_name);
+                        
+                        html += '<div class="job-location-suggestion-item" data-id="' + city.id + '" data-name="' + city.name + '">' +
+                            '<div class="city-name">' + city.name + '</div>' +
+                            (locationParts.length ? '<div class="city-location">' + locationParts.join(', ') + '</div>' : '') +
+                            '</div>';
+                    });
+
+                    suggestions.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('City search error:', error);
+                    suggestions.innerHTML = '<div class="job-location-no-results">Error searching cities</div>';
+                });
+        }, 300);
+    });
+
+    // Keyboard navigation
+    locationInput.addEventListener('keydown', function(e) {
+        const items = Array.from(suggestions.querySelectorAll('.job-location-suggestion-item'));
+        
+        if (suggestions.style.display === 'none' || items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, items.length - 1);
+            items.forEach(item => item.classList.remove('active'));
+            if (items[activeSuggestionIndex]) {
+                items[activeSuggestionIndex].classList.add('active');
+                items[activeSuggestionIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
+            items.forEach(item => item.classList.remove('active'));
+            if (activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
+                items[activeSuggestionIndex].classList.add('active');
+                items[activeSuggestionIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        } else if (e.key === 'Enter' && activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
+            e.preventDefault();
+            items[activeSuggestionIndex].click();
+        } else if (e.key === 'Escape') {
+            suggestions.style.display = 'none';
+        }
+    });
+
+    // Click on suggestion
+    suggestions.addEventListener('click', function(e) {
+        const item = e.target.closest('.job-location-suggestion-item');
+        if (item) {
+            const cityIdValue = item.getAttribute('data-id');
+            const cityName = item.getAttribute('data-name');
+            
+            if (cityId) cityId.value = cityIdValue;
+            locationInput.value = cityName;
+            suggestions.style.display = 'none';
+        }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.home-city-search-wrapper')) {
+            suggestions.style.display = 'none';
+        }
+    });
 });
 </script>

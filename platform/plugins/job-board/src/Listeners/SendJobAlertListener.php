@@ -648,6 +648,8 @@ class SendJobAlertListener
             $emailsFailed = 0;
             
             // SEND EMAILS DIRECTLY (not via queue) - ensures emails are sent immediately
+            // COMMENTED OUT: Job alert email notifications temporarily disabled
+            /*
             $totalJobSeekers = $jobSeekers->count();
             
             \Log::info('[JOB_ALERT] Sending ' . $totalJobSeekers . ' emails DIRECTLY (not queued)');
@@ -715,11 +717,26 @@ class SendJobAlertListener
                     'email' => ''
                 ];
             }
+            */
+            
+            // COMMENTED OUT: Job alert email notifications temporarily disabled
+            \Log::info('[JOB_ALERT] Job alert email notifications are currently disabled');
+            error_log('[JOB_ALERT] Job alert email notifications are currently disabled');
+            
+            // Return empty result since emails are disabled
+            return [
+                'emails_sent' => 0,
+                'emails_queued' => 0,
+                'emails_failed' => 0,
+                'job_seekers_list' => []
+            ];
 
+            /* ORIGINAL RETURN STATEMENT (COMMENTED OUT)
             return [
                 'emails_sent' => $emailsQueued, // Count of queued emails
                 'job_seekers_list' => $jobSeekersList
             ];
+            */
         } catch (\Exception $e) {
             \Log::error('Error in sendToAllJobSeekers: ' . $e->getMessage());
             error_log('[JOB_ALERT] Error in sendToAllJobSeekers: ' . $e->getMessage());

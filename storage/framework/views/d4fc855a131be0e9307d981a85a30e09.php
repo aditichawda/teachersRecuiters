@@ -6,6 +6,7 @@
     border: 1px solid #e2e8f0;
     border-radius: 14px;
     padding: 22px 24px;
+    padding-top: 22px;
     margin-bottom: 14px;
     display: flex;
     align-items: center;
@@ -32,6 +33,45 @@
 }
 .job-card-modern:hover::before {
     background: #0073d1;
+}
+.job-card-modern .job-featured-badge,
+.job-grid-modern .job-featured-badge {
+    position: absolute;
+    top: 10px;
+    right: 23px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 50px;
+    background: #ef3800;
+    color: #fff;
+    z-index: 10;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(239, 56, 0, 0.3);
+}
+.job-card-modern .job-female-preferred-badge,
+.job-grid-modern .job-female-preferred-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 50%, #be185d 100%);
+    color: #fff;
+    z-index: 10;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+}
+/* Stack badges when both exist - if featured exists, move female preferred down */
+.job-card-modern .job-featured-badge ~ .job-female-preferred-badge,
+.job-grid-modern .job-featured-badge ~ .job-female-preferred-badge {
+    top: 42px;
 }
 .job-card-modern .jcm-location-logo {
     display: flex;
@@ -140,6 +180,8 @@
     font-size: 15px;
     font-weight: 700;
     color: #0073d1;
+    position: relative;
+    top: 15px;
 }
 .job-card-modern .jcm-time {
     font-size: 12px;
@@ -171,6 +213,7 @@
     border: 1px solid #e2e8f0;
     border-radius: 14px;
     padding: 24px;
+    padding-top: 24px;
     height: 100%;
     transition: all .3s ease;
     display: flex;
@@ -314,5 +357,7 @@
     .job-grid-modern { padding: 18px; }
     .job-grid-modern .jgm-title { font-size: 15px; }
 }
+</style>
+
 </style>
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/jobs-card-styles.blade.php ENDPATH**/ ?>

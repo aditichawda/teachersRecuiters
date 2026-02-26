@@ -11,7 +11,7 @@
 @endphp
 
 <div class="twm-sidebar-ele-filter">
-    <h4 class="section-head-small mb-4">{{ __('Industry') }}</h4>
+    <h4 class="section-head-small mb-4">{{ __('Job Role') }}</h4>
     <ul>
         @foreach($categories as $category)
             <li>

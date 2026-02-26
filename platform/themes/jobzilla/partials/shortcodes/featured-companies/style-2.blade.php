@@ -10,7 +10,7 @@
     <!-- TITLE END-->
     <div class="container">
         <div class="section-content">
-            <div class="owl-carousel home-client-carousel3 owl-btn-vertical-center" style="background-color: aliceblue;">
+            <div class="owl-carousel home-client-carousel3 owl-btn-vertical-center">
                 @foreach ($companies as $company)
                     <div class="item">
                         <div class="ow-client-logo">

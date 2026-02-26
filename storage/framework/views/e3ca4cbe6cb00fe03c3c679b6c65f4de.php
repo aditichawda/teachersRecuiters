@@ -48,46 +48,6 @@
         padding: 30px;
     }
 
-    /* Login Method Tabs */
-    .login-methods {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 20px;
-        background: #f5f7fa;
-        padding: 6px;
-        border-radius: 10px;
-    }
-
-    .login-method-btn {
-        flex: 1;
-        padding: 5px 5px;
-        border: none;
-        background: transparent;
-        color: #666;
-        font-size: 13px;
-        font-weight: 600;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-
-    .login-method-btn:hover {
-        background: rgba(0, 115, 209, 0.1);
-        color: #0073d1;
-    }
-
-    .login-method-btn.active {
-        background: #0073d1;
-        color: #fff;
-    }
-
-    .login-method-btn i {
-        font-size: 16px;
-    }
 
     /* Login Forms */
     .login-form-section {
@@ -388,32 +348,20 @@
                 </div>
             <?php endif; ?>
 
-            <!-- Login Method Tabs -->
-            <div class="login-methods" id="login-tabs">
-                <button type="button" class="login-method-btn active" data-method="password">
-                    With Password
-                </button>
-                <button type="button" class="login-method-btn" data-method="email-otp">
-                    With Email OTP
-                </button>
-                <button type="button" class="login-method-btn" data-method="whatsapp-otp">
-                    With WhatsApp OTP
-                </button>
-            </div>
 
             <!-- Password Login Form -->
             <div class="login-form-section active" id="password-login">
                 <!-- Password Login Step 1 -->
                 <div id="password-login-step1">
-                    <?php echo $form
-                           ->modify('submit', 'submit', [
-                                'label' => __('Sign In'),
-                                'attr' => [
-                                    'class' => 'btn-login',
+                <?php echo $form
+                       ->modify('submit', 'submit', [
+                            'label' => __('Sign In'),
+                            'attr' => [
+                                'class' => 'btn-login',
                                     'id' => 'password-login-submit',
-                                ],
-                            ], true)
-                           ->renderForm(); ?>
+                            ],
+                        ], true)
+                       ->renderForm(); ?>
 
                 </div>
                 
@@ -446,8 +394,8 @@
                 </div>
             </div>
 
-            <!-- Email OTP Login Form -->
-            <div class="login-form-section" id="email-otp-login">
+            <!-- Email OTP Login Form (Hidden) -->
+            <div class="login-form-section" id="email-otp-login" style="display: none;">
                 <div id="email-otp-step1">
                     <form id="email-otp-form">
                         <div class="form-group">
@@ -488,8 +436,8 @@
                 </div>
             </div>
 
-            <!-- WhatsApp OTP Login Form -->
-            <div class="login-form-section" id="whatsapp-otp-login">
+            <!-- WhatsApp OTP Login Form (Hidden) -->
+            <div class="login-form-section" id="whatsapp-otp-login" style="display: none;">
                 <div id="whatsapp-otp-step1">
                     <form id="whatsapp-otp-form">
                         <div class="form-group">
@@ -566,28 +514,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = '<?php echo e(csrf_token()); ?>';
     
-    // Tab switching
-    const tabs = document.querySelectorAll('.login-method-btn');
-    const sections = document.querySelectorAll('.login-form-section');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const method = this.dataset.method;
-            
-            tabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-
-            sections.forEach(s => s.classList.remove('active'));
-            
-            if (method === 'password') {
-                document.getElementById('password-login').classList.add('active');
-            } else if (method === 'email-otp') {
-                document.getElementById('email-otp-login').classList.add('active');
-            } else if (method === 'whatsapp-otp') {
-                document.getElementById('whatsapp-otp-login').classList.add('active');
-            }
-        });
-    });
+    // Tab switching removed - only password login is available
 
     // Check if WhatsApp OTP was sent from password form
     <?php if(session('whatsapp_otp_sent')): ?>
@@ -846,44 +773,56 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // WhatsApp OTP Form
-    document.getElementById('whatsapp-otp-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const phone = document.getElementById('otp-phone').value;
-        const btn = document.getElementById('send-whatsapp-otp-btn');
-        
-        btn.disabled = true;
-        btn.innerHTML = '<i class="ti ti-loader me-2"></i>Sending...';
-
-        try {
-            const response = await fetch('<?php echo e(route("public.account.login.sendWhatsAppOtp")); ?>', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ phone })
-            });
-
-            const data = await response.json();
-
-            if (data.error) {
-                showAlert(data.message);
-            } else {
-                document.getElementById('display-phone').textContent = phone;
-                document.getElementById('whatsapp-otp-step1').style.display = 'none';
-                document.getElementById('whatsapp-otp-step2').style.display = 'block';
-                whatsappOtpInputs[0].focus();
-                startTimer(document.getElementById('whatsapp-timer'), document.getElementById('resend-whatsapp-otp'));
-                showAlert('OTP sent! Check WhatsApp.', 'success');
+    const whatsappOtpForm = document.getElementById('whatsapp-otp-form');
+    if (whatsappOtpForm) {
+        whatsappOtpForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const phone = document.getElementById('otp-phone').value.trim();
+            const btn = document.getElementById('send-whatsapp-otp-btn');
+            
+            if (!phone || phone.length < 10) {
+                showAlert('Please enter a valid WhatsApp number (minimum 10 digits)');
+                return;
             }
-        } catch (error) {
-            showAlert('An error occurred. Please try again.');
-        }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader me-2"></i>Sending...';
 
-        btn.disabled = false;
-        btn.innerHTML = '<i class="ti ti-brand-whatsapp me-2"></i>Send OTP to WhatsApp';
-    });
+            try {
+                const response = await fetch('<?php echo e(route("public.account.login.sendWhatsAppOtp")); ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ phone })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showAlert(data.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ti ti-brand-whatsapp me-2"></i>Send OTP to WhatsApp';
+                } else {
+                    document.getElementById('display-phone').textContent = phone;
+                    document.getElementById('whatsapp-otp-step1').style.display = 'none';
+                    document.getElementById('whatsapp-otp-step2').style.display = 'block';
+                    if (whatsappOtpInputs && whatsappOtpInputs.length > 0) {
+                        whatsappOtpInputs[0].focus();
+                    }
+                    startTimer(document.getElementById('whatsapp-timer'), document.getElementById('resend-whatsapp-otp'));
+                    showAlert('OTP sent! Check WhatsApp.', 'success');
+                }
+            } catch (error) {
+                console.error('WhatsApp OTP Error:', error);
+                showAlert('An error occurred. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ti ti-brand-whatsapp me-2"></i>Send OTP to WhatsApp';
+            }
+        });
+    }
 
     // Verify Email OTP
     document.getElementById('verify-email-otp-form').addEventListener('submit', async function(e) {

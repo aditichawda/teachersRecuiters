@@ -39,6 +39,7 @@ class AccountJobRequest extends JobRequest
             'apply_internal_emails.*' => ['nullable', 'email', 'max:255'],
             'apply_internal_phones' => ['nullable', 'array', 'max:3'],
             'apply_internal_phones.*' => ['nullable', 'string', 'max:20'],
+            'enable_whatsapp_notifications' => ['nullable', 'boolean'],
             'is_remote' => ['nullable'],
             'hide_company' => ['nullable'],
             'hide_salary' => ['nullable'],

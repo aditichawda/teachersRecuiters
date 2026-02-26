@@ -9,12 +9,11 @@
     ?>
     <div class="form-group mb-4">
         <h4 class="section-head-small mb-4"><?php echo e(__('Location')); ?></h4>
-        <select name="city_id" class="wt-select-bar-large selectpicker-location">
-            <option value=""><?php echo e(__('Select City')); ?></option>
-            <?php if($cityId && $cityName): ?>
-                <option value="<?php echo e($cityId); ?>" selected><?php echo e($cityName); ?></option>
-            <?php endif; ?>
-        </select>
+        <div class="job-city-search-wrapper" style="position: relative;">
+            <input type="text" name="city_search" id="job_city_search" class="wt-select-bar-large job-city-search-input" placeholder="<?php echo e(__('Select Your Location')); ?>" autocomplete="off" value="<?php echo e(request('city_search', $cityName)); ?>" />
+            <input type="hidden" name="city_id" id="job_city_id" value="<?php echo e($cityId); ?>" />
+            <div class="job-city-suggestions" id="job-city-suggestions" style="display: none;"></div>
+        </div>
     </div>
 <?php endif; ?>
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/jobs/filters/city.blade.php ENDPATH**/ ?>

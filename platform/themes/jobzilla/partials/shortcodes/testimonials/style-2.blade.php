@@ -1,3 +1,37 @@
+<style>
+.twm-testimonial-2-carousel .owl-item {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+.twm-testimonial-2-carousel .item {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var carousel = $('.twm-testimonial-2-carousel');
+    if (carousel.length && carousel.data('owl.carousel')) {
+        carousel.trigger('destroy.owl.carousel');
+    }
+    if (carousel.length) {
+        carousel.owlCarousel({
+            loop: true,
+            nav: true,
+            dots: false,
+            margin: 5,
+            autoplay: true,
+            navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+            responsive: {
+                0: { items: 1 },
+                480: { items: 1 },
+                991: { items: 1 },
+                1199: { items: 1 }
+            }
+        });
+    }
+});
+</script>
 <div class="section-full p-t5 p-b6 site-bg-gray twm-testimonial-2-area">
     <div class="section-head center wt-small-separator-outer">
         <div class="wt-small-separator site-text-primary">

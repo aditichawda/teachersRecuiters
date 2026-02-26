@@ -458,14 +458,6 @@
                         <div class="twm-candidates-list-wrap candidates-listing">
                             @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'), ['layout' => $layout])
                         </div>
-
-                        @if ($candidates instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                            <div class="row">
-                                <div class="col-lg-12 mt-4 pt-2">
-                                    {!! $candidates->withQueryString()->links(Theme::getThemeNamespace('partials.pagination')) !!}
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </div>
             </div>
