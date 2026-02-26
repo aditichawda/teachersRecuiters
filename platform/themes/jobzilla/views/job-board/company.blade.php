@@ -300,16 +300,6 @@
                 @if ($company->description)
                     <p class="cd-hero-desc">{{ Str::limit($company->description, 200) }}</p>
                 @endif
-                @php
-                    $admissionOpen = $company->admission && $company->admission->status === 'published' && trim($company->admission->content ?? '') !== '' && $company->admission->admission_deadline && !\Carbon\Carbon::parse($company->admission->admission_deadline)->endOfDay()->isPast();
-                @endphp
-                @if ($admissionOpen)
-                <div class="mt-3">
-                    <button type="button" class="btn btn-primary px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#admissionEnquiryModal" style="background: linear-gradient(135deg, #059669, #047857); border: none;">
-                        <i class="fas fa-graduation-cap me-2"></i>{{ __('Admission Enquiry') }}
-                    </button>
-                </div>
-                @endif
             </div>
         </div>
     </div>
@@ -318,12 +308,6 @@
 {{-- Main Content --}}
 <div class="cd-main">
     <div class="container">
-        @if(session('success_msg'))
-            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">{{ session('success_msg') }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
-        @endif
-        @if(session('error_msg'))
-            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">{{ session('error_msg') }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
-        @endif
         <a href="{{ JobBoardHelper::getJobcompaniesPageURL() }}" class="cd-back-btn">← {{ __('Back to companies') }}</a>
 
         <div class="row">
@@ -377,19 +361,6 @@
                     <div class="cd-content-card">
                         {!! Theme::partial('companies.reviews', compact('company', 'canReviewCompany')) !!}
                     </div>
-                @endif
-
-                {{-- Admission Section + Enquiry Form: only when employer has added About School/Institution and deadline has not passed --}}
-                @if ($admissionOpen)
-                <div class="cd-content-card">
-                    <h4 class="cd-section-title">{{ __('Get Admission with :name', ['name' => $company->name]) }}</h4>
-                    <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;">{{ __('About School / Institution') }}</h5>
-                    <p class="text-muted small mb-2" style="font-size: 0.85rem;">{{ __('Details added by the institution for admission.') }}</p>
-                    <div class="mb-4" style="color: #475569; line-height: 1.6;">{!! BaseHelper::clean($company->admission->content) !!}</div>
-                    <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;">{{ __('Enquiry Form') }}</h5>
-                    <p class="text-muted small mb-3">{{ __('Submit your admission enquiry using the form below or use the button above.') }}</p>
-                    @include(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company])
-                </div>
                 @endif
             </div>
 
@@ -488,30 +459,3 @@
         @endif
     </div>
 </div>
-
-{{-- Admission Enquiry Modal - only when admission is open (content + deadline not passed) --}}
-@if (isset($admissionOpen) && $admissionOpen)
-<style>
-#admissionEnquiryModal .modal-dialog { max-width: 520px; }
-#admissionEnquiryModal .modal-body { padding: 1rem 1.25rem 1.5rem; }
-#admissionEnquiryModal .admission-enquiry-form .form-label { font-weight: 600; color: #334155; margin-bottom: 6px; font-size: 0.9rem; }
-#admissionEnquiryModal .admission-enquiry-form .form-control,
-#admissionEnquiryModal .admission-enquiry-form .form-select { border-radius: 8px; border: 1px solid #e2e8f0; padding: 8px 12px; font-size: 0.95rem; }
-#admissionEnquiryModal .admission-enquiry-form .btn-primary { border-radius: 8px; padding: 10px 20px; font-weight: 600; }
-</style>
-<div class="modal fade" id="admissionEnquiryModal" tabindex="-1" aria-labelledby="admissionEnquiryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-3">
-            <div class="modal-header border-0 pb-0 pt-4 px-4">
-                <h5 class="modal-title" id="admissionEnquiryModalLabel">
-                    <i class="fas fa-graduation-cap me-2 text-success"></i>{{ __('Admission Enquiry') }} - {{ $company->name }}
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                @include(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company])
-            </div>
-        </div>
-    </div>
-</div>
-@endif

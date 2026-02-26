@@ -1,4 +1,4 @@
-@php
+-size@php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
@@ -295,29 +295,6 @@
                             </div> --}}
                         </div>
                         <div class="extra-cell">
-                            <style>
-                            /* Fix button alignment */
-                            .header-nav-btn-section {
-                                display: flex !important;
-                                align-items: center !important;
-                            }
-                            .twm-nav-btn-left,
-                            .twm-nav-btn-right {
-                                display: flex !important;
-                                align-items: center !important;
-                            }
-                            .twm-nav-sign-up,
-                            .twm-nav-post-a-job {
-                                display: flex !important;
-                                align-items: center !important;
-                                vertical-align: middle !important;
-                            }
-                            .twm-nav-sign-up i,
-                            .twm-nav-post-a-job i {
-                                display: flex !important;
-                                align-items: center !important;
-                            }
-                            </style>
                             <div class="header-nav-btn-section">
                                 @if (auth('account')->check() && $account = auth('account')->user())
                                     <div>
@@ -359,7 +336,8 @@
                                                 <li>
                                                     {!! Form::open([
                                                         'route' => 'public.account.logout',
-                                                        'id' => 'logout-form']) !!}
+                                                        'id' => 'logout-form',
+                                                        'onsubmit' => 'return false;']) !!}
                                                         <button type="button" class="dropdown-item" id="logout-btn">
                                                             <i class="feather-log-out"></i>
                                                             <span>{{ __('Logout') }}</span>
@@ -373,7 +351,7 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <!-- Login Button -->
                                         <div class="twm-nav-btn-left">
-                                            <a class="twm-nav-sign-up" href="{{ route('public.account.login') }}">
+                                            <a class="twm-nav-sign-up d-inline-block" href="{{ route('public.account.login') }}">
                                                 <i class="feather-log-in"></i>
                                                 <span>{{ __('Login') }}</span>
                                             </a>
@@ -927,17 +905,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    /* padding: 12px; */
-    /* background: #fff; */
-    /* border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); */
-    /* transition: all 0.3s ease; */
+    padding: 12px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
 }
 
-/* .home-client-carousel3 .ow-client-logo:hover {
+.home-client-carousel3 .ow-client-logo:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     transform: translateY(-3px);
-} */
+}
 
 .home-client-carousel3 .client-logo {
     max-width: 100% !important;
@@ -1275,100 +1253,91 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(initNavbarScroll, 500);
 })();
 
-// Logout Button Handler - Enhanced with better dialog system detection
+// Logout Button Handler - Simplified and more reliable
 (function() {
-    function waitForDialogSystem(callback, maxAttempts) {
-        maxAttempts = maxAttempts || 50; // 5 seconds max (50 * 100ms)
-        let attempts = 0;
-        
-        function check() {
-            attempts++;
-            if (typeof window.showDialogConfirm === 'function' && typeof jQuery !== 'undefined') {
-                callback();
-            } else if (attempts < maxAttempts) {
-                setTimeout(check, 100);
-            } else {
-                // Fallback after max attempts
-                console.warn('Dialog system not loaded, using native confirm');
-                callback(true); // Pass true to indicate fallback
-            }
+                function showLogoutDialog() {
+        // Try custom dialog first
+                    if (typeof window.showDialogConfirm === 'function') {
+                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                            if (confirmed) {
+                    const logoutForm = document.getElementById('logout-form');
+                    if (logoutForm) {
+                                logoutForm.submit();
+                            }
+                }
+            }).catch(function(error) {
+                console.error('Dialog error:', error);
+                // Fallback to native confirm
+                if (confirm('Do you want to logout?')) {
+                    const logoutForm = document.getElementById('logout-form');
+                    if (logoutForm) {
+                                        logoutForm.submit();
+                    }
+                                    }
+                                });
+                            } else {
+            // Use native confirm as fallback
+                                if (confirm('Do you want to logout?')) {
+                const logoutForm = document.getElementById('logout-form');
+                if (logoutForm) {
+                                    logoutForm.submit();
+                                }
+                            }
         }
-        check();
     }
     
     function initLogoutHandler() {
         const logoutBtn = document.getElementById('logout-btn');
         const logoutForm = document.getElementById('logout-form');
         
-        if (logoutBtn && logoutForm) {
-            // Check if already initialized
-            if (logoutBtn.dataset.dialogInitialized === 'true') {
-                return; // Already initialized
-            }
-            logoutBtn.dataset.dialogInitialized = 'true';
-            
-            // Remove any existing listeners by cloning
-            const newBtn = logoutBtn.cloneNode(true);
-            newBtn.dataset.dialogInitialized = 'true';
-            logoutBtn.parentNode.replaceChild(newBtn, logoutBtn);
-            
-            // Store allowSubmit flag
-            let allowSubmit = false;
-            
-            // Prevent form submission unless allowed
-            const submitHandler = function(e) {
-                if (!allowSubmit) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    return false;
-                }
-            };
-            logoutForm.addEventListener('submit', submitHandler, true);
-            
-            newBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                
-                // Wait for dialog system
-                waitForDialogSystem(function(useFallback) {
-                    if (useFallback) {
-                        // Use native confirm as fallback
-                        if (confirm('Do you want to logout?')) {
-                            allowSubmit = true;
-                            logoutForm.submit();
-                        }
-                    } else {
-                        // Use custom dialog
-                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
-                            if (confirmed) {
-                                allowSubmit = true;
-                                logoutForm.removeEventListener('submit', submitHandler, true);
-                                logoutForm.submit();
-                            }
-                        });
-                    }
-                });
-                
-                return false;
-            }, true); // Use capture phase
-        } else if (!logoutBtn || !logoutForm) {
+        if (!logoutBtn || !logoutForm) {
             // Retry if elements not found yet
             setTimeout(initLogoutHandler, 200);
+            return;
         }
+        
+        // Check if already initialized
+        if (logoutBtn.dataset.dialogInitialized === 'true') {
+            return; // Already initialized
+        }
+        
+        logoutBtn.dataset.dialogInitialized = 'true';
+        
+        // Remove any existing listeners by cloning
+        const newBtn = logoutBtn.cloneNode(true);
+        newBtn.dataset.dialogInitialized = 'true';
+        logoutBtn.parentNode.replaceChild(newBtn, logoutBtn);
+        
+        // Prevent default form submission
+        logoutForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            return false;
+        }, true);
+        
+        // Add click handler
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            showLogoutDialog();
+            return false;
+        });
+        
+        console.log('Logout handler initialized successfully');
     }
     
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initLogoutHandler, 300);
+            setTimeout(initLogoutHandler, 100);
         });
     } else {
         // DOM already loaded
-        setTimeout(initLogoutHandler, 300);
+        setTimeout(initLogoutHandler, 100);
     }
     
     // Also try after a longer delay to ensure all scripts are loaded
-    setTimeout(initLogoutHandler, 1000);
+    setTimeout(initLogoutHandler, 500);
+    setTimeout(initLogoutHandler, 1500);
 })();
 </script>

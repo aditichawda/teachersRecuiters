@@ -360,10 +360,9 @@
                         </div>
                     </div>
 
-                    
                     <!-- State (Auto-filled) -->
                     <div class="form-group">
-                        <label class="form-label">State</label>
+                        <label class="form-label">State <span class="optional">(Auto-filled)</span></label>
                         <select name="state_id" id="state_id" class="form-select" disabled>
                             <option value="">Select State</option>
                         </select>
@@ -371,7 +370,7 @@
 
                     <!-- Country (Auto-filled) -->
                     <div class="form-group">
-                        <label class="form-label">Country</label>
+                        <label class="form-label">Country <span class="optional">(Auto-filled)</span></label>
                         <select name="country_id" id="country_id" class="form-select" disabled>
                             <option value="">Select Country</option>
                             @php

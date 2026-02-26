@@ -212,47 +212,9 @@
     font-size: 16px;
 }
 
-/* Main Content Area – ensure right column always visible */
-.js-settings-main-col {
-    display: block !important;
-    min-width: 280px;
-}
+/* Main Content Area */
 .js-main-content {
     padding: 0 0 40px 0px;
-    width: 100%;
-    display: block !important;
-}
-/* Wallet page: ensure theme CSS does not hide or clip content */
-.js-main-content-wallet {
-    overflow: visible !important;
-    min-height: 0 !important;
-}
-.js-main-content-wallet .wallet-js-page,
-.js-main-content-wallet .wallet-js-page * {
-    visibility: visible !important;
-}
-.js-main-content-wallet .wallet-js-page .row {
-    display: flex !important;
-    flex-wrap: wrap !important;
-}
-.js-main-content-wallet .wallet-js-page .card {
-    display: block !important;
-}
-.js-main-content-wallet .wallet-js-page [class*="col-"] {
-    display: block !important;
-}
-@media (min-width: 768px) {
-    .js-main-content-wallet .wallet-js-page .col-md-4 {
-        display: block !important;
-        width: 33.333333% !important;
-    }
-}
-@media (min-width: 992px) {
-    .js-main-content-wallet .wallet-js-page .col-lg-5 { width: 41.666667% !important; flex: 0 0 41.666667% !important; }
-    .js-main-content-wallet .wallet-js-page .col-lg-6 { width: 50% !important; }
-    .js-main-content-wallet .wallet-js-page .col-lg-7 { width: 58.333333% !important; flex: 1 1 58.333333% !important; min-width: 280px !important; }
-    .js-main-content-wallet .wallet-js-page .col-xl-4 { width: 33.333333% !important; }
-    .js-main-content-wallet .wallet-js-page .col-xl-8 { width: 66.666667% !important; flex: 1 1 66.666667% !important; min-width: 280px !important; }
 }
 
 .js-page-header {
@@ -534,7 +496,72 @@
 }
 </style>
 
-@stack('header')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<!-- Dashboard Header -->
+<div class="enl-header">
+    <div class="enl-header-inner">
+        <!-- Logo -->
+        <div class="enl-header-logo">
+            @if (Theme::getLogo())
+                <a href="{{ BaseHelper::getHomepageUrl() }}">
+                    {!! Theme::getLogoImage([], 'logo_light', 44) !!}
+                </a>
+            @endif
+        </div>
+
+        <!-- Right -->
+        <div class="enl-header-right" style="display: flex; align-items: center; gap: 20px;">
+            <!-- Nav Items Next to User -->
+            <ul class="enl-header-nav" style="margin: 0; padding: 0;">
+                <!-- Home Icon -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="{{ BaseHelper::getHomepageUrl() }}" title="{{ __('Home') }}">
+                        <i class="feather-home" style="font-size: 20px !important;"></i>
+                    </a>
+                </li>
+                
+                <!-- FAQ -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black;" href="{{ route('public.faq') }}">
+                        <span>{{ __('FAQ') }}</span>
+                    </a>
+                </li>
+
+                <!-- Plans -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black;" href="{{ route('public.premium-service') }}">
+                        <span>{{ __('Plans') }}</span>
+                    </a>
+                </li>
+
+                <!-- Notifications -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black; font-size: 20px !important;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                        <i class="feather-bell" style="font-size: 20px !important;"></i>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="enl-header-user">
+                <button class="enl-header-user-btn" onclick="document.getElementById('jsUserDropdown').classList.toggle('show')">
+                    <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}">
+                    <span>{{ $account->first_name ?? $account->name }}</span>
+                    <i class="fa fa-chevron-down"></i>
+                </button>
+                <div class="enl-header-dropdown" id="jsUserDropdown">
+                    <a href="{{ route('public.account.jobseeker.dashboard') }}"><i class="fa fa-home"></i> Dashboard</a>
+                    <a href="{{ route('public.account.settings') }}"><i class="fa fa-cog"></i> Settings</a>
+                    <a href="{{ route('public.account.security') }}"><i class="fa fa-lock"></i> Security</a>
+                    <hr>
+                    <a href="{{ route('public.account.logout') }}" id="logout-link-js" onclick="event.preventDefault(); handleLogoutClick(event);"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="logout-form-js" style="display:none;" action="{{ route('public.account.logout') }}" method="POST">@csrf</form>
 
 <div class="js-settings-page crop-avatar">
     <div class="container">
@@ -567,7 +594,7 @@
                                     <i class="fa fa-external-link-alt"></i> {{ __('View Profile') }}
                                 </a>
                             @else
-                                <a href="{{ url(route('public.account.settings')) }}" target="_self" class="js-view-profile-btn js-view-profile-edit">
+                                <a href="{{ route('public.account.settings') }}" class="js-view-profile-btn js-view-profile-edit">
                                     <i class="fa fa-user-edit"></i> {{ __('Complete profile for public link') }}
                                 </a>
                             @endif
@@ -575,19 +602,11 @@
                     </div>
                     
                     <!-- Wallet -->
-                    @if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
-                    <a href="{{ url(route('public.account.jobseeker.wallet')) }}" target="_self" class="js-wallet-badge text-decoration-none d-block" style="cursor: pointer; color: inherit;">
-                        <i class="fa fa-wallet"></i>
-                        <span>{{ __('Available Coins') }}:</span>
-                        <span class="js-wallet-points">{{ format_credits_short($account->credits ?? 0) }}</span>
-                    </a>
-                    @else
                     <div class="js-wallet-badge" onclick="document.getElementById('profileModal').style.display='flex'">
                         <i class="fa fa-wallet"></i>
                         <span>Reward Points:</span>
                         <span class="js-wallet-points">{{ $walletPoints }}</span>
                     </div>
-                    @endif
 
                     <!-- Navigation -->
                     @php
@@ -595,13 +614,13 @@
                     @endphp
                     <ul class="js-sidebar-nav">
                         <li><a href="{{ route('public.account.jobseeker.dashboard') }}" @class(['active' => $currentUrl == route('public.account.jobseeker.dashboard')])><i class="fa fa-home"></i> Dashboard</a></li>
-                        <li><a href="{{ url(route('public.account.settings')) }}" target="_self" @class(['active' => $currentUrl == route('public.account.settings')])><i class="fa fa-user"></i> My Profile</a></li>
+                        <li><a href="{{ route('public.account.settings') }}" @class(['active' => $currentUrl == route('public.account.settings')])><i class="fa fa-user"></i> My Profile</a></li>
                         <li><a href="{{ route('public.account.jobs.saved') }}" @class(['active' => $currentUrl == route('public.account.jobs.saved')])><i class="fa fa-bookmark"></i> Saved Jobs</a></li>
                         <li><a href="{{ route('public.account.jobs.applied-jobs') }}" @class(['active' => $currentUrl == route('public.account.jobs.applied-jobs')])><i class="fa fa-file-alt"></i> Applied Jobs</a></li>
                         <li><a href="{{ route('public.account.experiences.index') }}" @class(['active' => str_contains($currentUrl, 'experience')])><i class="fa fa-briefcase"></i> Experience</a></li>
                         <li><a href="{{ route('public.account.educations.index') }}" @class(['active' => str_contains($currentUrl, 'education')])><i class="fa fa-graduation-cap"></i> Education</a></li>
                         <li><a href="{{ route('public.account.interests-achievements') }}" @class(['active' => str_contains($currentUrl, 'interests-achievements')])><i class="fa fa-star"></i> Interests & Achievements</a></li>
-                        <li>@if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())<a href="{{ url(route('public.account.jobseeker.wallet')) }}" target="_self" @class(['active' => $currentUrl == url(route('public.account.jobseeker.wallet'))])><i class="fa fa-wallet"></i> Wallet <span style="background:#0073d1;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ format_credits_short($account->credits ?? 0) }}</span></a>@else<a href="#" @class(['active' => false])><i class="fa fa-wallet"></i> Wallet <span style="background:#0073d1;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $walletPoints }}</span></a>@endif</li>
+                        <li><a href="#" @class(['active' => false])><i class="fa fa-wallet"></i> Wallet <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $walletPoints }}</span></a></li>
                         <li><a href="{{ route('public.account.resume-builder') }}" @class(['active' => str_contains($currentUrl, 'resume-builder')])><i class="fa fa-file-pdf"></i> Resume Builder</a></li>
                         <li><a href="{{ route('public.account.security') }}" @class(['active' => $currentUrl == route('public.account.security')])><i class="fa fa-lock"></i> Security</a></li>
                     </ul>
@@ -609,8 +628,8 @@
             </div>
             
             <!-- Main Content -->
-            <div class="col-lg-9 col-md-8 js-settings-main-col">
-                <div class="js-main-content {{ !empty($is_wallet_page) ? 'js-main-content-wallet' : '' }}">
+            <div class="col-lg-9 col-md-8">
+                <div class="js-main-content">
                     @yield('content')
                 </div>
             </div>
@@ -698,7 +717,7 @@
         </div>
 
         @if($completion < 100)
-            <a href="{{ url(route('public.account.settings')) }}" target="_self" class="pm-complete-btn">
+            <a href="{{ route('public.account.settings') }}" class="pm-complete-btn">
                 <i class="fa fa-user-edit"></i> Complete Your Profile
             </a>
         @else
