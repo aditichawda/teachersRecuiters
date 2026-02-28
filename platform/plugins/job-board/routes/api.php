@@ -168,4 +168,10 @@ Route::group([
             Route::get('/cities/{stateId}', 'LocationController@cities')->wherePrimaryKey('stateId');
         });
     }
+
+    // WhatsApp Template Testing Route (for debugging)
+    Route::group(['prefix' => 'whatsapp'], function (): void {
+        Route::get('/test-template/{templateName?}', 'WhatsAppController@testTemplate');
+        Route::get('/test-all-templates', 'WhatsAppController@testAllTemplates');
+    });
 });

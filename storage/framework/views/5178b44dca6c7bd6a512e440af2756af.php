@@ -486,9 +486,20 @@
 
                 <div class="d-flex align-items-center gap-3 flex-wrap mb-3">
                     <div class="jd-hero-salary"><?php echo e(JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text); ?></div>
-                    <?php if(! $job->never_expired && $job->expire_date): ?>
+                    <?php
+                        // Use application_closing_date if available, otherwise use expire_date
+                        // application_closing_date is the date when applications close
+                        // expire_date is when the job posting expires
+                        $closingDate = null;
+                        if ($job->application_closing_date) {
+                            $closingDate = $job->application_closing_date;
+                        } elseif ($job->expire_date && !$job->never_expired) {
+                            $closingDate = $job->expire_date;
+                        }
+                    ?>
+                    <?php if($closingDate): ?>
                         <span class="jd-hero-expires">
-                            <i class="feather-calendar"></i> <?php echo e(__('Expires')); ?>: <?php echo e(Theme::formatDate($job->expire_date)); ?>
+                            <i class="feather-calendar"></i> <?php echo e(__('Expires')); ?>: <?php echo e(Theme::formatDate($closingDate)); ?>
 
                         </span>
                     <?php endif; ?>
@@ -575,15 +586,181 @@
                     </div>
                 <?php endif; ?>
 
-                <?php if($job->content): ?>
-                    <div class="jd-content-card">
-                        <h4 class="jd-section-title"><?php echo e(__('Job Details')); ?></h4>
-                        <div class="ck-content">
+                
+                <div class="jd-content-card">
+                    <h4 class="jd-section-title"><?php echo e(__('Job Details')); ?></h4>
+                    
+                    <?php if($job->content): ?>
+                        <div class="ck-content" style="margin-bottom: 30px;">
                             <?php echo BaseHelper::clean($job->content); ?>
 
                         </div>
+                    <?php endif; ?>
+
+                    
+                    <div class="job-details-list" style="display: grid; gap: 20px;">
+                        <?php if($job->number_of_positions): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Number of Positions')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($job->number_of_positions); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->jobShift && $job->jobShift->name): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Job Shift')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($job->jobShift->name); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->functionalArea && $job->functionalArea->name): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Functional Area')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($job->functionalArea->name); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->degreeLevel && $job->degreeLevel->name): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Degree Level')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($job->degreeLevel->name); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->required_certifications): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Required Certifications')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <?php
+                                        $certifications = is_array($job->required_certifications) 
+                                            ? $job->required_certifications 
+                                            : (is_string($job->required_certifications) ? json_decode($job->required_certifications, true) : [$job->required_certifications]);
+                                        $certifications = array_filter((array)$certifications);
+                                    ?>
+                                    <?php if(!empty($certifications)): ?>
+                                        <?php echo e(implode(', ', array_map('trim', $certifications))); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e($job->required_certifications); ?>
+
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->gender_preference): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Gender Preference')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e(ucfirst(str_replace('_', ' ', $job->gender_preference))); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->marital_status_preference): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Marital Status Preference')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e(ucfirst(str_replace('_', ' ', $job->marital_status_preference))); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->language_proficiency): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Language Proficiency')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <?php
+                                        $languages = is_array($job->language_proficiency) 
+                                            ? $job->language_proficiency 
+                                            : (is_string($job->language_proficiency) ? json_decode($job->language_proficiency, true) : [$job->language_proficiency]);
+                                        $languages = array_filter((array)$languages);
+                                    ?>
+                                    <?php if(!empty($languages)): ?>
+                                        <?php echo e(implode(', ', array_map('trim', $languages))); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e($job->language_proficiency); ?>
+
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->address): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Address')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($job->address); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->zip_code): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Zip Code')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($job->zip_code); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->is_remote): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Work Type')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e(__('Remote')); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->is_freelance): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Job Type')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e(__('Freelance')); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->start_date): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Start Date')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e(Theme::formatDate($job->start_date)); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->application_closing_date): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Application Closing Date')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e(Theme::formatDate($job->application_closing_date)); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->application_location_type): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Application Location Type')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e(ucfirst(str_replace('_', ' ', $job->application_location_type))); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->application_locations): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Application Locations')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <?php
+                                        $locations = is_array($job->application_locations) 
+                                            ? $job->application_locations 
+                                            : (is_string($job->application_locations) ? json_decode($job->application_locations, true) : [$job->application_locations]);
+                                        $locations = array_filter((array)$locations);
+                                    ?>
+                                    <?php if(!empty($locations)): ?>
+                                        <?php echo e(implode(', ', array_map('trim', $locations))); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e($job->application_locations); ?>
+
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($job->job_type_category): ?>
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Job Type Category')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($job->job_type_category); ?></span>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                <?php endif; ?>
+                </div>
 
                 
                 <div class="jd-share">
@@ -644,7 +821,7 @@
                             <span class="jd-info-icon"><i class="fas fa-file-signature"></i></span>
                             <div class="jd-info-text">
                                 <div class="jd-info-label"><?php echo e(__('Applicants')); ?></div>
-                                <div class="jd-info-value"><?php echo e($job->number_of_positions); ?></div>
+                                <div class="jd-info-value"><?php echo e($job->number_of_applied ?? $job->applicants_count ?? 0); ?></div>
                             </div>
                         </li>
                         <li>

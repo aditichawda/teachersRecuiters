@@ -52,25 +52,46 @@ document.addEventListener('DOMContentLoaded', function() {
         var step1 = document.getElementById('apply-step-1');
         if (step1) step1.style.display = 'block';
         if (list) list.innerHTML = '';
-        if (wrap) {
-            wrap.style.display = 'none';
-            wrap.classList.remove('loading');
-        }
+        
         var jobIdInput = applyNow.querySelector('input[name="job_id"]') || applyNow.querySelector('.modal-job-id');
         if (jobIdInput) jobIdInput.value = jobId || '';
-        if (!jobId) return;
+        if (!jobId) {
+            if (wrap) {
+                wrap.style.display = 'none';
+                wrap.classList.remove('loading');
+            }
+            return;
+        }
         
-        // Show loader
+        // Show loader immediately - ensure element is visible first
         if (wrap) {
+            // Remove loading class first
+            wrap.classList.remove('loading');
+            // Make element visible
             wrap.style.display = 'block';
-            wrap.classList.add('loading');
+            wrap.style.visibility = 'visible';
+            wrap.style.opacity = '1';
+            wrap.style.position = 'relative';
+            wrap.style.minHeight = '200px';
+            // Force reflow to ensure display change is applied
+            void wrap.offsetHeight;
+            // Add loading class after a tiny delay to ensure styles are applied
+            setTimeout(function() {
+                if (wrap) {
+                    wrap.classList.add('loading');
+                }
+            }, 10);
         }
         
         fetch(screeningUrl + '/' + jobId, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 // Hide loader
-                if (wrap) wrap.classList.remove('loading');
+                if (wrap) {
+                    wrap.classList.remove('loading');
+                    // Reset inline styles
+                    wrap.style.minHeight = '';
+                }
                 
                 var questions = data.questions || [];
                 if (questions.length === 0) {
@@ -163,6 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (wrap) {
                     wrap.classList.remove('loading');
                     wrap.style.display = 'none';
+                    wrap.style.minHeight = '';
                 }
                 console.error('Error loading screening questions:', error);
             });
@@ -201,15 +223,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            console.log('Form submitted, jobId:', jobId, 'Stored button:', modalTriggerButton);
+            console.log('[JOB_APPLY] ========== Application Form Submit Started ==========');
+            console.log('[JOB_APPLY] Job ID:', jobId);
+            console.log('[JOB_APPLY] Form URL:', form.action || '<?php echo e(route("public.job.apply")); ?>');
+            console.log('[JOB_APPLY] Stored button reference:', modalTriggerButton);
 
             if (submitBtn) {
                 submitBtn.disabled = true;
                 if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = '<?php echo e(__("Sending...")); ?>';
+                console.log('[JOB_APPLY] Submit button disabled and label changed to "Sending..."');
             }
 
             var formData = new FormData(form);
             var applyUrl = form.action || '<?php echo e(route("public.job.apply")); ?>';
+            
+            // Log form data (excluding sensitive info)
+            var formDataEntries = [];
+            for (var pair of formData.entries()) {
+                var key = pair[0];
+                var value = pair[1];
+                // Don't log file contents, just file names
+                if (value instanceof File) {
+                    formDataEntries.push([key, 'File: ' + value.name + ' (' + value.size + ' bytes)']);
+                } else {
+                    formDataEntries.push([key, value]);
+                }
+            }
+            console.log('[JOB_APPLY] Form data:', formDataEntries);
+            
+            console.log('[JOB_APPLY] Sending POST request to:', applyUrl);
+            var requestStartTime = Date.now();
 
             fetch(applyUrl, {
                 method: 'POST',
@@ -217,20 +260,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
             })
             .then(function(r) {
-                console.log('Response status:', r.status, r.statusText);
+                var requestTime = Date.now() - requestStartTime;
+                console.log('[JOB_APPLY] Response received in', requestTime + 'ms');
+                console.log('[JOB_APPLY] Response status:', r.status, r.statusText);
+                console.log('[JOB_APPLY] Response headers:', Object.fromEntries(r.headers.entries()));
+                
                 if (!r.ok) {
                     return r.json().then(function(d) { 
-                        console.error('Response error:', d);
+                        console.error('[JOB_APPLY] ❌ Response error:', d);
+                        console.error('[JOB_APPLY] Error details:', {
+                            status: r.status,
+                            statusText: r.statusText,
+                            error: d.error,
+                            message: d.message,
+                            data: d.data
+                        });
                         throw new Error(d && d.message ? d.message : 'Request failed'); 
                     });
                 }
                 return r.json();
             })
             .then(function(data) {
-                console.log('Response data received:', data);
-                console.log('data.error:', data ? data.error : 'data is null');
-                console.log('data type:', typeof data);
-                console.log('data keys:', data ? Object.keys(data) : 'no keys');
+                console.log('[JOB_APPLY] ========== Response Data Received ==========');
+                console.log('[JOB_APPLY] Full response:', data);
+                console.log('[JOB_APPLY] Response structure:', {
+                    'data.error': data ? data.error : 'data is null',
+                    'data.success': data ? data.success : 'N/A',
+                    'data.message': data ? data.message : 'N/A',
+                    'data.data': data ? data.data : 'N/A',
+                    'data type': typeof data,
+                    'data keys': data ? Object.keys(data) : 'no keys'
+                });
                 
                 // Check multiple possible success formats
                 var isSuccess = false;
@@ -253,11 +313,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                console.log('Is success?', isSuccess);
+                console.log('[JOB_APPLY] Success check result:', isSuccess);
                 
                 if (isSuccess) {
-                    console.log('✅ Application successful, jobId:', jobId);
-                    console.log('✅ Stored button reference:', modalTriggerButton);
+                    console.log('[JOB_APPLY] ✅ ========== APPLICATION SUCCESSFUL ==========');
+                    console.log('[JOB_APPLY] ✅ Job ID:', jobId);
+                    console.log('[JOB_APPLY] ✅ Success message:', data.message || 'Application submitted successfully');
+                    console.log('[JOB_APPLY] ✅ Stored button reference:', modalTriggerButton);
+                    console.log('[JOB_APPLY] ✅ Response data:', data);
                     
                     // Function to update button - simplified and more reliable
                     function updateApplyButton(btn) {
@@ -489,19 +552,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 500);
                 } else {
                     // Reset button on error
-                    console.error('❌ Application failed. Response:', data);
+                    console.error('[JOB_APPLY] ❌ ========== APPLICATION FAILED ==========');
+                    console.error('[JOB_APPLY] ❌ Full error response:', data);
+                    console.error('[JOB_APPLY] ❌ Error details:', {
+                        error: data ? data.error : 'unknown',
+                        message: data ? data.message : 'No message',
+                        data: data ? data.data : null,
+                        errors: data ? data.errors : null
+                    });
+                    
                     if (submitBtn) {
                         submitBtn.disabled = false;
                         if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
+                        console.log('[JOB_APPLY] Submit button re-enabled');
                     }
+                    
                     var errorMsg = (data && data.message) ? data.message : '<?php echo e(__("Application failed. Please try again.")); ?>';
-                    console.error('Error message:', errorMsg);
-                    if (typeof Botble !== 'undefined') Botble.showError(errorMsg);
+                    console.error('[JOB_APPLY] Error message to display:', errorMsg);
+                    
+                    if (typeof Botble !== 'undefined') {
+                        Botble.showError(errorMsg);
+                        console.log('[JOB_APPLY] Error displayed to user via Botble.showError');
+                    } else {
+                        console.warn('[JOB_APPLY] Botble is not defined, cannot show error message');
+                    }
                 }
             })
             .catch(function(error) {
-                console.error('❌ Fetch error:', error);
-                console.error('Error stack:', error.stack);
+                console.error('[JOB_APPLY] ❌ ========== FETCH ERROR ==========');
+                console.error('[JOB_APPLY] ❌ Error type:', error.name);
+                console.error('[JOB_APPLY] ❌ Error message:', error.message);
+                console.error('[JOB_APPLY] ❌ Error stack:', error.stack);
+                console.error('[JOB_APPLY] ❌ Full error object:', error);
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
@@ -774,6 +856,66 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     #applyNow .modal-body::-webkit-scrollbar-thumb:hover {
         background: #555;
+    }
+    /* Screening Questions Loader - Blue Spinner */
+    #job-screening-questions-wrap.loading {
+        position: relative !important;
+        min-height: 200px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        overflow: visible !important;
+    }
+    #job-screening-questions-wrap.loading::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 200px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(3px) !important;
+        -webkit-backdrop-filter: blur(3px) !important;
+        z-index: 10 !important;
+        border-radius: 8px !important;
+        display: block !important;
+    }
+    #job-screening-questions-wrap.loading::after {
+        content: '' !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        -webkit-transform: translate(-50%, -50%) !important;
+        width: 50px !important;
+        height: 50px !important;
+        border: 4px solid rgba(59, 130, 246, 0.2) !important;
+        border-top-color: #3b82f6 !important;
+        border-right-color: #3b82f6 !important;
+        border-radius: 50% !important;
+        animation: blue-spin 0.8s linear infinite !important;
+        -webkit-animation: blue-spin 0.8s linear infinite !important;
+        z-index: 11 !important;
+        display: block !important;
+    }
+    @keyframes blue-spin {
+        0% {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+        100% {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+    @-webkit-keyframes blue-spin {
+        0% {
+            -webkit-transform: translate(-50%, -50%) rotate(0deg);
+        }
+        100% {
+            -webkit-transform: translate(-50%, -50%) rotate(360deg);
+        }
     }
     </style>
     <div class="modal fade" id="applyNow" aria-hidden="true" tabindex="-1" style="z-index: 10050;">

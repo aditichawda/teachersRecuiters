@@ -7,6 +7,7 @@ use Botble\JobBoard\Enums\AccountTypeEnum;
 use Botble\JobBoard\Events\JobPublishedEvent;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\JobAlert;
+use Botble\JobBoard\Models\UserNotification;
 use Botble\JobBoard\Services\JobAlertService;
 use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Jobs\SendJobAlertEmailJob;
@@ -23,6 +24,10 @@ class SendJobAlertListener
 
     public function handle(JobPublishedEvent $event): void
     {
+        // COMMENTED OUT: All job alert notifications disabled
+        return;
+        
+        /*
         try {
         $job = $event->job;
             
@@ -296,6 +301,7 @@ class SendJobAlertListener
             error_log('[JOB_ALERT] Error file: ' . $t->getFile() . ':' . $t->getLine());
             // Don't re-throw - let job creation continue even if email fails
         }
+        */
     }
 
 
@@ -833,6 +839,28 @@ class SendJobAlertListener
             
             \Log::info('[JOB_ALERT] ✅✅✅ Direct Mail::send() executed successfully for: ' . $jobSeeker->email);
             \Log::info('[JOB_ALERT] ========== EMAIL SEND COMPLETE ==========');
+            
+            // Save notification to database
+            try {
+                UserNotification::create([
+                    'account_id' => $jobSeeker->id,
+                    'type' => 'job_alert',
+                    'title' => 'New Job Alert: ' . $emailVariables['job_name'],
+                    'message' => 'A new job matching your profile has been posted: ' . $emailVariables['job_name'],
+                    'icon' => 'feather-briefcase',
+                    'color' => '#1967d2',
+                    'action_url' => $emailVariables['job_url'] ?? null,
+                    'data' => [
+                        'job_id' => $job->id,
+                        'job_name' => $emailVariables['job_name'],
+                        'company_name' => $emailVariables['company_name'] ?? '',
+                    ],
+                ]);
+                \Log::info('[JOB_ALERT] ✅ Notification saved for job seeker: ' . $jobSeeker->id);
+            } catch (\Exception $notifException) {
+                \Log::error('[JOB_ALERT] ❌ Failed to save notification: ' . $notifException->getMessage());
+                // Don't throw - notification failure shouldn't break email sending
+            }
         } catch (\Exception $mailException) {
             \Log::error('[JOB_ALERT] ❌❌❌ Direct Mail::send() FAILED: ' . $mailException->getMessage());
             \Log::error('[JOB_ALERT] Exception file: ' . $mailException->getFile() . ':' . $mailException->getLine());
@@ -845,6 +873,27 @@ class SendJobAlertListener
             ->setVariableValues($emailVariables)
             ->sendUsingTemplate('job-alert-notification', $jobSeeker->email);
                 \Log::info('[JOB_ALERT] ✅ Fallback EmailHandler used for: ' . $jobSeeker->email);
+                
+                // Save notification to database after successful fallback email
+                try {
+                    UserNotification::create([
+                        'account_id' => $jobSeeker->id,
+                        'type' => 'job_alert',
+                        'title' => 'New Job Alert: ' . $emailVariables['job_name'],
+                        'message' => 'A new job matching your profile has been posted: ' . $emailVariables['job_name'],
+                        'icon' => 'feather-briefcase',
+                        'color' => '#1967d2',
+                        'action_url' => $emailVariables['job_url'] ?? null,
+                        'data' => [
+                            'job_id' => $job->id,
+                            'job_name' => $emailVariables['job_name'],
+                            'company_name' => $emailVariables['company_name'] ?? '',
+                        ],
+                    ]);
+                    \Log::info('[JOB_ALERT] ✅ Notification saved for job seeker: ' . $jobSeeker->id);
+                } catch (\Exception $notifException) {
+                    \Log::error('[JOB_ALERT] ❌ Failed to save notification: ' . $notifException->getMessage());
+                }
             } catch (\Exception $e) {
                 \Log::error('[JOB_ALERT] ❌ Both methods failed: ' . $e->getMessage());
                 throw $mailException; // Throw original exception

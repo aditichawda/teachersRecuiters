@@ -290,18 +290,31 @@
             <div class="cd-hero-info">
                 <h1>{{ $company->name }} {!! $company->badge !!}</h1>
                 <div class="cd-hero-meta">
-                    @if ($company->address)
+                    @if ($company->full_address)
+                        <span><i class="feather-map-pin"></i> {{ $company->full_address }}</span>
+                    @elseif ($company->address)
                         <span><i class="feather-map-pin"></i> {{ $company->address }}</span>
                     @endif
-                    @if ($company->website)
-                        <a href="{{ $company->website }}" target="_blank"><i class="feather-globe"></i> {{ $company->website }}</a>
+                    @if ($company->website && !empty(trim($company->website)))
+                        <a href="{{ $company->website }}" target="_blank" rel="noopener"><i class="feather-globe"></i> {{ Str::limit($company->website, 50) }}</a>
                     @endif
                 </div>
-                @if ($company->description)
+                @if ($company->description && !empty(trim($company->description)))
                     <p class="cd-hero-desc">{{ Str::limit($company->description, 200) }}</p>
                 @endif
                 @php
-                    $admissionOpen = $company->admission && $company->admission->status === 'published' && trim($company->admission->content ?? '') !== '' && $company->admission->admission_deadline && !\Carbon\Carbon::parse($company->admission->admission_deadline)->endOfDay()->isPast();
+                    $admissionOpen = false;
+                    if ($company->admission && isset($company->admission->status) && $company->admission->status === 'published') {
+                        $content = $company->admission->content ?? '';
+                        $deadline = $company->admission->admission_deadline ?? null;
+                        if (trim($content) !== '' && $deadline) {
+                            try {
+                                $admissionOpen = !\Carbon\Carbon::parse($deadline)->endOfDay()->isPast();
+                            } catch (\Exception $e) {
+                                $admissionOpen = false;
+                            }
+                        }
+                    }
                 @endphp
                 @if ($admissionOpen)
                 <div class="mt-3">
@@ -339,6 +352,284 @@
                     </div>
                 @endif
 
+                {{-- Company Details Section --}}
+                <div class="cd-content-card">
+                    <h4 class="cd-section-title">{{ __('Company Details') }}</h4>
+                    
+                    {{-- Additional Company Details from Database --}}
+                    <div class="company-details-list" style="display: grid; gap: 20px;">
+                        @if ($company->institution_type)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Institution Type') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ ucfirst(str_replace('-', ' ', $company->institution_type)) }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->campus_type)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Campus Type') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    @php
+                                        $campusTypes = is_array($company->campus_type) 
+                                            ? $company->campus_type 
+                                            : (is_string($company->campus_type) ? json_decode($company->campus_type, true) : [$company->campus_type]);
+                                        $campusTypes = array_filter((array)$campusTypes);
+                                    @endphp
+                                    @if (!empty($campusTypes))
+                                        {{ implode(', ', array_map('ucfirst', array_map('trim', $campusTypes))) }}
+                                    @else
+                                        {{ ucfirst($company->campus_type) }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($company->email)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Email') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->email }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->phone)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Phone') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->phone }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->website)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Website') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <a href="{{ $company->website }}" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;">{{ $company->website }}</a>
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($company->year_founded)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Year Founded') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->year_founded }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->ceo)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('CEO') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->ceo }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->number_of_offices)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Number of Offices') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->number_of_offices }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->number_of_employees)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Number of Employees') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->number_of_employees }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->total_staff)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Total Staff') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->total_staff }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->annual_revenue)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Annual Revenue') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->annual_revenue }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->full_address)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Full Address') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->full_address }}</span>
+                            </div>
+                        @elseif ($company->address)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Address') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->address }}</span>
+                            </div>
+                        @endif
+
+                        @if (is_plugin_active('location'))
+                            @if ($company->city && $company->city->name)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('City') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->city->name }}</span>
+                                </div>
+                            @endif
+                            @if ($company->state && $company->state->name)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('State') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->state->name }}</span>
+                                </div>
+                            @endif
+                            @if ($company->country && $company->country->name)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Country') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->country->name }}</span>
+                                </div>
+                            @endif
+                        @endif
+
+                        @if ($company->postal_code)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Postal Code') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->postal_code }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->tax_id)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Tax ID') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->tax_id }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->working_days)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Working Days') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    @php
+                                        $workingDays = is_array($company->working_days) 
+                                            ? $company->working_days 
+                                            : (is_string($company->working_days) ? json_decode($company->working_days, true) : [$company->working_days]);
+                                        $workingDays = array_filter((array)$workingDays);
+                                    @endphp
+                                    @if (!empty($workingDays))
+                                        {{ implode(', ', array_map('ucfirst', array_map('trim', $workingDays))) }}
+                                    @else
+                                        {{ $company->working_days }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($company->working_hours_start && $company->working_hours_end)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Working Hours') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->working_hours_start }} - {{ $company->working_hours_end }}</span>
+                            </div>
+                        @endif
+
+                        @if ($company->staff_facilities)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Staff Facilities') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    @php
+                                        $facilities = is_array($company->staff_facilities) 
+                                            ? $company->staff_facilities 
+                                            : (is_string($company->staff_facilities) ? json_decode($company->staff_facilities, true) : [$company->staff_facilities]);
+                                        $facilities = array_filter((array)$facilities);
+                                    @endphp
+                                    @if (!empty($facilities))
+                                        {{ implode(', ', array_map('ucfirst', array_map('trim', $facilities))) }}
+                                    @else
+                                        {{ $company->staff_facilities }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($company->standard_level)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Standard Level') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    @php
+                                        $levels = is_array($company->standard_level) 
+                                            ? $company->standard_level 
+                                            : (is_string($company->standard_level) ? json_decode($company->standard_level, true) : [$company->standard_level]);
+                                        $levels = array_filter((array)$levels);
+                                    @endphp
+                                    @if (!empty($levels))
+                                        {{ implode(', ', array_map('ucfirst', array_map('trim', $levels))) }}
+                                    @else
+                                        {{ $company->standard_level }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($company->awards)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Awards') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    @php
+                                        $awards = is_array($company->awards) 
+                                            ? $company->awards 
+                                            : (is_string($company->awards) ? json_decode($company->awards, true) : [$company->awards]);
+                                        $awards = array_filter((array)$awards);
+                                    @endphp
+                                    @if (!empty($awards))
+                                        {{ implode(', ', array_map('trim', $awards)) }}
+                                    @else
+                                        {{ $company->awards }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($company->affiliations)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Affiliations') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    @php
+                                        $affiliations = is_array($company->affiliations) 
+                                            ? $company->affiliations 
+                                            : (is_string($company->affiliations) ? json_decode($company->affiliations, true) : [$company->affiliations]);
+                                        $affiliations = array_filter((array)$affiliations);
+                                    @endphp
+                                    @if (!empty($affiliations))
+                                        {{ implode(', ', array_map('trim', $affiliations)) }}
+                                    @else
+                                        {{ $company->affiliations }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($company->youtube_video)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('YouTube Video') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <a href="{{ $company->youtube_video }}" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;">{{ __('Watch Video') }}</a>
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($company->google)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Google') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <a href="{{ $company->google }}" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;">{{ __('View on Google') }}</a>
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($company->is_verified)
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Verification Status') }}:</strong>
+                                <span style="color: #16a34a; font-size: 15px; margin-left: 10px;">
+                                    <i class="fas fa-check-circle"></i> {{ __('Verified') }}
+                                    @if ($company->verified_at)
+                                        ({{ Theme::formatDate($company->verified_at) }})
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
                 {{-- Social Links --}}
                 @if ($company->facebook || $company->twitter || $company->linkedin || $company->instagram)
                     <div class="cd-content-card">
@@ -361,12 +652,12 @@
                 @endif
 
                 {{-- Available Jobs --}}
-                @if ($jobs->isNotEmpty())
+                @if (isset($jobs) && $jobs && method_exists($jobs, 'isNotEmpty') && $jobs->isNotEmpty())
                     <div class="cd-content-card">
                         <h4 class="cd-section-title">{{ __('Available Jobs') }} ({{ $jobs->count() }})</h4>
                         <div class="twm-jobs-list-wrap">
                             <ul style="list-style:none; padding:0; margin:0;">
-                                @include(Theme::getThemeNamespace('views.job-board.partials.job-items'), ['job' => $jobs, 'layout'=> 'list'])
+                                @include(Theme::getThemeNamespace('views.job-board.partials.job-items'), ['jobs' => $jobs, 'layout'=> 'list'])
                             </ul>
                         </div>
                     </div>
@@ -380,12 +671,14 @@
                 @endif
 
                 {{-- Admission Section + Enquiry Form: only when employer has added About School/Institution and deadline has not passed --}}
-                @if ($admissionOpen)
+                @if (isset($admissionOpen) && $admissionOpen && $company->admission)
                 <div class="cd-content-card">
                     <h4 class="cd-section-title">{{ __('Get Admission with :name', ['name' => $company->name]) }}</h4>
                     <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;">{{ __('About School / Institution') }}</h5>
                     <p class="text-muted small mb-2" style="font-size: 0.85rem;">{{ __('Details added by the institution for admission.') }}</p>
-                    <div class="mb-4" style="color: #475569; line-height: 1.6;">{!! BaseHelper::clean($company->admission->content) !!}</div>
+                    @if ($company->admission->content)
+                        <div class="mb-4" style="color: #475569; line-height: 1.6;">{!! BaseHelper::clean($company->admission->content) !!}</div>
+                    @endif
                     <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;">{{ __('Enquiry Form') }}</h5>
                     <p class="text-muted small mb-3">{{ __('Submit your admission enquiry using the form below or use the button above.') }}</p>
                     @include(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company])
@@ -406,9 +699,11 @@
                 @endif
 
                 {{-- Map --}}
-                <div class="cd-sidebar-card">
-                    @include(Theme::getThemeNamespace('views.job-board.partials.company-map'), ['company' => $company])
-                </div>
+                @if ($company->latitude && $company->longitude)
+                    <div class="cd-sidebar-card">
+                        @include(Theme::getThemeNamespace('views.job-board.partials.company-map'), ['company' => $company])
+                    </div>
+                @endif
 
                 {{-- Company Info --}}
                 @if (! JobBoardHelper::hideCompanyEmailEnabled())

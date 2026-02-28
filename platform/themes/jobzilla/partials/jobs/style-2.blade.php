@@ -2,9 +2,6 @@
     @if ($job->is_featured)
         <span class="job-featured-badge">★ {{ __('Featured') }}</span>
     @endif
-    @if ($job->gender_preference == 'female')
-        <span class="job-female-preferred-badge">♀ {{ __('Female Preferred') }}</span>
-    @endif
     <div class="jgm-top">
         <div class="jgm-time-location-logo" style="display:block;">
         <div class="jgm-logo">
@@ -50,25 +47,28 @@
     <span class="jgm-institution-type" style="display: block; margin-top: 5px; font-size: 13px; color: #64748b;">
         <i class="feather-briefcase" style="font-size: 12px;"></i> {{ $displayType }}
     </span>
+    <div class="jgm-salary" style="display: block; margin-top: 5px; margin-bottom: 5px; font-size: 15px; font-weight: 700; color: #0073d1;">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</div>
     @if (!empty($job->gender_preference))
         @php
             $genderLabel = ucfirst($job->gender_preference);
+            $bgColor = '';
             if ($job->gender_preference == 'male') {
                 $genderIcon = '♂';
                 $genderLabel = __('Male Preferred');
+                $bgColor = 'background-color: #e0f2fe;';
             } elseif ($job->gender_preference == 'female') {
                 $genderIcon = '♀';
                 $genderLabel = __('Female Preferred');
+                $bgColor = 'background-color: #fce7f3;';
             } else {
                 $genderIcon = '';
             }
         @endphp
-        <span class="jgm-gender-preference" style="display: block; margin-top: 5px; font-size: 13px; color: #64748b;">
+        <span class="jgm-gender-preference" style="display: block; margin-top: 5px; font-size: 13px; color: #64748b; padding: 4px 8px; border-radius: 4px; {{ $bgColor }}">
             @if ($genderIcon){{ $genderIcon }} @endif{{ $genderLabel }}
         </span>
     @endif
     <div class="jgm-bottom">
-        <div class="jgm-salary">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</div>
         <a href="{{ $job->url }}" class="jgm-view">{{ __('View') }} →</a>
     </div>
 </div>

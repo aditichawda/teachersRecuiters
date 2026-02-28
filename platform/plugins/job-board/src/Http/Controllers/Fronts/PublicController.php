@@ -7,6 +7,7 @@ use Botble\Base\Facades\AdminHelper;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Supports\Helper;
 use Botble\JobBoard\Enums\AccountTypeEnum;
+use Botble\JobBoard\Enums\JobApplicationStatusEnum;
 use Botble\JobBoard\Enums\JobStatusEnum;
 use Botble\JobBoard\Events\JobAppliedEvent;
 use Botble\JobBoard\Facades\JobBoardHelper;
@@ -41,6 +42,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -57,10 +60,20 @@ class PublicController extends BaseController
      */
     public function getJobScreeningQuestions(int $id)
     {
-        $job = JobModel::with(['screeningQuestions', 'jobScreeningQuestions'])->find($id);
+        $job = JobModel::with(['screeningQuestions'])->find($id);
         if (! $job) {
             return response()->json(['questions' => []], 200);
         }
+        
+        // Only load jobScreeningQuestions if table exists
+        try {
+            if (Schema::hasTable('jb_job_screening_questions')) {
+                $job->load('jobScreeningQuestions');
+            }
+        } catch (\Exception $e) {
+            // Ignore if table doesn't exist
+        }
+        
         $allQuestions = $job->getAllScreeningQuestionsForApply();
         $questions = $allQuestions->map(function ($q) {
             $opts = $q->options ?? [];
@@ -82,9 +95,18 @@ class PublicController extends BaseController
      */
     public function validateScreening(Request $request, int $id)
     {
-        $job = JobModel::with(['screeningQuestions', 'jobScreeningQuestions'])->find($id);
+        $job = JobModel::with(['screeningQuestions'])->find($id);
         if (! $job) {
             return response()->json(['valid' => false, 'message' => 'Job not found.'], 404);
+        }
+        
+        // Only load jobScreeningQuestions if table exists
+        try {
+            if (Schema::hasTable('jb_job_screening_questions')) {
+                $job->load('jobScreeningQuestions');
+            }
+        } catch (\Exception $e) {
+            // Ignore if table doesn't exist
         }
         $screeningAnswers = $request->input('screening_answers', []);
         if (! is_array($screeningAnswers)) {
@@ -233,7 +255,20 @@ class PublicController extends BaseController
             ]);
         }
 
-        $job->loadMissing('customFields');
+        // Load all necessary relationships for job details
+        $job->loadMissing([
+            'customFields',
+            'jobShift',
+            'functionalArea',
+            'degreeLevel',
+            'careerLevel',
+            'jobExperience',
+            'jobTypes',
+            'categories',
+            'skills',
+            'tags',
+            'company',
+        ]);
 
         return Theme::scope(
             'job-board.job',
@@ -614,7 +649,20 @@ class PublicController extends BaseController
                 }
             }
             // Validate correct_answer restriction for all questions (admin + job-specific)
+            // Check if table exists before loading relationship to avoid errors
+            try {
+                if (Schema::hasTable('jb_job_screening_questions')) {
             $job->load(['screeningQuestions', 'jobScreeningQuestions']);
+                } else {
+                    // Table doesn't exist, only load admin pool questions
+                    $job->load(['screeningQuestions']);
+                }
+            } catch (\Exception $e) {
+                // If there's any error loading relationships, just load admin pool
+                \Log::warning('Could not load jobScreeningQuestions: ' . $e->getMessage());
+                $job->load(['screeningQuestions']);
+            }
+            
             $allQuestions = $job->getAllScreeningQuestionsForApply();
             foreach ($allQuestions as $sq) {
                 $correctAnswer = $sq->correct_answer ?? null;
@@ -657,10 +705,57 @@ class PublicController extends BaseController
             $input['screening_answers'] = array_filter($screeningAnswers, function ($v) {
                 return $v !== null && $v !== '';
             });
-            $jobApplication->fill($input);
+            
+            // Only fill with fillable fields to prevent mass assignment issues
+            $fillableFields = [
+                'first_name',
+                'last_name',
+                'phone',
+                'email',
+                'resume',
+                'cover_letter',
+                'message',
+                'screening_answers',
+                'job_id',
+                'account_id',
+                'status',
+            ];
+            
+            $fillableData = array_intersect_key($input, array_flip($fillableFields));
+            
+            // Set status if not provided - use enum
+            if (!isset($fillableData['status'])) {
+                $fillableData['status'] = JobApplicationStatusEnum::PENDING;
+            }
+            
+            $jobApplication->fill($fillableData);
             $jobApplication->save();
 
+            \Log::info('[JOB_APPLICATION] Application saved successfully', [
+                'application_id' => $jobApplication->id,
+                'job_id' => $job->id,
+                'candidate_email' => $jobApplication->email ?? 'N/A',
+                'candidate_name' => ($jobApplication->first_name ?? '') . ' ' . ($jobApplication->last_name ?? ''),
+                'has_screening_answers' => !empty($fillableData['screening_answers']),
+                'screening_answers_count' => is_array($fillableData['screening_answers'] ?? []) ? count($fillableData['screening_answers']) : 0,
+            ]);
+
             $job::withoutEvents(fn () => $job::withoutTimestamps(fn () => $job->increment('number_of_applied')));
+            
+            \Log::debug('[JOB_APPLICATION] Job application count incremented', [
+                'job_id' => $job->id,
+            ]);
+
+            // WhatsApp notifications are now handled by SendEmployerApplicationNotificationJob
+            // This ensures all employer phones (author, company, additional) receive notifications
+
+            // Prepare response message first
+            $message = $job->apply_url
+                ? trans('plugins/job-board::job-application.email.external_redirect')
+                : trans('plugins/job-board::job-application.email.success');
+
+            // Prepare response data
+            $responseData = ['url' => $job->apply_url];
 
             if (! $job->apply_url) {
                 $jobApplication->setRelation('job', $job);
@@ -669,17 +764,82 @@ class PublicController extends BaseController
                     $jobApplication->setRelation('account', $account);
                 }
 
-                // Dispatch event safely - wrap in try-catch to prevent 500 errors
+                // Dispatch event in background using queue to avoid blocking response
+                // Store IDs to avoid serialization issues with full objects
+                $applicationId = $jobApplication->id;
+                $jobId = $job->id;
+                
                 try {
-                    JobAppliedEvent::dispatch($jobApplication, $job);
-                } catch (\Exception $eventException) {
-                    // Log event error but don't fail the application
-                    \Log::error('Failed to dispatch JobAppliedEvent: ' . $eventException->getMessage(), [
-                        'exception' => $eventException,
-                        'application_id' => $jobApplication->id,
-                        'job_id' => $job->id,
+                    \Log::info('[JOB_APPLICATION] Dispatching email notification via queue', [
+                        'application_id' => $applicationId,
+                        'job_id' => $jobId,
                     ]);
-                    // Continue - application is saved, just email might fail
+                    
+                    // Dispatch event in a closure-based queue job to run after response
+                    Queue::push(function () use ($applicationId, $jobId) {
+                        \Log::info('[JOB_APPLICATION] Queue job started - loading application and job', [
+                            'application_id' => $applicationId,
+                            'job_id' => $jobId,
+                        ]);
+                        
+                        $app = JobApplication::find($applicationId);
+                        $jobModel = JobModel::find($jobId);
+                        
+                        if ($app && $jobModel) {
+                            // Reload relationships if needed
+                            $app->loadMissing(['job', 'account']);
+                            $jobModel->loadMissing(['author', 'company']);
+                            
+                            \Log::info('[JOB_APPLICATION] Dispatching JobAppliedEvent', [
+                                'application_id' => $app->id,
+                                'job_id' => $jobModel->id,
+                            ]);
+                            
+                            JobAppliedEvent::dispatch($app, $jobModel);
+                            
+                            \Log::info('[JOB_APPLICATION] JobAppliedEvent dispatched successfully', [
+                                'application_id' => $app->id,
+                            ]);
+                        } else {
+                            \Log::error('[JOB_APPLICATION] Application or Job not found in queue job', [
+                                'application_id' => $applicationId,
+                                'job_id' => $jobId,
+                                'app_found' => $app ? 'yes' : 'no',
+                                'job_found' => $jobModel ? 'yes' : 'no',
+                            ]);
+                        }
+                    });
+                    
+                    \Log::info('[JOB_APPLICATION] Queue job pushed successfully', [
+                        'application_id' => $applicationId,
+                    ]);
+                } catch (\Exception $eventException) {
+                    \Log::warning('[JOB_APPLICATION] Queue push failed, trying synchronous dispatch', [
+                        'application_id' => $applicationId,
+                        'error' => $eventException->getMessage(),
+                    ]);
+                    
+                    // If queue fails, try synchronous dispatch as fallback
+                    try {
+                        \Log::info('[JOB_APPLICATION] Attempting synchronous event dispatch', [
+                            'application_id' => $applicationId,
+                        ]);
+                        
+                        JobAppliedEvent::dispatch($jobApplication, $job);
+                        
+                        \Log::info('[JOB_APPLICATION] Synchronous event dispatch successful', [
+                            'application_id' => $applicationId,
+                        ]);
+                    } catch (\Exception $syncException) {
+                        // Log error but don't fail the application
+                        \Log::error('[JOB_APPLICATION] Failed to dispatch JobAppliedEvent (both queue and sync failed)', [
+                            'exception' => $syncException,
+                            'application_id' => $applicationId,
+                            'job_id' => $jobId,
+                            'error_message' => $syncException->getMessage(),
+                            'trace' => $syncException->getTraceAsString(),
+                        ]);
+                    }
                 }
             } else {
                 // Track external apply click: increment counter and log user info
@@ -694,30 +854,39 @@ class PublicController extends BaseController
                 ]);
             }
 
+            // Return response immediately - don't wait for email sending
             if (! $request->ajax()) {
                 return redirect()->to($job->apply_url);
             }
 
-            $message = $job->apply_url
-                ? trans('plugins/job-board::job-application.email.external_redirect')
-                : trans('plugins/job-board::job-application.email.success');
-
             return $this
                 ->httpResponse()
-                ->setData(['url' => $job->apply_url])
+                ->setData($responseData)
                 ->setMessage($message);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors specifically
+            \Log::error('Job application validation failed', [
+                'errors' => $e->errors(),
+                'request_data' => $request->except(['resume', 'cover_letter', 'screening_answers_file']),
+            ]);
+            
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage($e->getMessage())
+                ->setData(['errors' => $e->errors()]);
         } catch (Exception $e) {
             // Log the actual error for debugging
             \Log::error('Job application failed: ' . $e->getMessage(), [
                 'exception' => $e,
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->except(['resume', 'cover_letter', 'screening_answers_file']),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
             
-            // Return detailed error message in development, generic in production
-            $errorMessage = config('app.debug') 
-                ? 'Application failed: ' . $e->getMessage() 
-                : trans('plugins/job-board::job-application.email.failed');
+            // Always show the actual error message for better debugging
+            $errorMessage = $e->getMessage() ?: trans('plugins/job-board::job-application.email.failed');
             
             return $this
                 ->httpResponse()
@@ -1029,9 +1198,16 @@ class PublicController extends BaseController
         /**
          * @var Company $company
          */
+        $with = ['admission', 'slugable'];
+        
+        // Load location relationships if location plugin is active
+        if (is_plugin_active('location')) {
+            $with = array_merge($with, array_keys(Location::getSupported(Company::class)));
+        }
+        
         $company = Company::query()
             ->where($condition)
-            ->with(['admission'])
+            ->with($with)
             ->withCount([
                 'jobs' => function (Builder $query): void {
                     // @phpstan-ignore-next-line
@@ -1096,17 +1272,22 @@ class PublicController extends BaseController
 
         do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, COMPANY_MODULE_SCREEN_NAME, $company);
 
+        $canReview = false;
+        $canReviewCompany = false;
+
         if (JobBoardHelper::isEnabledReview()) {
+            try {
             $company->setRelation('reviews', $company->reviews()->with('createdBy')->paginate(10));
 
             /** @var Account $account */
             $account = Auth::guard('account')->user();
 
-            $canReview = $account
-                && ! $account->isEmployer()
-                && $account->canReview($company);
-        } else {
-            $canReview = false;
+                if ($account) {
+                    $canReview = ! $account->isEmployer() && $account->canReview($company);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error loading reviews for company: ' . $e->getMessage());
+            }
         }
 
         $canReviewCompany = $canReview;

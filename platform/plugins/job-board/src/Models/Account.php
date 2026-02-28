@@ -437,6 +437,11 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         return $this->morphMany(Review::class, 'created_by');
     }
 
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class, 'account_id');
+    }
+
     public function completedCompanyProfile(): bool
     {
         foreach ($this->companies()->get() as $company) {

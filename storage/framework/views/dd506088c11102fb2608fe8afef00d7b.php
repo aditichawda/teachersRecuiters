@@ -907,9 +907,86 @@ html {
     min-height: 200px;
 }
 
+/* Blue Loader Overlay for Jobs Filter */
+.jobs-listing {
+    position: relative;
+    min-height: 400px;
+}
+
+.jobs-listing .overlay {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 400px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+    border-radius: 8px;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.jobs-listing .overlay[style*="display: flex"],
+.jobs-listing .overlay.show {
+    display: flex !important;
+}
+
+/* Ensure jobs listing container has proper positioning */
+#jobs-listing-container {
+    position: relative !important;
+    min-height: 400px;
+    width: 100%;
+    display: block;
+}
+
+.twm-jobs-list-wrap.jobs-listing {
+    position: relative !important;
+    min-height: 400px;
+    width: 100%;
+}
+
+.jobs-listing .overlay .blue-loader {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(0, 115, 209, 0.2);
+    border-top-color: #0073d1;
+    border-radius: 50%;
+    animation: blue-spin 0.8s linear infinite;
+    position: relative;
+    margin: 0 auto;
+    flex-shrink: 0;
+}
+
+@keyframes blue-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 /* Jobs container animation */
 .jobs-listing {
     animation: fadeIn 0.6s ease-out;
+}
+
+/* Ensure parent container allows absolute positioning */
+.col-lg-9.col-md-12.position-relative {
+    position: relative;
+}
+
+.twm-jobs-list-wrap {
+    position: relative;
+    width: 100%;
 }
 
 @keyframes fadeIn {
@@ -1998,7 +2075,11 @@ html {
                     
                 </div>
 
-                <div class="twm-jobs-list-wrap jobs-listing" id="jobs-listing-container">
+                <div class="twm-jobs-list-wrap jobs-listing" id="jobs-listing-container" style="position: relative;">
+                    <!-- Blue Loader Overlay -->
+                    <div class="overlay blue-loader-overlay" style="display: none;">
+                        <div class="blue-loader large"></div>
+                    </div>
                     <?php echo Theme::partial("jobs.$layout", ['jobs' => $jobs, 'style' => 2]); ?>
 
                 </div>
@@ -2323,10 +2404,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Handle institution_type to job_categories mapping
+    // Handle top filter form submission with AJAX and loader
     const topFilterForm = document.getElementById('jobs-top-filter-form');
-    if (topFilterForm) {
+    const jobsListingContainer = document.querySelector('.jobs-listing');
+    const overlay = document.querySelector('.jobs-listing .overlay');
+    
+    if (topFilterForm && overlay) {
         topFilterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Handle institution_type to job_categories mapping
             const institutionType = this.querySelector('[name="institution_type"]');
             if (institutionType && institutionType.value) {
                 // Convert institution_type to job_categories
@@ -2348,23 +2435,125 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.appendChild(hiddenInput);
                 }
             }
+            
+            // Show loader
+            if (overlay) {
+                overlay.style.display = 'flex';
+                overlay.classList.add('show');
+            }
+            
+            // Build form data
+            const formData = new FormData(this);
+            const params = new URLSearchParams();
+            
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    if (key.includes('[]')) {
+                        params.append(key, value);
+                    } else {
+                        params.set(key, value);
+                    }
+                }
+            }
+            
+            // Handle multiple selects
+            const selects = this.querySelectorAll('select[name*="[]"]');
+            selects.forEach(function(select) {
+                const selectedOptions = Array.from(select.selectedOptions);
+                selectedOptions.forEach(function(option) {
+                    params.append(select.name, option.value);
+                });
+            });
+            
+            // Get AJAX URL
+            const ajaxUrl = '<?php echo e(route("public.ajax.jobs")); ?>';
+            const url = params.toString() ? `${ajaxUrl}?${params.toString()}` : ajaxUrl;
+            
+            // Update URL
+            const actionUrl = this.getAttribute('action');
+            const newUrl = params.toString() ? `${actionUrl}?${params.toString()}` : actionUrl;
+            window.history.pushState({}, '', newUrl);
+            
+            // Make AJAX request
+            if (typeof $ !== 'undefined') {
+                const $overlay = $('.jobs-listing .overlay');
+                const $jobsList = $('#jobs-listing-container');
+                
+                $.ajax({
+                    method: 'GET',
+                    url: url,
+                    beforeSend: function() {
+                        $overlay.css('display', 'flex').addClass('show');
+                        // Scroll to top
+                        $('html, body').animate({
+                            scrollTop: $('.jobs-container').offset().top - 130
+                        }, 0);
+                    },
+                    success: function(response) {
+                        if (response.data) {
+                            // Store overlay before updating
+                            const overlayHtml = $jobsList.find('.overlay').length ? $jobsList.find('.overlay')[0].outerHTML : '<div class="overlay blue-loader-overlay" style="display: none;"><div class="blue-loader large"></div></div>';
+                            
+                            // Update jobs listing content
+                            $jobsList.html(response.data);
+                            
+                            // Re-add overlay at the beginning
+                            $jobsList.prepend(overlayHtml);
+                        }
+                        if (response.message) {
+                            $('.woocommerce-result-count-left').text(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Filter error:', error);
+                    },
+                    complete: function() {
+                        $overlay.css('display', 'none').removeClass('show');
+                    }
+                });
+            } else {
+                // Fallback: submit normally if jQuery not available
+                this.submit();
+            }
         });
     }
 });
 
+// Load job categories for jobs page (like homepage)
+<?php
+    $jobCategories = app(\Botble\JobBoard\Repositories\Interfaces\CategoryInterface::class)
+        ->allBy(['status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED])
+        ->map(function($category) {
+            return [
+                'id' => $category->id,
+                'name' => $category->name,
+            ];
+        })
+        ->values()
+        ->toArray();
+?>
+<script>
+// Set window.jobCategories for jobs page (required by home_category_search)
+window.jobCategories = <?php echo json_encode($jobCategories, 15, 512) ?>;
+
 // Use homepage functions for jobs page filters
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize homepage category search if element exists
-    if (typeof home_category_search === 'function') {
-        home_category_search();
-    }
-    
-    // Initialize homepage city search if element exists
-    if (typeof home_city_search === 'function') {
-        home_city_search();
-    }
+    // Wait a bit for window.jobCategories to be set
+    setTimeout(function() {
+        // Initialize homepage category search if element exists
+        if (typeof home_category_search === 'function') {
+            home_category_search();
+        }
+        
+        // Initialize homepage city search if element exists
+        if (typeof home_city_search === 'function') {
+            home_city_search();
+        }
+    }, 100);
 });
+</script>
 
+<script>
 // Fallback: Initialize Job Role Search (Like Homepage - Show dropdown on focus/click)
 document.addEventListener('DOMContentLoaded', function() {
     const roleInput = document.getElementById('home_category_search');

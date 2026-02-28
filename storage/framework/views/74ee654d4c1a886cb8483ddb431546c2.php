@@ -46,27 +46,36 @@ foreach ($attributes->all() as $__key => $__value) {
 
 unset($__defined_vars, $__key, $__value); ?>
 
+<?php
+    $options = is_array($options) ? $options : (method_exists($options, 'toArray') ? $options->toArray() : []);
+    $wrapper = Arr::get($options, 'wrapper', true);
+    $wrapperAttrs = Arr::get($options, 'wrapperAttrs', '');
+    $labelOpt = Arr::get($options, 'label', '');
+    $labelShow = Arr::get($options, 'label_show', true);
+    $labelAttr = Arr::get($options, 'label_attr', []);
+?>
+
 <?php if($showLabel && $showField): ?>
-    <?php if($options['wrapper'] !== false): ?>
-        <div <?php echo $options['wrapperAttrs']; ?>>
+    <?php if($wrapper !== false): ?>
+        <div <?php echo $wrapperAttrs; ?>>
     <?php endif; ?>
 <?php endif; ?>
 
-<?php if($showLabel && $options['label'] !== false && $options['label_show']): ?>
+<?php if($showLabel && $labelOpt !== false && $labelShow): ?>
     <?php if(isset($label)): ?>
         <?php echo $label; ?>
 
     <?php else: ?>
         <?php if (isset($component)) { $__componentOriginal50e5e771b30c35423d2b4f118feb7c0c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal50e5e771b30c35423d2b4f118feb7c0c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::form.label','data' => ['for' => $name,'label' => $options['label'],'attributes' => new Illuminate\View\ComponentAttributeBag($options['label_attr'])]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::form.label','data' => ['for' => $name,'label' => $labelOpt,'attributes' => new Illuminate\View\ComponentAttributeBag($labelAttr)]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('core::form.label'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['for' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($name),'label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($options['label']),'attributes' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(new Illuminate\View\ComponentAttributeBag($options['label_attr']))]); ?>
+<?php $component->withAttributes(['for' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($name),'label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($labelOpt),'attributes' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(new Illuminate\View\ComponentAttributeBag($labelAttr))]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal50e5e771b30c35423d2b4f118feb7c0c)): ?>
@@ -100,7 +109,7 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php echo $__env->make('core/base::forms.partials.errors', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <?php if($showLabel && $showField): ?>
-    <?php if($options['wrapper'] !== false): ?>
+    <?php if($wrapper !== false): ?>
         </div>
     <?php endif; ?>
 <?php endif; ?>

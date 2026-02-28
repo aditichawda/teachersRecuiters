@@ -34,9 +34,12 @@ class EventServiceProvider extends ServiceProvider
         RenderingSiteMapEvent::class => [
             RenderingSiteMapListener::class,
         ],
+        // COMMENTED OUT: Job alert notifications disabled
+        /*
         JobPublishedEvent::class => [
             SendJobAlertListener::class,
         ],
+        */
         EmployerPostedJobEvent::class => [
             EmployerPostedJobListener::class,
         ],

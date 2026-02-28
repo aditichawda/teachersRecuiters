@@ -342,6 +342,14 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     Route::post('{id}/toggle', 'JobAlertController@toggle')->name('toggle');
                 });
 
+                // User Notifications
+                Route::group(['prefix' => 'notifications', 'as' => 'notifications.'], function (): void {
+                    Route::post('{id}/read', 'UserNotificationController@markAsRead')->name('read');
+                    Route::post('read-all', 'UserNotificationController@markAllAsRead')->name('read-all');
+                    Route::delete('{id}', 'UserNotificationController@delete')->name('delete');
+                    Route::delete('all', 'UserNotificationController@deleteAll')->name('delete-all');
+                });
+
                 // Job seeker wallet only (separate from employer wallet)
                 Route::get('jobseeker/wallet', [
                     'as' => 'jobseeker.wallet',

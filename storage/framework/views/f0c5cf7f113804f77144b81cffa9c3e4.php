@@ -1,7 +1,11 @@
-<?php if($options['help_block']['text'] && !$options['is_child']): ?>
-    <<?php echo e($options['help_block']['tag']); ?> <?php echo $options['help_block']['helpBlockAttrs']; ?>>
-        <?php echo $options['help_block']['text']; ?>
+<?php
+    $helpBlock = \Illuminate\Support\Arr::get($options, 'help_block', []);
+    $isChild = \Illuminate\Support\Arr::get($options, 'is_child', false);
+?>
+<?php if(\Illuminate\Support\Arr::get($helpBlock, 'text') && !$isChild): ?>
+    <<?php echo e(\Illuminate\Support\Arr::get($helpBlock, 'tag', 'p')); ?> <?php echo \Illuminate\Support\Arr::get($helpBlock, 'helpBlockAttrs', ''); ?>>
+        <?php echo $helpBlock['text']; ?>
 
-        </<?php echo e($options['help_block']['tag']); ?>>
+    </<?php echo e(\Illuminate\Support\Arr::get($helpBlock, 'tag', 'p')); ?>>
 <?php endif; ?>
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/partials/help-block.blade.php ENDPATH**/ ?>

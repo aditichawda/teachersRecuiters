@@ -137,17 +137,20 @@
                 @if (!empty($job->gender_preference))
                     @php
                         $genderLabel = ucfirst($job->gender_preference);
+                        $bgColor = '';
                         if ($job->gender_preference == 'male') {
                             $genderIcon = '♂';
                             $genderLabel = __('Male Preferred');
+                            $bgColor = 'background-color: #e0f2fe;';
                         } elseif ($job->gender_preference == 'female') {
                             $genderIcon = '♀';
                             $genderLabel = __('Female Preferred');
+                            $bgColor = 'background-color: #fce7f3;';
                         } else {
                             $genderIcon = '';
                         }
                     @endphp
-                    <p class="company-gender-preference" style="font-size: 13px; color: #64748b; margin: 3px 0;">
+                    <p class="company-gender-preference" style="font-size: 13px; color: #64748b; margin: 3px 0; padding: 4px 8px; border-radius: 4px; {{ $bgColor }}">
                         @if ($genderIcon){{ $genderIcon }} @endif{{ $genderLabel }}
                     </p>
                 @endif

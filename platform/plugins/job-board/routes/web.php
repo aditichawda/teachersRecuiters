@@ -376,3 +376,10 @@ AdminHelper::registerRoutes(function (): void {
         });
     });
 });
+
+// WhatsApp Template Testing Routes (Web routes to bypass API middleware)
+Route::group(['prefix' => 'whatsapp-test', 'as' => 'whatsapp.test.', 'middleware' => ['web']], function (): void {
+    Route::get('template/{templateName?}', [\Botble\JobBoard\Http\Controllers\API\WhatsAppController::class, 'testTemplate'])->name('template');
+    Route::get('all-templates', [\Botble\JobBoard\Http\Controllers\API\WhatsAppController::class, 'testAllTemplates'])->name('all-templates');
+    Route::get('send-test-message', [\Botble\JobBoard\Http\Controllers\API\WhatsAppController::class, 'sendTestMessage'])->name('send-test-message');
+});
