@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Delete notification
+                // Delete notification
     document.querySelectorAll('.delete-btn').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -334,12 +334,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert(data.message || 'Error deleting notification');
                     return;
                 }
-                item.style.transition = 'opacity 0.3s';
-                item.style.opacity = '0';
-                setTimeout(function() {
-                    item.remove();
+                    item.style.transition = 'opacity 0.3s';
+                    item.style.opacity = '0';
+                    setTimeout(function() {
+                        item.remove();
                     updateBadgeCounts();
-                }, 300);
+                    }, 300);
             })
             .catch(error => {
                 console.error('Error:', error);

@@ -1,9 +1,9 @@
-@php
+<?php
     $candidates->loadMissing(['country', 'state', 'city', 'favoriteSkills', 'slugable', 'educations', 'experiences']);
-@endphp
+?>
 
-@foreach ($candidates as $candidate)
-    @php
+<?php $__currentLoopData = $candidates; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $candidate): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+    <?php
         // Helper function for formatting
         $formatLabel = function($v) { return ucwords(str_replace('_', ' ', (string)$v)); };
         
@@ -174,96 +174,97 @@
                 $languages .= ' +' . (count($candidate->languages) - 2);
             }
         }
-    @endphp
+    ?>
     
     <div class="cand-card-list" style="position: relative; display: flex; align-items: flex-start; gap: 16px; padding: 16px; padding-left: 20px; border: 1px solid #e5e7eb; border-left: 4px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px; background: #fff; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#0073d1'; this.style.borderLeftColor='#0073d1';" onmouseout="this.style.borderColor='#e5e7eb'; this.style.borderLeftColor='#e5e7eb';">
-        @if ($candidate->is_featured)
-            <span class="cl-featured" style="position: absolute; top: 12px; right: 12px; background: #dc2626; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; z-index: 2; text-transform: uppercase; letter-spacing: 0.5px;">{{ __('Featured') }}</span>
-        @endif
+        <?php if($candidate->is_featured): ?>
+            <span class="cl-featured" style="position: absolute; top: 12px; right: 12px; background: #dc2626; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; z-index: 2; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo e(__('Featured')); ?></span>
+        <?php endif; ?>
         
-        {{-- Candidate Photo --}}
+        
         <div class="cl-avatar" style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-            <img src="{{ $candidate->avatar_url }}" alt="{{ $candidate->name }}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; object-position: center; border: 2px solid #e5e7eb; display: block;">
+            <img src="<?php echo e($candidate->avatar_url); ?>" alt="<?php echo e($candidate->name); ?>" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; object-position: center; border: 2px solid #e5e7eb; display: block;">
         </div>
         
-        {{-- Main Info Section --}}
+        
         <div class="cl-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
-            {{-- Name --}}
-            <a href="{{ $candidate->url }}" class="cl-name" style="font-size: 16px; font-weight: 600; color: #0073d1; text-decoration: none; display: block; margin-bottom: 4px;">{{ $candidate->name }}</a>
             
-            {{-- Details List (Only Fields with Data) --}}
+            <a href="<?php echo e($candidate->url); ?>" class="cl-name" style="font-size: 16px; font-weight: 600; color: #0073d1; text-decoration: none; display: block; margin-bottom: 4px;"><?php echo e($candidate->name); ?></a>
+            
+            
             <div class="cl-details-list" style="display: flex; flex-direction: column; gap: 6px; flex-wrap: wrap; max-height: 140px;">
-                {{-- Location --}}
-                @if ($currentLocation !== '—')
+                
+                <?php if($currentLocation !== '—'): ?>
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
                         <i class="feather-map-pin" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
-                        <span><strong>{{ __('Location') }}:</strong> {{ $currentLocation }}</span>
+                        <span><strong><?php echo e(__('Location')); ?>:</strong> <?php echo e($currentLocation); ?></span>
                     </div>
-                @endif
+                <?php endif; ?>
                 
-                {{-- Experience --}}
-                @if ($totalExp !== '—')
+                
+                <?php if($totalExp !== '—'): ?>
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
                         <i class="feather-briefcase" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
-                        <span><strong>{{ __('Experience') }}:</strong> {{ $totalExp }}</span>
+                        <span><strong><?php echo e(__('Experience')); ?>:</strong> <?php echo e($totalExp); ?></span>
                     </div>
-                @endif
+                <?php endif; ?>
                 
-                {{-- Certifications --}}
-                @if ($certifications !== '—')
+                
+                <?php if($certifications !== '—'): ?>
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
                         <i class="feather-award" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
-                        <span><strong>{{ __('Certifications') }}:</strong> {{ $certifications }}</span>
+                        <span><strong><?php echo e(__('Certifications')); ?>:</strong> <?php echo e($certifications); ?></span>
                     </div>
-                @endif
+                <?php endif; ?>
                 
-                {{-- Updated --}}
-                @if ($lastUpdated !== '—')
+                
+                <?php if($lastUpdated !== '—'): ?>
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
                         <i class="feather-clock" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
-                        <span><strong>{{ __('Updated') }}:</strong> {{ $lastUpdated }}</span>
+                        <span><strong><?php echo e(__('Updated')); ?>:</strong> <?php echo e($lastUpdated); ?></span>
                     </div>
-                @endif
+                <?php endif; ?>
                 
-                {{-- Institution Type --}}
-                @if ($instTypeDisplay !== '—')
+                
+                <?php if($instTypeDisplay !== '—'): ?>
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
                         <i class="feather-building" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
-                        <span><strong>{{ __('Institution Type') }}:</strong> {{ $instTypeDisplay }}</span>
+                        <span><strong><?php echo e(__('Institution Type')); ?>:</strong> <?php echo e($instTypeDisplay); ?></span>
                     </div>
-                @endif
+                <?php endif; ?>
                 
-                {{-- Subjects/Roles --}}
-                @if ($subjectsRoles !== '—')
+                
+                <?php if($subjectsRoles !== '—'): ?>
                     <div style="display: flex; align-items: flex-start; gap: 6px; font-size: 12px; color: #64748b;">
                         <i class="feather-book" style="font-size: 12px; color: #94a3b8; width: 14px; margin-top: 2px;"></i>
-                        <span><strong>{{ __('Subjects/Roles') }}:</strong> {{ $subjectsRoles }}</span>
+                        <span><strong><?php echo e(__('Subjects/Roles')); ?>:</strong> <?php echo e($subjectsRoles); ?></span>
                     </div>
-                @endif
+                <?php endif; ?>
                 
-                {{-- Qualification --}}
-                @if ($highestQual !== '—')
+                
+                <?php if($highestQual !== '—'): ?>
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
                         <i class="feather-graduation-cap" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
-                        <span><strong>{{ __('Qualification') }}:</strong> {{ $highestQual }}</span>
+                        <span><strong><?php echo e(__('Qualification')); ?>:</strong> <?php echo e($highestQual); ?></span>
                     </div>
-                @endif
+                <?php endif; ?>
                 
-                {{-- Status --}}
-                @if($profileStatus !== '—')
+                
+                <?php if($profileStatus !== '—'): ?>
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
                         <i class="feather-check-circle" style="font-size: 12px; color: #10b981; width: 14px;"></i>
-                        <span><strong>{{ __('Status') }}:</strong> {{ $profileStatus }}</span>
+                        <span><strong><?php echo e(__('Status')); ?>:</strong> <?php echo e($profileStatus); ?></span>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
         
-        {{-- View Profile Button --}}
-        @if (! JobBoardHelper::isDisabledPublicProfile() && $candidate->url)
+        
+        <?php if(! JobBoardHelper::isDisabledPublicProfile() && $candidate->url): ?>
             <div class="cl-right" style="flex-shrink: 0; display: flex; align-items: flex-end; align-self: flex-end; margin-left: auto;">
-                <a href="{{ $candidate->url }}" class="cl-view-btn" style="background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%); color: #fff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.3s; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 115, 209, 0.25);">{{ __('View Profile') }} →</a>
+                <a href="<?php echo e($candidate->url); ?>" class="cl-view-btn" style="background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%); color: #fff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.3s; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 115, 209, 0.25);"><?php echo e(__('View Profile')); ?> →</a>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
-@endforeach
+<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/views/job-board/partials/candidates/list.blade.php ENDPATH**/ ?>

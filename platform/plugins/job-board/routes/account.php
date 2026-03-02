@@ -431,6 +431,18 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 Route::resource('', 'AccountJobController')->parameters(['' => 'job'])->only(['index', 'store', 'show', 'destroy']);
             });
 
+            // Candidates page for employers
+            Route::group([
+                'middleware' => ['account:' . AccountTypeEnum::EMPLOYER],
+            ], function (): void {
+                Route::controller('DashboardController')->group(function (): void {
+                    Route::get('candidates', [
+                        'as' => 'candidates',
+                        'uses' => 'candidates',
+                    ]);
+                });
+            });
+
             Route::group([
                 'prefix' => 'packages',
                 'middleware' => [

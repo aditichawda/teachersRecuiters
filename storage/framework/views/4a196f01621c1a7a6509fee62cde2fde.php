@@ -1,6 +1,6 @@
-@php
+<?php
     Theme::layout('without-navbar');
-@endphp
+?>
 
 <style>
 .fp-wrapper { min-height: 100vh; background: #f5f7fa; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
@@ -32,37 +32,36 @@
 <div class="fp-wrapper">
     <div class="fp-container">
         <div class="fp-header">
-            <h2><i class="ti ti-key me-2"></i>{{ __('Forgot Password') }}</h2>
-            <p>{{ __('Enter your email or phone number to receive reset link') }}</p>
+            <h2><i class="ti ti-key me-2"></i><?php echo e(__('Forgot Password')); ?></h2>
+            <p><?php echo e(__('Enter your email or phone number to receive reset link')); ?></p>
         </div>
         <div class="fp-body">
-            @if (session()->has('status'))
-                <div role="alert" class="alert alert-success">{{ session('status') }}</div>
-            @elseif (session()->has('auth_error_message'))
-                <div role="alert" class="alert alert-danger">{{ session('auth_error_message') }}</div>
-            @elseif (session()->has('auth_success_message'))
-                <div role="alert" class="alert alert-success">{{ session('auth_success_message') }}</div>
-            @elseif (session()->has('auth_warning_message'))
-                <div role="alert" class="alert alert-warning">{{ session('auth_warning_message') }}</div>
-            @endif
+            <?php if(session()->has('status')): ?>
+                <div role="alert" class="alert alert-success"><?php echo e(session('status')); ?></div>
+            <?php elseif(session()->has('auth_error_message')): ?>
+                <div role="alert" class="alert alert-danger"><?php echo e(session('auth_error_message')); ?></div>
+            <?php elseif(session()->has('auth_success_message')): ?>
+                <div role="alert" class="alert alert-success"><?php echo e(session('auth_success_message')); ?></div>
+            <?php elseif(session()->has('auth_warning_message')): ?>
+                <div role="alert" class="alert alert-warning"><?php echo e(session('auth_warning_message')); ?></div>
+            <?php endif; ?>
 
-            @if ($errors->any())
+            <?php if($errors->any()): ?>
                 <div role="alert" class="alert alert-danger">
-                    @foreach ($errors->all() as $err) {{ $err }}@if(!$loop->last)<br>@endif @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $err): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?> <?php echo e($err); ?><?php if(!$loop->last): ?><br><?php endif; ?> <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
-            @endif
+            <?php endif; ?>
 
-            {!!
-                $form
+            <?php echo $form
                     ->modify('submit', 'submit', [
                         'label' => __('Send Password Reset Link'),
                         'attr' => ['class' => 'btn-fp'],
                     ], true)
-                    ->renderForm()
-            !!}
+                    ->renderForm(); ?>
+
 
             <div class="fp-footer">
-                <a href="{{ route('public.account.login') }}"><i class="ti ti-arrow-left me-1"></i> {{ __('Back to Login') }}</a>
+                <a href="<?php echo e(route('public.account.login')); ?>"><i class="ti ti-arrow-left me-1"></i> <?php echo e(__('Back to Login')); ?></a>
             </div>
         </div>
     </div>
@@ -126,3 +125,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/views/job-board/auth/passwords/email.blade.php ENDPATH**/ ?>

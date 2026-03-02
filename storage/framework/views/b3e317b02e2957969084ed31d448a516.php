@@ -1,4 +1,4 @@
-{{-- Modern Candidate Card Styles (Shared) --}}
+
 <style>
 /* ===== Grid Card ===== */
 .cand-card-grid {
@@ -218,3 +218,4 @@
     .cand-card-list .cl-view-btn { width: 100%; justify-content: center; }
 }
 </style>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/candidate-card-styles.blade.php ENDPATH**/ ?>

@@ -2062,10 +2062,13 @@ html {
                 </div>
 
                 <div class="twm-jobs-list-wrap jobs-listing" id="jobs-listing-container" style="position: relative;">
-                    <!-- Blue Loader Overlay -->
-                    <div class="overlay blue-loader-overlay" style="display: none;">
-                        <div class="blue-loader large"></div>
-                    </div>
+                    {{-- Common Loader Component --}}
+                    @include(Theme::getThemeNamespace('partials.loader'), [
+                        'size' => 'large',
+                        'overlay' => true,
+                        'containerId' => 'jobs-loader-overlay',
+                        'show' => false
+                    ])
                     {!! Theme::partial("jobs.$layout", ['jobs' => $jobs, 'style' => 2]) !!}
                 </div>
 
@@ -2461,14 +2464,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Make AJAX request
             if (typeof $ !== 'undefined') {
-                const $overlay = $('.jobs-listing .overlay');
                 const $jobsList = $('#jobs-listing-container');
                 
                 $.ajax({
                     method: 'GET',
                     url: url,
                     beforeSend: function() {
-                        $overlay.css('display', 'flex').addClass('show');
+                        // Show loader using LoaderHelper or fallback
+                        if (typeof window.LoaderHelper !== 'undefined') {
+                            LoaderHelper.show('jobs-loader-overlay');
+                        } else {
+                            $('#jobs-loader-overlay').css('display', 'flex').addClass('show');
+                        }
                         // Scroll to top
                         $('html, body').animate({
                             scrollTop: $('.jobs-container').offset().top - 130
@@ -2476,14 +2483,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     success: function(response) {
                         if (response.data) {
-                            // Store overlay before updating
-                            const overlayHtml = $jobsList.find('.overlay').length ? $jobsList.find('.overlay')[0].outerHTML : '<div class="overlay blue-loader-overlay" style="display: none;"><div class="blue-loader large"></div></div>';
-                            
                             // Update jobs listing content
                             $jobsList.html(response.data);
                             
-                            // Re-add overlay at the beginning
-                            $jobsList.prepend(overlayHtml);
+                            // Re-add loader component if not present
+                            if (!$jobsList.find('#jobs-loader-overlay').length) {
+                                const loaderHtml = '<div class="blue-loader-overlay" id="jobs-loader-overlay" style="display: none;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div></div></div>';
+                                $jobsList.prepend(loaderHtml);
+                            }
                         }
                         if (response.message) {
                             $('.woocommerce-result-count-left').text(response.message);
@@ -2493,7 +2500,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.error('Filter error:', error);
                     },
                     complete: function() {
-                        $overlay.css('display', 'none').removeClass('show');
+                        // Hide loader using LoaderHelper or fallback
+                        if (typeof window.LoaderHelper !== 'undefined') {
+                            LoaderHelper.hide('jobs-loader-overlay');
+                        } else {
+                            $('#jobs-loader-overlay').css('display', 'none').removeClass('show');
+                        }
                     }
                 });
             } else {

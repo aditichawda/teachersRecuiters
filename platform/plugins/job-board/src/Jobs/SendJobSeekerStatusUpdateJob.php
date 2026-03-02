@@ -40,12 +40,35 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
                 return;
             }
 
+            // Load account relationship if not already loaded
+            if (!$this->application->relationLoaded('account') && $this->application->account_id) {
+                $this->application->load('account');
+            }
+
+            // Get email from application (submitted during job apply)
+            // Fallback to account email if application email is empty
             $jobSeekerEmail = $this->application->email;
             
-            if (!filter_var($jobSeekerEmail, FILTER_VALIDATE_EMAIL)) {
-                Log::warning('Invalid email for job seeker status update', [
+            // If application email is empty, try to get from account
+            if (empty($jobSeekerEmail) && $this->application->account_id) {
+                $account = $this->application->account;
+                if ($account && $account->email) {
+                    $jobSeekerEmail = $account->email;
+                    Log::info('Using account email as fallback for job seeker status update', [
+                        'application_id' => $this->application->id,
+                        'account_id' => $this->application->account_id,
+                        'email' => $jobSeekerEmail,
+                    ]);
+                }
+            }
+            
+            if (empty($jobSeekerEmail) || !filter_var($jobSeekerEmail, FILTER_VALIDATE_EMAIL)) {
+                Log::warning('Invalid or missing email for job seeker status update', [
                     'application_id' => $this->application->id,
-                    'email' => $jobSeekerEmail,
+                    'application_email' => $this->application->email,
+                    'account_id' => $this->application->account_id,
+                    'account_email' => $this->application->account?->email ?? 'N/A',
+                    'final_email' => $jobSeekerEmail,
                 ]);
                 return;
             }

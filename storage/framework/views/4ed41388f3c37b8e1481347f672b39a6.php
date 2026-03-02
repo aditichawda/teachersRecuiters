@@ -1,10 +1,11 @@
-@php
+<?php
     Theme::asset()->container('footer')->usePath()->add('candidate-js', 'js/candidate.js');
     $orderByParams = JobBoardHelper::getSortByParams();
     $layout = request()->query('layout') ?: $shortcode->layout;
-@endphp
+?>
 
-{!! Theme::partial('candidate-card-styles') !!}
+<?php echo Theme::partial('candidate-card-styles'); ?>
+
 
 <style>
 .cand-heading {
@@ -588,23 +589,23 @@
 <div class="section-full p-t120 p-b90 site-bg-white">
     <div class="container">
         <div class="cand-heading">
-            @if ($shortcode->title || $shortcode->subtitle)
-                @if ($shortcode->subtitle)
-                    <h2>{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
-                @endif
-                @if ($shortcode->title)
-                    <p>{!! BaseHelper::clean($shortcode->title) !!}</p>
-                @endif
-            @else
-                <h2>{{ __('Candidates') }}</h2>
-                <p>{{ __('Find talented teachers ready to make a difference') }}</p>
-            @endif
+            <?php if($shortcode->title || $shortcode->subtitle): ?>
+                <?php if($shortcode->subtitle): ?>
+                    <h2><?php echo BaseHelper::clean($shortcode->subtitle); ?></h2>
+                <?php endif; ?>
+                <?php if($shortcode->title): ?>
+                    <p><?php echo BaseHelper::clean($shortcode->title); ?></p>
+                <?php endif; ?>
+            <?php else: ?>
+                <h2><?php echo e(__('Candidates')); ?></h2>
+                <p><?php echo e(__('Find talented teachers ready to make a difference')); ?></p>
+            <?php endif; ?>
         </div>
 
         <div class="section-content">
             <div class="candidates candidates-container">
                 <div class="row">
-                    {{-- Sidebar Filters --}}
+                    
                     <div class="col-lg-3 col-md-12 candidates-sidebar-modern">
                         <div class="side-bar-filter">
                             <div class="backdrop"></div>
@@ -614,119 +615,121 @@
                                         <i class="feather-x"></i>
                                     </button>
                                     
-                                    {{-- Sidebar Header --}}
+                                    
                                     <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
                                         <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 8px;">
                                             <i class="feather-filter" style="color:rgb(255, 255, 255);"></i>
-                                            {{ __('Filters') }}
+                                            <?php echo e(__('Filters')); ?>
+
                                         </h4>
                                         <button type="button" class="btn-clear-filters" id="clear-all-candidate-filters" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; cursor: pointer;">
                                             <i class="feather-x-circle" style="font-size: 14px;"></i>
-                                            {{ __('Clear All') }}
+                                            <?php echo e(__('Clear All')); ?>
+
                                         </button>
                                     </div>
                                     
-                                    <form action="{{ request()->url() }}" method="get" id="candidate-filter-form" class="p-2">
-                                        {{-- Keyword or Teaching Subject or Post --}}
+                                    <form action="<?php echo e(request()->url()); ?>" method="get" id="candidate-filter-form" class="p-2">
+                                        
                                         <div class="form-group">
-                                            <label class="form-label">{{ __('Keyword / Subject / Post') }}</label>
-                                            <input type="text" name="keyword" class="form-control" placeholder="{{ __('Search by name, subject, or post...') }}" value="{{ request('keyword') }}" autocomplete="off">
+                                            <label class="form-label"><?php echo e(__('Keyword / Subject / Post')); ?></label>
+                                            <input type="text" name="keyword" class="form-control" placeholder="<?php echo e(__('Search by name, subject, or post...')); ?>" value="<?php echo e(request('keyword')); ?>" autocomplete="off">
                                         </div>
 
-                                        {{-- Location with radius --}}
-                                        @if(is_plugin_active('location'))
+                                        
+                                        <?php if(is_plugin_active('location')): ?>
                                             <div class="form-group">
-                                                <label class="form-label">{{ __('Location') }}</label>
-                                                @php
+                                                <label class="form-label"><?php echo e(__('Location')); ?></label>
+                                                <?php
                                                     $selectedCityId = request('city_id');
                                                     $selectedCityName = '';
                                                     if ($selectedCityId) {
                                                         $city = \Botble\Location\Models\City::find($selectedCityId);
                                                         $selectedCityName = $city ? $city->name : '';
                                                     }
-                                                @endphp
+                                                ?>
                                                 <div class="candidate-city-search-wrapper" style="position: relative;">
-                                                    <input type="text" name="city_search" id="candidate_city_search" class="form-control candidate-city-search-input" placeholder="{{ __('Select City') }}" autocomplete="off" value="{{ request('city_search', $selectedCityName) }}" />
-                                                    <input type="hidden" name="city_id" id="candidate_city_id" value="{{ $selectedCityId }}" />
+                                                    <input type="text" name="city_search" id="candidate_city_search" class="form-control candidate-city-search-input" placeholder="<?php echo e(__('Select City')); ?>" autocomplete="off" value="<?php echo e(request('city_search', $selectedCityName)); ?>" />
+                                                    <input type="hidden" name="city_id" id="candidate_city_id" value="<?php echo e($selectedCityId); ?>" />
                                                     <div class="candidate-city-suggestions" id="candidate-city-suggestions" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; max-height: 200px; overflow-y: auto; margin-top: 4px;"></div>
                                                 </div>
                                             </div>
                                             <div class="form-group">
-                                                <label class="form-label">{{ __('Radius (km)') }}</label>
-                                                <input type="number" name="radius" class="form-control" placeholder="10" value="{{ request('radius') }}" min="1" max="100">
+                                                <label class="form-label"><?php echo e(__('Radius (km)')); ?></label>
+                                                <input type="number" name="radius" class="form-control" placeholder="10" value="<?php echo e(request('radius')); ?>" min="1" max="100">
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
 
-                                        {{-- Last Updated --}}
+                                        
                                         <div class="form-group">
-                                            <label class="form-label">{{ __('Last Updated') }}</label>
+                                            <label class="form-label"><?php echo e(__('Last Updated')); ?></label>
                                             <select name="last_updated" class="form-control">
-                                                <option value="">{{ __('Any Time') }}</option>
-                                                <option value="last_24_hours" {{ request('last_updated') == 'last_24_hours' ? 'selected' : '' }}>{{ __('Last 24 Hours') }}</option>
-                                                <option value="last_7_days" {{ request('last_updated') == 'last_7_days' ? 'selected' : '' }}>{{ __('Last 7 Days') }}</option>
-                                                <option value="last_30_days" {{ request('last_updated') == 'last_30_days' ? 'selected' : '' }}>{{ __('Last 30 Days') }}</option>
-                                                <option value="last_3_months" {{ request('last_updated') == 'last_3_months' ? 'selected' : '' }}>{{ __('Last 3 Months') }}</option>
+                                                <option value=""><?php echo e(__('Any Time')); ?></option>
+                                                <option value="last_24_hours" <?php echo e(request('last_updated') == 'last_24_hours' ? 'selected' : ''); ?>><?php echo e(__('Last 24 Hours')); ?></option>
+                                                <option value="last_7_days" <?php echo e(request('last_updated') == 'last_7_days' ? 'selected' : ''); ?>><?php echo e(__('Last 7 Days')); ?></option>
+                                                <option value="last_30_days" <?php echo e(request('last_updated') == 'last_30_days' ? 'selected' : ''); ?>><?php echo e(__('Last 30 Days')); ?></option>
+                                                <option value="last_3_months" <?php echo e(request('last_updated') == 'last_3_months' ? 'selected' : ''); ?>><?php echo e(__('Last 3 Months')); ?></option>
                                             </select>
                                         </div>
 
-                                        {{-- Looking for Position --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Position Type') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Position Type')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="position_type[]" value="teaching" id="filter-teaching" {{ in_array('teaching', (array)request('position_type', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-teaching">{{ __('Teaching') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="position_type[]" value="teaching" id="filter-teaching" <?php echo e(in_array('teaching', (array)request('position_type', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-teaching"><?php echo e(__('Teaching')); ?></label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="position_type[]" value="non_teaching" id="filter-non-teaching" {{ in_array('non_teaching', (array)request('position_type', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-non-teaching">{{ __('Non-Teaching') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="position_type[]" value="non_teaching" id="filter-non-teaching" <?php echo e(in_array('non_teaching', (array)request('position_type', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-non-teaching"><?php echo e(__('Non-Teaching')); ?></label>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {{-- Gender --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Gender') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Gender')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="gender[]" value="male" id="filter-gender-male" {{ in_array('male', (array)request('gender', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-gender-male">{{ __('Male') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="gender[]" value="male" id="filter-gender-male" <?php echo e(in_array('male', (array)request('gender', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-gender-male"><?php echo e(__('Male')); ?></label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="gender[]" value="female" id="filter-gender-female" {{ in_array('female', (array)request('gender', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-gender-female">{{ __('Female') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="gender[]" value="female" id="filter-gender-female" <?php echo e(in_array('female', (array)request('gender', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-gender-female"><?php echo e(__('Female')); ?></label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="gender[]" value="other" id="filter-gender-other" {{ in_array('other', (array)request('gender', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-gender-other">{{ __('Other') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="gender[]" value="other" id="filter-gender-other" <?php echo e(in_array('other', (array)request('gender', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-gender-other"><?php echo e(__('Other')); ?></label>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {{-- Marital Status --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Marital Status') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Marital Status')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="marital_status[]" value="single" id="filter-marital-single" {{ in_array('single', (array)request('marital_status', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-marital-single">{{ __('Single') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="marital_status[]" value="single" id="filter-marital-single" <?php echo e(in_array('single', (array)request('marital_status', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-marital-single"><?php echo e(__('Single')); ?></label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="marital_status[]" value="married" id="filter-marital-married" {{ in_array('married', (array)request('marital_status', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-marital-married">{{ __('Married') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="marital_status[]" value="married" id="filter-marital-married" <?php echo e(in_array('married', (array)request('marital_status', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-marital-married"><?php echo e(__('Married')); ?></label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="marital_status[]" value="divorced" id="filter-marital-divorced" {{ in_array('divorced', (array)request('marital_status', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-marital-divorced">{{ __('Divorced') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="marital_status[]" value="divorced" id="filter-marital-divorced" <?php echo e(in_array('divorced', (array)request('marital_status', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-marital-divorced"><?php echo e(__('Divorced')); ?></label>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {{-- Institution Type --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Institution Type') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Institution Type')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
-                                                @php
+                                                <?php
                                                     $instTypes = [
                                                         'cbse_school' => 'CBSE',
                                                         'icse_school' => 'ICSE',
@@ -742,21 +745,21 @@
                                                         'university' => 'University'
                                                     ];
                                                     $selectedInstTypes = (array)request('institution_types', []);
-                                                @endphp
-                                                @foreach($instTypes as $key => $label)
+                                                ?>
+                                                <?php $__currentLoopData = $instTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="institution_types[]" value="{{ $key }}" id="filter-inst-{{ $key }}" {{ in_array($key, $selectedInstTypes) ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="filter-inst-{{ $key }}">{{ $label }}</label>
+                                                        <input class="form-check-input" type="checkbox" name="institution_types[]" value="<?php echo e($key); ?>" id="filter-inst-<?php echo e($key); ?>" <?php echo e(in_array($key, $selectedInstTypes) ? 'checked' : ''); ?>>
+                                                        <label class="form-check-label" for="filter-inst-<?php echo e($key); ?>"><?php echo e($label); ?></label>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
                                         </div>
 
-                                        {{-- Qualification Level --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Qualification Level') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Qualification Level')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
-                                                @php
+                                                <?php
                                                     $qualLevels = [
                                                         'diploma' => 'Diploma',
                                                         'bachelors' => "Bachelor's",
@@ -765,21 +768,21 @@
                                                         'post_graduate' => 'Post Graduate'
                                                     ];
                                                     $selectedQuals = (array)request('qualification_levels', []);
-                                                @endphp
-                                                @foreach($qualLevels as $key => $label)
+                                                ?>
+                                                <?php $__currentLoopData = $qualLevels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="qualification_levels[]" value="{{ $key }}" id="filter-qual-{{ $key }}" {{ in_array($key, $selectedQuals) ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="filter-qual-{{ $key }}">{{ $label }}</label>
+                                                        <input class="form-check-input" type="checkbox" name="qualification_levels[]" value="<?php echo e($key); ?>" id="filter-qual-<?php echo e($key); ?>" <?php echo e(in_array($key, $selectedQuals) ? 'checked' : ''); ?>>
+                                                        <label class="form-check-label" for="filter-qual-<?php echo e($key); ?>"><?php echo e($label); ?></label>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
                                         </div>
 
-                                        {{-- Certifications --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Certifications') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Certifications')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
-                                                @php
+                                                <?php
                                                     $certs = [
                                                         'b_ed' => 'B.Ed',
                                                         'm_ed' => 'M.Ed',
@@ -790,71 +793,71 @@
                                                         'phd' => 'PhD'
                                                     ];
                                                     $selectedCerts = (array)request('certifications', []);
-                                                @endphp
-                                                @foreach($certs as $key => $label)
+                                                ?>
+                                                <?php $__currentLoopData = $certs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="certifications[]" value="{{ $key }}" id="filter-cert-{{ $key }}" {{ in_array($key, $selectedCerts) ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="filter-cert-{{ $key }}">{{ $label }}</label>
+                                                        <input class="form-check-input" type="checkbox" name="certifications[]" value="<?php echo e($key); ?>" id="filter-cert-<?php echo e($key); ?>" <?php echo e(in_array($key, $selectedCerts) ? 'checked' : ''); ?>>
+                                                        <label class="form-check-label" for="filter-cert-<?php echo e($key); ?>"><?php echo e($label); ?></label>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
                                         </div>
 
-                                        {{-- Experience (Min to Max) --}}
+                                        
                                         <div class="form-group">
-                                            <label class="form-label">{{ __('Experience (years)') }}</label>
+                                            <label class="form-label"><?php echo e(__('Experience (years)')); ?></label>
                                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                                                <input type="number" name="experience_min" class="form-control" placeholder="{{ __('Min') }}" value="{{ request('experience_min') }}" min="0" max="50">
-                                                <input type="number" name="experience_max" class="form-control" placeholder="{{ __('Max') }}" value="{{ request('experience_max') }}" min="0" max="50">
+                                                <input type="number" name="experience_min" class="form-control" placeholder="<?php echo e(__('Min')); ?>" value="<?php echo e(request('experience_min')); ?>" min="0" max="50">
+                                                <input type="number" name="experience_max" class="form-control" placeholder="<?php echo e(__('Max')); ?>" value="<?php echo e(request('experience_max')); ?>" min="0" max="50">
                                             </div>
                                         </div>
 
-                                        {{-- Salary (Min to Max) --}}
+                                        
                                         <div class="form-group">
-                                            <label class="form-label">{{ __('Expected Salary (₹)') }}</label>
+                                            <label class="form-label"><?php echo e(__('Expected Salary (₹)')); ?></label>
                                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                                                <input type="number" name="salary_min" class="form-control" placeholder="{{ __('Min') }}" value="{{ request('salary_min') }}" min="0">
-                                                <input type="number" name="salary_max" class="form-control" placeholder="{{ __('Max') }}" value="{{ request('salary_max') }}" min="0">
+                                                <input type="number" name="salary_min" class="form-control" placeholder="<?php echo e(__('Min')); ?>" value="<?php echo e(request('salary_min')); ?>" min="0">
+                                                <input type="number" name="salary_max" class="form-control" placeholder="<?php echo e(__('Max')); ?>" value="<?php echo e(request('salary_max')); ?>" min="0">
                                             </div>
                                         </div>
 
-                                        {{-- Languages Known --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Languages') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Languages')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
-                                                @php
+                                                <?php
                                                     $languages = ['English', 'Hindi', 'Marathi', 'Gujarati', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Punjabi', 'Urdu'];
                                                     $selectedLangs = (array)request('languages', []);
-                                                @endphp
-                                                @foreach($languages as $lang)
+                                                ?>
+                                                <?php $__currentLoopData = $languages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lang): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="languages[]" value="{{ $lang }}" id="filter-lang-{{ strtolower($lang) }}" {{ in_array($lang, $selectedLangs) ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="filter-lang-{{ strtolower($lang) }}">{{ $lang }}</label>
+                                                        <input class="form-check-input" type="checkbox" name="languages[]" value="<?php echo e($lang); ?>" id="filter-lang-<?php echo e(strtolower($lang)); ?>" <?php echo e(in_array($lang, $selectedLangs) ? 'checked' : ''); ?>>
+                                                        <label class="form-check-label" for="filter-lang-<?php echo e(strtolower($lang)); ?>"><?php echo e($lang); ?></label>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
                                         </div>
 
-                                        {{-- Current Status --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Current Status') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Current Status')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="current_status[]" value="working" id="filter-status-working" {{ in_array('working', (array)request('current_status', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-status-working">{{ __('Working Now') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="current_status[]" value="working" id="filter-status-working" <?php echo e(in_array('working', (array)request('current_status', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-status-working"><?php echo e(__('Working Now')); ?></label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="current_status[]" value="not_working" id="filter-status-not-working" {{ in_array('not_working', (array)request('current_status', [])) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-status-not-working">{{ __('Not Working') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="current_status[]" value="not_working" id="filter-status-not-working" <?php echo e(in_array('not_working', (array)request('current_status', [])) ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-status-not-working"><?php echo e(__('Not Working')); ?></label>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {{-- Notice Period --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Notice Period') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Notice Period')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
-                                                @php
+                                                <?php
                                                     $noticePeriods = [
                                                         'immediate' => 'Immediate',
                                                         '15_days' => '15 Days',
@@ -864,36 +867,37 @@
                                                         'more_than_3_months' => 'More than 3 Months'
                                                     ];
                                                     $selectedNotice = (array)request('notice_period', []);
-                                                @endphp
-                                                @foreach($noticePeriods as $key => $label)
+                                                ?>
+                                                <?php $__currentLoopData = $noticePeriods; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="notice_period[]" value="{{ $key }}" id="filter-notice-{{ $key }}" {{ in_array($key, $selectedNotice) ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="filter-notice-{{ $key }}">{{ $label }}</label>
+                                                        <input class="form-check-input" type="checkbox" name="notice_period[]" value="<?php echo e($key); ?>" id="filter-notice-<?php echo e($key); ?>" <?php echo e(in_array($key, $selectedNotice) ? 'checked' : ''); ?>>
+                                                        <label class="form-check-label" for="filter-notice-<?php echo e($key); ?>"><?php echo e($label); ?></label>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
                                         </div>
 
-                                        {{-- Immediate Joiner --}}
+                                        
                                         <div class="form-group">
-                                            <label class="section-head-small">{{ __('Immediate Joiner') }}</label>
+                                            <label class="section-head-small"><?php echo e(__('Immediate Joiner')); ?></label>
                                             <div class="twm-sidebar-ele-filter">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="immediate_joiner" value="1" id="filter-immediate-joiner" {{ request('immediate_joiner') == '1' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="filter-immediate-joiner">{{ __('Available for Immediate Joining') }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="immediate_joiner" value="1" id="filter-immediate-joiner" <?php echo e(request('immediate_joiner') == '1' ? 'checked' : ''); ?>>
+                                                    <label class="form-check-label" for="filter-immediate-joiner"><?php echo e(__('Available for Immediate Joining')); ?></label>
                                                 </div>
                                             </div>
                                         </div>
                                         
-                                        <input type="hidden" name="per_page" value="{{ BaseHelper::stringify(request()->query('per_page', 12)) }}">
-                                        <input type="hidden" name="page" value="{{ request()->query('page', 1) }}" id="filter-page-input">
+                                        <input type="hidden" name="per_page" value="<?php echo e(BaseHelper::stringify(request()->query('per_page', 12))); ?>">
+                                        <input type="hidden" name="page" value="<?php echo e(request()->query('page', 1)); ?>" id="filter-page-input">
                                         <input type="hidden" name="layout" value="list">
-                                        <input type="hidden" name="sort_by" value="{{ BaseHelper::stringify(request()->query('sort_by')) }}">
+                                        <input type="hidden" name="sort_by" value="<?php echo e(BaseHelper::stringify(request()->query('sort_by'))); ?>">
                                         
                                         <div class="form-group mt-4">
                                             <button type="submit" class="btn btn-primary w-100">
                                                 <i class="feather-filter" style="margin-right: 6px;"></i>
-                                                {{ __('Apply Filters') }}
+                                                <?php echo e(__('Apply Filters')); ?>
+
                                             </button>
                                         </div>
                                     </form>
@@ -902,7 +906,7 @@
                         </div>
                     </div>
 
-                    {{-- Candidates Listings --}}
+                    
                     <div class="col-lg-9 col-md-12 position-relative candidates-listing-modern">
                         <!-- <div class="candidates-toolbar product-filter-wrap" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04);">
                             <div class="d-flex align-items-center gap-2">
@@ -910,44 +914,46 @@
                                     <i class="feather-filter"></i>
                                 </button>
                                 <span class="woocommerce-result-count-left" style="font-size: 14px; color: #64748b; font-weight: 500;">
-                                @if ($candidates->total())
-                                    {{ __('Showing :from – :to of :total results', [
+                                <?php if($candidates->total()): ?>
+                                    <?php echo e(__('Showing :from – :to of :total results', [
                                         'from'  => $candidates->firstItem(),
                                         'to'    => $candidates->lastItem(),
                                         'total' => $candidates->total(),
-                                    ]) }}
-                                @endif
+                                    ])); ?>
+
+                                <?php endif; ?>
                             </span>
                             </div>
                         </div>
 
-                        {{-- Toolbar --}}
+                        
                         <div class="candidates-toolbar product-filter-wrap">
                             <div class="d-flex align-items-center gap-2">
                                 <button type="button" class="d-block d-md-none btn btn-open-filter" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;">
                                     <i class="feather-filter"></i>
                                 </button>
                                 <span class="woocommerce-result-count-left">
-                                    @if ($candidates->total())
-                                        {{ __('Showing :from – :to of :total results', [
+                                    <?php if($candidates->total()): ?>
+                                        <?php echo e(__('Showing :from – :to of :total results', [
                                             'from'  => $candidates->firstItem(),
                                             'to'    => $candidates->lastItem(),
                                             'total' => $candidates->total(),
-                                        ]) }}
-                                    @endif
+                                        ])); ?>
+
+                                    <?php endif; ?>
                                 </span>
                             </div>
                         </div> -->
 
                         <div class="twm-candidates-list-wrap candidates-listing" id="candidates-listing-container" style="position: relative;">
-                            {{-- Common Loader Component --}}
-                            @include(Theme::getThemeNamespace('partials.loader'), [
+                            
+                            <?php echo $__env->make(Theme::getThemeNamespace('partials.loader'), [
                                 'size' => 'large',
                                 'overlay' => true,
                                 'containerId' => 'candidates-loader-overlay',
                                 'show' => false
-                            ])
-                            @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'), ['layout' => 'list'])
+                            ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                            <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.candidates.index'), ['layout' => 'list'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                         </div>
                     </div>
                 </div>
@@ -956,7 +962,7 @@
     </div>
 </div>
 
-{{-- Clear All Filters Script --}}
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const clearFiltersBtn = document.getElementById('clear-all-candidate-filters');
@@ -1325,3 +1331,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/shortcodes/candidates/style-1.blade.php ENDPATH**/ ?>

@@ -1475,29 +1475,16 @@ app()->booted(function (): void {
                 $condition[] = ['confirmed_at', '!=', null];
             }
 
-            $candidates = app(AccountInterface::class)
-                ->select(['jb_accounts.*'])
-                ->where($condition)
-                ->with($with);
+            // Use JobBoardHelper::filterCandidates to apply all filters
+            $input = request()->all();
+            $input['per_page'] = $shortcode->number_per_page ?? 12;
+            $input['layout'] = 'list'; // Force list view only
+            $candidates = JobBoardHelper::filterCandidates($input);
 
             $style = $shortcode->style;
-            $orderBy = $shortcode->order_by;
-            if ($style == 'list') {
-                $orderBy = request()->input('order_by') ?: $orderBy;
-            }
+            $layout = 'list'; // Always use list view
 
-            $candidates = match ($orderBy) {
-                'newest' => $candidates->orderBy('created_at', 'DESC'),
-                'oldest' => $candidates->orderBy('created_at', 'ASC'),
-                'random' => $candidates->inRandomOrder(),
-                default => $candidates
-                    ->orderBy('is_featured', 'DESC')
-                    ->orderBy('views', 'DESC'),
-            };
-
-            $candidates = $candidates->paginate($shortcode->number_per_page ?? 12);
-
-            return Theme::partial('shortcodes.candidates.index', compact('shortcode', 'candidates'));
+            return Theme::partial('shortcodes.candidates.index', compact('shortcode', 'candidates', 'layout'));
         });
 
         shortcode()->setAdminConfig('job-board-candidates', function ($attributes) {
