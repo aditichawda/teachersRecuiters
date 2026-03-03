@@ -576,9 +576,9 @@
                     
                     <!-- Wallet -->
                     @if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
-                    <a href="{{ url(route('public.account.jobseeker.wallet')) }}" target="_self" class="js-wallet-badge text-decoration-none d-block" style="cursor: pointer; color: inherit;">
+                    <a href="{{ url(route('public.account.jobseeker.wallet')) }}" target="_self" class="js-wallet-badge text-decoration-none d-block" style="cursor: pointer">
                         <i class="fa fa-wallet"></i>
-                        <span>{{ __('Available Coins') }}:</span>
+                        <span>{{__('Available Coins') }}:</span>
                         <span class="js-wallet-points">{{ format_credits_short($account->credits ?? 0) }}</span>
                     </a>
                     @else

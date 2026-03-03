@@ -26,6 +26,7 @@ use Botble\JobBoard\Models\JobExperience;
 use Botble\JobBoard\Models\JobSkill;
 use Botble\JobBoard\Models\JobType;
 use Botble\JobBoard\Models\Package;
+use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Tables\Fronts\ApplicantTable;
 use Botble\JobBoard\Services\CouponService;
 use Botble\JobBoard\Supports\InvoiceHelper;
@@ -140,6 +141,21 @@ document.addEventListener("DOMContentLoaded", function() {
         if (defined('PAYMENT_ACTION_PAYMENT_PROCESSED')) {
             add_action(PAYMENT_ACTION_PAYMENT_PROCESSED, function ($data): void {
                 $payment = PaymentHelper::storeLocalPayment($data);
+
+                // When gateway (e.g. Razorpay) already created the payment with null customer_id,
+                // storeLocalPayment returns false. Update that payment so invoice view/download works.
+                if ($payment === false && ! empty($data['customer_id']) && ! empty($data['customer_type'])) {
+                    $orderId = Arr::first((array) ($data['order_id'] ?? null));
+                    $existing = Payment::query()
+                        ->where('charge_id', $data['charge_id'] ?? null)
+                        ->when($orderId, fn ($q) => $q->where('order_id', $orderId))
+                        ->first();
+                    if ($existing && ! $existing->customer_id) {
+                        $existing->customer_id = $data['customer_id'];
+                        $existing->customer_type = $data['customer_type'];
+                        $existing->save();
+                    }
+                }
 
                 InvoiceHelper::store([
                     ...$data,
@@ -459,6 +475,132 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 return $data . $button;
             }, 3, 2);
+
+            add_filter('payment_table_payer_name', function ($default, $payment) {
+                if ($payment->customer_id && $payment->customer_type && class_exists($payment->customer_type)) {
+                    return $default;
+                }
+                $transaction = Transaction::query()->where('payment_id', $payment->id)->first();
+                if ($transaction && $transaction->account_id) {
+                    $account = Account::query()->find($transaction->account_id);
+                    return $account ? $account->name : $default;
+                }
+                return $default;
+            }, 10, 2);
+
+            add_filter('payment_table_account_type', function ($default, $payment) {
+                if (! $payment->customer_type || $payment->customer_type !== Account::class || ! $payment->customer_id) {
+                    $transaction = Transaction::query()->where('payment_id', $payment->id)->first();
+                    return $transaction ? ($transaction->account_type === 'employer' ? __('Employer') : __('Job Seeker')) : $default;
+                }
+                $account = $payment->customer_type::find($payment->customer_id);
+                if (! $account) {
+                    return $default;
+                }
+                return $account->isEmployer() ? __('Employer') : __('Job Seeker');
+            }, 10, 2);
+
+            add_filter('payment_table_institution_name', function ($default, $payment) {
+                if (! $payment->customer_type || $payment->customer_type !== Account::class || ! $payment->customer_id) {
+                    $transaction = Transaction::query()->where('payment_id', $payment->id)->first();
+                    return $transaction ? ($transaction->institution_name ?: $default) : $default;
+                }
+                $account = $payment->customer_type::find($payment->customer_id);
+                if (! $account || ! $account->isEmployer()) {
+                    return $default;
+                }
+                $company = $account->companies()->first();
+                return $company ? $company->name : $default;
+            }, 10, 2);
+
+            add_filter('payment_table_package_name', function ($default, $payment) {
+                $transaction = Transaction::query()->where('payment_id', $payment->id)->first();
+                if ($transaction && $transaction->package_name) {
+                    return $transaction->package_name;
+                }
+                if ($payment->order_id) {
+                    $package = Package::query()->find($payment->order_id);
+                    return $package ? $package->name : $default;
+                }
+                return $default;
+            }, 10, 2);
+
+            add_filter('payment_table_coupon_code', function ($default, $payment) {
+                $invoice = Invoice::query()->where('payment_id', $payment->id)->first();
+                return ($invoice && $invoice->coupon_code) ? $invoice->coupon_code : $default;
+            }, 10, 2);
+
+            add_filter('payment_detail_extra_info', function ($html, $payment) {
+                $transaction = Transaction::query()->where('payment_id', $payment->id)->first();
+
+                $showPayerInfo = ! $payment->customer_id || ! $payment->customer_type;
+                $payerName = null;
+                $payerEmail = null;
+                $payerPhone = null;
+                if ($showPayerInfo && $transaction) {
+                    if ($transaction->account_id) {
+                        $account = Account::query()->find($transaction->account_id);
+                        if ($account) {
+                            $payerName = $account->name;
+                            $payerEmail = $account->email;
+                            $payerPhone = $account->phone ? (($account->phone_country_code ?? '') . ' ' . $account->phone) : null;
+                        }
+                    }
+                    if (! $payerName && $transaction->user_details) {
+                        $payerName = $transaction->user_details['name'] ?? null;
+                        $payerEmail = $transaction->user_details['email'] ?? null;
+                        $payerPhone = $transaction->user_details['phone'] ?? null;
+                    }
+                }
+
+                $accountType = null;
+                if ($payment->customer_type === Account::class && $payment->customer_id) {
+                    $account = Account::query()->find($payment->customer_id);
+                    $accountType = $account ? ($account->isEmployer() ? __('Employer') : __('Job Seeker')) : null;
+                }
+                if (! $accountType && $transaction) {
+                    $accountType = $transaction->account_type === 'employer' ? __('Employer') : __('Job Seeker');
+                }
+
+                $institutionName = null;
+                if ($payment->customer_type === Account::class && $payment->customer_id) {
+                    $account = Account::query()->find($payment->customer_id);
+                    if ($account && $account->isEmployer()) {
+                        $company = $account->companies()->first();
+                        $institutionName = $company ? $company->name : null;
+                    }
+                }
+                if (! $institutionName && $transaction && $transaction->institution_name) {
+                    $institutionName = $transaction->institution_name;
+                }
+
+                $packageName = null;
+                if ($transaction && $transaction->package_name) {
+                    $packageName = $transaction->package_name;
+                }
+                if (! $packageName && $payment->order_id) {
+                    $package = Package::query()->find($payment->order_id);
+                    $packageName = $package ? $package->name : null;
+                }
+
+                $couponCode = null;
+                $invoice = Invoice::query()->where('payment_id', $payment->id)->first();
+                if ($invoice && ! empty($invoice->coupon_code)) {
+                    $couponCode = $invoice->coupon_code;
+                }
+
+                return view('plugins/job-board::partials.payment-detail-extra', [
+                    'payment' => $payment,
+                    'showPayerInfo' => $showPayerInfo && ($payerName || $payerEmail || $payerPhone),
+                    'payerName' => $payerName,
+                    'payerEmail' => $payerEmail,
+                    'payerPhone' => $payerPhone,
+                    'accountType' => $accountType,
+                    'institutionName' => $institutionName,
+                    'packageName' => $packageName,
+                    'couponCode' => $couponCode,
+                ])->render();
+            }, 10, 2);
         }
 
         if (defined('PAGE_MODULE_SCREEN_NAME')) {

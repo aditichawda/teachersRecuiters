@@ -28,6 +28,12 @@ class WalletController extends BaseController
             ->latest()
             ->paginate(15);
 
+        $paymentIds = $transactions->pluck('payment_id')->filter()->unique()->values()->all();
+        $invoiceByPaymentId = Invoice::query()
+            ->whereIn('payment_id', $paymentIds)
+            ->get()
+            ->keyBy('payment_id');
+
         $invoices = Invoice::query()
             ->whereHas('payment', function (Builder $q) use ($account): void {
                 $q->where('customer_id', $account->getKey());
@@ -71,6 +77,7 @@ class WalletController extends BaseController
             'account',
             'transactions',
             'invoices',
+            'invoiceByPaymentId',
             'packages',
             'bonusCredits',
             'purchasedCredits',

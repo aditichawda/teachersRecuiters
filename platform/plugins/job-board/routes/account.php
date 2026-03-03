@@ -222,6 +222,35 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             });
         });
 
+        // Checkout + callback + invoices: shared (no account-type) so job seeker and employer both reach payment page, callback and invoice
+        Route::group([
+            'middleware' => ['account', 'enable-credits', LocaleMiddleware::class],
+            'as' => 'public.account.',
+            'namespace' => 'Fronts',
+        ], function (): void {
+            Route::group(['prefix' => 'account'], function (): void {
+                Route::get('packages/{id}/subscribe', [
+                    'as' => 'package.subscribe.checkout',
+                    'uses' => 'DashboardController@getSubscribePackage',
+                ])->whereNumber('id');
+                Route::get('packages/{id}/subscribe/callback', [
+                    'as' => 'package.subscribe.callback',
+                    'uses' => 'DashboardController@getPackageSubscribeCallback',
+                ])->whereNumber('id');
+            });
+        });
+        Route::group([
+            'middleware' => ['account'],
+            'as' => 'public.account.',
+            'namespace' => 'Fronts',
+        ], function (): void {
+            Route::group(['prefix' => 'account'], function (): void {
+                Route::get('invoices', ['as' => 'invoices.index', 'uses' => 'InvoiceController@index']);
+                Route::get('invoices/{invoice}', ['as' => 'invoices.show', 'uses' => 'InvoiceController@show'])->wherePrimaryKey('invoice');
+                Route::get('invoices/{invoice}/generate-invoice', ['as' => 'invoices.generate_invoice', 'uses' => 'InvoiceController@getGenerateInvoice'])->wherePrimaryKey('invoice');
+            });
+        });
+
         Route::group([
             'middleware' => ['account'],
             'as' => 'public.account.',
@@ -456,16 +485,7 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'as' => 'packages',
                         'uses' => 'getPackages',
                     ]);
-
-                    Route::get('{id}/subscribe', [
-                        'as' => 'package.subscribe',
-                        'uses' => 'getSubscribePackage',
-                    ])->wherePrimaryKey();
-
-                    Route::get('{id}/subscribe/callback', [
-                        'as' => 'package.subscribe.callback',
-                        'uses' => 'getPackageSubscribeCallback',
-                    ])->wherePrimaryKey();
+                    // Checkout + callback moved to shared routes so job seeker + employer both work
                 });
             });
 
@@ -487,18 +507,7 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 ])->whereNumber('enquiry');
             });
 
-            Route::group([
-                'prefix' => 'invoices',
-                'as' => 'invoices.',
-            ], function (): void {
-                Route::resource('', 'InvoiceController')
-                    ->only('index')
-                    ->parameters('invoices');
-                Route::get('{invoice}', 'InvoiceController@show')->name('show')->wherePrimaryKey();
-                Route::get('{invoice}/generate-invoice', 'InvoiceController@getGenerateInvoice')
-                    ->name('generate_invoice')
-                    ->wherePrimaryKey();
-            });
+            // Invoices moved to shared routes so job seeker + employer both can view
 
             // Employer wallet only (job seeker has separate route: jobseeker.wallet)
             Route::group([

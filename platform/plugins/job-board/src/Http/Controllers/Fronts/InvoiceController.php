@@ -5,6 +5,7 @@ namespace Botble\JobBoard\Http\Controllers\Fronts;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Models\Invoice;
+use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Supports\InvoiceHelper;
 use Botble\JobBoard\Tables\Fronts\InvoiceTable;
 use Botble\SeoHelper\Facades\SeoHelper;
@@ -28,6 +29,7 @@ class InvoiceController extends BaseController
 
     public function show(Invoice $invoice)
     {
+        $invoice->loadMissing(['payment', 'items']);
         abort_unless($this->canViewInvoice($invoice), 404);
 
         $title = trans('plugins/job-board::messages.invoice_detail', ['code' => $invoice->code]);
@@ -41,17 +43,38 @@ class InvoiceController extends BaseController
 
     public function getGenerateInvoice(Invoice $invoice, Request $request, InvoiceHelper $invoiceHelper)
     {
+        $invoice->loadMissing(['payment', 'items']);
         abort_unless($this->canViewInvoice($invoice), 404);
 
-        if ($request->input('type') === 'print') {
-            return $invoiceHelper->streamInvoice($invoice);
+        set_time_limit(120);
+        try {
+            if ($request->input('type') === 'print') {
+                return $invoiceHelper->streamInvoice($invoice);
+            }
+            return $invoiceHelper->downloadInvoice($invoice);
+        } catch (\Throwable $e) {
+            report($e);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', trans('plugins/job-board::invoice.download_failed') ?: 'Invoice download failed. Please try again.');
         }
-
-        return $invoiceHelper->downloadInvoice($invoice);
     }
 
     protected function canViewInvoice(Invoice $invoice): bool
     {
-        return auth('account')->id() == $invoice->payment->customer_id;
+        $payment = $invoice->payment;
+        if (! $payment) {
+            return false;
+        }
+        $accountId = auth('account')->id();
+        if ($payment->customer_id && (int) $payment->customer_id === (int) $accountId) {
+            return true;
+        }
+        // Fallback: payment may have been created with null customer_id (e.g. Razorpay callback)
+        return (bool) Transaction::query()
+            ->where('payment_id', $payment->id)
+            ->where('account_id', $accountId)
+            ->exists();
     }
 }

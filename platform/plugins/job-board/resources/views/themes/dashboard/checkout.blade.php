@@ -8,7 +8,7 @@
             : cms_currency()->getDefaultCurrency()->title,
         'amount' => $package->price,
         'name' => $package->name,
-        'returnUrl' => route('public.account.package.subscribe', $package->id),
+        'returnUrl' => url('account/packages/' . $package->id . '/subscribe'),
         'callbackUrl' => route('public.account.package.subscribe.callback', $package->id),
     ])
 @endsection
