@@ -19,7 +19,12 @@ class Transaction extends BaseModel
         'type',
         'user_id',
         'account_id',
+        'account_type',
+        'user_details',
+        'institution_name',
         'payment_id',
+        'package_id',
+        'package_name',
     ];
 
     public const TYPE_CREDIT = 'add';
@@ -27,7 +32,18 @@ class Transaction extends BaseModel
 
     protected $casts = [
         'description' => SafeContent::class,
+        'user_details' => 'array',
     ];
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class)->withDefault();
+    }
+
+    public function package(): BelongsTo
+    {
+        return $this->belongsTo(Package::class)->withDefault();
+    }
 
     public function user(): BelongsTo
     {
@@ -54,6 +70,9 @@ class Transaction extends BaseModel
         }
 
         $description = trans('plugins/job-board::messages.purchased_credits', ['credits' => $this->credits]);
+        if ($this->package_name) {
+            $description .= ' (' . $this->package_name . ')';
+        }
         if ($this->payment_id) {
             $description .= trans('plugins/job-board::messages.via_payment', ['payment' => $this->payment->payment_channel->label()]);
             $description .= ': ' . number_format($this->payment->amount, 2) . $this->payment->currency;

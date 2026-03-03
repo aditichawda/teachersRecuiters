@@ -96,6 +96,63 @@ class HookServiceProvider extends ServiceProvider
 
             return $data;
         }, 20, 3);
+
+        add_filter('payment_detail_card_info', function ($default, $payment) {
+            if ($payment->payment_channel != RAZORPAY_PAYMENT_METHOD_NAME) {
+                return $default;
+            }
+            $logs = $payment->getPaymentLogs();
+            foreach ($logs as $log) {
+                $resp = $log->response ?? [];
+                $req = $log->request ?? [];
+                $entity = Arr::get($resp, 'payload.payment.entity')
+                    ?: Arr::get($req, 'payload.payment.entity')
+                    ?: Arr::get($resp, 'payment.entity')
+                    ?: Arr::get($resp, 'payload.payment')
+                    ?: [];
+                if (empty($entity)) {
+                    continue;
+                }
+                $cardId = Arr::get($entity, 'card_id');
+                $card = Arr::get($entity, 'card', []);
+                $last4 = is_array($card) ? Arr::get($card, 'last4') : null;
+                $last4 = $last4 ?: Arr::get($entity, 'last4');
+                $network = is_array($card) ? Arr::get($card, 'network') : null;
+                $method = Arr::get($entity, 'method');
+                if ($cardId || $last4 || $method) {
+                    $parts = array_filter([
+                        $network ?: $method,
+                        $last4 ? ('**** ' . $last4) : null,
+                        $cardId,
+                    ]);
+                    return implode(' · ', $parts) ?: ($cardId ?: ($last4 ? '**** **** **** ' . $last4 : 'Card'));
+                }
+            }
+            return $default;
+        }, 10, 2);
+
+        add_filter('payment_detail_entity_from_gateway', function ($default, $payment) {
+            if ($payment->payment_channel != RAZORPAY_PAYMENT_METHOD_NAME || ! $payment->charge_id) {
+                return $default;
+            }
+            try {
+                $paymentService = new RazorpayPaymentService();
+                $detail = $paymentService->getPaymentDetails($payment->charge_id);
+                if (! $detail) {
+                    return $default;
+                }
+                if (is_array($detail)) {
+                    return $detail;
+                }
+                if (is_object($detail) && method_exists($detail, 'toArray')) {
+                    return $detail->toArray();
+                }
+
+                return (array) $detail;
+            } catch (Exception $e) {
+                return $default;
+            }
+        }, 10, 2);
     }
 
     public function addPaymentSettings(?string $settings): string

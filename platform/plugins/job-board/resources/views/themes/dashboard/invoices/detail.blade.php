@@ -167,8 +167,9 @@
                 <x-core::button
                     tag="a"
                     :href="route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download'])"
-                    target="_blank"
                     icon="ti ti-download"
+                    target="_blank"
+                    rel="noopener"
                 >
                     {{ trans('plugins/job-board::invoice.download') }}
                 </x-core::button>

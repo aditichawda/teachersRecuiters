@@ -2,7 +2,6 @@
 
 @push('header')
 <style>
-/* Same card layout as job seeker: blue + yellow separate cards, equal width */
 .wallet-em-page .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 1.25rem !important; height: 200px !important; max-height: 200px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; overflow: hidden !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
 .wallet-em-page .wallet-js-card-blue .card-body { padding: 0 !important; border: none !important; background: transparent !important; flex: 1 1 auto; min-height: 0; }
 .wallet-em-page .wallet-js-card-blue .card-footer { border: none !important; padding: 0.75rem 0 0 !important; background: transparent !important; flex-shrink: 0; }
@@ -25,6 +24,7 @@
 @media (max-width: 575px) {
     .wallet-em-page .wallet-js-package-col { flex: 0 0 100% !important; }
 }
+   
 </style>
 @endpush
 
@@ -124,10 +124,10 @@
                 </x-core::card.header>
                 <x-core::card.body>
                     <p class="mb-1">{{ trans('plugins/job-board::dashboard.wallet_billing_name') }}: <strong>{{ $billingName ?? $account->name }}</strong></p>
-                    <a href="{{ route('public.account.employer.settings.edit') }}" class="small d-block mb-2">{{ trans('plugins/job-board::dashboard.wallet_add_billing_details') }}</a>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#wallet-em-remaining-details" aria-expanded="false">Remaining details</button>
-                    <div class="collapse mt-2 small" id="wallet-em-remaining-details">
-                        <div class="border rounded p-2 bg-light">
+                    <p class="mb-2 small text-muted">{{ trans('plugins/job-board::dashboard.wallet_add_billing_details') }}</p>
+                    <a href="{{ route('public.account.employer.settings.edit') }}" class="btn btn-sm btn-primary">{{ __('Add Remaining Details') }}</a>
+                    <div class="mt-2 small" id="wallet-em-remaining-details">
+                        <div class="border rounded p-2 bg-light mt-2">
                             <p class="mb-1"><strong>Name:</strong> {{ $account->name ?? trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) ?: '—' }}</p>
                             <p class="mb-1"><strong>Address:</strong> {{ $account->address ?? '—' }}</p>
                             <p class="mb-1"><strong>Mobile:</strong> {{ $account->phone ? (($account->phone_country_code ?? '') . ' ' . $account->phone) : '—' }}</p>
@@ -188,6 +188,7 @@
         </div>
     </div>
 
+    <div class="wallet-consumption-invoice-section">
     {{-- Consumption Report --}}
     <x-core::card class="mb-4">
         <x-core::card.header>
@@ -199,12 +200,14 @@
         <x-core::card.body class="p-0">
             @if($transactions->isNotEmpty())
                 <div class="table-responsive">
-                    <table class="table table-vcenter table-hover card-table mb-0">
+                    <table class="table table-vcenter table-hover card-table mb-0 wallet-consumption-table" style="table-layout: fixed; width: 100%;">
+                        
                         <thead>
                             <tr>
                                 <th>{{ trans('plugins/job-board::dashboard.wallet_sl_no') }}</th>
                                 <th>{{ trans('plugins/job-board::dashboard.wallet_date_of_transaction') }}</th>
-                                <th>{{ trans('plugins/job-board::dashboard.wallet_type_of_transaction') }}</th>
+                                <th class="wallet-th-type">{{ trans('plugins/job-board::dashboard.wallet_type_of_transaction') }}</th>
+                                <th>{{ __('Package') }}</th>
                                 <th class="text-end">{{ trans('plugins/job-board::dashboard.wallet_amount_coins') }}</th>
                                 <th class="text-end">{{ trans('plugins/job-board::dashboard.wallet_current_balance') }}</th>
                             </tr>
@@ -218,13 +221,14 @@
                                 @endphp
                                 <tr>
                                     <td>{{ $sn }}</td>
-                                    <td>{{ $txn->created_at->format('M d, Y H:i') }}</td>
-                                    <td>{!! BaseHelper::clean($txn->getDescription()) !!}</td>
+                                    <td class="text-nowrap">{{ $txn->created_at->format('M d, Y H:i') }}</td>
+                                    <td class="wallet-txn-description">{!! BaseHelper::clean($txn->getDescription()) !!}</td>
+                                    <td>{{ $txn->package_name ?? '—' }}</td>
                                     <td class="text-end">
                                         @if($txn->isCredit())
-                                            <span class="text-success">+{{ format_credits_short($txn->credits) }}</span>
+                                            <span class="text-success fw-medium">+{{ format_credits_short($txn->credits) }}</span>
                                         @else
-                                            <span class="text-danger">-{{ format_credits_short($txn->credits) }}</span>
+                                            <span class="text-danger fw-medium">-{{ format_credits_short($txn->credits) }}</span>
                                         @endif
                                     </td>
                                     <td class="text-end">{{ format_credits_short($runningBalance) }}</td>
@@ -284,7 +288,9 @@
                                     $currency = $payment ? \Botble\JobBoard\Models\Currency::query()->where('title', strtoupper($payment->currency))->first() : null;
                                 @endphp
                                 <tr>
-                                    <td>#{{ $invoice->code }}</td>
+                                    <td>
+                                        <a href="{{ route('public.account.invoices.show', $invoice) }}" class="text-primary text-decoration-none fw-medium">#{{ $invoice->code }}</a>
+                                    </td>
                                     <td>{{ format_price($invoice->amount, $currency) }}</td>
                                     <td>
                                         <x-core::badge :color="$invoice->status->getValue() === 'completed' ? 'success' : 'warning'">
@@ -296,7 +302,7 @@
                                         <x-core::button tag="a" :href="route('public.account.invoices.show', $invoice)" size="sm" color="default" icon="ti ti-eye">
                                             {{ trans('plugins/job-board::dashboard.wallet_view_invoice') }}
                                         </x-core::button>
-                                        <x-core::button tag="a" :href="route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download'])" size="sm" color="primary" icon="ti ti-download" target="_blank">
+                                        <x-core::button tag="a" :href="route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download'])" size="sm" color="primary" icon="ti ti-download" target="_blank" rel="noopener" download>
                                             {{ trans('plugins/job-board::dashboard.wallet_download_invoice') }}
                                         </x-core::button>
                                     </td>
@@ -318,5 +324,6 @@
             @endif
         </x-core::card.body>
     </x-core::card>
+    </div>{{-- .wallet-consumption-invoice-section --}}
     </div>{{-- .wallet-em-page --}}
 @endsection

@@ -752,6 +752,10 @@ class RazorpayController extends BaseController
             ['charge_id' => $chargeId, 'token' => $token]
         );
 
+        if (empty($orderId) && is_numeric($token)) {
+            $orderId = [(int) $token];
+        }
+
         $customerInfo = $this->getCustomerInfoFromOrder($orderId);
 
         $this->saveOrUpdatePayment(
