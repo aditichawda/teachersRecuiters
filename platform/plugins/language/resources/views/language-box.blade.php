@@ -23,30 +23,90 @@
 
 @if (count($languages) > 1)
     <div>
-        <h4>{{ trans('plugins/language::language.translations') }}</h4>
+        <style>
+            #list-others-language {
+                max-height: 200px;
+                overflow-y: auto;
+                scrollbar-width: thin;
+                scrollbar-color: #cbd5e1 #f1f5f9;
+            }
+            
+            #list-others-language::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            #list-others-language::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 3px;
+            }
+            
+            #list-others-language::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 3px;
+            }
+            
+            #list-others-language::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+            
+            #list-others-language .dropdown-item {
+                padding: 10px 16px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                transition: all 0.2s ease;
+            }
+            
+            #list-others-language .dropdown-item:hover {
+                background: var(--bb-bg-surface-secondary, #f8f9fa);
+                color: var(--bb-body-color, #212529);
+            }
+            
+            #list-others-language .dropdown-item .flag {
+                width: 20px;
+                height: 15px;
+                flex-shrink: 0;
+            }
+            
+            #list-others-language .dropdown-item span {
+                flex: 1;
+                font-size: 14px;
+            }
+            
+            #list-others-language .dropdown-item .ms-auto {
+                margin-left: auto;
+                opacity: 0.6;
+                font-size: 14px;
+            }
+        </style>
+        <x-core::dropdown
+            label="Languages"
+            wrapper-class="w-100"
+        >
         <div id="list-others-language">
             @foreach ($languages as $language)
                 @continue($language->lang_code === $currentLanguage->lang_code)
 
                 @if (array_key_exists($language->lang_code, $related))
-                    <a
-                        href="{{ Route::has($route['edit']) ? route($route['edit'], $related[$language->lang_code]) : '#' }}"
-                        class="gap-2 d-flex align-items-center text-decoration-none"
+                        <x-core::dropdown.item
+                            :href="Route::has($route['edit']) ? route($route['edit'], $related[$language->lang_code]) : '#'"
                     >
-                        {!! language_flag($language->lang_flag, $language->lang_name) !!}
-                        {{ $language->lang_name }} <x-core::icon name="ti ti-edit" />
-                    </a>
+                            {!! language_flag($language->lang_flag, $language->lang_name, 20) !!}
+                            <span>{{ $language->lang_name }}</span>
+                            <x-core::icon name="ti ti-edit" class="ms-auto" />
+                        </x-core::dropdown.item>
                 @else
-                    <a
-                        href="{{ Route::has($route['create']) ? route($route['create']) : '#' }}?{{ http_build_query(array_merge($queryParams, [Language::refLangKey() => $language->lang_code])) }}"
-                        class="gap-2 d-flex align-items-center text-decoration-none"
+                        <x-core::dropdown.item
+                            :href="Route::has($route['create']) ? route($route['create']) . '?' . http_build_query(array_merge($queryParams, [Language::refLangKey() => $language->lang_code])) : '#'"
                     >
-                        {!! language_flag($language->lang_flag, $language->lang_name) !!}
-                        {{ $language->lang_name }} <x-core::icon name="ti ti-plus" />
-                    </a>
+                            {!! language_flag($language->lang_flag, $language->lang_name, 20) !!}
+                            <span>{{ $language->lang_name }}</span>
+                            <x-core::icon name="ti ti-plus" class="ms-auto" />
+                        </x-core::dropdown.item>
                 @endif
             @endforeach
         </div>
+        </x-core::dropdown>
     </div>
 
     <input

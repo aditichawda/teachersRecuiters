@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'msgclub' => [
+        'url' => env('MSGCLUB_WHATSAPP_URL', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate'),
+        'key' => env('MSGCLUB_AUTH_KEY', env('WHATSAPP_API_KEY', '4625770ffb62853af287cedec7f50b0')),
+    ],
+
 ];

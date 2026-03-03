@@ -553,10 +553,11 @@
     }
 }
 @media(max-width: 768px) {
-    .for-schools-section { padding: 70px 0 40px; }
-    .schools-hero h1 { font-size: 32px; }
-    .schools-hero p { font-size: 16px; }
-    .schools-features-header h2 { font-size: 32px; }
+    .for-schools-section { padding: 60px 0 40px; }
+    .schools-hero { gap: 30px; margin-bottom: 50px; padding: 30px 0; }
+    .schools-hero h1 { font-size: 28px; line-height: 1.3; }
+    .schools-hero p { font-size: 15px; }
+    .schools-features-header h2 { font-size: 26px; }
     .schools-feature-card {
         flex-direction: column;
         text-align: center;

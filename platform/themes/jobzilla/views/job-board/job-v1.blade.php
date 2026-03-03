@@ -484,9 +484,20 @@
 
                 <div class="d-flex align-items-center gap-3 flex-wrap mb-3">
                     <div class="jd-hero-salary">{{ JobBoardHelper::isSalaryHiddenForGuests() ? __('Sign in to view salary') : $job->salary_text }}</div>
-                    @if (! $job->never_expired && $job->expire_date)
+                    @php
+                        // Use application_closing_date if available, otherwise use expire_date
+                        // application_closing_date is the date when applications close
+                        // expire_date is when the job posting expires
+                        $closingDate = null;
+                        if ($job->application_closing_date) {
+                            $closingDate = $job->application_closing_date;
+                        } elseif ($job->expire_date && !$job->never_expired) {
+                            $closingDate = $job->expire_date;
+                        }
+                    @endphp
+                    @if ($closingDate)
                         <span class="jd-hero-expires">
-                            <i class="feather-calendar"></i> {{ __('Expires') }}: {{ Theme::formatDate($job->expire_date) }}
+                            <i class="feather-calendar"></i> {{ __('Expires') }}: {{ Theme::formatDate($closingDate) }}
                         </span>
                     @endif
                 </div>
@@ -552,14 +563,174 @@
                     </div>
                 @endif
 
-                @if ($job->content)
-                    <div class="jd-content-card">
-                        <h4 class="jd-section-title">{{ __('Job Details') }}</h4>
-                        <div class="ck-content">
+                {{-- Job Details Section --}}
+                <div class="jd-content-card">
+                    <h4 class="jd-section-title">{{ __('Job Details') }}</h4>
+                    
+                    @if ($job->content)
+                        <div class="ck-content" style="margin-bottom: 30px;">
                             {!! BaseHelper::clean($job->content) !!}
                         </div>
+                    @endif
+
+                    {{-- Additional Job Details from Database --}}
+                    <div class="job-details-list" style="display: grid; gap: 20px;">
+                        @if ($job->number_of_positions)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Number of Positions') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $job->number_of_positions }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->jobShift && $job->jobShift->name)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Job Shift') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $job->jobShift->name }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->functionalArea && $job->functionalArea->name)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Functional Area') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $job->functionalArea->name }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->degreeLevel && $job->degreeLevel->name)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Degree Level') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $job->degreeLevel->name }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->required_certifications)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Required Certifications') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    @php
+                                        $certifications = is_array($job->required_certifications) 
+                                            ? $job->required_certifications 
+                                            : (is_string($job->required_certifications) ? json_decode($job->required_certifications, true) : [$job->required_certifications]);
+                                        $certifications = array_filter((array)$certifications);
+                                    @endphp
+                                    @if (!empty($certifications))
+                                        {{ implode(', ', array_map('trim', $certifications)) }}
+                                    @else
+                                        {{ $job->required_certifications }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($job->gender_preference)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Gender Preference') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ ucfirst(str_replace('_', ' ', $job->gender_preference)) }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->marital_status_preference)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Marital Status Preference') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ ucfirst(str_replace('_', ' ', $job->marital_status_preference)) }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->language_proficiency)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Language Proficiency') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    @php
+                                        $languages = is_array($job->language_proficiency) 
+                                            ? $job->language_proficiency 
+                                            : (is_string($job->language_proficiency) ? json_decode($job->language_proficiency, true) : [$job->language_proficiency]);
+                                        $languages = array_filter((array)$languages);
+                                    @endphp
+                                    @if (!empty($languages))
+                                        {{ implode(', ', array_map('trim', $languages)) }}
+                                    @else
+                                        {{ $job->language_proficiency }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($job->address)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Address') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $job->address }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->zip_code)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Zip Code') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $job->zip_code }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->is_remote)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Work Type') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ __('Remote') }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->is_freelance)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Job Type') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ __('Freelance') }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->start_date)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Start Date') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ Theme::formatDate($job->start_date) }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->application_closing_date)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Application Closing Date') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ Theme::formatDate($job->application_closing_date) }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->application_location_type)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Application Location Type') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ ucfirst(str_replace('_', ' ', $job->application_location_type)) }}</span>
+                            </div>
+                        @endif
+
+                        @if ($job->application_locations)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Application Locations') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    @php
+                                        $locations = is_array($job->application_locations) 
+                                            ? $job->application_locations 
+                                            : (is_string($job->application_locations) ? json_decode($job->application_locations, true) : [$job->application_locations]);
+                                        $locations = array_filter((array)$locations);
+                                    @endphp
+                                    @if (!empty($locations))
+                                        {{ implode(', ', array_map('trim', $locations)) }}
+                                    @else
+                                        {{ $job->application_locations }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($job->job_type_category)
+                            <div class="job-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Job Type Category') }}:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $job->job_type_category }}</span>
+                            </div>
+                        @endif
                     </div>
-                @endif
+                </div>
 
                 {{-- Share Section --}}
                 <div class="jd-share">
@@ -618,7 +789,7 @@
                             <span class="jd-info-icon"><i class="fas fa-file-signature"></i></span>
                             <div class="jd-info-text">
                                 <div class="jd-info-label">{{ __('Applicants') }}</div>
-                                <div class="jd-info-value">{{ $job->number_of_positions }}</div>
+                                <div class="jd-info-value">{{ $job->number_of_applied ?? $job->applicants_count ?? 0 }}</div>
                             </div>
                         </li>
                         <li>

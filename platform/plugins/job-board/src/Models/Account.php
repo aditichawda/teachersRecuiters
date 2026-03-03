@@ -213,7 +213,166 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
 
     public function sendPasswordResetNotification($token): void
     {
+        \Log::info('[PASSWORD_RESET] sendPasswordResetNotification called', [
+            'account_id' => $this->id,
+            'email' => $this->email,
+            'phone' => $this->phone ?? 'N/A',
+            'has_phone' => !empty($this->phone),
+        ]);
+        
         $this->notify(new ResetPasswordNotification($token));
+        
+        // Also send WhatsApp notification if phone number is available
+        if (!empty($this->phone)) {
+            \Log::info('[PASSWORD_RESET] Sending WhatsApp notification', [
+                'account_id' => $this->id,
+                'phone' => $this->phone,
+            ]);
+            $this->sendPasswordResetWhatsApp($token);
+        } else {
+            \Log::warning('[PASSWORD_RESET] No phone number available for WhatsApp notification', [
+                'account_id' => $this->id,
+                'email' => $this->email,
+            ]);
+        }
+    }
+
+    /**
+     * Send WhatsApp notification for password reset
+     * Made public so it can be called from controller as well
+     */
+    public function sendPasswordResetWhatsApp($token): void
+    {
+        try {
+            $resetLink = route('public.account.password.reset', [
+                'token' => $token,
+                'email' => $this->email
+            ]);
+
+            // Clean phone number
+            $phone = preg_replace('/[^0-9]/', '', $this->phone);
+            if (strlen($phone) == 12 && substr($phone, 0, 2) == '91') {
+                $phone = substr($phone, 2);
+            } elseif (strlen($phone) > 10) {
+                $phone = substr($phone, -10);
+            }
+
+            if (strlen($phone) !== 10) {
+                \Log::warning('[PASSWORD_RESET_WHATSAPP] Invalid phone number length', [
+                    'phone' => $this->phone,
+                    'cleaned_phone' => $phone,
+                    'length' => strlen($phone),
+                ]);
+                return;
+            }
+
+            $apiUrl = config('services.msgclub.url', env('MSGCLUB_WHATSAPP_URL', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate'));
+            $authKey = config('services.msgclub.key', env('MSGCLUB_AUTH_KEY', env('WHATSAPP_API_KEY', '4625770ffb62853af287cedec7f50b0')));
+            $senderId = setting('whatsapp_sender_id', env('WHATSAPP_SENDER_ID', '919039632383'));
+            
+            // Use OTP template (otp_signup_login) - which is working and tested
+            $templateName = setting('whatsapp_otp_template', env('WHATSAPP_OTP_TEMPLATE', 'otp_signup_login'));
+            
+            // Build short message with hint - exactly like OTP format
+            // Format: "PASS{code}" - Example: "PASS123456"
+            // Code: last 6 digits of phone number
+            $code = str_pad(substr($phone, -6), 6, '0', STR_PAD_LEFT);
+            $bodyText = "PASS" . $code;
+
+            $requestBody = [
+                'mobileNumbers' => $phone,
+                'senderId' => $senderId,
+                'component' => [
+                    'messaging_product' => 'whatsapp',
+                    'recipient_type' => 'individual',
+                    'type' => 'template',
+                    'template' => [
+                        'name' => $templateName,
+                        'language' => [
+                            'code' => 'en'
+                        ],
+                        'components' => [
+                            [
+                                'type' => 'body',
+                                'index' => 0,
+                                'parameters' => [
+                                    [
+                                        'type' => 'text',
+                                        'text' => $bodyText // "PASS{code}" - hint for password reset
+                                    ]
+                                ]
+                            ],
+                            [
+                                'type' => 'button',
+                                'sub_type' => 'url',
+                                'index' => 0,
+                                'parameters' => [
+                                    [
+                                        'type' => 'text',
+                                        'text' => $resetLink // Full reset link in button
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'qrImageUrl' => false,
+                    'qrLinkUrl' => false,
+                    'to' => $phone
+                ]
+            ];
+
+            \Log::info('[PASSWORD_RESET_WHATSAPP] Sending request', [
+                'phone' => $phone,
+                'template' => $templateName,
+                'reset_link' => $resetLink,
+                'body_text' => $bodyText,
+            ]);
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Accept' => 'application/json',
+            ])
+            ->timeout(500)
+            ->retry(3, 2000, function ($exception, $request) {
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException 
+                    || $exception instanceof \GuzzleHttp\Exception\ConnectException
+                    || $exception instanceof \GuzzleHttp\Exception\RequestException;
+            })
+            ->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
+
+            $responseData = $response->json();
+            $statusCode = $response->status();
+            
+            \Log::info('[PASSWORD_RESET_WHATSAPP] API Response', [
+                'phone' => $phone,
+                'status_code' => $statusCode,
+                'response' => $responseData,
+            ]);
+
+            // Check if response indicates success
+            $responseCode = $responseData['responseCode'] ?? null;
+            $isSuccess = ($statusCode === 200 && ($responseCode === '3001' || $responseCode === 3001));
+
+            if ($isSuccess) {
+                \Log::info('[PASSWORD_RESET_WHATSAPP] ✓ WhatsApp message sent successfully', [
+                    'phone' => $phone,
+                    'account_id' => $this->id,
+                ]);
+            } else {
+                \Log::warning('[PASSWORD_RESET_WHATSAPP] ✗ WhatsApp API returned non-success response', [
+                    'phone' => $phone,
+                    'response_code' => $responseCode,
+                    'response' => $responseData,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('[PASSWORD_RESET_WHATSAPP] Error sending WhatsApp message', [
+                'phone' => $this->phone,
+                'account_id' => $this->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Don't throw - WhatsApp failure shouldn't break email flow
+        }
     }
 
     public function sendEmailVerificationNotification(): void
@@ -435,6 +594,11 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
     public function myReviews(): MorphMany
     {
         return $this->morphMany(Review::class, 'created_by');
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class, 'account_id');
     }
 
     public function completedCompanyProfile(): bool

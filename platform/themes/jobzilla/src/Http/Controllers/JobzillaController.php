@@ -4,10 +4,15 @@ namespace Theme\Jobzilla\Http\Controllers;
 
 use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Http\Responses\BaseHttpResponse;
+use Botble\Base\Enums\BaseStatusEnum;
+use Botble\JobBoard\Models\UserNotification;
+use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
 use Botble\Location\Repositories\Interfaces\CityInterface;
 use Botble\Theme\Facades\Theme;
 use Botble\Theme\Http\Controllers\PublicController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Theme\Jobzilla\Http\Resources\CityResource;
 
 class JobzillaController extends PublicController
@@ -28,6 +33,39 @@ class JobzillaController extends PublicController
         $cities = $cityRepository->filters($keyword, 20, ['state']);
 
         return $response->setData(CityResource::collection($cities));
+    }
+
+    public function ajaxGetJobRoles(Request $request, CategoryInterface $categoryRepository, BaseHttpResponse $response)
+    {
+        if (! $request->ajax() || ! $request->wantsJson()) {
+            return $response->setNextUrl(BaseHelper::getHomepageUrl());
+        }
+
+        $keyword = BaseHelper::stringify($request->input('k'));
+
+        $categories = $categoryRepository->advancedGet([
+            'condition' => [
+                'status' => BaseStatusEnum::PUBLISHED,
+            ],
+            'order_by' => ['order' => 'ASC', 'created_at' => 'DESC'],
+        ]);
+
+        // If keyword is empty, return all categories (for dropdown on click)
+        // Otherwise filter by keyword
+        if (!empty($keyword) && strlen($keyword) >= 2) {
+            $categories = $categories->filter(function ($category) use ($keyword) {
+                return stripos($category->name, $keyword) !== false;
+            });
+        }
+
+        $categories = $categories->take(100)->map(function ($category) {
+            return [
+                'id' => $category->id,
+                'name' => $category->name,
+            ];
+        });
+
+        return $response->setData($categories->values());
     }
 
     public function faq()
@@ -81,6 +119,47 @@ class JobzillaController extends PublicController
             ->add(__('Home'), url('/'))
             ->add(__('Notifications'), route('public.notifications'));
 
-        return Theme::scope('notifications')->render();
+        $account = Auth::guard('account')->user();
+        
+        $notifications = collect([]);
+        $unreadCount = 0;
+        $readCount = 0;
+
+        if ($account) {
+            try {
+                // Check if table exists before querying
+                if (\Illuminate\Support\Facades\Schema::hasTable('jb_user_notifications')) {
+                    $notifications = UserNotification::where('account_id', $account->id)
+                        ->orderBy('created_at', 'desc')
+                        ->get()
+                        ->map(function ($notification) {
+                            return [
+                                'id' => $notification->id,
+                                'type' => $notification->type,
+                                'title' => $notification->title,
+                                'message' => $notification->message,
+                                'time' => $notification->created_at->diffForHumans(),
+                                'read' => $notification->isRead(),
+                                'icon' => $notification->icon,
+                                'color' => $notification->color,
+                                'action_url' => $notification->action_url,
+                            ];
+                        });
+
+                    $unreadCount = UserNotification::where('account_id', $account->id)
+                        ->whereNull('read_at')
+                        ->count();
+                    
+                    $readCount = UserNotification::where('account_id', $account->id)
+                        ->whereNotNull('read_at')
+                        ->count();
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error fetching notifications: ' . $e->getMessage());
+                // Continue with empty notifications if table doesn't exist
+            }
+        }
+
+        return Theme::scope('notifications', compact('notifications', 'unreadCount', 'readCount'))->render();
     }
 }

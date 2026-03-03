@@ -1,7 +1,16 @@
 @php
     $page->loadMissing('metadata');
     Theme::set('header_css_class', $page->getMetaData('header_css_class', true) ?: '');
+    
+    // Check if this is the homepage
+    $isHomePage = \Botble\Base\Facades\BaseHelper::isHomepage($page->id);
+    
+    // Hide background image for homepage
+    if ($isHomePage) {
+        Theme::set('pageCoverImage', '');
+    } else {
     Theme::set('pageCoverImage', $page->getMetaData('background_breadcrumb', true) ?: theme_option('background_breadcrumb_default'));
+    }
     
     $isAboutPage = $page->slug == 'about-us';
     $isHowItWorksPage = $page->slug == 'how-it-works';

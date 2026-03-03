@@ -28,7 +28,7 @@
                                     <div class="swiper-slide">
                                         <div class="twm-testi-content">
                                             <div class="t-testimonial-top">
-                                                <div class="t-quote"><i class="fa fa-quote-left"></i></div>
+                                                <div class="t-quote"></div>
                                             </div>
                                             <div class="t-discription">{!! BaseHelper::clean($testimonial->content) !!}</div>
                                             <div class="twm-testi-detail">

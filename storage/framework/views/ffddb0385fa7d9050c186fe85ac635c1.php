@@ -2,9 +2,41 @@
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
+    use Botble\JobBoard\Models\UserNotification;
+    use Illuminate\Support\Facades\Schema;
     
     $account = auth('account')->user();
-    $company = $account->companies()->first();
+    
+    // Get unread notification count
+    $notificationCount = 0;
+    if ($account) {
+        try {
+            if (Schema::hasTable('jb_user_notifications')) {
+                $notificationCount = UserNotification::where('account_id', $account->id)
+                    ->whereNull('read_at')
+                    ->count();
+            }
+        } catch (\Exception $e) {
+            // Silently fail
+        }
+    }
+    
+    // Format count: show "9+" if more than 9
+    $notificationBadge = $notificationCount > 9 ? '9+' : ($notificationCount > 0 ? $notificationCount : '');
+    $company = $account->companies()->with('slugable')->first();
+    $employerPublicProfileUrl = null;
+    if ($account->isEmployer() && $company) {
+        $companySlugKey = $company->slugable?->key ?? null;
+        if (!$companySlugKey) {
+            try {
+                $slugModel = \Botble\Slug\Facades\SlugHelper::getSlug(null, \Botble\Slug\Facades\SlugHelper::getPrefix(\Botble\JobBoard\Models\Company::class), \Botble\JobBoard\Models\Company::class, $company->id);
+                $companySlugKey = $slugModel?->key ?? null;
+            } catch (\Throwable $e) {
+                $companySlugKey = null;
+            }
+        }
+        $employerPublicProfileUrl = $companySlugKey ? route('public.company', $companySlugKey) : route('public.account.companies.index');
+    }
     
     // Profile completion
     $profileFields = [
@@ -577,7 +609,7 @@
 /* Layout Grid */
 .enl-row {
     display: flex;
-    gap: 24px;
+    gap: 15px;
 }
 .enl-sidebar-col {
     flex: 0 0 280px;
@@ -643,9 +675,12 @@
                         </li>
 
             <!-- Notifications -->
-                                     <li class="nav-item">
+                                     <li class="nav-item" style="position: relative;">
                 <a class="nav-link" style="color: black; font-size: 20px !important;" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
                     <i class="feather-bell" style="font-size: 20px !important;"></i>
+                    <?php if($notificationBadge): ?>
+                        <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;"><?php echo e($notificationBadge); ?></span>
+                    <?php endif; ?>
                             </a>
                         </li>
         </ul>
@@ -664,7 +699,7 @@
                     <a href="<?php echo e(route('public.account.dashboard')); ?>"><i class="fa fa-home"></i> Dashboard</a>
                     <a href="<?php echo e(route('public.account.employer.settings.edit')); ?>"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
-                    <a href="javascript:void(0);" id="logout-link-enl"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                    <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); var f = document.getElementById('logout-form-enl'); if (!f) return false; if (typeof window.showDialogConfirm === 'function') { window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(ok) { if (ok) f.submit(); }).catch(function() { if (confirm('Do you want to logout?')) f.submit(); }); } else { if (confirm('Do you want to logout?')) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -719,13 +754,15 @@
                         <h5 class="enl-name">Hello, <?php echo e($company->name ?? $account->name); ?></h5>
                         <p class="enl-date">Joined <?php echo e($account->created_at->format('M d, Y')); ?></p>
                         <p class="enl-updated">Last Updated: <?php echo e($account->updated_at->format('M d, Y')); ?></p>
-                        <button type="button" class="enl-view-btn" onclick="document.getElementById('enlProfileModal').style.display='flex'">
+                        <?php if($account->isEmployer()): ?>
+                        <a href="<?php echo e($employerPublicProfileUrl ?? route('public.account.companies.index')); ?>" class="enl-view-btn" style="display:inline-block;text-decoration:none;" <?php echo e(($employerPublicProfileUrl && $employerPublicProfileUrl !== route('public.account.companies.index')) ? 'target="_blank" rel="noopener"' : ''); ?>>
                             <i class="fa fa-eye"></i> View Profile
-                        </button>
+                        </a>
+                        <?php endif; ?>
                     </div>
                     
-                    <!-- Credits -->
-                    <div class="enl-credits">
+                    <!-- Credits (click opens profile completion modal) -->
+                    <div class="enl-credits" onclick="document.getElementById('enlProfileModal').style.display='flex'" style="cursor:pointer;">
                         <i class="fa fa-coins"></i>
                         <span>Credits:</span>
                         <span class="enl-credits-val"><?php echo e($account->credits ?? 0); ?></span>
@@ -744,11 +781,23 @@
                     <a href="<?php echo e(route('public.account.jobs.create')); ?>" class="enl-postjob">
                         <i class="fa fa-plus-circle"></i> Post Job
                     </a>
+
+                    <!-- Admission Button (employer only) -->
+                    <a href="<?php echo e(route('public.account.admission.edit')); ?>" class="enl-postjob" style="background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;">
+                        <i class="fa fa-graduation-cap"></i> <?php echo e(__('Admission')); ?>
+
+                    </a>
                     
                     <!-- Navigation -->
                     <ul class="enl-nav">
                         <?php $__currentLoopData = $menuItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php if(! $item['name']) continue; ?>
+                            <?php
+                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages', 'cms-account-invoices'];
+                                if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
+                                    continue;
+                                }
+                            ?>
                             <li>
                                 <a href="<?php echo e($item['url']); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $item['active']]); ?>">
                                     <?php if(str_contains($item['icon'] ?? '', 'ti ')): ?>
@@ -1279,105 +1328,67 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Logout Button Handler - Enhanced with better dialog system detection (matching navbar.blade.php exactly)
+// Logout Button Handler for Employer Dashboard
 (function() {
-    function waitForDialogSystem(callback, maxAttempts) {
-        maxAttempts = maxAttempts || 50; // 5 seconds max (50 * 100ms)
-        let attempts = 0;
-        
-        function check() {
-            attempts++;
-            if (typeof window.showDialogConfirm === 'function' && typeof jQuery !== 'undefined') {
-                callback();
-            } else if (attempts < maxAttempts) {
-                setTimeout(check, 100);
+    function showLogoutDialog() {
+        const logoutForm = document.getElementById('logout-form-enl');
+        if (!logoutForm) {
+            console.error('Logout form not found');
+            return;
+        }
+
+        // Wait for dialog system to be available
+        function tryShowDialog(attempts) {
+            attempts = attempts || 0;
+            
+            if (typeof window.showDialogConfirm === 'function') {
+                // Use custom dialog
+                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                    if (confirmed) {
+                        logoutForm.submit();
+                    }
+                }).catch(function(error) {
+                    console.error('Dialog error:', error);
+                    // Fallback to native confirm
+                    if (confirm('Do you want to logout?')) {
+                        logoutForm.submit();
+                    }
+                });
+            } else if (attempts < 50) {
+                // Retry after 100ms
+                setTimeout(function() {
+                    tryShowDialog(attempts + 1);
+                }, 100);
             } else {
-                // Fallback after max attempts
-                console.warn('Dialog system not loaded, using native confirm');
-                callback(true); // Pass true to indicate fallback
+                // Fallback to native confirm after max attempts
+                if (confirm('Do you want to logout?')) {
+                    logoutForm.submit();
+                }
             }
         }
-        check();
+        
+        tryShowDialog();
     }
     
     function initLogoutHandler() {
         const logoutLink = document.getElementById('logout-link-enl');
-        const logoutForm = document.getElementById('logout-form-enl');
         
-        if (logoutLink && logoutForm) {
-            // Check if already initialized
-            if (logoutLink.dataset.dialogInitialized === 'true') {
-                return; // Already initialized
-            }
-            logoutLink.dataset.dialogInitialized = 'true';
+        if (logoutLink) {
+            // Remove any existing listeners by cloning
+            const newLogoutLink = logoutLink.cloneNode(true);
+            logoutLink.parentNode.replaceChild(newLogoutLink, logoutLink);
             
-            // Store allowSubmit flag
-            let allowSubmit = false;
-            
-            // Prevent form submission unless allowed
-            const submitHandler = function(e) {
-                if (!allowSubmit) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    return false;
-                }
-            };
-            logoutForm.addEventListener('submit', submitHandler, true);
-            
-            // Add click handler directly (don't clone, just add listener)
-            logoutLink.addEventListener('click', function(e) {
+            // Add click handler
+            newLogoutLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                e.stopImmediatePropagation();
-                
-                console.log('Logout link clicked');
-                
-                // Wait for dialog system
-                waitForDialogSystem(function(useFallback) {
-                    console.log('Dialog system ready, useFallback:', useFallback);
-                    if (useFallback) {
-                        // Use native confirm as fallback
-                        if (confirm('Do you want to logout?')) {
-                            allowSubmit = true;
-                            // Ensure form has correct action before submitting
-                            if (!logoutForm.action || logoutForm.action === '') {
-                                logoutForm.action = '<?php echo e(route('public.account.logout')); ?>';
-                            }
-                            logoutForm.submit();
-                        }
-                    } else {
-                        // Use custom dialog
-                        console.log('Showing custom dialog');
-                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
-                            console.log('Dialog confirmed:', confirmed);
-                            if (confirmed) {
-                                allowSubmit = true;
-                                logoutForm.removeEventListener('submit', submitHandler, true);
-                                // Ensure form has correct action before submitting
-                                if (!logoutForm.action || logoutForm.action === '' || logoutForm.action === window.location.href) {
-                                    logoutForm.action = '<?php echo e(route('public.account.logout')); ?>';
-                                }
-                                logoutForm.submit();
-                            }
-                        }).catch(function(error) {
-                            console.error('Dialog error:', error);
-                            // Fallback to native confirm on error
-                            if (confirm('Do you want to logout?')) {
-                                allowSubmit = true;
-                                logoutForm.removeEventListener('submit', submitHandler, true);
-                                logoutForm.submit();
-                            }
-                        });
-                    }
-                });
-                
+                showLogoutDialog();
                 return false;
-            }, true); // Use capture phase - fires before other handlers
+            });
             
-            console.log('Logout handler initialized');
+            console.log('Employer dashboard logout handler initialized');
         } else {
-            console.log('Logout elements not found, retrying...', {logoutLink: !!logoutLink, logoutForm: !!logoutForm});
-            // Retry if elements not found yet
+            // Retry if element not found
             setTimeout(initLogoutHandler, 200);
         }
     }
@@ -1385,20 +1396,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing logout handler');
-            setTimeout(initLogoutHandler, 300);
+            setTimeout(initLogoutHandler, 500);
         });
     } else {
-        // DOM already loaded
-        console.log('DOM already loaded, initializing logout handler');
-        setTimeout(initLogoutHandler, 300);
+        setTimeout(initLogoutHandler, 500);
     }
     
-    // Also try after a longer delay to ensure all scripts are loaded
-    setTimeout(initLogoutHandler, 1000);
-    setTimeout(initLogoutHandler, 2000);
-    
-    // Also try after window load to ensure all assets are loaded
+    // Also try after window load
     window.addEventListener('load', function() {
         setTimeout(initLogoutHandler, 500);
     });

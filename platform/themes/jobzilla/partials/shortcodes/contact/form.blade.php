@@ -1,3 +1,50 @@
+<style>
+/* Contact Page Responsive */
+.twm-contact-one {
+    padding: 60px 0;
+}
+.contact-one-inner {
+    padding: 20px 0;
+}
+.contact-form-outer, .contact-info-wrap {
+    margin-bottom: 30px;
+}
+@media (max-width: 991px) {
+    .twm-contact-one {
+        padding: 50px 0;
+    }
+    .contact-form-outer {
+        margin-bottom: 40px;
+    }
+}
+@media (max-width: 767px) {
+    .twm-contact-one {
+        padding: 40px 0;
+    }
+    .contact-one-inner .row > [class*="col-"] {
+        margin-bottom: 20px;
+    }
+    .contact-form input,
+    .contact-form textarea,
+    .contact-form select {
+        width: 100%;
+        font-size: 14px;
+    }
+    .c-info-column {
+        margin-bottom: 25px;
+        text-align: center;
+    }
+}
+@media (max-width: 575px) {
+    .twm-contact-one {
+        padding: 30px 0;
+    }
+    .section-head h2 {
+        font-size: 24px;
+    }
+}
+</style>
+
 <div class="section-full twm-contact-one">
     <div class="section-content">
         <div class="container">

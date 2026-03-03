@@ -3,59 +3,11 @@
     Theme::set('withPageHeader', false);
     Theme::set('bodyClass', 'hide-page-banner notifications-page');
     
-    // Sample notifications - in real app, these would come from database
-    $notifications = [
-        [
-            'id' => 1,
-            'type' => 'job_alert',
-            'title' => 'New Job Match Found',
-            'message' => 'A new teaching position matching your profile has been posted.',
-            'time' => '2 hours ago',
-            'read' => false,
-            'icon' => 'feather-briefcase',
-            'color' => '#1967d2'
-        ],
-        [
-            'id' => 2,
-            'type' => 'application',
-            'title' => 'Application Status Updated',
-            'message' => 'Your application for "Mathematics Teacher" has been reviewed.',
-            'time' => '5 hours ago',
-            'read' => false,
-            'icon' => 'feather-file-text',
-            'color' => '#10b981'
-        ],
-        [
-            'id' => 3,
-            'type' => 'message',
-            'title' => 'New Message from Employer',
-            'message' => 'You have received a message from ABC School regarding your application.',
-            'time' => '1 day ago',
-            'read' => true,
-            'icon' => 'feather-message-circle',
-            'color' => '#f59e0b'
-        ],
-        [
-            'id' => 4,
-            'type' => 'profile',
-            'title' => 'Profile View',
-            'message' => 'Your profile was viewed by 5 employers this week.',
-            'time' => '2 days ago',
-            'read' => true,
-            'icon' => 'feather-eye',
-            'color' => '#8b5cf6'
-        ],
-        [
-            'id' => 5,
-            'type' => 'job_alert',
-            'title' => 'New Job Match Found',
-            'message' => 'A new position for "Science Teacher" is available in your area.',
-            'time' => '3 days ago',
-            'read' => true,
-            'icon' => 'feather-briefcase',
-            'color' => '#1967d2'
-        ],
-    ];
+    // Dynamic notifications from database
+    $notifications = $notifications ?? collect([]);
+    $unreadCount = $unreadCount ?? 0;
+    $readCount = $readCount ?? 0;
+    $totalCount = $notifications->count();
 @endphp
 
 <style>
@@ -233,13 +185,13 @@
         <div class="notifications-container">
             <div class="notifications-tabs">
                 <button class="notification-tab active" data-filter="all">
-                    {{ __('All') }} <span class="badge">5</span>
+                    {{ __('All') }} <span class="badge">{{ $totalCount }}</span>
                 </button>
                 <button class="notification-tab" data-filter="unread">
-                    {{ __('Unread') }} <span class="badge">2</span>
+                    {{ __('Unread') }} <span class="badge">{{ $unreadCount }}</span>
                 </button>
                 <button class="notification-tab" data-filter="read">
-                    {{ __('Read') }} <span class="badge">3</span>
+                    {{ __('Read') }} <span class="badge">{{ $readCount }}</span>
                 </button>
             </div>
 
@@ -248,7 +200,11 @@
                     @foreach($notifications as $notification)
                         <div class="notification-item {{ !$notification['read'] ? 'unread' : '' }}" 
                              data-type="{{ $notification['type'] }}"
-                             data-read="{{ $notification['read'] ? 'true' : 'false' }}">
+                             data-read="{{ $notification['read'] ? 'true' : 'false' }}"
+                             data-id="{{ $notification['id'] }}">
+                            @if(!empty($notification['action_url']))
+                                <a href="{{ $notification['action_url'] }}" style="text-decoration: none; color: inherit; display: flex; flex: 1; align-items: flex-start;">
+                            @endif
                             <div class="notification-icon" style="background: {{ $notification['color'] }};">
                                 <i class="{{ $notification['icon'] }}"></i>
                             </div>
@@ -257,13 +213,20 @@
                                 <div class="notification-message">{{ $notification['message'] }}</div>
                                 <div class="notification-time">{{ $notification['time'] }}</div>
                             </div>
+                            @if(!empty($notification['action_url']))
+                                </a>
+                            @endif
                             <div class="notification-actions">
                                 @if(!$notification['read'])
-                                    <button class="notification-action-btn" title="{{ __('Mark as read') }}">
+                                    <button class="notification-action-btn mark-read-btn" 
+                                            data-id="{{ $notification['id'] }}"
+                                            title="{{ __('Mark as read') }}">
                                         <i class="feather-check"></i>
                                     </button>
                                 @endif
-                                <button class="notification-action-btn" title="{{ __('Delete') }}">
+                                <button class="notification-action-btn delete-btn" 
+                                        data-id="{{ $notification['id'] }}"
+                                        title="{{ __('Delete') }}">
                                     <i class="feather-trash-2"></i>
                                 </button>
                             </div>
@@ -308,28 +271,92 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Mark as read
-    document.querySelectorAll('.notification-action-btn').forEach(function(btn) {
+    document.querySelectorAll('.mark-read-btn').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
+            e.preventDefault();
+            const notificationId = this.getAttribute('data-id');
             const item = this.closest('.notification-item');
             
-            if (this.querySelector('.feather-check')) {
-                // Mark as read
+            fetch('{{ route("public.account.notifications.read", ":id") }}'.replace(':id', notificationId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.message || 'Error marking notification as read');
+                    return;
+                }
                 item.classList.remove('unread');
                 item.style.background = '#fff';
                 item.style.borderLeft = 'none';
+                item.setAttribute('data-read', 'true');
                 this.remove();
-            } else if (this.querySelector('.feather-trash-2')) {
+                
+                // Update badge counts
+                updateBadgeCounts();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error marking notification as read');
+            });
+        });
+    });
+
                 // Delete notification
-                if (confirm('{{ __('Are you sure you want to delete this notification?') }}')) {
+    document.querySelectorAll('.delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const notificationId = this.getAttribute('data-id');
+            const item = this.closest('.notification-item');
+            
+            if (!confirm('{{ __('Are you sure you want to delete this notification?') }}')) {
+                return;
+            }
+            
+            fetch('{{ route("public.account.notifications.delete", ":id") }}'.replace(':id', notificationId), {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.message || 'Error deleting notification');
+                    return;
+                }
                     item.style.transition = 'opacity 0.3s';
                     item.style.opacity = '0';
                     setTimeout(function() {
                         item.remove();
+                    updateBadgeCounts();
                     }, 300);
-                }
-            }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting notification');
+            });
         });
     });
+
+    // Update badge counts
+    function updateBadgeCounts() {
+        const items = document.querySelectorAll('.notification-item');
+        const unreadItems = document.querySelectorAll('.notification-item.unread');
+        const readItems = document.querySelectorAll('.notification-item:not(.unread)');
+        
+        document.querySelector('[data-filter="all"] .badge').textContent = items.length;
+        document.querySelector('[data-filter="unread"] .badge').textContent = unreadItems.length;
+        document.querySelector('[data-filter="read"] .badge').textContent = readItems.length;
+    }
 });
 </script>

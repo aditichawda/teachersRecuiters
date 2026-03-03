@@ -1,7 +1,26 @@
--size@php
+@php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
+    use Botble\JobBoard\Models\UserNotification;
+    use Illuminate\Support\Facades\Schema;
+    
+    // Get unread notification count
+    $notificationCount = 0;
+    if (auth('account')->check()) {
+        try {
+            if (Schema::hasTable('jb_user_notifications')) {
+                $notificationCount = UserNotification::where('account_id', auth('account')->id())
+                    ->whereNull('read_at')
+                    ->count();
+            }
+        } catch (\Exception $e) {
+            // Silently fail
+        }
+    }
+    
+    // Format count: show "9+" if more than 9
+    $notificationBadge = $notificationCount > 9 ? '9+' : ($notificationCount > 0 ? $notificationCount : '');
     
     // Get featured categories with job counts
     $featuredCategories = collect();
@@ -126,9 +145,12 @@
                                     <span>{{ __('Premium Service') }}</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" style="position: relative;">
                                 <a class="nav-link" style="color: black; font-size: 20px; !important" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
                                     <i class="feather-bell" style="font-size: 20px !important"></i>
+                                    @if($notificationBadge)
+                                        <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;">{{ $notificationBadge }}</span>
+                                    @endif
                                 </a>
                             </li>
                         @elseif($isEmployer)
@@ -143,9 +165,12 @@
                                     <span>{{ __('Plans') }}</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" style="position: relative;">
                                 <a class="nav-link" style="color: black; font-size: 20px; !important" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
                                     <i class="feather-bell" style="font-size: 20px !important"></i>
+                                    @if($notificationBadge)
+                                        <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;">{{ $notificationBadge }}</span>
+                                    @endif
                                 </a>
                             </li>
                         @else
@@ -295,6 +320,29 @@
                             </div> --}}
                         </div>
                         <div class="extra-cell">
+                            <style>
+                            /* Fix button alignment */
+                            .header-nav-btn-section {
+                                display: flex !important;
+                                align-items: center !important;
+                            }
+                            .twm-nav-btn-left,
+                            .twm-nav-btn-right {
+                                display: flex !important;
+                                align-items: center !important;
+                            }
+                            .twm-nav-sign-up,
+                            .twm-nav-post-a-job {
+                                display: flex !important;
+                                align-items: center !important;
+                                vertical-align: middle !important;
+                            }
+                            .twm-nav-sign-up i,
+                            .twm-nav-post-a-job i {
+                                display: flex !important;
+                                align-items: center !important;
+                            }
+                            </style>
                             <div class="header-nav-btn-section">
                                 @if (auth('account')->check() && $account = auth('account')->user())
                                     <div>
@@ -350,7 +398,7 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <!-- Login Button -->
                                         <div class="twm-nav-btn-left">
-                                            <a class="twm-nav-sign-up d-inline-block" href="{{ route('public.account.login') }}">
+                                            <a class="twm-nav-sign-up" href="{{ route('public.account.login') }}">
                                                 <i class="feather-log-in"></i>
                                                 <span>{{ __('Login') }}</span>
                                             </a>
@@ -737,6 +785,32 @@
     transform: translateX(5px);
 }
 
+/* Notification Badge Styles */
+.nav-item[style*="position: relative"] .nav-link {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute !important;
+    top: 2px !important;
+    right: 2px !important;
+    background: #dc3545 !important;
+    color: white !important;
+    border-radius: 10px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+    padding: 0 4px !important;
+    white-space: nowrap !important;
+    z-index: 10 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
 /* Mobile Responsive */
 @media (max-width: 991px) {
     .mega-menu {
@@ -904,17 +978,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
+    /* padding: 12px; */
+    /* background: #fff; */
+    /* border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); */
+    /* transition: all 0.3s ease; */
 }
 
-.home-client-carousel3 .ow-client-logo:hover {
+/* .home-client-carousel3 .ow-client-logo:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     transform: translateY(-3px);
-}
+} */
 
 .home-client-carousel3 .client-logo {
     max-width: 100% !important;
@@ -1255,12 +1329,21 @@ document.addEventListener('DOMContentLoaded', function() {
 // Logout Button Handler - Enhanced with better dialog system detection
 (function() {
     function waitForDialogSystem(callback, maxAttempts) {
-        maxAttempts = maxAttempts || 50; // 5 seconds max (50 * 100ms)
+        maxAttempts = maxAttempts || 100; // 10 seconds max (100 * 100ms)
         let attempts = 0;
         
         function check() {
             attempts++;
-            if (typeof window.showDialogConfirm === 'function' && typeof jQuery !== 'undefined') {
+            // Check if showDialogConfirm function exists (it should work even without jQuery check)
+            if (typeof window.showDialogConfirm === 'function') {
+                // Also ensure dialog container exists
+                if (typeof jQuery !== 'undefined' && jQuery('#dialog-alert-container').length === 0) {
+                    jQuery('body').append('<div id="dialog-alert-container"></div>');
+                } else if (typeof jQuery === 'undefined' && !document.getElementById('dialog-alert-container')) {
+                    const container = document.createElement('div');
+                    container.id = 'dialog-alert-container';
+                    document.body.appendChild(container);
+                }
                 callback();
             } else if (attempts < maxAttempts) {
                 setTimeout(check, 100);
@@ -1317,13 +1400,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     } else {
                         // Use custom dialog
-                        window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
-                            if (confirmed) {
+                        try {
+                            window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                                if (confirmed) {
+                                    allowSubmit = true;
+                                    logoutForm.removeEventListener('submit', submitHandler, true);
+                                    logoutForm.submit();
+                                }
+                            }).catch(function(error) {
+                                console.error('Dialog error:', error);
+                                // Fallback to native confirm on error
+                                if (confirm('Do you want to logout?')) {
+                                    allowSubmit = true;
+                                    logoutForm.submit();
+                                }
+                            });
+                        } catch (error) {
+                            console.error('Dialog system error:', error);
+                            // Fallback to native confirm on error
+                            if (confirm('Do you want to logout?')) {
                                 allowSubmit = true;
-                                logoutForm.removeEventListener('submit', submitHandler, true);
                                 logoutForm.submit();
                             }
-                        });
+                        }
                     }
                 });
                 
@@ -1338,14 +1437,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initLogoutHandler, 300);
+            setTimeout(initLogoutHandler, 500);
         });
     } else {
         // DOM already loaded
-        setTimeout(initLogoutHandler, 300);
+        setTimeout(initLogoutHandler, 500);
     }
     
-    // Also try after a longer delay to ensure all scripts are loaded
-    setTimeout(initLogoutHandler, 1000);
+    // Also try after longer delays to ensure all scripts are loaded
+    setTimeout(initLogoutHandler, 1500);
+    setTimeout(initLogoutHandler, 3000);
 })();
 </script>
+
+{{-- Ensure dialog container exists --}}
+<div id="dialog-alert-container" style="display: none;"></div>

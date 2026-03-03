@@ -1,116 +1,268 @@
 @php
-    $candidates->loadMissing(['country', 'state', 'city', 'favoriteSkills', 'slugable']);
+    $candidates->loadMissing(['country', 'state', 'city', 'favoriteSkills', 'slugable', 'educations', 'experiences']);
 @endphp
 
 @foreach ($candidates as $candidate)
-    <div class="cand-card-list" style="display: flex; align-items: flex-start; gap: 20px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 20px; background: #fff; transition: all 0.3s;">
+    @php
+        // Helper function for formatting
+        $formatLabel = function($v) { return ucwords(str_replace('_', ' ', (string)$v)); };
+        
+        // Institution Type Labels
+        $instLabels = [
+            'cbse_school' => 'CBSE', 'icse_school' => 'ICSE', 'cambridge_school' => 'Cambridge',
+            'ib_school' => 'IB', 'state_board_school' => 'State Board', 'play_school' => 'Play School',
+            'engineering_college' => 'Engineering', 'medical_college' => 'Medical',
+            'nursing_college' => 'Nursing', 'edtech_company' => 'EdTech',
+            'coaching_institute' => 'Coaching', 'university' => 'University'
+        ];
+        
+        // Get institution types - try multiple access methods
+        $instTypes = [];
+        if (!empty($candidate->institution_types)) {
+            $instTypes = is_array($candidate->institution_types) ? $candidate->institution_types : json_decode($candidate->institution_types, true);
+        }
+        if (empty($instTypes) && !empty($candidate->institution_type)) {
+            $instTypes = is_array($candidate->institution_type) ? $candidate->institution_type : [$candidate->institution_type];
+        }
+        $instTypes = is_array($instTypes) ? array_filter($instTypes) : [];
+        $instTypeDisplay = !empty($instTypes) ? implode(', ', array_map(function($it) use ($instLabels) {
+            return $instLabels[$it] ?? ucwords(str_replace('_', ' ', $it));
+        }, array_slice($instTypes, 0, 2))) : '—';
+        
+        // Current Location
+        $currentLocation = '—';
+        // Try multiple ways to get location
+        $cityName = $candidate->city_name ?? ($candidate->city->name ?? null);
+        $stateName = $candidate->state_name ?? ($candidate->state->name ?? null);
+        if ($cityName) {
+            $currentLocation = $cityName;
+            if ($stateName) $currentLocation .= ', ' . $stateName;
+        } elseif ($stateName) {
+            $currentLocation = $stateName;
+        } elseif ($candidate->address) {
+            $currentLocation = Str::limit($candidate->address, 30);
+        }
+        
+        // Total Experience
+        $totalExp = $candidate->total_experience ?? '—';
+        if ($totalExp && $totalExp !== '—') {
+            $totalExp = $formatLabel($totalExp);
+        }
+        
+        // Teaching Subjects / Non-Teaching Roles
+        $subjectsRoles = '—';
+        $positionType = $candidate->position_type ?? null;
+        // Handle both string and array formats
+        if (is_string($positionType)) {
+            $positionType = json_decode($positionType, true) ?? $positionType;
+        }
+        if ($positionType === 'teaching' || (is_array($positionType) && in_array('teaching', $positionType))) {
+            $subjects = $candidate->teaching_subjects ?? [];
+            if (is_string($subjects)) {
+                $subjects = json_decode($subjects, true) ?? [];
+            }
+            if (is_array($subjects) && !empty($subjects)) {
+                $subjectsList = array_slice(array_filter($subjects), 0, 3);
+                $subjectsRoles = 'Teaching: ' . implode(', ', array_map($formatLabel, $subjectsList));
+                if (count($subjects) > 3) $subjectsRoles .= ' +' . (count($subjects) - 3) . ' more';
+            }
+        } elseif ($positionType === 'non_teaching' || (is_array($positionType) && in_array('non_teaching', $positionType))) {
+            $nonTeach = $candidate->non_teaching_positions ?? [];
+            if (is_string($nonTeach)) {
+                $nonTeach = json_decode($nonTeach, true) ?? [];
+            }
+            if (is_array($nonTeach) && !empty($nonTeach)) {
+                $nonTeachList = array_slice(array_filter($nonTeach), 0, 3);
+                $subjectsRoles = 'Non-Teaching: ' . implode(', ', array_map($formatLabel, $nonTeachList));
+                if (count($nonTeach) > 3) $subjectsRoles .= ' +' . (count($nonTeach) - 3) . ' more';
+            }
+        }
+        
+        // Teaching Certification
+        $certifications = '—';
+        $certs = $candidate->teaching_certifications ?? [];
+        if (is_string($certs)) {
+            $certs = json_decode($certs, true) ?? [];
+        }
+        if (is_array($certs) && !empty($certs)) {
+            $certList = array_slice(array_filter($certs), 0, 2);
+            $certifications = implode(', ', array_map($formatLabel, $certList));
+            if (count($certs) > 2) $certifications .= ' +' . (count($certs) - 2) . ' more';
+        }
+        
+        // Highest Qualification Level
+        $highestQual = '—';
+        $quals = $candidate->qualifications ?? [];
+        if (is_string($quals)) {
+            $quals = json_decode($quals, true) ?? [];
+        }
+        // Also try to get from educations relationship if qualifications field is empty
+        if (empty($quals) && $candidate->educations && $candidate->educations->isNotEmpty()) {
+            $quals = $candidate->educations->map(function($edu) {
+                return [
+                    'level' => $edu->degree_level ?? $edu->degree ?? '',
+                    'specialization' => $edu->specialization ?? $edu->major ?? '',
+                    'institution' => $edu->school ?? $edu->institution ?? ''
+                ];
+            })->toArray();
+        }
+        if (is_array($quals) && !empty($quals)) {
+            // Find highest level (assuming order: bachelors < masters < phd, etc.)
+            $levelOrder = ['diploma' => 1, 'bachelors' => 2, 'masters' => 3, 'phd' => 4, 'post_graduate' => 3, 'doctorate' => 4];
+            $highest = null;
+            $highestOrder = 0;
+            foreach ($quals as $q) {
+                $level = is_array($q) ? ($q['level'] ?? '') : '';
+                if (empty($level)) continue;
+                $order = $levelOrder[strtolower($level)] ?? 0;
+                if ($order > $highestOrder) {
+                    $highestOrder = $order;
+                    $highest = $q;
+                }
+            }
+            if ($highest) {
+                $level = is_array($highest) ? ($highest['level'] ?? '') : '';
+                $highestQual = $formatLabel($level);
+                if (is_array($highest) && !empty($highest['specialization'])) {
+                    $highestQual .= ' (' . $formatLabel($highest['specialization']) . ')';
+                }
+            }
+        }
+        
+        // Last Profile Updated
+        $lastUpdated = $candidate->updated_at ? $candidate->updated_at->diffForHumans() : '—';
+        
+        // Profile Status (only show if open for employer view)
+        $profileStatus = '—';
+        if ($candidate->is_public_profile && $candidate->available_for_hiring) {
+            $profileStatus = 'Open for Hiring';
+        } elseif ($candidate->is_public_profile) {
+            $profileStatus = 'Profile Visible';
+        }
+        
+        // Gender
+        $gender = $candidate->gender ? ucfirst($candidate->gender) : null;
+        
+        // Marital Status
+        $maritalStatus = $candidate->marital_status ? ucwords(str_replace('_', ' ', $candidate->marital_status)) : null;
+        
+        // Notice Period
+        $noticePeriod = $candidate->notice_period ? $formatLabel($candidate->notice_period) : null;
+        
+        // Current Work Status
+        $workStatus = $candidate->current_work_status ? $formatLabel($candidate->current_work_status) : null;
+        
+        // Expected Salary
+        $expectedSalary = null;
+        if ($candidate->expected_salary) {
+            $expectedSalary = '₹' . number_format($candidate->expected_salary);
+            if ($candidate->expected_salary_period) {
+                $expectedSalary .= ' / ' . $formatLabel($candidate->expected_salary_period);
+            }
+        }
+        
+        // Languages (first 2-3)
+        $languages = null;
+        if (is_array($candidate->languages) && !empty($candidate->languages)) {
+            $langList = array_slice($candidate->languages, 0, 2);
+            $langNames = array_map(function($lang) {
+                $langName = is_array($lang) ? ($lang['language'] ?? '') : (string)$lang;
+                return ucwords(str_replace('_', ' ', $langName));
+            }, $langList);
+            $languages = implode(', ', array_filter($langNames));
+            if (count($candidate->languages) > 2) {
+                $languages .= ' +' . (count($candidate->languages) - 2);
+            }
+        }
+    @endphp
+    
+    <div class="cand-card-list" style="position: relative; display: flex; align-items: flex-start; gap: 16px; padding: 16px; padding-left: 20px; border: 1px solid #e5e7eb; border-left: 4px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px; background: #fff; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#0073d1'; this.style.borderLeftColor='#0073d1';" onmouseout="this.style.borderColor='#e5e7eb'; this.style.borderLeftColor='#e5e7eb';">
         @if ($candidate->is_featured)
-            <span class="cl-featured" style="position: absolute; top: 15px; right: 15px; background: #fbbf24; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ __('Featured') }}</span>
+            <span class="cl-featured" style="position: absolute; top: 12px; right: 12px; background: #dc2626; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; z-index: 2; text-transform: uppercase; letter-spacing: 0.5px;">{{ __('Featured') }}</span>
         @endif
         
-        <div class="cl-avatar" style="flex-shrink: 0;">
-            <img src="{{ $candidate->avatar_url }}" alt="{{ $candidate->name }}" style="width: 100px; height: 100px; border-radius: 12px; object-fit: cover; border: 2px solid #e5e7eb;">
+        {{-- Candidate Photo --}}
+        <div class="cl-avatar" style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+            <img src="{{ $candidate->avatar_url }}" alt="{{ $candidate->name }}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; object-position: center; border: 2px solid #e5e7eb; display: block;">
         </div>
         
-        <div class="cl-info" style="flex: 1; min-width: 0;">
-            <a href="{{ $candidate->url }}" class="cl-name" style="font-size: 18px; font-weight: 600; color: #1f2937; text-decoration: none; display: block; margin-bottom: 8px;">{{ $candidate->name }}</a>
+        {{-- Main Info Section --}}
+        <div class="cl-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
+            {{-- Name --}}
+            <a href="{{ $candidate->url }}" class="cl-name" style="font-size: 16px; font-weight: 600; color: #0073d1; text-decoration: none; display: block; margin-bottom: 4px;">{{ $candidate->name }}</a>
             
-            <div class="cl-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
-                @if ($candidate->phone)
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280;">
-                        <i class="feather-phone" style="font-size: 14px; color: #9ca3af;"></i>
-                        <span>{{ $candidate->phone }}</span>
+            {{-- Details List (Only Fields with Data) --}}
+            <div class="cl-details-list" style="display: flex; flex-direction: column; gap: 6px; flex-wrap: wrap; max-height: 140px;">
+                {{-- Location --}}
+                @if ($currentLocation !== '—')
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
+                        <i class="feather-map-pin" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
+                        <span><strong>{{ __('Location') }}:</strong> {{ $currentLocation }}</span>
                     </div>
                 @endif
                 
-                @if ($candidate->city_name || $candidate->state_name)
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280;">
-                        <i class="feather-map-pin" style="font-size: 14px; color: #9ca3af;"></i>
-                        <span>
-                            @if ($candidate->city_name)
-                                {{ $candidate->city_name }}
-                            @endif
-                            @if ($candidate->city_name && $candidate->state_name), @endif
-                            @if ($candidate->state_name)
-                                {{ $candidate->state_name }}
-                            @endif
-                        </span>
-                    </div>
-                @elseif ($candidate->address)
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280;">
-                        <i class="feather-map-pin" style="font-size: 14px; color: #9ca3af;"></i>
-                        <span>{{ Str::limit($candidate->address, 50) }}</span>
+                {{-- Experience --}}
+                @if ($totalExp !== '—')
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
+                        <i class="feather-briefcase" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
+                        <span><strong>{{ __('Experience') }}:</strong> {{ $totalExp }}</span>
                     </div>
                 @endif
                 
-                @if ($candidate->expected_salary)
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280;">
-                        <i class="feather-dollar-sign" style="font-size: 14px; color: #9ca3af;"></i>
-                        <span>{{ number_format($candidate->expected_salary) }} 
-                            @if ($candidate->expected_salary_period)
-                                / {{ ucfirst($candidate->expected_salary_period) }}
-                            @endif
-                        </span>
+                {{-- Certifications --}}
+                @if ($certifications !== '—')
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
+                        <i class="feather-award" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
+                        <span><strong>{{ __('Certifications') }}:</strong> {{ $certifications }}</span>
                     </div>
                 @endif
                 
-                @if ($candidate->total_experience)
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280;">
-                        <i class="feather-briefcase" style="font-size: 14px; color: #9ca3af;"></i>
-                        <span>{{ $candidate->total_experience }} {{ __('Experience') }}</span>
+                {{-- Updated --}}
+                @if ($lastUpdated !== '—')
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
+                        <i class="feather-clock" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
+                        <span><strong>{{ __('Updated') }}:</strong> {{ $lastUpdated }}</span>
+                    </div>
+                @endif
+                
+                {{-- Institution Type --}}
+                @if ($instTypeDisplay !== '—')
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
+                        <i class="feather-building" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
+                        <span><strong>{{ __('Institution Type') }}:</strong> {{ $instTypeDisplay }}</span>
+                    </div>
+                @endif
+                
+                {{-- Subjects/Roles --}}
+                @if ($subjectsRoles !== '—')
+                    <div style="display: flex; align-items: flex-start; gap: 6px; font-size: 12px; color: #64748b;">
+                        <i class="feather-book" style="font-size: 12px; color: #94a3b8; width: 14px; margin-top: 2px;"></i>
+                        <span><strong>{{ __('Subjects/Roles') }}:</strong> {{ $subjectsRoles }}</span>
+                    </div>
+                @endif
+                
+                {{-- Qualification --}}
+                @if ($highestQual !== '—')
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
+                        <i class="feather-graduation-cap" style="font-size: 12px; color: #94a3b8; width: 14px;"></i>
+                        <span><strong>{{ __('Qualification') }}:</strong> {{ $highestQual }}</span>
+                    </div>
+                @endif
+                
+                {{-- Status --}}
+                @if($profileStatus !== '—')
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
+                        <i class="feather-check-circle" style="font-size: 12px; color: #10b981; width: 14px;"></i>
+                        <span><strong>{{ __('Status') }}:</strong> {{ $profileStatus }}</span>
                     </div>
                 @endif
             </div>
-            
-            @php
-                $cgLabels = ['cbse_school'=>'CBSE','icse_school'=>'ICSE','cambridge_school'=>'Cambridge','ib_school'=>'IB','state_board_school'=>'State Board','play_school'=>'Play School','engineering_college'=>'Engineering','medical_college'=>'Medical','nursing_college'=>'Nursing','edtech_company'=>'EdTech','coaching_institute'=>'Coaching','university'=>'University'];
-                $cgInst = $candidate->institution_types ?? [];
-                if (empty($cgInst) && !empty($candidate->institution_type)) $cgInst = [$candidate->institution_type];
-                $cgInst = is_array($cgInst) ? array_filter($cgInst) : [];
-            @endphp
-            
-            @if (!empty($cgInst))
-                <div class="cl-institution-tags" style="margin-bottom: 10px;">
-                    @foreach(array_slice($cgInst, 0, 4) as $it)
-                        <span class="badge bg-primary" style="font-size: 11px; padding: 4px 10px; margin-right: 6px; border-radius: 6px;">{{ $cgLabels[$it] ?? ucwords(str_replace('_',' ', $it)) }}</span>
-                    @endforeach
-                </div>
-            @endif
-            
-            @if ($candidate->favoriteSkills && $candidate->favoriteSkills->count() > 0)
-                <div class="cl-skills" style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
-                    @foreach($candidate->favoriteSkills->take(5) as $skill)
-                        <span class="badge bg-secondary" style="font-size: 11px; padding: 4px 10px; border-radius: 6px;">{{ $skill->name }}</span>
-                    @endforeach
-                    @if ($candidate->favoriteSkills->count() > 5)
-                        <span class="badge bg-light text-muted" style="font-size: 11px; padding: 4px 10px; border-radius: 6px;">+{{ $candidate->favoriteSkills->count() - 5 }} {{ __('more') }}</span>
-                    @endif
-                </div>
-            @endif
-            
-            @if ($candidate->teaching_subjects)
-                @php
-                    $subjects = is_array($candidate->teaching_subjects) ? $candidate->teaching_subjects : json_decode($candidate->teaching_subjects, true);
-                    $subjects = is_array($subjects) ? array_slice(array_filter($subjects), 0, 3) : [];
-                @endphp
-                @if (!empty($subjects))
-                    <div class="cl-subjects" style="margin-bottom: 10px; font-size: 13px; color: #4b5563;">
-                        <i class="feather-book" style="font-size: 12px; margin-right: 6px; color: #9ca3af;"></i>
-                        <strong>{{ __('Subjects') }}:</strong> {{ implode(', ', $subjects) }}
-                    </div>
-                @endif
-            @endif
-            
-            @if ($candidate->description)
-                <p class="cl-desc" style="font-size: 13px; color: #6b7280; line-height: 1.6; margin-bottom: 0;">
-                    {!! Str::limit(BaseHelper::clean($candidate->description), 150) !!}
-                </p>
-            @endif
         </div>
         
+        {{-- View Profile Button --}}
         @if (! JobBoardHelper::isDisabledPublicProfile() && $candidate->url)
-            <div class="cl-right" style="flex-shrink: 0; display: flex; align-items: center;">
-                <a href="{{ $candidate->url }}" class="cl-view-btn" style="background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%); color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s; white-space: nowrap;">{{ __('View Profile') }} →</a>
+            <div class="cl-right" style="flex-shrink: 0; display: flex; align-items: flex-end; align-self: flex-end; margin-left: auto;">
+                <a href="{{ $candidate->url }}" class="cl-view-btn" style="background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%); color: #fff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.3s; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 115, 209, 0.25);">{{ __('View Profile') }} →</a>
             </div>
         @endif
     </div>

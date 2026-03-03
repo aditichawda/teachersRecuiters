@@ -1150,9 +1150,8 @@ app()->booted(function (): void {
                 ],
             };
 
-            if (JobBoardHelper::isPinFeaturedJobsInTheTop()) {
-                $sortBy = ['jb_jobs.is_featured' => 'DESC', ...$sortBy];
-            }
+            // Always prioritize featured jobs
+            $sortBy = ['jb_jobs.is_featured' => 'DESC', ...$sortBy];
 
             $jobs = app(JobInterface::class)->getJobs(
                 $requestQuery,
@@ -1299,6 +1298,57 @@ app()->booted(function (): void {
                 );
         });
 
+        add_shortcode('featured-schools', __('Featured Schools'), __('Featured Schools'), function ($shortcode) {
+            $limit = (int) $shortcode->limit ?: 6;
+            
+            $companies = app(\Botble\JobBoard\Repositories\Interfaces\CompanyInterface::class)->advancedGet([
+                'condition' => [
+                    'status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED,
+                    'is_featured' => 1,
+                ],
+                'order_by' => [
+                    'jb_companies.created_at' => 'desc',
+                ],
+                'take' => $limit,
+                'with' => ['country', 'state'],
+            ]);
+
+            return Theme::partial('shortcodes.featured-schools.index', compact('shortcode', 'companies'));
+        });
+
+        shortcode()->setAdminConfig('featured-schools', function ($attributes) {
+            return ShortcodeForm::createFromArray($attributes)
+                ->withLazyLoading()
+                ->add(
+                    'title',
+                    TextField::class,
+                    TextFieldOption::make()
+                        ->label(__('Title'))
+                        ->placeholder(__('Title'))
+                )
+                ->add(
+                    'subtitle',
+                    TextField::class,
+                    TextFieldOption::make()
+                        ->label(__('Subtitle'))
+                        ->placeholder(__('Subtitle'))
+                )
+                ->add(
+                    'button_name',
+                    TextField::class,
+                    TextFieldOption::make()
+                        ->label(__('Button name'))
+                        ->placeholder(__('Button name'))
+                )
+                ->add(
+                    'limit',
+                    TextField::class,
+                    TextFieldOption::make()
+                        ->label(__('Limit'))
+                        ->placeholder(__('Limit'))
+                );
+        });
+
         add_shortcode('featured-job-categories', __('Job board - Featured Categories'), __('Job board - Featured Categories'), function ($shortcode) {
             $limit = (int) $shortcode->limit ?: 12;
 
@@ -1425,29 +1475,16 @@ app()->booted(function (): void {
                 $condition[] = ['confirmed_at', '!=', null];
             }
 
-            $candidates = app(AccountInterface::class)
-                ->select(['jb_accounts.*'])
-                ->where($condition)
-                ->with($with);
+            // Use JobBoardHelper::filterCandidates to apply all filters
+            $input = request()->all();
+            $input['per_page'] = $shortcode->number_per_page ?? 12;
+            $input['layout'] = 'list'; // Force list view only
+            $candidates = JobBoardHelper::filterCandidates($input);
 
             $style = $shortcode->style;
-            $orderBy = $shortcode->order_by;
-            if ($style == 'list') {
-                $orderBy = request()->input('order_by') ?: $orderBy;
-            }
+            $layout = 'list'; // Always use list view
 
-            $candidates = match ($orderBy) {
-                'newest' => $candidates->orderBy('created_at', 'DESC'),
-                'oldest' => $candidates->orderBy('created_at', 'ASC'),
-                'random' => $candidates->inRandomOrder(),
-                default => $candidates
-                    ->orderBy('is_featured', 'DESC')
-                    ->orderBy('views', 'DESC'),
-            };
-
-            $candidates = $candidates->paginate($shortcode->number_per_page ?? 12);
-
-            return Theme::partial('shortcodes.candidates.index', compact('shortcode', 'candidates'));
+            return Theme::partial('shortcodes.candidates.index', compact('shortcode', 'candidates', 'layout'));
         });
 
         shortcode()->setAdminConfig('job-board-candidates', function ($attributes) {
@@ -1556,10 +1593,59 @@ app()->booted(function (): void {
         });
 
         add_shortcode('job-companies', __('Job companies'), __('Job companies'), function ($shortcode) {
+            $request = request();
             $companies = Company::query()
                 ->wherePublished()
                 ->withCount(['jobs', 'reviews'])
-                ->withAvg('reviews', 'star')->latest()
+                ->withAvg('reviews', 'star');
+
+            // Apply filters
+            if ($request->input('company_id')) {
+                $companies = $companies->where('id', $request->input('company_id'));
+            }
+
+            if ($request->has('institution_type') && is_array($request->input('institution_type'))) {
+                $companies = $companies->whereIn('institution_type', $request->input('institution_type'));
+            }
+
+            if ($request->input('country_id')) {
+                $companies = $companies->where('country_id', $request->input('country_id'));
+            }
+            if ($request->input('state_id')) {
+                $companies = $companies->where('state_id', $request->input('state_id'));
+            }
+            if ($request->input('city_id')) {
+                $companies = $companies->where('city_id', $request->input('city_id'));
+            }
+
+            if ($request->has('campus_type') && is_array($request->input('campus_type'))) {
+                $companies = $companies->whereIn('campus_type', $request->input('campus_type'));
+            }
+
+            if ($request->boolean('currently_hiring')) {
+                $companies = $companies->has('activeJobs');
+            }
+
+            if ($request->has('benefits') && is_array($request->input('benefits'))) {
+                $benefits = $request->input('benefits');
+                $companies = $companies->where(function (Builder $query) use ($benefits): void {
+                    foreach ($benefits as $benefit) {
+                        $query->orWhereJsonContains('staff_facilities', $benefit);
+                    }
+                });
+            }
+
+            if ($request->has('standard_level') && is_array($request->input('standard_level'))) {
+                $standardLevels = $request->input('standard_level');
+                $companies = $companies->where(function (Builder $query) use ($standardLevels): void {
+                    foreach ($standardLevels as $level) {
+                        $query->orWhereJsonContains('standard_level', $level);
+                    }
+                });
+            }
+
+            $companies = $companies->orderBy('is_featured', 'DESC')
+                ->latest()
                 ->paginate((int) $shortcode->paginate ?: 12);
 
             return Theme::partial('shortcodes.companies.index', compact('shortcode', 'companies'));

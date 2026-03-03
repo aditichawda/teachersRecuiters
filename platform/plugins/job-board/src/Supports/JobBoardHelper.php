@@ -350,6 +350,9 @@ class JobBoardHelper
 
         $with = [
             'avatar',
+            'favoriteSkills',
+            'educations',
+            'experiences',
         ];
 
         if (! $this->isDisabledPublicProfile()) {

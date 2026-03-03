@@ -371,6 +371,14 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     Route::post('{id}/toggle', 'JobAlertController@toggle')->name('toggle');
                 });
 
+                // User Notifications
+                Route::group(['prefix' => 'notifications', 'as' => 'notifications.'], function (): void {
+                    Route::post('{id}/read', 'UserNotificationController@markAsRead')->name('read');
+                    Route::post('read-all', 'UserNotificationController@markAllAsRead')->name('read-all');
+                    Route::delete('{id}', 'UserNotificationController@delete')->name('delete');
+                    Route::delete('all', 'UserNotificationController@deleteAll')->name('delete-all');
+                });
+
                 // Job seeker wallet only (separate from employer wallet)
                 Route::get('jobseeker/wallet', [
                     'as' => 'jobseeker.wallet',
@@ -450,6 +458,18 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 Route::match(['put', 'patch'], '{job}', ['as' => 'update', 'uses' => 'AccountJobController@update'])->whereNumber('job');
 
                 Route::resource('', 'AccountJobController')->parameters(['' => 'job'])->only(['index', 'store', 'show', 'destroy']);
+            });
+
+            // Candidates page for employers
+            Route::group([
+                'middleware' => ['account:' . AccountTypeEnum::EMPLOYER],
+            ], function (): void {
+                Route::controller('DashboardController')->group(function (): void {
+                    Route::get('candidates', [
+                        'as' => 'candidates',
+                        'uses' => 'candidates',
+                    ]);
+                });
             });
 
             Route::group([

@@ -19,6 +19,9 @@ class JobFilter {
         }
 
         this.handleFiltersOnChange()
+        this.initJobCitySearch()
+        this.initJobRoleSearch()
+        this.initJobLocationSearch()
 
         this.$container
             .on('click', '.side-bar-filter .backdrop', function (e) {
@@ -31,6 +34,368 @@ class JobFilter {
             .on('click', '.btn-close-filter', () => {
                 this.$container.find('.side-bar-filter').removeClass('active')
             })
+    }
+
+    initJobCitySearch() {
+        const $cityInput = $('#job_city_search');
+        const $cityId = $('#job_city_id');
+        const $suggestions = $('#job-city-suggestions');
+        let searchTimeout = null;
+        let activeSuggestionIndex = -1;
+
+        if (!$cityInput.length) return;
+
+        // City search autocomplete
+        $cityInput.on('input', function() {
+            const keyword = $(this).val().trim();
+            activeSuggestionIndex = -1;
+
+            // Clear city selection when user types
+            $cityId.val('');
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (keyword.length < 2) {
+                $suggestions.hide().empty();
+                return;
+            }
+
+            $suggestions.html('<div class="job-city-loading">Searching...</div>').show();
+
+            searchTimeout = setTimeout(() => {
+                const apiUrl = (window.siteUrl || window.location.origin) + '/ajax/search-cities';
+                
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    data: { k: keyword },
+                    success: (response) => {
+                        const cities = response.data || [];
+                        
+                        if (cities.length === 0) {
+                            $suggestions.html('<div class="job-city-no-results">No cities found</div>').show();
+                            return;
+                        }
+
+                        let html = '';
+                        cities.forEach(function(city) {
+                            const locationParts = [];
+                            if (city.state_name) locationParts.push(city.state_name);
+                            if (city.country_name) locationParts.push(city.country_name);
+                            
+                            html += '<div class="job-city-suggestion-item" ' +
+                                'data-id="' + city.id + '" ' +
+                                'data-name="' + city.name + '">' +
+                                '<div class="city-name">' + city.name + '</div>' +
+                                (locationParts.length ? '<div class="city-location">' + locationParts.join(', ') + '</div>' : '') +
+                                '</div>';
+                        });
+
+                        $suggestions.html(html).show();
+                    },
+                    error: (xhr, status, error) => {
+                        console.error('City search error:', error);
+                        $suggestions.html('<div class="job-city-no-results">Error searching cities</div>').show();
+                    }
+                });
+            }, 300);
+        });
+
+        // Keyboard navigation for suggestions
+        $cityInput.on('keydown', function(e) {
+            const $items = $suggestions.find('.job-city-suggestion-item');
+            
+            if (!$suggestions.is(':visible') || $items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
+                $items.removeClass('active');
+                if (activeSuggestionIndex >= 0) {
+                    $items.eq(activeSuggestionIndex).addClass('active');
+                }
+            } else if (e.key === 'Enter' && activeSuggestionIndex >= 0) {
+                e.preventDefault();
+                $items.eq(activeSuggestionIndex).click();
+            } else if (e.key === 'Escape') {
+                $suggestions.hide();
+            }
+        });
+
+        // Click on suggestion
+        $(document).on('click', '.job-city-suggestion-item', function() {
+            const cityId = $(this).data('id');
+            const cityName = $(this).data('name');
+            
+            $cityId.val(cityId);
+            $cityInput.val(cityName);
+            $suggestions.hide();
+            
+            // Trigger filter update
+            const event = new Event('change', { bubbles: true });
+            $cityId[0].dispatchEvent(event);
+        });
+
+        // Hide suggestions when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.job-city-search-wrapper').length) {
+                $suggestions.hide();
+            }
+        });
+    }
+
+    initJobRoleSearch() {
+        const $roleInput = $('#job_role_search');
+        const $roleId = $('#job_role_id');
+        const $suggestions = $('#job-role-suggestions');
+        let activeSuggestionIndex = -1;
+        let rolesLoaded = false;
+
+        if (!$roleInput.length) return;
+
+        // Load all job roles on click
+        $roleInput.on('click focus', function() {
+            if (rolesLoaded && $suggestions.children().length > 0) {
+                $suggestions.show();
+                return;
+            }
+
+            $suggestions.html('<div class="job-role-loading">Loading...</div>').show();
+
+            const apiUrl = (window.siteUrl || window.location.origin) + '/ajax/job-roles';
+            
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                data: { k: '' }, // Empty keyword to get all roles
+                success: (response) => {
+                    const roles = response.data || [];
+                    
+                    if (roles.length === 0) {
+                        $suggestions.html('<div class="job-role-no-results">No job roles found</div>').show();
+                        return;
+                    }
+
+                    let html = '';
+                    roles.forEach(function(role) {
+                        html += '<div class="job-role-suggestion-item" ' +
+                            'data-id="' + role.id + '" ' +
+                            'data-name="' + role.name + '">' +
+                            '<div class="role-name">' + role.name + '</div>' +
+                            '</div>';
+                    });
+
+                    $suggestions.html(html).show();
+                    rolesLoaded = true;
+                },
+                error: (xhr, status, error) => {
+                    console.error('Job role search error:', error);
+                    $suggestions.html('<div class="job-role-no-results">Error loading job roles</div>').show();
+                }
+            });
+        });
+
+        // Filter roles on input
+        $roleInput.on('input', function() {
+            const keyword = $(this).val().toLowerCase().trim();
+            activeSuggestionIndex = -1;
+
+            if (!rolesLoaded) return;
+
+            const $items = $suggestions.find('.job-role-suggestion-item');
+            
+            if (keyword.length === 0) {
+                $items.show();
+                return;
+            }
+
+            $items.each(function() {
+                const roleName = $(this).find('.role-name').text().toLowerCase();
+                if (roleName.includes(keyword)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            if ($items.filter(':visible').length === 0) {
+                $suggestions.html('<div class="job-role-no-results">No matching job roles</div>');
+            } else {
+                // Reset active index when filtering
+                activeSuggestionIndex = -1;
+            }
+        });
+
+        // Keyboard navigation for suggestions
+        $roleInput.on('keydown', function(e) {
+            const $items = $suggestions.find('.job-role-suggestion-item:visible');
+            
+            if (!$suggestions.is(':visible') || $items.length === 0) {
+                // If dropdown not visible, trigger click to load
+                if (e.key !== 'Escape' && e.key !== 'Tab') {
+                    $roleInput.trigger('click');
+                }
+                return;
+            }
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+                $items.removeClass('active');
+                $items.eq(activeSuggestionIndex).addClass('active');
+                // Scroll into view
+                const $active = $items.eq(activeSuggestionIndex);
+                if ($active.length) {
+                    $active[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
+                $items.removeClass('active');
+                if (activeSuggestionIndex >= 0) {
+                    $items.eq(activeSuggestionIndex).addClass('active');
+                    const $active = $items.eq(activeSuggestionIndex);
+                    if ($active.length) {
+                        $active[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }
+                }
+            } else if (e.key === 'Enter' && activeSuggestionIndex >= 0) {
+                e.preventDefault();
+                $items.eq(activeSuggestionIndex).click();
+            } else if (e.key === 'Escape') {
+                $suggestions.hide();
+            }
+        });
+
+        // Click on suggestion
+        $(document).on('click', '.job-role-suggestion-item', function() {
+            const roleId = $(this).data('id');
+            const roleName = $(this).data('name');
+            
+            $roleId.val(roleId);
+            $roleInput.val(roleName);
+            $suggestions.hide();
+            rolesLoaded = false; // Reset so it reloads on next click
+        });
+
+        // Hide suggestions when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.job-role-search-wrapper').length) {
+                $suggestions.hide();
+            }
+        });
+    }
+
+    initJobLocationSearch() {
+        const $locationInput = $('#job_location_search');
+        const $cityId = $('#job_location_city_id');
+        const $suggestions = $('#job-location-suggestions');
+        let searchTimeout = null;
+        let activeSuggestionIndex = -1;
+
+        if (!$locationInput.length) return;
+
+        // City search autocomplete (same as signin/login)
+        $locationInput.on('input', function() {
+            const keyword = $(this).val().trim();
+            activeSuggestionIndex = -1;
+
+            // Clear city selection when user types
+            $cityId.val('');
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (keyword.length < 2) {
+                $suggestions.hide().empty();
+                return;
+            }
+
+            $suggestions.html('<div class="job-location-loading">Searching...</div>').show();
+
+            searchTimeout = setTimeout(() => {
+                const apiUrl = (window.siteUrl || window.location.origin) + '/ajax/search-cities';
+                
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    data: { k: keyword },
+                    success: (response) => {
+                        const cities = response.data || [];
+                        
+                        if (cities.length === 0) {
+                            $suggestions.html('<div class="job-location-no-results">No cities found</div>').show();
+                            return;
+                        }
+
+                        let html = '';
+                        cities.forEach(function(city) {
+                            const locationParts = [];
+                            if (city.state_name) locationParts.push(city.state_name);
+                            if (city.country_name) locationParts.push(city.country_name);
+                            
+                            html += '<div class="job-location-suggestion-item" ' +
+                                'data-id="' + city.id + '" ' +
+                                'data-name="' + city.name + '">' +
+                                '<div class="city-name">' + city.name + '</div>' +
+                                (locationParts.length ? '<div class="city-location">' + locationParts.join(', ') + '</div>' : '') +
+                                '</div>';
+                        });
+
+                        $suggestions.html(html).show();
+                    },
+                    error: (xhr, status, error) => {
+                        console.error('City search error:', error);
+                        $suggestions.html('<div class="job-location-no-results">Error searching cities</div>').show();
+                    }
+                });
+            }, 300);
+        });
+
+        // Keyboard navigation for suggestions
+        $locationInput.on('keydown', function(e) {
+            const $items = $suggestions.find('.job-location-suggestion-item');
+            
+            if (!$suggestions.is(':visible') || $items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
+                $items.removeClass('active');
+                if (activeSuggestionIndex >= 0) {
+                    $items.eq(activeSuggestionIndex).addClass('active');
+                }
+            } else if (e.key === 'Enter' && activeSuggestionIndex >= 0) {
+                e.preventDefault();
+                $items.eq(activeSuggestionIndex).click();
+            } else if (e.key === 'Escape') {
+                $suggestions.hide();
+            }
+        });
+
+        // Click on suggestion
+        $(document).on('click', '.job-location-suggestion-item', function() {
+            const cityId = $(this).data('id');
+            const cityName = $(this).data('name');
+            
+            $cityId.val(cityId);
+            $locationInput.val(cityName);
+            $suggestions.hide();
+        });
+
+        // Hide suggestions when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.job-location-search-wrapper').length) {
+                $suggestions.hide();
+            }
+        });
     }
 
     submit() {

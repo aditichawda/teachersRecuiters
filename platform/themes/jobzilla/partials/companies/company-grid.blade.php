@@ -69,10 +69,10 @@
         </div>
     @empty
         <div class="col-12">
-            <div style="text-align:center; padding:50px; color:#94a3b8;">
-                <i class="feather-briefcase" style="font-size:44px; margin-bottom:14px; display:block;"></i>
-                <p style="font-size:16px; font-weight:600;">{{ __('No companies found') }}</p>
-                <p style="font-size:14px;">{{ __('Try adjusting your search filters') }}</p>
+            <div class="no-schools-message" style="text-align: center; padding: 60px 20px; color: #64748b;">
+                <i class="feather-briefcase" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5; display: block;"></i>
+                <h4 style="color: #334155; margin-bottom: 10px;">{{ __('No schools available currently') }}</h4>
+                <p style="color: #94a3b8; font-size: 14px;">{{ __('Please try another category or check back later.') }}</p>
             </div>
         </div>
     @endforelse

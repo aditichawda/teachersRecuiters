@@ -9,12 +9,26 @@
 {!! Theme::partial('candidate-card-styles') !!}
 
 <style>
-/* Candidate profile — Indeed / Jobs in Education inspired */
+/* Prevent text cutting */
+body {
+    overflow-x: hidden;
+}
+.cdt-hero,
+.cdt-main,
+.cdt-horizontal-section {
+    overflow: visible !important;
+}
+/* Candidate profile — Compact Design */
 .cdt-hero {
-    background: linear-gradient(165deg, #e8f4fc 0%, #d4ebf7 35%, #b8dff0 100%);
-    padding: 100px 0 56px;
+    background: #f8fafc;
+    padding: 100px 0 40px;
     position: relative;
-    overflow: hidden;
+    border-bottom: 1px solid #e5e7eb;
+    margin-top: 0;
+    overflow: visible;
+}
+.cdt-hero .container {
+    padding-top: 20px;
 }
 .cdt-hero::before {
     content: '';
@@ -57,6 +71,8 @@
     display: flex;
     align-items: flex-start;
     gap: 28px;
+    padding-top: 10px;
+    margin-top: 10px;
 }
 .cdt-hero-avatar {
     width: 120px;
@@ -66,6 +82,7 @@
     border: 4px solid #fff;
     box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
     flex-shrink: 0;
+    margin-top: 5px;
 }
 .cdt-hero-avatar img {
     width: 100%;
@@ -127,21 +144,37 @@
     color: #0052a3 !important;
 }
 .cdt-main {
-    padding: 36px 0 80px;
-    background: #f3f2ef;
+    padding: 60px 0 60px;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    overflow: visible;
+}
+.cdt-main .container {
+    padding-top: 30px;
+    padding-bottom: 20px;
 }
 .cdt-back-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    color: #0066cc;
+    gap: 8px;
+    color: #475569;
     text-decoration: none;
     font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 20px;
-    transition: color .2s;
+    font-size: 16px;
+    margin-bottom: 24px;
+    padding: 8px 16px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
-.cdt-back-btn:hover { color: #004080; }
+.cdt-back-btn:hover { 
+    color: #1e293b; 
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transform: translateX(-2px);
+}
 .cdt-card {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -158,7 +191,7 @@
     border-left-color: #0066cc;
 }
 .cdt-section-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #1a1a1a;
     margin-bottom: 18px;
@@ -177,7 +210,7 @@
     border-radius: 1px;
 }
 .cdt-card .ck-content {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.75;
     color: #374151;
 }
@@ -229,13 +262,13 @@
     margin-bottom: 2px;
 }
 .cdt-timeline-subtitle {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     color: #0066cc;
     margin-bottom: 6px;
 }
 .cdt-timeline-desc {
-    font-size: 14px;
+    font-size: 16px;
     color: #6b7280;
     line-height: 1.6;
 }
@@ -248,13 +281,13 @@
 }
 .cdt-detail-row:last-child { border-bottom: none; }
 .cdt-detail-label {
-    font-size: 13px;
+    font-size: 16px;
     color: #6b7280;
     font-weight: 600;
     min-width: 160px;
 }
 .cdt-detail-value {
-    font-size: 14px;
+    font-size: 16px;
     color: #1f2937;
     flex: 1;
 }
@@ -266,7 +299,7 @@
 .cdt-simple-list li {
     padding: 10px 0;
     border-bottom: 1px solid #f3f4f6;
-    font-size: 14px;
+    font-size: 16px;
     color: #374151;
 }
 .cdt-simple-list li:last-child { border-bottom: none; }
@@ -533,37 +566,7 @@
     @endif
 @endif
 
-{{-- Hero Section --}}
-<section class="cdt-hero">
-    <div class="container">
-        <div class="cdt-breadcrumb">
-            <a href="/">{{ __('Home') }}</a>
-            <span>→</span>
-            <span style="color: #475569;">{{ Str::limit($candidate->name ?? 'Candidate', 40) }}</span>
-        </div>
-        <div class="cdt-hero-content">
-            <div class="cdt-hero-avatar">
-                <img src="{{ $candidate->avatar_url ?? '' }}" alt="{{ $candidate->name ?? 'Candidate' }}">
-            </div>
-            <div class="cdt-hero-info">
-                <h1>{{ $candidate->name ?? 'Candidate' }}</h1>
-                @if($candidate->description ?? null)
-                    <p class="cdt-hero-desc">{!! BaseHelper::clean($candidate->description) !!}</p>
-                @endif
-                @if(JobBoardHelper::canViewCandidateInformation())
-                    <div class="cdt-hero-actions">
-                        @if($candidate->phone ?? null)
-                            <a href="tel:{{ $candidate->phone }}" class="cdt-btn-primary"><i class="feather-phone"></i> {{ __('Hire Me Now') }}</a>
-                        @endif
-                        @if(($candidate->resume ?? null) && !($candidate->hide_cv ?? false))
-                            <a href="{{ $candidate->resume_url ?? '#' }}" download class="cdt-btn-outline"><i class="feather-download"></i> {{ __('Download CV') }}</a>
-                        @endif
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-</section>
+{{-- Hero Section Removed --}}
 
 @php
                     $posType = $candidate->position_type ?? null;
@@ -609,224 +612,834 @@
                     }
                 @endphp
 
+{{-- Additional Styles for Horizontal Layout --}}
+<style>
+.cdt-horizontal-section {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid #4269c2;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+    overflow: visible;
+    transition: all 0.3s;
+}
+.cdt-horizontal-section:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .1);
+    border-left-color: #4269c2;
+}
+.cdt-horizontal-section h5 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 18px;
+    margin-top: 0;
+    padding-bottom: 12px;
+    padding-top: 0;
+    border-bottom: 2px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: visible;
+    background: #f8fafc;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-left: -12px;
+    margin-right: -12px;
+    border-radius: 8px 8px 0 0;
+}
+.cdt-horizontal-section h5 i {
+    font-size: 18px;
+    color: #64748b;
+    overflow: visible;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 6px;
+}
+.cdt-horizontal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    font-size: 16px;
+    padding: 8px 0;
+}
+.cdt-horizontal-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: auto;
+    padding: 14px 16px;
+    overflow: visible;
+    background: #ffffff;
+    border-radius: 10px;
+    /* border: 1px solid #e5e7eb; */
+    transition: all 0.2s;
+    /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); */
+}
+.cdt-horizontal-item:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+.cdt-horizontal-item .label-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.cdt-horizontal-item i {
+    font-size: 16px;
+    /* color: #64748b; */
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+.cdt-horizontal-item .label,
+.cdt-horizontal-item .value {
+    overflow: visible;
+    line-height: 1.6;
+}
+.cdt-horizontal-item .label {
+    color: #64748b;
+    font-weight: 400;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex: 1;
+}
+.cdt-horizontal-item .value {
+    color: #1e293b;
+    font-size: 16px;
+    font-weight: 500;
+    word-break: break-word;
+    margin-top: 4px;
+}
+.cdt-social-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.cdt-social-links a {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: #f3f4f6;
+    color: #4b5563;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.cdt-social-links a:hover {
+    background: #e5e7eb;
+    color: #0066cc;
+}
+.cdt-action-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.cdt-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.cdt-action-btn-primary {
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%);
+    color: #fff !important;
+}
+.cdt-action-btn-primary:hover {
+    background: linear-gradient(135deg, #005bb5 0%, #004a94 100%);
+    box-shadow: 0 4px 12px rgba(0, 115, 209, 0.35);
+    transform: translateY(-2px);
+    color: #fff !important;
+}
+.cdt-action-btn-secondary {
+    background: #fff;
+    color: #0073d1 !important;
+    border: 2px solid #0073d1;
+}
+.cdt-action-btn-secondary:hover {
+    background: #f0f7ff;
+    border-color: #005bb5;
+    color: #005bb5 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 115, 209, 0.2);
+}
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.cdt-action-btn-primary {
+    background: #0073d1;
+    color: #fff;
+}
+.cdt-action-btn-primary:hover {
+    background: #005bb5;
+    color: #fff;
+}
+.cdt-action-btn-secondary {
+    background: #e0f2fe;
+    color: #0073d1;
+}
+.cdt-action-btn-secondary:hover {
+    background: #bae6fd;
+    color: #005bb5;
+}
+.cdt-audio-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+.cdt-audio-preview audio {
+    flex: 1;
+    max-width: 100%;
+}
+.cdt-video-preview {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #000;
+}
+.cdt-video-preview iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+.cdt-professional-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+.cdt-professional-item {
+    padding: 16px 18px;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    /* border-left: 3px solid #64748b; */
+    transition: all 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.cdt-professional-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-left-color: #475569;
+}
+.cdt-professional-item h6 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e5e7eb;
+}
+.cdt-professional-item h6 i {
+    font-size: 18px;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 6px;
+    color: #64748b;
+}
+.cdt-professional-item ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 16px;
+    color: #4b5563;
+    line-height: 1.8;
+}
+.cdt-professional-item ul li {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 16px;
+    background: #fff;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+.cdt-professional-item ul li:hover {
+    background: #f8fafc;
+    /* border-left: 3px solid #64748b; */
+    padding-left: 15px;
+}
+.cdt-professional-item ul li:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+.cdt-professional-item ul li strong {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    display: block;
+    margin-bottom: 4px;
+}
+.cdt-professional-item p {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #4b5563;
+    padding: 12px;
+    background: #fff;
+    border-radius: 6px;
+    margin: 0;
+}
+.cdt-download-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+}
+.cdt-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.cdt-download-btn-primary {
+    background: #0073d1;
+    color: #fff;
+}
+.cdt-download-btn-primary:hover {
+    background: #005bb5;
+    color: #fff;
+}
+.cdt-download-btn-outline {
+    background: #fff;
+    color: #0073d1;
+    border: 2px solid #0073d1;
+}
+.cdt-download-btn-outline:hover {
+    background: #eef6fc;
+    color: #005bb5;
+}
+@media (max-width: 767px) {
+    .cdt-horizontal-grid {
+        grid-template-columns: 1fr;
+    }
+    .cdt-professional-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 {{-- Main --}}
 <div class="cdt-main">
     <div class="container">
-        <a href="javascript:history.back()" class="cdt-back-btn">← {{ __('Back') }}</a>
+        <a href="javascript:history.back()" class="cdt-back-btn" style="margin-top: 10px; margin-bottom: 15px; display: inline-block;">← {{ __('Back') }}</a>
         <div class="row">
-            <div class="@if(JobBoardHelper::canViewCandidateInformation()) col-lg-8 @else col-lg-12 @endif col-md-12">
-                {{-- Personal Details (no avatar/name repeat - already in hero) --}}
-                <div class="cdt-card">
-                    <h4 class="cdt-block-heading">{{ __('Personal Details') }}</h4>
-                    <div class="cdt-personal-card">
-                        <div class="cdt-personal-info" style="flex: 1;">
-                            <div class="cdt-personal-role">{{ $firstRole }}</div>
-                            @if($candidate->gender ?? null)<div class="text-muted small">{{ __('Gender') }}: {{ ucfirst($candidate->gender) }}</div>@endif
-                            @if(is_array($teachSubjects) && !empty($teachSubjects))
-                                <div class="cdt-skill-tags">
-                                    @foreach(array_slice($teachSubjects, 0, 10) as $sub)
-                                        <span class="cdt-skill-tag">{{ $formatLabel($sub) }}</span>
-                                    @endforeach
+            <div class="col-lg-12 col-md-12">
+                {{-- Top Section (Horizontal) --}}
+                <div class="cdt-horizontal-section" style="margin-top: 0; padding-top: 24px; padding-bottom: 24px; overflow: visible; background: #ffffff; ">
+                    <div class="cdt-horizontal-grid" style="grid-template-columns: auto repeat(auto-fit, minmax(180px, 1fr)); align-items: start; padding-top: 8px; padding-bottom: 8px;">
+                        {{-- Photo --}}
+                        <div class="cdt-horizontal-item" style="grid-row: 1; align-self: center; padding: 0; background: transparent; border: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); border-radius: 50%; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto;">
+                            <img src="{{ $candidate->avatar_url ?? '' }}" alt="{{ $candidate->name }}" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #e5e7eb; display: block;">
+                        </div>
+                        
+                        {{-- Name (Prominent) --}}
+                        <div class="cdt-horizontal-item" style="grid-column: 2 / -1; margin-bottom: 16px; padding: 16px 20px; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border: 2px solid #e5e7eb; border-left: 4px solid #0073d1; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);">
+                            <span class="value" style="font-size: 20px; font-weight: 800; color: #1e293b; display: block; line-height: 1.4; letter-spacing: -0.02em;">{{ $candidate->name ?? '—' }}</span>
+                        </div>
+                        
+                        {{-- Current Location --}}
+                        @if($currentLocStr && $currentLocStr !== '—')
+                            <div class="cdt-horizontal-item">
+                                <div class="label-wrapper">
+                                    <i class="feather-map-pin"></i>
+                                    <span class="label">{{ __('Current Location') }}</span>
+                                </div>
+                                <span class="value">{{ $currentLocStr }}</span>
                                 </div>
                             @endif
+                        
+                        {{-- Institution Type --}}
+                        @if($instTypesDisplay && $instTypesDisplay !== '—')
+                            <div class="cdt-horizontal-item">
+                                <div class="label-wrapper">
+                                    <i class="feather-building"></i>
+                                    <span class="label">{{ __('Institution Type') }}</span>
                         </div>
+                                <span class="value">{{ $instTypesDisplay }}</span>
                     </div>
+                        @endif
+                        
+                        {{-- Teaching / Non-Teaching --}}
+                        @if($positionTypeStr && $positionTypeStr !== '—')
+                            <div class="cdt-horizontal-item">
+                                <div class="label-wrapper">
+                                    <i class="feather-briefcase"></i>
+                                    <span class="label">{{ __('Position') }}</span>
                 </div>
+                                <span class="value">{{ str_replace(['teaching', 'non_teaching'], [__('Teaching'), __('Non-Teaching')], $positionTypeStr) }}</span>
+                            </div>
+                        @endif
 
-                {{-- Description About Me --}}
-                <div class="cdt-card">
-                    <h4 class="cdt-block-heading">{{ __('Description About Me') }}</h4>
-                    @if($candidate->bio ?? null)
-                        <div class="ck-content">{!! BaseHelper::clean($candidate->bio) !!}</div>
-                    @else
-                        <p class="cdt-empty-msg">— {{ __('No description added') }}</p>
+                        {{-- Subjects/Role --}}
+                        @php
+                            $subjectsRoleValue = '—';
+                            if($positionTypeStr && (strpos($positionTypeStr, 'teaching') !== false || (is_array($posType) && in_array('teaching', $posType)))) {
+                                $subjectsRoleValue = $teachSubjectsDisplay;
+                            } elseif($positionTypeStr && (strpos($positionTypeStr, 'non_teaching') !== false || (is_array($posType) && in_array('non_teaching', $posType)))) {
+                                $subjectsRoleValue = $nonTeachDisplay;
+                            }
+                        @endphp
+                        @if($subjectsRoleValue && $subjectsRoleValue !== '—')
+                            <div class="cdt-horizontal-item">
+                                <div class="label-wrapper">
+                                    <i class="feather-book"></i>
+                                    <span class="label">{{ __('Subjects/Role') }}</span>
+                                </div>
+                                <span class="value">{{ $subjectsRoleValue }}</span>
+                            </div>
                     @endif
-                </div>
 
-                {{-- Interests (card) --}}
-                <div class="cdt-card">
-                    <h4 class="cdt-block-heading">{{ __('Interests') }}</h4>
-                    @if(!empty(trim($candidate->interests ?? '')))
-                        <div class="cdt-text-block">{!! nl2br(e($candidate->interests)) !!}</div>
-                    @else
-                        <p class="cdt-empty-msg">— {{ __('No interests added') }}</p>
+                        {{-- Gender --}}
+                        @if($candidate->gender)
+                            <div class="cdt-horizontal-item">
+                                <div class="label-wrapper">
+                                    <i class="feather-user"></i>
+                                    <span class="label">{{ __('Gender') }}</span>
+                </div>
+                                <span class="value">{{ ucfirst($candidate->gender) }}</span>
+                            </div>
+                        @endif
+
+                        {{-- Marital Status --}}
+                        @if($candidate->marital_status)
+                            <div class="cdt-horizontal-item">
+                                <div class="label-wrapper">
+                                    <i class="feather-heart"></i>
+                                    <span class="label">{{ __('Marital Status') }}</span>
+                                </div>
+                                <span class="value">{{ ucwords(str_replace('_', ' ', $candidate->marital_status)) }}</span>
+                            </div>
                     @endif
-                </div>
 
-                {{-- Achievements (card) --}}
-                <div class="cdt-card">
-                    <h4 class="cdt-block-heading">{{ __('Achievements') }}</h4>
-                    @if(!empty(trim($candidate->achievements ?? '')))
-                        <div class="cdt-text-block">{!! nl2br(e($candidate->achievements)) !!}</div>
-                    @else
-                        <p class="cdt-empty-msg">— {{ __('No achievements added') }}</p>
+                        {{-- Date of Birth --}}
+                        @if($candidate->dob)
+                            <div class="cdt-horizontal-item">
+                                <div class="label-wrapper">
+                                    <i class="feather-calendar"></i>
+                                    <span class="label">{{ __('Date of Birth') }}</span>
+                </div>
+                                <span class="value">{{ is_object($candidate->dob) ? $candidate->dob->format('M d, Y') : $candidate->dob }}</span>
+                            </div>
+                        @endif
+                        
+                        {{-- Profile Created Date and Last Updated Days --}}
+                        @if($candidate->created_at)
+                            <div class="cdt-horizontal-item">
+                                <div class="label-wrapper">
+                                    <i class="feather-clock"></i>
+                                    <span class="label">{{ __('Profile Created') }}</span>
+                                </div>
+                                <span class="value">{{ $candidate->created_at->format('M d, Y') }}</span>
+                            </div>
                     @endif
+                        @if($candidate->updated_at)
+                            <div class="cdt-horizontal-item">
+                                <div class="label-wrapper">
+                                    <i class="feather-refresh-cw"></i>
+                                    <span class="label">{{ __('Last Updated') }}</span>
                 </div>
-
-                {{-- Activities (card) --}}
-                <div class="cdt-card">
-                    <h4 class="cdt-block-heading">{{ __('Activities') }}</h4>
-                    @if(!empty(trim($candidate->activities ?? '')))
-                        <div class="cdt-text-block">{!! nl2br(e($candidate->activities)) !!}</div>
-                    @else
-                        <p class="cdt-empty-msg">— {{ __('No activities added') }}</p>
-                    @endif
+                                <span class="value">{{ $candidate->updated_at->diffForHumans() }}</span>
+                            </div>
+                        @endif
+                        
+                        {{-- Contact Details --}}
+                        @if(JobBoardHelper::canViewCandidateInformation())
+                            @if($candidate->phone)
+                                <div class="cdt-horizontal-item">
+                                    <div class="label-wrapper">
+                                        <i class="feather-phone"></i>
+                                        <span class="label">{{ __('Phone') }}</span>
+                                    </div>
+                                    <span class="value">{{ $candidate->phone }}</span>
+                                </div>
+                @endif
+                            @if($candidate->alternate_phone)
+                                <div class="cdt-horizontal-item">
+                                    <div class="label-wrapper">
+                                        <i class="feather-phone"></i>
+                                        <span class="label">{{ __('Alternate Phone') }}</span>
                 </div>
-
-                {{-- YouTube Video (embed preview only, no link) --}}
-                @if(!empty($youtubeEmbedUrl))
-                <div class="cdt-card">
-                    <h4 class="cdt-block-heading">{{ __('Intro Video') }}</h4>
-                    <div class="cdt-yt-embed-wrap" style="position:relative;display:block;height:0;padding-bottom:56.25%;overflow:hidden;border-radius:8px;background:#000;">
-                        <iframe src="{{ $youtubeEmbedUrl }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+                                    <span class="value">{{ $candidate->alternate_phone }}</span>
+                                </div>
+                            @endif
+                        @endif
+                        
+                        {{-- Social Profile Logos --}}
+                        @if(!empty($socialLinks))
+                            <div class="cdt-horizontal-item" style="grid-column: 1 / -1;">
+                                <div class="label-wrapper">
+                                    <i class="feather-share-2"></i>
+                                    <span class="label">{{ __('Social Profiles') }}</span>
                     </div>
+                                <div class="cdt-social-links">
+                                    @if(!empty($socialLinks['linkedin']))
+                                        <a href="{{ $socialLinks['linkedin'] }}" target="_blank" rel="noopener noreferrer" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                                    @endif
+                                    @if(!empty($socialLinks['facebook']))
+                                        <a href="{{ $socialLinks['facebook'] }}" target="_blank" rel="noopener noreferrer" title="Facebook"><i class="fab fa-facebook"></i></a>
+                                    @endif
+                                    @if(!empty($socialLinks['twitter']))
+                                        <a href="{{ $socialLinks['twitter'] }}" target="_blank" rel="noopener noreferrer" title="Twitter"><i class="fab fa-twitter"></i></a>
+                                    @endif
+                                    @if(!empty($socialLinks['instagram']))
+                                        <a href="{{ $socialLinks['instagram'] }}" target="_blank" rel="noopener noreferrer" title="Instagram"><i class="fab fa-instagram"></i></a>
+                                    @endif
+                </div>
                 </div>
                 @endif
 
-                {{-- Tabs: Work Experience | Education Details | Other Details --}}
-                <div class="cdt-card">
-                    <div class="cdt-tabs-wrap">
-                        <div class="cdt-tabs-nav" role="tablist">
-                            <button type="button" class="cdt-tab-btn active" data-cdt-tab="work" role="tab">{{ __('Work Experience') }}</button>
-                            <button type="button" class="cdt-tab-btn" data-cdt-tab="education" role="tab">{{ __('Education Details') }}</button>
-                            <button type="button" class="cdt-tab-btn" data-cdt-tab="other" role="tab">{{ __('Other Details') }}</button>
+                        {{-- Send Email, WhatsApp & Download Resume buttons --}}
+                        @if(JobBoardHelper::canViewCandidateInformation())
+                            <div class="cdt-horizontal-item" style="grid-column: 1 / -1;">
+                                <div class="cdt-action-buttons">
+                                    @if($candidate->email)
+                                        <a href="mailto:{{ $candidate->email }}" class="cdt-action-btn cdt-action-btn-primary">
+                                            <i class="feather-mail"></i> {{ __('Send Email') }}
+                                        </a>
+                                    @endif
+                                    @if($candidate->phone && $candidate->is_whatsapp_available)
+                                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $candidate->phone) }}" target="_blank" rel="noopener noreferrer" class="cdt-action-btn cdt-action-btn-secondary">
+                                            <i class="fab fa-whatsapp"></i> {{ __('WhatsApp') }}
+                                        </a>
+                                    @endif
+                                    @if(($candidate->resume ?? null) && !($candidate->hide_cv ?? false))
+                                        <a href="{{ $candidate->resume_url ?? '#' }}" download class="cdt-action-btn cdt-action-btn-primary">
+                                            <i class="feather-download"></i> {{ __('Download Resume') }}
+                                        </a>
+                                    @endif
+                                            </div>
+                                        </div>
+                        @endif
+                                </div>
                         </div>
 
-                        <div id="cdt-pane-work" class="cdt-tab-pane active" role="tabpanel">
-                            @if(isset($experiences) && $experiences->isNotEmpty())
-                                @foreach($experiences as $idx => $experience)
-                                    <div class="cdt-timeline-num">
-                                        <div class="cdt-timeline-num-circle">{{ str_pad($idx + 1, 2, '0', STR_PAD_LEFT) }}</div>
-                                        <div class="cdt-timeline-num-body">
-                                            <div class="cdt-timeline-num-period">
-                                                {{ ($experience->started_at ? $experience->started_at->format('Y-m-d') : '') }} {{ __('to') }} {{ ($experience->is_current || !$experience->ended_at) ? __('Till Now') : ($experience->ended_at ? $experience->ended_at->format('Y-m-d') : '') }}
+                {{-- Second Section: Current Status & Salary --}}
+                @php
+                    $hasStatusData = $candidate->current_work_status || ($noticeDisplay && $noticeDisplay !== '—') || $candidate->current_salary || $candidate->expected_salary;
+                @endphp
+                @if($hasStatusData)
+                    <div class="cdt-horizontal-section">
+                        <h5><i class="feather-briefcase"></i> {{ __('Current Status & Salary') }}</h5>
+                        <div class="cdt-horizontal-grid">
+                            @if($candidate->current_work_status)
+                                <div class="cdt-horizontal-item">
+                                    <div class="label-wrapper">
+                                        <i class="feather-check-circle"></i>
+                                        <span class="label">{{ __('Working Now / Not Working') }}</span>
                                             </div>
-                                            <div class="cdt-timeline-num-title">{{ $experience->company ?? '' }}</div>
-                                            @if($experience->position ?? null)<div class="cdt-timeline-num-sub">{{ ucwords($experience->position) }}</div>@endif
-                                            @if($experience->description ?? null)<div class="cdt-timeline-num-desc">{!! BaseHelper::clean($experience->description) !!}</div>@endif
+                                    <span class="value">{{ $formatLabel($candidate->current_work_status) }}</span>
                                         </div>
+                            @endif
+                            @if($noticeDisplay && $noticeDisplay !== '—')
+                                <div class="cdt-horizontal-item">
+                                    <div class="label-wrapper">
+                                        <i class="feather-calendar"></i>
+                                        <span class="label">{{ __('Notice Period') }}</span>
                                     </div>
-                                @endforeach
-                            @else
-                                <p class="cdt-empty-msg">— {{ __('No work experience added') }}</p>
+                                    <span class="value">{{ $noticeDisplay }}</span>
+                                </div>
+                                    @endif
+                            @if($candidate->current_salary)
+                                <div class="cdt-horizontal-item">
+                                    <div class="label-wrapper">
+                                        <i class="feather-dollar-sign"></i>
+                                        <span class="label">{{ __('Current Salary') }}</span>
+                        </div>
+                                    <span class="value">₹{{ number_format($candidate->current_salary) }}{!! ($candidate->current_salary_period ?? null) ? ' / ' . e($candidate->current_salary_period) : '' !!}</span>
+                                            </div>
+                            @endif
+                            @if($candidate->expected_salary)
+                                <div class="cdt-horizontal-item">
+                                    <div class="label-wrapper">
+                                        <i class="feather-trending-up"></i>
+                                        <span class="label">{{ __('Expected Salary') }}</span>
+                                        </div>
+                                    <span class="value">₹{{ number_format($candidate->expected_salary) }}{!! ($candidate->expected_salary_period ?? null) ? ' / ' . e($candidate->expected_salary_period) : '' !!}</span>
+                                </div>
                             @endif
                         </div>
+                                </div>
+                            @endif
 
-                        <div id="cdt-pane-education" class="cdt-tab-pane" role="tabpanel">
-                            @if(isset($educations) && $educations->isNotEmpty())
-                                @foreach($educations as $idx => $education)
-                                    <div class="cdt-timeline-num">
-                                        <div class="cdt-timeline-num-circle">{{ str_pad($idx + 1, 2, '0', STR_PAD_LEFT) }}</div>
-                                        <div class="cdt-timeline-num-body">
-                                            <div class="cdt-timeline-num-period">
-                                                {{ ($education->started_at ? $education->started_at->format('Y-m-d') : '') }} {{ __('to') }} {{ ($education->is_current || !$education->ended_at) ? __('Till Now') : ($education->ended_at ? $education->ended_at->format('Y-m-d') : '') }}
-                                            </div>
-                                            @if($education->school ?? null)<div class="cdt-timeline-num-title">{{ ucwords($education->school) }}</div>@endif
-                                            @if($education->specialized ?? null)<div class="cdt-timeline-num-sub">{{ ucwords($education->specialized) }}</div>@endif
-                                            @if($education->description ?? null)<div class="cdt-timeline-num-desc">{!! BaseHelper::clean($education->description) !!}</div>@endif
-                                        </div>
+                {{-- Third Section: Availability and Location Preferences --}}
+                @php
+                    $hasAvailabilityData = $candidate->remote_only || ($jobTypeDisplay && $jobTypeDisplay !== '—') || ($currentLocStr && $currentLocStr !== '—') || ($nativeLocStr && $nativeLocStr !== '—') || ($workPrefLabel && $workPrefLabel !== '—') || (is_array($candidate->work_location_preferences) && !empty($candidate->work_location_preferences));
+                @endphp
+                @if($hasAvailabilityData)
+                    <div class="cdt-horizontal-section">
+                        <h5><i class="feather-map-pin"></i> {{ __('Availability and Location Preferences') }}</h5>
+                        <div class="cdt-horizontal-grid">
+                            @if($candidate->remote_only || ($jobTypeDisplay && $jobTypeDisplay !== '—'))
+                                <div class="cdt-horizontal-item">
+                                    <div class="label-wrapper">
+                                        <i class="feather-clock"></i>
+                                        <span class="label">{{ __('Job Type') }}</span>
+                                </div>
+                                    <span class="value">
+                                        @if($candidate->remote_only)
+                                            {{ __('Available only for Remote Job') }}
+                                        @else
+                                            {{ $jobTypeDisplay }}
+                            @endif
+                                    </span>
+                                </div>
+                            @endif
+                            @if($currentLocStr && $currentLocStr !== '—')
+                                <div class="cdt-horizontal-item">
+                                    <div class="label-wrapper">
+                                        <i class="feather-map-pin"></i>
+                                        <span class="label">{{ __('Current Location') }}</span>
                                     </div>
-                                @endforeach
-                            @else
-                                <p class="cdt-empty-msg">— {{ __('No education added') }}</p>
+                                    <span class="value">{{ $currentLocStr }}</span>
+                                </div>
+                            @endif
+                            @if($nativeLocStr && $nativeLocStr !== '—')
+                                <div class="cdt-horizontal-item">
+                                    <div class="label-wrapper">
+                                        <i class="feather-home"></i>
+                                        <span class="label">{{ __('Native Location') }}</span>
+                            </div>
+                                    <span class="value">{{ $nativeLocStr }}</span>
+                            </div>
+                            @endif
+                            @if($workPrefLabel && $workPrefLabel !== '—' || (is_array($candidate->work_location_preferences) && !empty($candidate->work_location_preferences)))
+                                <div class="cdt-horizontal-item" style="grid-column: 1 / -1;">
+                                    <div class="label-wrapper">
+                                        <i class="feather-navigation"></i>
+                                        <span class="label">{{ __('Work Location Preference') }}</span>
+                                        </div>
+                                    <span class="value">{{ $workPrefLabel }}</span>
+                                    @if(is_array($candidate->work_location_preferences) && !empty($candidate->work_location_preferences))
+                                        <div style="margin-top: 8px; font-size: 16px; color: #4b5563;">
+                                            <strong>{{ __('Preferred Locations') }}:</strong>
+                                            @foreach($candidate->work_location_preferences as $pref)
+                                                @php
+                                                    $locParts = array_filter([
+                                                        $pref['city_name'] ?? '',
+                                                        $pref['state_name'] ?? '',
+                                                        $pref['country_name'] ?? ''
+                                                    ]);
+                                                @endphp
+                                                @if(!empty($locParts))
+                                                    <span style="display: inline-block; margin: 2px 4px; padding: 2px 8px; background: #eef6fc; border-radius: 4px;">{{ implode(', ', $locParts) }}</span>
+                                    @endif
+                                        @endforeach
+                                </div>
+                            @endif
+                                </div>
                             @endif
                         </div>
+                    </div>
+                @endif
 
-                        <div id="cdt-pane-other" class="cdt-tab-pane" role="tabpanel">
-                            <div class="cdt-detail-list mb-4">
-                                <div class="cdt-section-title mb-3">{{ __('Job Preferences') }}</div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Preferred Institution Type') }}</span><span class="cdt-detail-value">{{ $instTypesDisplay }}</span></div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Position Type') }}</span><span class="cdt-detail-value">{{ $positionTypeStr ? str_replace(['teaching', 'non_teaching'], [__('Teaching'), __('Non-Teaching')], $positionTypeStr) : '—' }}</span></div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Teaching Subjects') }}</span><span class="cdt-detail-value">{{ $teachSubjectsDisplay }}</span></div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Job Type') }}</span><span class="cdt-detail-value">{{ $jobTypeDisplay }}</span></div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Notice Period') }}</span><span class="cdt-detail-value">{{ $noticeDisplay }}</span></div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Total Experience') }}</span><span class="cdt-detail-value">{{ $totalExpDisplay }}</span></div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Expected Salary') }}</span><span class="cdt-detail-value">{{ $candidate->expected_salary ?? '—' }}{!! ($candidate->expected_salary_period ?? null) ? ' / ' . e($candidate->expected_salary_period) : '' !!}</span></div>
+                {{-- Fourth Section: About Us content --}}
+                @if($candidate->bio ?? $candidate->description ?? null)
+                    <div class="cdt-horizontal-section">
+                        <h5><i class="feather-info"></i> {{ __('About') }}</h5>
+                        <div style="font-size: 16px; color: #374151; line-height: 1.8; padding: 16px 20px; background: #f8fafc; border-radius: 10px; margin-top: 8px;">
+                            {!! BaseHelper::clean($candidate->bio ?? $candidate->description) !!}
+                </div>
+                    </div>
+                @endif
+
+                {{-- Fifth Section: Intro Audio / Video --}}
+                @if($candidate->introductory_audio || !empty($youtubeEmbedUrl) || !empty($youtubeUrl))
+                    <div class="cdt-horizontal-section">
+                        <h5><i class="feather-video"></i> {{ __('Intro Audio / Video') }}</h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                            @if($candidate->introductory_audio)
+                                <div class="cdt-audio-preview">
+                                    <i class="feather-music" style="font-size: 20px; color: #0066cc;"></i>
+                                    <audio controls style="flex: 1;">
+                                        <source src="{{ RvMedia::getImageUrl($candidate->introductory_audio) }}" type="audio/mpeg">
+                                        {{ __('Your browser does not support the audio element.') }}
+                                    </audio>
+                    </div>
+                @endif
+                            @if(!empty($youtubeEmbedUrl))
+                                <div class="cdt-video-preview">
+                                    <iframe src="{{ $youtubeEmbedUrl }}" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+            </div>
+                            @elseif(!empty($youtubeUrl))
+                                <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                    <a href="{{ $youtubeUrl }}" target="_blank" rel="noopener noreferrer" class="cdt-action-btn cdt-action-btn-secondary">
+                                        <i class="fab fa-youtube"></i> {{ __('Watch on YouTube') }}
+                                    </a>
                             </div>
-                            <div class="cdt-detail-list mb-4">
-                                <div class="cdt-section-title mb-3">{{ __('Location') }}</div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Current Location') }}</span><span class="cdt-detail-value">{{ $currentLocStr ?: '—' }}</span></div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Native Location') }}</span><span class="cdt-detail-value">{{ $nativeLocStr }}</span></div>
-                                <div class="cdt-detail-row"><span class="cdt-detail-label">{{ __('Work Location Preference') }}</span><span class="cdt-detail-value">{{ $workPrefLabel }}</span></div>
-                            </div>
-                            @if(is_array($candidate->qualifications ?? null) && !empty($candidate->qualifications))
-                                <div class="mb-4">
-                                    <div class="cdt-section-title mb-3">{{ __('Qualifications') }}</div>
-                                    <ul class="cdt-simple-list">
+                        @endif
+                        </div>
+                    </div>
+                    @endif
+
+                {{-- Sixth Section: Professional Information --}}
+                @php
+                    $hasQualification = is_array($candidate->qualifications) && !empty($candidate->qualifications);
+                    $hasExperience = isset($experiences) && $experiences->isNotEmpty();
+                    $hasLanguages = is_array($candidate->languages) && !empty($candidate->languages);
+                    $hasSkills = ($candidate->favoriteSkills && $candidate->favoriteSkills->count() > 0) || (is_array($candidate->skills) && !empty($candidate->skills));
+                    $hasInterest = !empty(trim($candidate->interests ?? ''));
+                    $hasAchievement = !empty(trim($candidate->achievements ?? ''));
+                    $hasProfessionalData = $hasQualification || $hasExperience || $hasLanguages || $hasSkills || $hasInterest || $hasAchievement;
+                @endphp
+                @if($hasProfessionalData)
+                    <div class="cdt-horizontal-section">
+                        <h5><i class="feather-briefcase"></i> {{ __('Professional Information') }}</h5>
+                        <div class="cdt-professional-grid">
+                            {{-- Qualification --}}
+                            @if($hasQualification)
+                                <div class="cdt-professional-item">
+                                    <h6><i class="feather-graduation-cap"></i> {{ __('Qualification') }}</h6>
+                                    <ul>
                                         @foreach($candidate->qualifications as $q)
-                                            @php $level = $q['level'] ?? ''; $spec = $q['specialization'] ?? ''; $level = $level ? ucwords(str_replace('_', ' ', $level)) : ''; $spec = $spec ? ucwords(str_replace('_', ' ', $spec)) : ''; @endphp
-                                            <li><strong>{{ $level }}</strong>@if($spec) — {{ $spec }}@endif @if(!empty($q['institution'])) ({{ $q['institution'] }})@endif</li>
+                                            @php
+                                                $level = $q['level'] ?? '';
+                                                $spec = $q['specialization'] ?? '';
+                                                $inst = $q['institution'] ?? '';
+                                                $level = $level ? ucwords(str_replace('_', ' ', $level)) : '';
+                                                $spec = $spec ? ucwords(str_replace('_', ' ', $spec)) : '';
+                                            @endphp
+                                            <li>
+                                                <strong>{{ $level }}</strong>
+                                                @if($spec) — {{ $spec }}@endif
+                                                @if($inst) ({{ $inst }})@endif
+                                </li>
                                         @endforeach
-                                    </ul>
-                                </div>
+                        </ul>
+                    </div>
                             @endif
-                            @if(is_array($candidate->teaching_certifications ?? null) && !empty($candidate->teaching_certifications))
-                                <div class="mb-4">
-                                    <div class="cdt-section-title mb-3">{{ __('Teaching Certifications') }}</div>
-                                    <ul class="cdt-simple-list">
-                                        @foreach($candidate->teaching_certifications as $cert)
-                                            @php $certName = is_array($cert) ? ($cert['name'] ?? implode(', ', $cert)) : (string)$cert; $certName = $certName ? ucwords(str_replace('_', ' ', $certName)) : $certName; @endphp
-                                            <li>{{ $certName }}</li>
+
+                            {{-- Experience --}}
+                            @if($hasExperience)
+                                <div class="cdt-professional-item">
+                                    <h6><i class="feather-briefcase"></i> {{ __('Experience') }}</h6>
+                                    <ul>
+                                        @foreach($experiences->take(5) as $exp)
+                                            <li>
+                                                <strong>{{ $exp->company ?? '—' }}</strong><br>
+                                                {{ $exp->position ?? '' }}
+                                                @if($exp->started_at)
+                                                    ({{ $exp->started_at->format('Y') }} - {{ ($exp->is_current || !$exp->ended_at) ? __('Present') : ($exp->ended_at ? $exp->ended_at->format('Y') : '') }})
+                                                @endif
+                                </li>
                                         @endforeach
-                                    </ul>
-                                </div>
+                        </ul>
+                    </div>
                             @endif
-                            @if(is_array($candidate->languages ?? null) && !empty($candidate->languages))
-                                <div>
-                                    <div class="cdt-section-title mb-3">{{ __('Languages') }}</div>
-                                    <ul class="cdt-simple-list">
+
+                            {{-- Languages --}}
+                            @if($hasLanguages)
+                                <div class="cdt-professional-item">
+                                    <h6><i class="feather-globe"></i> {{ __('Languages') }}</h6>
+                                    <ul>
                                         @foreach($candidate->languages as $lang)
-                                            @php $langName = is_array($lang) ? ($lang['language'] ?? '') : (string)$lang; $prof = is_array($lang) ? ($lang['proficiency'] ?? '') : ''; $langName = $langName ? ucwords(str_replace('_', ' ', $langName)) : $langName; $prof = $prof ? ucwords(str_replace('_', ' ', $prof)) : $prof; @endphp
+                                            @php
+                                                $langName = is_array($lang) ? ($lang['language'] ?? '') : (string)$lang;
+                                                $prof = is_array($lang) ? ($lang['proficiency'] ?? '') : '';
+                                                $langName = $langName ? ucwords(str_replace('_', ' ', $langName)) : $langName;
+                                                $prof = $prof ? ucwords(str_replace('_', ' ', $prof)) : $prof;
+                                            @endphp
                                             <li>{{ $langName }}{!! $prof ? ' – ' . e($prof) : '' !!}</li>
                                         @endforeach
                                     </ul>
-                                </div>
+                                    </div>
                             @endif
-                        </div>
-                    </div>
-                </div>
 
-                {{-- Footer: Download Resume / Download Profile (reference UI) --}}
-                @if(JobBoardHelper::canViewCandidateInformation() && ($candidate->resume ?? null) && !($candidate->hide_cv ?? false))
-                    <div class="cdt-footer-actions">
-                        <a href="{{ $candidate->resume_url ?? '#' }}" download class="cdt-footer-btn cdt-footer-btn-resume"><i class="feather-download"></i> {{ __('Download Resume') }}</a>
-                        <a href="{{ $candidate->resume_url ?? '#' }}" download class="cdt-footer-btn cdt-footer-btn-profile"><i class="feather-download"></i> {{ __('Download Profile') }}</a>
+                            {{-- Skills --}}
+                            @if($hasSkills)
+                                <div class="cdt-professional-item">
+                                    <h6><i class="feather-star"></i> {{ __('Skills') }}</h6>
+                                    @if($candidate->favoriteSkills && $candidate->favoriteSkills->count() > 0)
+                                        <ul>
+                                            @foreach($candidate->favoriteSkills->take(10) as $skill)
+                                                <li>{{ $skill->name }}</li>
+                                            @endforeach
+                        </ul>
+                                    @elseif(is_array($candidate->skills) && !empty($candidate->skills))
+                                        <ul>
+                                            @foreach(array_slice($candidate->skills, 0, 10) as $skill)
+                                                <li>{{ is_array($skill) ? ($skill['skill'] ?? '') : $skill }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
+                    </div>
+                            @endif
+
+                            {{-- Interest --}}
+                            @if($hasInterest)
+                                <div class="cdt-professional-item">
+                                    <h6><i class="feather-heart"></i> {{ __('Interest') }}</h6>
+                                    <p style="font-size: 16px; color: #4b5563; margin: 0; white-space: pre-line;">{!! nl2br(e(Str::limit($candidate->interests, 200))) !!}</p>
+                                </div>
+                                        @endif
+
+                            {{-- Achievement --}}
+                            @if($hasAchievement)
+                                <div class="cdt-professional-item">
+                                    <h6><i class="feather-award"></i> {{ __('Achievement') }}</h6>
+                                    <p style="font-size: 16px; color: #4b5563; margin: 0; white-space: pre-line;">{!! nl2br(e(Str::limit($candidate->achievements, 200))) !!}</p>
+                                    </div>
+                            @endif
+                                    </div>
                     </div>
                 @endif
-            </div>
 
-            {{-- Sidebar --}}
-            @if(JobBoardHelper::canViewCandidateInformation())
-                <div class="col-lg-4 col-md-12">
-                    {{-- Candidate Detail Sidebar Ads --}}
-                    @if (is_plugin_active('ads') && function_exists('render_page_ads'))
-                        @php $sidebarAds = render_page_ads('candidate-detail', 'sidebar-right'); @endphp
-                        @if (!empty($sidebarAds))
-                            <div class="cdt-sidebar-card" style="margin-bottom: 20px;">
-                                {!! $sidebarAds !!}
-                            </div>
-                        @endif
-                    @endif
-
-                    <div class="cdt-sidebar-wrap">
-                        <div class="cdt-sidebar-card">
-                            <h4>{{ __('Profile Info') }}</h4>
-                        <ul class="cdt-info-list">
-                            @if($candidate->gender ?? null)<li><span class="cdt-info-icon"><i class="fas fa-venus-mars"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Gender') }}</div><div class="cdt-info-value">{{ ucfirst($candidate->gender) }}</div></div></li>@endif
-                            @if($candidate->dob ?? null)<li><span class="cdt-info-icon"><i class="fas fa-birthday-cake"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Date of Birth') }}</div><div class="cdt-info-value">{{ is_object($candidate->dob) ? $candidate->dob->format('M d, Y') : $candidate->dob }}</div></div></li>@endif
-                            @if($candidate->marital_status ?? null)<li><span class="cdt-info-icon"><i class="fas fa-heart"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Marital Status') }}</div><div class="cdt-info-value">{{ ucfirst(str_replace('_', ' ', $candidate->marital_status)) }}</div></div></li>@endif
-                            @if(($candidate->total_experience ?? null) !== null && $candidate->total_experience !== '')<li><span class="cdt-info-icon"><i class="fas fa-briefcase"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Experience') }}</div><div class="cdt-info-value">{{ $formatLabel($candidate->total_experience) }}</div></div></li>@endif
-                            @if($candidate->current_work_status ?? null)<li><span class="cdt-info-icon"><i class="fas fa-user-tie"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Work Status') }}</div><div class="cdt-info-value">{{ $formatLabel($candidate->current_work_status) }}</div></div></li>@endif
-                            @if($candidate->notice_period ?? null)<li><span class="cdt-info-icon"><i class="fas fa-calendar-alt"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Notice Period') }}</div><div class="cdt-info-value">{{ $formatLabel($candidate->notice_period) }}</div></div></li>@endif
-                            @if($candidate->expected_salary ?? null)<li><span class="cdt-info-icon"><i class="fas fa-rupee-sign"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Expected Salary') }}</div><div class="cdt-info-value">{{ $candidate->expected_salary }}{!! ($candidate->expected_salary_period ?? null) ? ' / ' . e($candidate->expected_salary_period) : '' !!}</div></div></li>@endif
-                            @if($candidate->phone ?? null)<li><span class="cdt-info-icon"><i class="fas fa-mobile-alt"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Phone') }}</div><div class="cdt-info-value">{{ $candidate->phone }}</div></div></li>@endif
-                            @if($candidate->email ?? null)<li><span class="cdt-info-icon"><i class="fas fa-at"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Email') }}</div><div class="cdt-info-value">{{ $candidate->email }}</div></div></li>@endif
-                            @if($candidate->address ?? $candidate->city_name ?? $candidate->state_name ?? null)<li><span class="cdt-info-icon"><i class="fas fa-map-marker-alt"></i></span><div class="cdt-info-text"><div class="cdt-info-label">{{ __('Location') }}</div><div class="cdt-info-value">{{ $candidate->address ?? '' }}{{ ($candidate->city_name ?? null) ? ', ' . $candidate->city_name : '' }}{{ ($candidate->state_name ?? null) ? ', ' . $candidate->state_name : '' }}{{ ($candidate->country_name ?? null) ? ', ' . $candidate->country_name : '' }}</div></div></li>@endif
-                        </ul>
-                    </div>
+                {{-- Last: Download Buttons --}}
+                @if(JobBoardHelper::canViewCandidateInformation())
+                    <div class="cdt-horizontal-section">
+                        <div class="cdt-download-buttons">
+                            @if(($candidate->resume ?? null) && !($candidate->hide_cv ?? false))
+                                <a href="{{ $candidate->resume_url ?? '#' }}" download class="cdt-download-btn cdt-download-btn-primary">
+                                    <i class="feather-download"></i> {{ __('Download Resume') }}
+                                </a>
+                            @endif
+                            @if(($candidate->resume ?? null) && !($candidate->hide_cv ?? false))
+                                <a href="{{ $candidate->resume_url ?? '#' }}" download class="cdt-download-btn cdt-download-btn-outline">
+                                    <i class="feather-download"></i> {{ __('Download Profile') }}
+                                </a>
+                            @endif
+                            @if($candidate->cover_letter ?? null)
+                                <a href="{{ RvMedia::getImageUrl($candidate->cover_letter) }}" download class="cdt-download-btn cdt-download-btn-outline">
+                                    <i class="feather-download"></i> {{ __('Download Cover Letter') }}
+                                </a>
+                            @endif
                     </div>
                 </div>
             @endif
+            </div>
         </div>
 
         {{-- Candidate Detail Bottom Ads --}}
@@ -841,20 +1454,3 @@
     </div>
 </div>
 
-<script>
-(function() {
-    var nav = document.querySelector('.cdt-tabs-nav');
-    if (!nav) return;
-    nav.addEventListener('click', function(e) {
-        var btn = e.target.closest('.cdt-tab-btn');
-        if (!btn) return;
-        var tab = btn.getAttribute('data-cdt-tab');
-        if (!tab) return;
-        nav.querySelectorAll('.cdt-tab-btn').forEach(function(b) { b.classList.remove('active'); });
-        document.querySelectorAll('.cdt-tab-pane').forEach(function(p) { p.classList.remove('active'); });
-        btn.classList.add('active');
-        var pane = document.getElementById('cdt-pane-' + tab);
-        if (pane) pane.classList.add('active');
-    });
-})();
-</script>

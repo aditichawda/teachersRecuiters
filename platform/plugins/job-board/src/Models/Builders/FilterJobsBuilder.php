@@ -19,6 +19,8 @@ class FilterJobsBuilder extends BaseQueryBuilder
             'country_id' => null,
             'city_id' => null,
             'state_id' => null,
+            'company_id' => null,
+            'institution_type' => [],
             'job_categories' => [],
             'job_tags' => [],
             'job_types' => [],
@@ -142,6 +144,23 @@ class FilterJobsBuilder extends BaseQueryBuilder
                     }
                 }
             }
+        }
+
+        // Filter by company/institute
+        if ($companyId = Arr::get($filters, 'company_id')) {
+            $this->where('company_id', (int) $companyId);
+        }
+
+        // Filter by institution type (through company)
+        $institutionTypes = array_filter((array) Arr::get($filters, 'institution_type', []));
+        if ($institutionTypes) {
+            $this->whereHas('company', function (Builder $query) use ($institutionTypes): void {
+                $query->where(function (Builder $q) use ($institutionTypes): void {
+                    foreach ($institutionTypes as $institutionType) {
+                        $q->orWhere('institution_type', 'LIKE', '%' . $institutionType . '%');
+                    }
+                });
+            });
         }
 
         $filters['job_categories'] = array_map('intval', array_filter($filters['job_categories']));

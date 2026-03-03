@@ -11,6 +11,7 @@ use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Repositories\Interfaces\JobInterface;
 use Illuminate\Http\Request;
+use App\Services\WhatsappService;
 
 /**
  * @group Jobs
@@ -305,6 +306,112 @@ class JobController extends BaseController
 
         // Increment application count
         $job->increment('number_of_applied');
+
+        // 👉 Send WhatsApp Alert Notification
+        try {
+            // Load relationships if not loaded
+            if (!$job->relationLoaded('author')) {
+                $job->load('author');
+            }
+            if (!$job->relationLoaded('company')) {
+                $job->load('company');
+            }
+            
+            // Get employer phone number (priority: author phone > company phone > apply_internal_phones)
+            $employerPhone = null;
+            
+            // Try author phone first
+            if ($job->author && $job->author->phone) {
+                $employerPhone = preg_replace('/[^0-9]/', '', $job->author->phone);
+                if (strlen($employerPhone) == 12 && substr($employerPhone, 0, 2) == '91') {
+                    $employerPhone = substr($employerPhone, 2);
+                } elseif (strlen($employerPhone) > 10) {
+                    $employerPhone = substr($employerPhone, -10);
+                }
+                if (strlen($employerPhone) != 10) {
+                    $employerPhone = null;
+                }
+            }
+            
+            // Try company phone if author phone not available
+            if (!$employerPhone && $job->company && $job->company->phone) {
+                $employerPhone = preg_replace('/[^0-9]/', '', $job->company->phone);
+                if (strlen($employerPhone) == 12 && substr($employerPhone, 0, 2) == '91') {
+                    $employerPhone = substr($employerPhone, 2);
+                } elseif (strlen($employerPhone) > 10) {
+                    $employerPhone = substr($employerPhone, -10);
+                }
+                if (strlen($employerPhone) != 10) {
+                    $employerPhone = null;
+                }
+            }
+            
+            // Try apply_internal_phones if available
+            if (!$employerPhone && $job->apply_internal_phones && is_array($job->apply_internal_phones)) {
+                $phones = array_filter($job->apply_internal_phones);
+                if (!empty($phones)) {
+                    $firstPhone = preg_replace('/[^0-9]/', '', reset($phones));
+                    if (strlen($firstPhone) == 12 && substr($firstPhone, 0, 2) == '91') {
+                        $firstPhone = substr($firstPhone, 2);
+                    } elseif (strlen($firstPhone) > 10) {
+                        $firstPhone = substr($firstPhone, -10);
+                    }
+                    if (strlen($firstPhone) == 10) {
+                        $employerPhone = $firstPhone;
+                    }
+                }
+            }
+            
+            // Send WhatsApp notification if employer phone is available
+            if ($employerPhone) {
+                $jobTitle = $job->name ?? 'N/A';
+                $candidateName = trim(($application->first_name ?? '') . ' ' . ($application->last_name ?? ''));
+                $candidateEmail = $application->email ?? 'N/A';
+                $candidatePhone = $application->phone ?? 'N/A';
+                
+                // Clean candidate phone
+                $candidatePhoneClean = preg_replace('/[^0-9]/', '', $candidatePhone);
+                if (strlen($candidatePhoneClean) == 12 && substr($candidatePhoneClean, 0, 2) == '91') {
+                    $candidatePhoneClean = substr($candidatePhoneClean, 2);
+                } elseif (strlen($candidatePhoneClean) > 10) {
+                    $candidatePhoneClean = substr($candidatePhoneClean, -10);
+                }
+                if (strlen($candidatePhoneClean) != 10) {
+                    $candidatePhoneClean = 'N/A';
+                }
+                
+                \Log::info('[JOB_APPLICATION_API] Sending WhatsApp notification', [
+                    'employer_phone' => $employerPhone,
+                    'job_title' => $jobTitle,
+                    'candidate_name' => $candidateName,
+                ]);
+                
+                $whatsappResponse = WhatsappService::sendJobApplyAlert(
+                    $employerPhone,
+                    $jobTitle,
+                    $candidateName ?: 'N/A',
+                    $candidateEmail,
+                    $candidatePhoneClean
+                );
+                
+                \Log::info('[JOB_APPLICATION_API] WhatsApp notification sent', [
+                    'response' => $whatsappResponse,
+                ]);
+            } else {
+                \Log::warning('[JOB_APPLICATION_API] No employer phone found for WhatsApp notification', [
+                    'job_id' => $job->id,
+                    'has_author' => $job->author ? 'yes' : 'no',
+                    'has_company' => $job->company ? 'yes' : 'no',
+                ]);
+            }
+        } catch (\Exception $whatsappException) {
+            // Log error but don't fail the application
+            \Log::error('[JOB_APPLICATION_API] WhatsApp notification failed', [
+                'error' => $whatsappException->getMessage(),
+                'job_id' => $job->id,
+                'application_id' => $application->id,
+            ]);
+        }
 
         // Fire event
         event(new JobAppliedEvent($job, $application));

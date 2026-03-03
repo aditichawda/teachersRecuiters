@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class Job extends BaseModel
 {
@@ -81,6 +82,8 @@ class Job extends BaseModel
         'application_closing_date',
         'zip_code',
         'unique_id',
+        'apply_internal_phones',
+        'enable_whatsapp_notifications',
     ];
 
     protected $casts = [
@@ -98,6 +101,8 @@ class Job extends BaseModel
         'apply_url' => SafeContent::class,
         'is_remote' => 'boolean',
         'apply_internal_emails' => 'array',
+        'apply_internal_phones' => 'array',
+        'enable_whatsapp_notifications' => 'boolean',
     ];
 
     public function skills(): BelongsToMany
@@ -502,7 +507,19 @@ class Job extends BaseModel
      */
     public function getAllScreeningQuestionsForApply(): \Illuminate\Support\Collection
     {
+        // Load relationships safely - check if table exists
+        try {
+            if (Schema::hasTable('jb_job_screening_questions')) {
         $this->loadMissing(['screeningQuestions', 'jobScreeningQuestions']);
+            } else {
+                // Table doesn't exist, only load admin pool questions
+                $this->loadMissing(['screeningQuestions']);
+            }
+        } catch (\Exception $e) {
+            // If there's any error, just load admin pool questions
+            $this->loadMissing(['screeningQuestions']);
+        }
+        
 $replacements = \Botble\JobBoard\Support\ScreeningQuestionPlaceholder::jobToReplacements($this);
             $list = collect();
 
@@ -529,6 +546,8 @@ $replacements = \Botble\JobBoard\Support\ScreeningQuestionPlaceholder::jobToRepl
             ]);
         }
 
+        // Only process job-specific questions if relationship is loaded and table exists
+        if (isset($this->jobScreeningQuestions) && $this->relationLoaded('jobScreeningQuestions')) {
         foreach ($this->jobScreeningQuestions as $jq) {
             $optsArray = $jq->options_array;
             $list->push((object) [
@@ -539,6 +558,7 @@ $replacements = \Botble\JobBoard\Support\ScreeningQuestionPlaceholder::jobToRepl
                 'is_required' => (bool) $jq->is_required,
                 'correct_answer' => $jq->correct_answer,
             ]);
+            }
         }
 
         return $list;

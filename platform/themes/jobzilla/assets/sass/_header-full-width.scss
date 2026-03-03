@@ -4,9 +4,12 @@
     .header-nav-btn-section {
         float: right;
         display: flex;
+        align-items: center;
 
         .twm-nav-btn-left {
             margin-right: 10px;
+            display: flex;
+            align-items: center;
 
             .twm-nav-sign-up {
                 background-color: #e0eeff;
@@ -14,7 +17,8 @@
                 font-size: 16px;
                 border-radius: 10px;
                 padding: 8px 15px;
-                display: block;
+                display: flex;
+                align-items: center;
                 white-space: nowrap;
                 overflow: hidden;
                 position: relative;
@@ -61,6 +65,8 @@
 
         .twm-nav-btn-right {
             margin-right: 10px;
+            display: flex;
+            align-items: center;
 
             .twm-nav-post-a-job {
                 background-color: $clr-primary;
@@ -68,7 +74,8 @@
                 font-size: 16px;
                 border-radius: 10px;
                 padding: 8px 15px;
-                display: block;
+                display: flex;
+                align-items: center;
                 white-space: nowrap;
                 overflow: hidden;
                 position: relative;

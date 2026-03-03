@@ -273,6 +273,19 @@ class AccountJobController extends BaseController
             'never_expired',
         ]);
 
+        // Remove fields if columns don't exist in database yet
+        // This will be enabled after migrations are run
+        if ($request->has('apply_internal_phones')) {
+            if (!Schema::hasColumn('jb_jobs', 'apply_internal_phones')) {
+                $request->request->remove('apply_internal_phones');
+            }
+        }
+        if ($request->has('enable_whatsapp_notifications')) {
+            if (!Schema::hasColumn('jb_jobs', 'enable_whatsapp_notifications')) {
+                $request->request->remove('enable_whatsapp_notifications');
+            }
+        }
+
         $request->merge([
             'expire_date' => Carbon::now()->addDays(JobBoardHelper::jobExpiredDays()),
             'author_id' => $account->getAuthIdentifier(),
@@ -292,6 +305,21 @@ class AccountJobController extends BaseController
         }
         if (! $request->has('is_remote')) {
             $request->merge(['is_remote' => 0]);
+        }
+        // Handle enable_whatsapp_notifications checkbox
+        // If checkbox is checked, value will be "1", if unchecked, it won't be in request
+        // Default to 0 if not present, but if additional phones are added, auto-enable
+        if (! $request->has('enable_whatsapp_notifications')) {
+            // If additional phones are provided, auto-enable WhatsApp notifications
+            if ($request->has('apply_internal_phones') && !empty(array_filter($request->input('apply_internal_phones', [])))) {
+                $request->merge(['enable_whatsapp_notifications' => 1]);
+                \Log::info('[JOB_POST] Auto-enabling WhatsApp notifications because additional phones are provided');
+            } else {
+                $request->merge(['enable_whatsapp_notifications' => 0]);
+            }
+        } else {
+            // Checkbox was checked, ensure value is 1
+            $request->merge(['enable_whatsapp_notifications' => 1]);
         }
 
         // Ensure job can be stored: set defaults for optional fields if empty
@@ -357,6 +385,8 @@ class AccountJobController extends BaseController
         $job->jobTypes()->sync($request->input('jobTypes', []));
         $job->categories()->sync($request->input('categories', []));
         
+        // COMMENTED OUT: Job alert notifications disabled
+        /*
         // Trigger event after all relationships are synced
         if ($job->moderation_status == ModerationStatusEnum::APPROVED && $job->status == JobStatusEnum::PUBLISHED) {
             // Reload job with relationships before triggering event
@@ -376,6 +406,7 @@ class AccountJobController extends BaseController
             \Log::info('JobPublishedEvent NOT triggered - Job status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
             error_log('[JOB_CREATE] JobPublishedEvent NOT triggered - Status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
         }
+        */
 
         // Sync screening questions (from admin pool) with is_required, overrides, correct_answer per job
         $sqIds = array_filter((array) $request->input('screening_question_ids', []));
@@ -679,8 +710,34 @@ class AccountJobController extends BaseController
             'expire_date',
         ]);
 
+        // Remove fields if columns don't exist in database yet (same as store method)
+        if ($request->has('apply_internal_phones')) {
+            if (!Schema::hasColumn('jb_jobs', 'apply_internal_phones')) {
+                $request->request->remove('apply_internal_phones');
+            }
+        }
+        if ($request->has('enable_whatsapp_notifications')) {
+            if (!Schema::hasColumn('jb_jobs', 'enable_whatsapp_notifications')) {
+                $request->request->remove('enable_whatsapp_notifications');
+            }
+        }
+
         if (! $request->has('employer_colleagues')) {
             $request->merge(['employer_colleagues' => []]);
+        }
+
+        // Handle enable_whatsapp_notifications checkbox (same logic as store)
+        if (! $request->has('enable_whatsapp_notifications')) {
+            // If additional phones are provided, auto-enable WhatsApp notifications
+            if ($request->has('apply_internal_phones') && !empty(array_filter($request->input('apply_internal_phones', [])))) {
+                $request->merge(['enable_whatsapp_notifications' => 1]);
+                \Log::info('[JOB_UPDATE] Auto-enabling WhatsApp notifications because additional phones are provided');
+            } else {
+                $request->merge(['enable_whatsapp_notifications' => 0]);
+            }
+        } else {
+            // Checkbox was checked, ensure value is 1
+            $request->merge(['enable_whatsapp_notifications' => 1]);
         }
 
         if ($job->status != JobStatusEnum::PUBLISHED && $request->input('status') == JobStatusEnum::PUBLISHED) {
@@ -761,9 +818,49 @@ class AccountJobController extends BaseController
         // When not internal, clear internal emails; when internal, keep only non-empty (max 3 validated in request)
         if ($request->input('apply_type') !== 'internal') {
             $request->merge(['apply_internal_emails' => null]);
+            $request->merge(['apply_internal_phones' => null]);
         } else {
             $emails = array_values(array_filter(array_map('trim', (array) $request->input('apply_internal_emails', []))));
             $request->merge(['apply_internal_emails' => array_slice($emails, 0, 3) ?: null]);
+            
+            // Process apply_internal_phones - format with country code and store
+            $phones = array_filter(array_map('trim', (array) $request->input('apply_internal_phones', [])));
+            $formattedPhones = [];
+            
+            foreach ($phones as $phone) {
+                if (empty($phone)) {
+                    continue;
+                }
+                
+                // Format phone with country code (same logic as registration)
+                // If phone already has +, clean it
+                if (strpos($phone, '+') === 0) {
+                    // Phone already has country code, just clean spaces
+                    $formattedPhone = '+' . preg_replace('/[^0-9]/', '', $phone);
+                } elseif (preg_match('/^91/', preg_replace('/[^0-9]/', '', $phone))) {
+                    // Phone starts with 91 (country code), add +
+                    $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+                    $formattedPhone = '+' . $cleanPhone;
+                } elseif (strlen(preg_replace('/[^0-9]/', '', $phone)) == 10) {
+                    // 10 digit phone, add 91 country code
+                    $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+                    $formattedPhone = '+91' . $cleanPhone;
+                } else {
+                    // Keep as is if format is unclear
+                    $formattedPhone = $phone;
+                }
+                
+                $formattedPhones[] = $formattedPhone;
+            }
+            
+            // Store formatted phones (max 3)
+            $request->merge(['apply_internal_phones' => array_slice($formattedPhones, 0, 3) ?: null]);
+            
+            \Log::info('[JOB_POST] Processed apply_internal_phones', [
+                'original_phones' => $phones,
+                'formatted_phones' => $formattedPhones,
+                'stored_phones' => array_slice($formattedPhones, 0, 3) ?: null,
+            ]);
         }
 
         $except = [

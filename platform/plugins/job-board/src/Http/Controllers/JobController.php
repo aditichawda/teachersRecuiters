@@ -85,6 +85,8 @@ class JobController extends BaseController
 
         event(new CreatedContentEvent(JOB_MODULE_SCREEN_NAME, $request, $job));
 
+        // COMMENTED OUT: Job alert notifications disabled
+        /*
         if ($job->moderation_status == ModerationStatusEnum::APPROVED) {
             // Reload job with relationships before triggering event
             try {
@@ -133,6 +135,7 @@ class JobController extends BaseController
                 // Continue even if event fails
             }
         }
+        */
 
         $storeTagService->execute($request, $job);
 
@@ -246,12 +249,15 @@ class JobController extends BaseController
 
         event(new UpdatedContentEvent(JOB_MODULE_SCREEN_NAME, $request, $job));
 
+        // COMMENTED OUT: Job alert notifications disabled
+        /*
         if (
             $moderationStatus != ModerationStatusEnum::APPROVED
             && $request->input('moderation_status') == ModerationStatusEnum::APPROVED
         ) {
             event(new JobPublishedEvent($job));
         }
+        */
 
         $storeTagService->execute($request, $job);
 

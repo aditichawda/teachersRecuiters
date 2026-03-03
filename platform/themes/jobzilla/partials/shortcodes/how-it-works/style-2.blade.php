@@ -1,257 +1,173 @@
-<!-- HOW IT WORK SECTION START -->
-<div class="section-full p-b30 twm-how-it-work-area2" style="background-color: aliceblue">
+{!! Theme::partial('hiw-styles') !!}
 
-    {{-- Section Heading --}}
-    <div class="section-head left wt-small-separator-outer text-center pt-5">
-    <h2 class="wt-title d-flex justify-content-center">
-            {!! BaseHelper::clean($shortcode->subtitle) !!}
-        </h2>
-        <div class="wt-small-separator site-text-primary d-flex justify-content-center">
-            <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
+{{-- HOW IT WORK SECTION - HOME PAGE USING SAME LAYOUT AS /how-it-works --}}
+<section class="hiw-process-section">
+    <div class="container">
+        <div class="hiw-section-header">
+            <h2 class="hiw-section-title">How It Works</h2>
         </div>
 
-    </div>
+        {{-- Toggle Buttons --}}
+        <div class="hiw-toggle-buttons">
+            <button class="hiw-toggle-btn active" data-target="educators" onclick="toggleHowItWorksHomeSection('educators', this)">
+                For Educators
+            </button>
+            <button class="hiw-toggle-btn" data-target="institutions" onclick="toggleHowItWorksHomeSection('institutions', this)">
+                For Institutions
+            </button>
+        </div>
 
-    {{-- Check List --}}
-    @php
-        $checkList = $shortcode->check_list
-            ? array_filter(explode(';', $shortcode->check_list))
-            : [];
-    @endphp
-
-    @if ($checkList)
-        <ul class="description-list text-center">
-            @foreach ($checkList as $item)
-                <li>
-                    <i class="feather-check"></i> {{ $item }}
-                </li>
-            @endforeach
-        </ul>
-    @endif
-
-    <div class="container">
-
-        <div class="col-12">
-            {{-- Steps Column --}}
-            
-            <div class="col-lg-12 col-md-12">
-
-                {{-- Step Cards - Full Width Row --}}
-                <div class="twm-w-process-steps-2-wrap">
-                    <div class="row">
-                        @foreach ($tabs as $tab)
-                            @php
-                                $rgbColor = Arr::get($tab, 'rgb_color');
-                                $bgColor  = Arr::get($tab, 'bg_color');
-                            @endphp
-
-                            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
-                                <div class="twm-w-process-steps-2">
-                                    <div
-                                        class="twm-w-pro-top shadow bg-opacity-50 {{ !$rgbColor ? 'bg-clr-sky-light' : '' }}"
-                                        @if($bgColor)
-                                            style="background-color: {{ $bgColor }};"
-                                        @endif
-                                    >
-                                        <span
-                                            class="twm-large-number {{ !$bgColor ? 'text-clr-sky' : '' }}"
-                                            @if($bgColor)
-                                                style="color: {{ $bgColor }};"
-                                            @endif
-                                        >
-                                            {{ $loop->iteration < 10 ? '0'.$loop->iteration : $loop->iteration }}
-                                        </span>
-
-                                        <div class="twm-media">
-                                            <span>
-                                                <img
-                                                    src="{{ RvMedia::getImageUrl(
-                                                        Arr::get($tab, 'image'),
-                                                        null,
-                                                        false,
-                                                        RvMedia::getDefaultImage()
-                                                    ) }}"
-                                                    alt="{{ Arr::get($tab, 'title') }}"
-                                                >
-                                            </span>
-                                        </div>
-
-                                        <h4 class="twm-title">
-                                            {{ Arr::get($tab, 'title') }}
-                                        </h4>
-
-                                        <p>
-                                            {{ Arr::get($tab, 'subtitle') }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                {{-- Video Section - Below Cards --}}
-                <div class="hiw-video-below-section">
-                    <div class="row justify-content-center">
-                        <div class="col-lg-8 col-md-10 col-12">
-                            <div class="hiw-video-below-card">
-                                <div class="hiw-video-below-inner">
-                                    <iframe 
-                                        src="https://www.youtube.com/embed/r4PevhrJA_A?si=oVH36shDIgdaL5D4" 
-                                        title="Teachers Recruiter - How It Works" 
-                                        frameborder="0" 
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                                        allowfullscreen>
-                                    </iframe>
-                                </div>
+        {{-- For Educators Content (Default) --}}
+        <div id="educators-content-home-section" class="hiw-content-section active">
+            <div class="hiw-content-header">
+                <h3 class="hiw-content-title">For Educators</h3>
+                <p class="hiw-content-subtitle">Follow the steps and apply for verified school jobs.</p>
+            </div>
+                <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">01</span>
+                        <h4 class="hiw-step-title">Upload Your Resume</h4>
+                        <p class="hiw-step-desc">Sign up, verify your email/mobile, and upload your resume. <strong>100% Free Registration</strong></p>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-            </div>
-            {{-- Video Column --}}
-            @php
-                // Check if URL exists - also check from shortcode directly as fallback
-                $hasVideo = false;
-                $videoUrl = $url;
-                
-                // First check if $url variable is set
-                if (!empty($url) && is_string($url)) {
-                    $hasVideo = true;
-                    $videoUrl = $url;
-                }
-                // Fallback: check directly from shortcode
-                elseif (!empty($shortcode->youtube_url)) {
-                    $youtubeUrl = trim($shortcode->youtube_url);
-                    
-                    // Process URL directly here
-                    if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]{11})/', $youtubeUrl, $matches)) {
-                        $videoUrl = 'https://www.youtube.com/embed/' . $matches[1];
-                        $hasVideo = true;
-                    } elseif (preg_match('/(?:youtube\.com\/watch\?v=|youtube\.com\/watch\?.*&v=)([a-zA-Z0-9_-]{11})/', $youtubeUrl, $matches)) {
-                        $videoUrl = 'https://www.youtube.com/embed/' . $matches[1];
-                        $hasVideo = true;
-                    } elseif (preg_match('/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/', $youtubeUrl, $matches)) {
-                        $videoUrl = 'https://www.youtube.com/embed/' . $matches[1];
-                        $hasVideo = true;
-                    } elseif (strpos($youtubeUrl, 'youtube.com/embed/') !== false) {
-                        $videoUrl = $youtubeUrl;
-                        $hasVideo = true;
-                    }
-                }
-            @endphp
-            
-            @if ($hasVideo && !empty($videoUrl))
-                <div class="col-lg-4 col-md-12 mb-4 mb-lg-0">
-                    <div
-                        class="youtube-iframe"
-                        style="{{ (!$width && !$height) ? 'position:relative;display:block;height:0;padding-bottom:56.25%;overflow:hidden;' : 'margin-bottom:20px;' }}"
-                    >
-                        <iframe
-                            src="{{ $videoUrl }}"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen
-                            frameborder="0"
-                            title="Video"
-                            style="
-                                {{ (!$width && !$height) ? 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;' : '' }}
-                                {{ $width ? 'width:'.$width.'px !important;' : '' }}
-                                {{ $height ? 'height:'.$height.'px !important;' : '' }}
-                                max-width:100%;
-                            "
-                        ></iframe>
-                    </div>
-                </div>
-            @endif
-        </div>
-
-        <div class="twm-how-it-work-section"></div>
-
-    </div>
-</div>
-
-
-
-
-<!-- HOW IT WORK SECTION START -->
-<!-- <div class="section-full  p-b30 site-bg-white twm-how-it-work-area2">
-<div class="section-head left wt-small-separator-outer">
-                    <div class="wt-small-separator site-text-primary" style="
-    text-align: center;
-    justify-content: center;
-    display: flex;
-">
-                        <div>{!! BaseHelper::clean($shortcode->title) !!}</div>
-                    </div>
-                    <h2 class="wt-title" style="
-    text-align: center;
-    justify-content: center;
-    display: flex;
-">{!! BaseHelper::clean($shortcode->subtitle) !!}</h2>
-                </div>
-                @if ($shortcode->check_list && $list = array_filter(explode(';', $shortcode->check_list)))
-                    <ul class="description-list">
-                        @foreach ($list as $item)
-                            <li><i class="feather-check"></i>{{ $item }}</li>
-                        @endforeach
-                    </ul>
-                @endif
-                @if (!empty($url))
-    <div class="container">
-
-        <div class="row">
-            <div class="col-lg-3 col-md-12">
-                
-               
-    <div
-        class="youtube-iframe"
-        @if (!$width && !$height) style="position: relative; display: block; height: 0; padding-bottom: 56.25%; overflow: hidden;"
-        @else
-            style="margin-bottom: 20px;" @endif
-    >
-        <iframe
-            src="{{ $url }}"
-            allowfullscreen
-            frameborder="0"
-            @style([
-                'position: absolute; top: 0; bottom: 0; left: 0; width: 100%; height: 100%; border: 0;' => !$width && !$height,
-                "height: {$height}px !important;" => $height,
-                "width: {$width}px !important;" => $width,
-                'max-width: 100%',
-            ])
-            title="Video"
-        ></iframe>
-    </div>
-@endif
-
-               
-            </div>
-            <div class="col-lg-8 col-md-12">
-                <div class="twm-w-process-steps-2-wrap">
-                    <div class="row col-6">
-                        @foreach ($tabs as $tab)
-                            <div class="col-xl-6 col-lg-6 col-md-6">
-                                <div class="twm-w-process-steps-2">
-                                    <div class="twm-w-pro-top shadow bg-opacity-50 @if (! Arr::get($tab, 'rgb_color')) bg-clr-sky-light @endif"
-                                        @if (Arr::get($tab, 'rgb_color')) style="background-color: rgba({{ Arr::get($tab, 'rgb_color') }}, var(--bs-bg-opacity))" @endif>
-                                        <span class="twm-large-number @if (! Arr::get($tab, 'bg_color')) text-clr-sky @endif" 
-                                        @if (Arr::get($tab, 'rgb_color')) style="color: {{ Arr::get($tab, 'bg_color') }};" @endif>{{ $loop->iteration < 10 ? ('0' . $loop->iteration) : $loop->iteration }}</span>
-                                        <div class="twm-media">
-                                            <span>
-                                                <img src="{{ RvMedia::getImageUrl(Arr::get($tab, 'image'), null, false, RvMedia::getDefaultImage()) }}" alt="{{ Arr::get($tab, 'title') }}">
-                                            </span>
-                                        </div>
-                                        <h4 class="twm-title">{{ Arr::get($tab, 'title') }}</h4>
-                                        <p>{{ Arr::get($tab, 'subtitle') }}</p>
-                                    </div>
-                                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">02</span>
+                        <h4 class="hiw-step-title">Search Job & Apply</h4>
+                        <p class="hiw-step-desc">Complete your profile, get job suggestions, and apply to unlimited jobs. <strong>No Cost to Apply</strong></p>
                             </div>
-                        @endforeach
+                        </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">03</span>
+                        <h4 class="hiw-step-title">Get Noticed by Schools</h4>
+                        <p class="hiw-step-desc">Schools can view your profile and contact you directly for opportunities.</p>
+                        </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">04</span>
+                        <h4 class="hiw-step-title">Interview & Get Hired</h4>
+                        <p class="hiw-step-desc">Attend interviews, receive offers, and start your new educator role.</p>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="twm-how-it-work-section"></div>
+
+        {{-- For Institutions Content --}}
+        <div id="institutions-content-home-section" class="hiw-content-section">
+            <div class="hiw-content-header">
+                <h3 class="hiw-content-title">For Institutions</h3>
+                <p class="hiw-content-subtitle">Smart Hiring. Verified Educators. Faster Recruitment.</p>
+            </div>
+                <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">01</span>
+                        <h4 class="hiw-step-title">Register Your Institution</h4>
+                        <p class="hiw-step-desc">Sign up with basic details and verify your email/mobile to activate your account.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">02</span>
+                        <h4 class="hiw-step-title">Post Jobs & Manage Applications</h4>
+                        <p class="hiw-step-desc">Publish job openings, receive relevant applications, and track or shortlist candidates from your dashboard.</p>
+                    </div>
+                                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">03</span>
+                        <h4 class="hiw-step-title">Access Educators Resume</h4>
+                        <p class="hiw-step-desc">Search verified teacher profiles using filters like subject, experience, qualification, location, and availability.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="hiw-step-card">
+                        <span class="hiw-step-number">04</span>
+                        <h4 class="hiw-step-title">Interview and Hire Faster</h4>
+                        <p class="hiw-step-desc">Connect directly with shortlisted candidates and hire the best talent quickly.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div> -->
+</section>
+
+{{-- Video Section --}}
+<section class="hiw-video-section">
+    <div class="container">
+        <div class="hiw-section-header">
+            <h2 class="hiw-section-title">See How It Works</h2>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="hiw-video-wrapper-large">
+                    <iframe 
+                        src="https://www.youtube.com/embed/r4PevhrJA_A?si=oVH36shDIgdaL5D4" 
+                        title="Teachers Recruiter - How It Works" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.hiw-video-wrapper-large {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    background: #000;
+}
+.hiw-video-wrapper-large iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+</style>
+
+<script>
+function toggleHowItWorksHomeSection(target, element) {
+    // Hide sections
+    document.querySelectorAll('#educators-content-home-section, #institutions-content-home-section').forEach(section => {
+        section.classList.remove('active');
+    });
+
+    // Toggle buttons only inside this block
+    const container = element.closest('.hiw-process-section');
+    if (container) {
+        container.querySelectorAll('.hiw-toggle-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
+    // Show selected
+    const contentSection = document.getElementById(target + '-content-home-section');
+    if (contentSection) {
+        contentSection.classList.add('active');
+    }
+
+    if (element) {
+        element.classList.add('active');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const educatorsContent = document.getElementById('educators-content-home-section');
+    const educatorsBtn = document.querySelector('.hiw-process-section .hiw-toggle-btn[data-target="educators"]');
+
+    if (educatorsContent && educatorsBtn) {
+        educatorsContent.classList.add('active');
+        educatorsBtn.classList.add('active');
+    }
+    });
+    </script>
