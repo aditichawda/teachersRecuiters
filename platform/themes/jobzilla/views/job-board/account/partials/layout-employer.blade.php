@@ -411,6 +411,7 @@
                         @endif
                         <li><a href="{{ route('public.account.invoices.index') }}" @class(['active' => str_contains($currentUrl, 'invoices')])><i class="fa fa-file-invoice"></i> {{ __('Invoices') }}</a></li>
                         <li><a href="{{ route('public.account.security') }}" @class(['active' => $currentUrl == route('public.account.security')])><i class="fa fa-lock"></i> {{ __('Security') }}</a></li>
+                        <li><a href="{{ route('public.account.logout') }}" id="logout-link-emp" class="emp-logout-link"><i class="fa fa-sign-out-alt"></i> {{ __('Logout') }}</a></li>
                     </ul>
                 </div>
             </div>
@@ -465,6 +466,17 @@
         </div>
     </div>
 </div>
+
+<form id="logout-form-emp" style="display:none;" action="{{ route('public.account.logout') }}" method="POST">@csrf</form>
+<div id="dialog-alert-container"></div>
+
+@if (!isset($dialogSystemLoadedEmp))
+    @php
+        Theme::asset()->usePath()->add('dialog-alert-css-emp', 'css/dialog-alert.css', [], [], '1.0');
+        Theme::asset()->container('footer')->usePath()->add('dialog-alert-js-emp', 'js/dialog-alert.js', ['jquery'], [], '1.0');
+        $dialogSystemLoadedEmp = true;
+    @endphp
+@endif
 
 <!-- Profile Completion Modal -->
 <div id="empProfileModal" class="emp-pm-overlay" style="display:none;">
@@ -525,6 +537,45 @@ document.addEventListener('keydown', function(e) {
         if (modal) modal.style.display = 'none';
     }
 });
+
+// Logout with confirmation modal (same as job seeker dashboard)
+(function() {
+    function handleEmpLogoutClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var logoutForm = document.getElementById('logout-form-emp');
+        if (!logoutForm) return false;
+        function tryShow(attempts) {
+            attempts = attempts || 0;
+            if (typeof window.showDialogConfirm === 'function') {
+                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(ok) {
+                    if (ok) logoutForm.submit();
+                });
+            } else if (attempts < 50) {
+                setTimeout(function() { tryShow(attempts + 1); }, 100);
+            } else {
+                if (confirm('Do you want to logout?')) logoutForm.submit();
+            }
+        }
+        tryShow();
+        return false;
+    }
+    function initEmpLogout() {
+        var link = document.getElementById('logout-link-emp');
+        if (link) {
+            link.removeEventListener('click', handleEmpLogoutClick);
+            link.addEventListener('click', handleEmpLogoutClick);
+        } else {
+            setTimeout(initEmpLogout, 150);
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(initEmpLogout, 300); });
+    } else {
+        setTimeout(initEmpLogout, 300);
+    }
+    window.addEventListener('load', function() { setTimeout(initEmpLogout, 400); });
+})();
 </script>
 
 @push('footer')

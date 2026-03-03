@@ -45,7 +45,10 @@ class Package extends BaseModel
 
     public function getTotalPriceAttribute(): float
     {
-        return $this->price - ($this->price * $this->percent_save / 100);
+        $price = (float) ($this->price ?? 0);
+        $percent = (float) ($this->percent_save ?? 0);
+
+        return $price - ($price * $percent / 100);
     }
 
     public function getPriceTextAttribute(): string

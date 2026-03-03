@@ -53,6 +53,18 @@ class PaymentTable extends TableAbstract
 
                 return apply_filters('payment_table_payer_name', '&mdash;', $item);
             })
+            ->editColumn('account_type', function (Payment $item) {
+                return apply_filters('payment_table_account_type', '&mdash;', $item);
+            })
+            ->editColumn('institution_name', function (Payment $item) {
+                return apply_filters('payment_table_institution_name', '&mdash;', $item);
+            })
+            ->editColumn('package_name', function (Payment $item) {
+                return apply_filters('payment_table_package_name', '&mdash;', $item);
+            })
+            ->editColumn('coupon_code', function (Payment $item) {
+                return apply_filters('payment_table_coupon_code', '&mdash;', $item);
+            })
             ->editColumn('payment_channel', function (Payment $item) {
                 return $item->payment_channel->displayName() ?: '&mdash;';
             })
@@ -98,6 +110,26 @@ class PaymentTable extends TableAbstract
             Column::make('customer_id')
                 ->title(trans('plugins/payment::payment.payer_name'))
                 ->alignStart(),
+            Column::make('account_type')
+                ->title(__('Account Type'))
+                ->alignStart()
+                ->orderable(false)
+                ->searchable(false),
+            Column::make('institution_name')
+                ->title(__('Institution / Company'))
+                ->alignStart()
+                ->orderable(false)
+                ->searchable(false),
+            Column::make('package_name')
+                ->title(__('Package'))
+                ->alignStart()
+                ->orderable(false)
+                ->searchable(false),
+            Column::make('coupon_code')
+                ->title(__('Coupon'))
+                ->alignStart()
+                ->orderable(false)
+                ->searchable(false),
             Column::make('amount')
                 ->title(trans('plugins/payment::payment.amount'))
                 ->alignStart(),

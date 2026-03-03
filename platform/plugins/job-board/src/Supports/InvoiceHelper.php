@@ -49,13 +49,19 @@ class InvoiceHelper
             ->first();
 
         if (! $payment) {
+            $payment = Payment::query()
+                ->where('charge_id', $data['charge_id'])
+                ->first();
+        }
+
+        if (! $payment) {
             return false;
         }
 
         $isPaymentCompleted = $data['status'] === PaymentStatusEnum::COMPLETED;
 
-        $discountAmount = $data['discount_amount'];
-        $amount = $data['amount'];
+        $discountAmount = (float) (Arr::get($data, 'discount_amount') ?: 0);
+        $amount = (float) $data['amount'];
         $subAmount = $amount + $discountAmount;
 
         /**
@@ -68,6 +74,14 @@ class InvoiceHelper
         } else {
             $reference = Package::query()->whereIn('id', $orderIds)->first();
             $company = $account->companies->first();
+        }
+
+        if (! $reference && $payment->order_id) {
+            $orderIds = array_filter(array_merge($orderIds, [(int) $payment->order_id]));
+            $reference = Package::query()->whereIn('id', $orderIds)->first();
+            if ($reference) {
+                $company = $account->companies->first();
+            }
         }
 
         if (! $reference) {
@@ -190,6 +204,13 @@ class InvoiceHelper
 
         $currency = $payment ? Currency::query()->where('title', strtoupper($payment->currency))->first() : null;
 
+        $paymentMethod = $payment && $payment->payment_channel ? $payment->payment_channel->label() : '-';
+        $paymentStatus = $payment && $payment->status ? $payment->status->label() : '-';
+        $paymentDescription = null;
+        if ($payment && $payment->payment_channel == PaymentMethodEnum::BANK_TRANSFER && $payment->status == PaymentStatusEnum::PENDING) {
+            $paymentDescription = BaseHelper::clean(get_payment_setting('description', $payment->payment_channel));
+        }
+
         return [
             'invoice' => $invoice,
             'currency' => $currency,
@@ -198,11 +219,9 @@ class InvoiceHelper
             'site_title' => theme_option('site_title'),
             'company_logo_full_path' => $companyLogo,
             'tax_id' => $invoice->tax_id,
-            'payment_method' => $invoice->payment->payment_channel->label(),
-            'payment_status' => $invoice->payment->status->label(),
-            'payment_description' => ($invoice->payment->payment_channel == PaymentMethodEnum::BANK_TRANSFER && $invoice->payment->status == PaymentStatusEnum::PENDING)
-                ? BaseHelper::clean(get_payment_setting('description', $invoice->payment->payment_channel))
-                : null,
+            'payment_method' => $paymentMethod,
+            'payment_status' => $paymentStatus,
+            'payment_description' => $paymentDescription,
             'settings' => [
                 'using_custom_font_for_invoice' => setting('job_board_using_custom_font_for_invoice'),
                 'font_family' => setting('job_board_using_custom_font_for_invoice', 0) == 1
