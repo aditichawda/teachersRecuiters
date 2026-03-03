@@ -62,7 +62,7 @@
                     <input type="text" class="form-control form-control-sm mb-2 applicant-email-subject" placeholder="{{ trans('plugins/job-board::dashboard.email_subject_about_application') }}" value="{{ trans('plugins/job-board::dashboard.email_subject_about_application') }}">
                     <label class="form-label small mb-1">{{ trans('plugins/job-board::dashboard.email_message_placeholder') }}</label>
                     <textarea class="form-control form-control-sm mb-2 applicant-email-body" rows="2" placeholder="{{ trans('plugins/job-board::dashboard.email_message_placeholder') }}"></textarea>
-                    <a href="#" class="btn btn-sm btn-outline-primary applicant-send-email" data-email="{{ e($jobApplication->email) }}">
+                    <a href="#" class="btn btn-sm btn-outline-primary applicant-send-email" data-application-id="{{ $jobApplication->id }}">
                         <x-core::icon name="ti ti-mail" class="me-1" /> {{ trans('plugins/job-board::dashboard.send_email') }}
                     </a>
                 </div>
@@ -75,7 +75,7 @@
                         <input type="text" class="form-control form-control-sm mb-2 applicant-wa-subject" placeholder="{{ trans('plugins/job-board::dashboard.email_subject_about_application') }}">
                         <label class="form-label small mb-1">{{ trans('plugins/job-board::dashboard.whatsapp_message_label') }}</label>
                         <textarea class="form-control form-control-sm mb-2 applicant-wa-message" rows="2" placeholder="{{ trans('plugins/job-board::dashboard.whatsapp_message_about_application') }}">{{ trans('plugins/job-board::dashboard.whatsapp_message_about_application') }}</textarea>
-                        <a href="#" class="btn btn-sm btn-outline-success applicant-send-whatsapp" data-phone="{{ e(preg_replace('/[^0-9]/', '', $jobApplication->phone)) }}">
+                        <a href="#" class="btn btn-sm btn-outline-success applicant-send-whatsapp" data-application-id="{{ $jobApplication->id }}">
                             <x-core::icon name="ti ti-brand-whatsapp" class="me-1" /> {{ trans('plugins/job-board::dashboard.send_whatsapp') }}
                         </a>
                         <small class="d-block text-muted mt-1">{{ trans('plugins/job-board::dashboard.whatsapp_opens_in_app') }}</small>
@@ -193,32 +193,141 @@
         @push('footer')
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
+                    // Send Email functionality
                     document.querySelectorAll('.applicant-send-email').forEach(function(btn) {
                         btn.addEventListener('click', function(e) {
                             e.preventDefault();
-                            var email = this.getAttribute('data-email');
+                            var applicationId = this.getAttribute('data-application-id');
                             var wrap = this.closest('[class*="datagrid"]') || document;
                             var subject = wrap.querySelector('.applicant-email-subject');
                             var body = wrap.querySelector('.applicant-email-body');
                             var sub = subject ? subject.value : '';
                             var b = body ? body.value : '';
-                            var url = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(sub);
-                            if (b) url += '&body=' + encodeURIComponent(b);
-                            window.location.href = url;
+                            
+                            if (!sub || !b) {
+                                alert('Please fill in both subject and message');
+                                return;
+                            }
+                            
+                            // Disable button and show loading
+                            this.disabled = true;
+                            var originalText = this.innerHTML;
+                            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...';
+                            
+                            // Make API call
+                            fetch('{{ route("public.account.applicants.send-email", ":id") }}'.replace(':id', applicationId), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    subject: sub,
+                                    message: b
+                                })
+                            })
+                            .then(function(response) { return response.json(); })
+                            .then(function(data) {
+                                if (data.error === false) {
+                                    if (typeof Botble !== 'undefined') {
+                                        Botble.showSuccess(data.message || 'Email sent successfully');
+                                    } else {
+                                        alert(data.message || 'Email sent successfully');
+                                    }
+                                    // Clear form
+                                    if (subject) subject.value = '';
+                                    if (body) body.value = '';
+                                } else {
+                                    if (typeof Botble !== 'undefined') {
+                                        Botble.showError(data.message || 'Failed to send email');
+                                    } else {
+                                        alert(data.message || 'Failed to send email');
+                                    }
+                                }
+                            })
+                            .catch(function(error) {
+                                console.error('Error:', error);
+                                if (typeof Botble !== 'undefined') {
+                                    Botble.showError('Failed to send email');
+                                } else {
+                                    alert('Failed to send email');
+                                }
+                            })
+                            .finally(function() {
+                                btn.disabled = false;
+                                btn.innerHTML = originalText;
+                            });
                         });
                     });
+                    
+                    // Send WhatsApp functionality
                     document.querySelectorAll('.applicant-send-whatsapp').forEach(function(btn) {
                         btn.addEventListener('click', function(e) {
                             e.preventDefault();
-                            var phone = this.getAttribute('data-phone');
+                            var applicationId = this.getAttribute('data-application-id');
                             var wrap = this.closest('[class*="datagrid"]') || document;
                             var subjectEl = wrap.querySelector('.applicant-wa-subject');
                             var msgEl = wrap.querySelector('.applicant-wa-message');
                             var subject = subjectEl ? subjectEl.value : '';
                             var msg = msgEl ? msgEl.value : '';
-                            var text = (subject ? subject + '\n\n' : '') + msg;
-                            var url = 'https://wa.me/' + phone + (text ? '?text=' + encodeURIComponent(text) : '');
-                            window.open(url, '_blank', 'noopener');
+                            
+                            if (!msg) {
+                                alert('Please enter a message');
+                                return;
+                            }
+                            
+                            // Combine subject and message
+                            var fullMessage = (subject ? subject + '\n\n' : '') + msg;
+                            
+                            // Disable button and show loading
+                            this.disabled = true;
+                            var originalText = this.innerHTML;
+                            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...';
+                            
+                            // Make API call
+                            fetch('{{ route("public.account.applicants.send-whatsapp", ":id") }}'.replace(':id', applicationId), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    message: fullMessage
+                                })
+                            })
+                            .then(function(response) { return response.json(); })
+                            .then(function(data) {
+                                if (data.error === false) {
+                                    if (typeof Botble !== 'undefined') {
+                                        Botble.showSuccess(data.message || 'WhatsApp message sent successfully');
+                                    } else {
+                                        alert(data.message || 'WhatsApp message sent successfully');
+                                    }
+                                    // Clear form
+                                    if (subjectEl) subjectEl.value = '';
+                                    if (msgEl) msgEl.value = '';
+                                } else {
+                                    if (typeof Botble !== 'undefined') {
+                                        Botble.showError(data.message || 'Failed to send WhatsApp message');
+                                    } else {
+                                        alert(data.message || 'Failed to send WhatsApp message');
+                                    }
+                                }
+                            })
+                            .catch(function(error) {
+                                console.error('Error:', error);
+                                if (typeof Botble !== 'undefined') {
+                                    Botble.showError('Failed to send WhatsApp message');
+                                } else {
+                                    alert('Failed to send WhatsApp message');
+                                }
+                            })
+                            .finally(function() {
+                                btn.disabled = false;
+                                btn.innerHTML = originalText;
+                            });
                         });
                     });
                 });

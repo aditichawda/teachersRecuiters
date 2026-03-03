@@ -15,11 +15,7 @@
         <?php endif; ?>
      <?php $__env->endSlot(); ?>
 
-<<<<<<< HEAD:storage/framework/views/aea30219928aff8839c25c74bdfb6979.php
-    <?php echo Form::editor($name, \Illuminate\Support\Arr::get($options, 'value'), \Illuminate\Support\Arr::get($options, 'attr', [])); ?>
-=======
     <?php echo Form::text($name, $options['value'], $options['attr']); ?>
->>>>>>> d214544ecc7c3d81cd5b17534b5ea3e53522c797:storage/framework/views/04fc037829a0ca1092fba7a09a763f1b.php
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -31,8 +27,4 @@
 <?php $component = $__componentOriginal5ee5f78769862fd20bf1abe3e4744d51; ?>
 <?php unset($__componentOriginal5ee5f78769862fd20bf1abe3e4744d51); ?>
 <?php endif; ?>
-<<<<<<< HEAD:storage/framework/views/aea30219928aff8839c25c74bdfb6979.php
-<?php /**PATH C:\xampp\htdocs\Aditi\platform\core\base\/resources/views/forms/fields/editor.blade.php ENDPATH**/ ?>
-=======
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/forms/fields/text.blade.php ENDPATH**/ ?>
->>>>>>> d214544ecc7c3d81cd5b17534b5ea3e53522c797:storage/framework/views/04fc037829a0ca1092fba7a09a763f1b.php
