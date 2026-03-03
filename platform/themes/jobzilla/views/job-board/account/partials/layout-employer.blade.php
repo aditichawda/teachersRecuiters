@@ -555,7 +555,7 @@
                         @endif
                         <li><a href="{{ route('public.account.invoices.index') }}" @class(['active' => str_contains($currentUrl, 'invoices')])><i class="fa fa-file-invoice"></i> {{ __('Invoices') }}</a></li>
                         <li><a href="{{ route('public.account.security') }}" @class(['active' => $currentUrl == route('public.account.security')])><i class="fa fa-lock"></i> {{ __('Security') }}</a></li>
-                        <li><a href="{{ route('public.account.logout') }}" id="logout-link-emp" class="emp-logout-link" onclick="event.preventDefault(); if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form-emp'); if (f) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> {{ __('Logout') }}</a></li>
+                        <li><a href="{{ route('public.account.logout') }}" id="logout-link-emp" class="emp-logout-link"><i class="fa fa-sign-out-alt"></i> {{ __('Logout') }}</a></li>
                     </ul>
                 </div>
             </div>
@@ -613,23 +613,6 @@
 
 <form id="logout-form-emp" style="display:none;" action="{{ route('public.account.logout') }}" method="POST">@csrf</form>
 <div id="dialog-alert-container"></div>
-
-<!-- Logout confirmation modal (Same as Employer Dashboard Body) -->
-<div id="emp-logout-modal-overlay" class="enl-logout-overlay">
-    <div id="emp-logout-modal-box" class="enl-logout-modal-box">
-        <div class="enl-logout-modal-body">
-            <div class="enl-logout-modal-icon-wrap">
-                <svg class="enl-logout-modal-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            </div>
-            <h4 class="enl-logout-modal-title">Logout</h4>
-            <p class="enl-logout-modal-text">Are you sure you want to logout?</p>
-        </div>
-        <div class="enl-logout-modal-actions">
-            <button type="button" id="emp-logout-modal-confirm" class="enl-logout-btn-secondary">Logout</button>
-            <button type="button" id="emp-logout-modal-cancel" class="enl-logout-btn-primary">Cancel</button>
-        </div>
-    </div>
-</div>
 
 @if (!isset($dialogSystemLoadedEmp))
     @php
@@ -820,60 +803,37 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Logout with confirmation modal (Same as Employer Dashboard Body)
+// Logout with confirmation modal (same as job seeker dashboard)
 (function() {
-    function showEmpLogoutModal() {
-        var overlay = document.getElementById('emp-logout-modal-overlay');
-        if (overlay) {
-            overlay.style.display = 'flex';
-        }
-    }
-    function hideEmpLogoutModal() {
-        var overlay = document.getElementById('emp-logout-modal-overlay');
-        if (overlay) overlay.style.display = 'none';
-    }
-    
     function handleEmpLogoutClick(e) {
         e.preventDefault();
         e.stopPropagation();
-        if (typeof window.showEmpLogoutModal === 'function') {
-            window.showEmpLogoutModal();
-        } else {
-            var f = document.getElementById('logout-form-emp');
-            if (f) f.submit();
+        var logoutForm = document.getElementById('logout-form-emp');
+        if (!logoutForm) return false;
+        function tryShow(attempts) {
+            attempts = attempts || 0;
+            if (typeof window.showDialogConfirm === 'function') {
+                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(ok) {
+                    if (ok) logoutForm.submit();
+                });
+            } else if (attempts < 50) {
+                setTimeout(function() { tryShow(attempts + 1); }, 100);
+            } else {
+                if (confirm('Do you want to logout?')) logoutForm.submit();
+            }
         }
+        tryShow();
         return false;
     }
-    
     function initEmpLogout() {
         var link = document.getElementById('logout-link-emp');
-        var cancelBtn = document.getElementById('emp-logout-modal-cancel');
-        var confirmBtn = document.getElementById('emp-logout-modal-confirm');
-        var overlay = document.getElementById('emp-logout-modal-overlay');
-        var logoutForm = document.getElementById('logout-form-emp');
-        
         if (link) {
             link.removeEventListener('click', handleEmpLogoutClick);
             link.addEventListener('click', handleEmpLogoutClick);
-        }
-        
-        if (cancelBtn && confirmBtn && overlay && logoutForm) {
-            cancelBtn.onclick = hideEmpLogoutModal;
-            confirmBtn.onclick = function() {
-                hideEmpLogoutModal();
-                logoutForm.submit();
-            };
-            overlay.onclick = function(e) {
-                if (e.target === this) hideEmpLogoutModal();
-            };
-            window.showEmpLogoutModal = showEmpLogoutModal;
-        }
-        
-        if (!link || !cancelBtn || !confirmBtn) {
+        } else {
             setTimeout(initEmpLogout, 150);
         }
     }
-    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() { setTimeout(initEmpLogout, 300); });
     } else {

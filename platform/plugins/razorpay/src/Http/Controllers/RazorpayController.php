@@ -775,8 +775,7 @@ class RazorpayController extends BaseController
             $orderId = [(int) $token];
         }
 
-        try {
-            $customerInfo = $this->getCustomerInfoFromOrder($orderId);
+        $customerInfo = $this->getCustomerInfoFromOrder($orderId);
 
             $this->saveOrUpdatePayment(
                 $chargeId,

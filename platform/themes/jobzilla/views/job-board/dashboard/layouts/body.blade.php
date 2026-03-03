@@ -4,10 +4,29 @@
     use Botble\JobBoard\Models\Company;
     use Botble\JobBoard\Models\Transaction;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
-    use Botble\Slug\Facades\SlugHelper;
+    use Botble\JobBoard\Models\UserNotification;
+    use Illuminate\Support\Facades\Schema;
     
     $account = auth('account')->user();
     $company = $account ? $account->companies()->with('slugable')->first() : null;
+    
+    // Get unread notification count
+    $notificationCount = 0;
+    if ($account) {
+        try {
+            if (Schema::hasTable('jb_user_notifications')) {
+                $notificationCount = UserNotification::where('account_id', $account->id)
+                    ->whereNull('read_at')
+                    ->count();
+            }
+        } catch (\Exception $e) {
+            // Silently fail
+        }
+    }
+    
+    // Format count: show "9+" if more than 9
+    $notificationBadge = $notificationCount > 9 ? '9+' : ($notificationCount > 0 ? $notificationCount : '');
+    $company = $account->companies()->with('slugable')->first();
     $employerPublicProfileUrl = null;
     if ($account->isEmployer() && $company) {
         $companySlugKey = $company->slugable?->key ?? null;
@@ -32,6 +51,7 @@
     }
     
     // Profile completion (use null-safe: $company can be null when employer has no company yet)
+    // Profile completion
     $profileFields = [
         ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company?->name)],
         ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company?->email)],
@@ -44,6 +64,17 @@
         ['field' => 'campus_type', 'label' => 'Campus Type', 'filled' => !empty($company?->campus_type)],
         ['field' => 'standard_level', 'label' => 'Standard Level', 'filled' => !empty($company?->standard_level)],
         ['field' => 'staff_facilities', 'label' => 'Staff Facilities', 'filled' => !empty($company?->staff_facilities)],
+        ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company->name)],
+        ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company->email)],
+        ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company->phone)],
+        ['field' => 'logo', 'label' => 'Institution Logo', 'filled' => !empty($company->logo)],
+        ['field' => 'description', 'label' => 'About Us', 'filled' => !empty($company->description)],
+        ['field' => 'address', 'label' => 'Address', 'filled' => !empty($company->address)],
+        ['field' => 'institution_type', 'label' => 'Institution Type', 'filled' => !empty($company->institution_type)],
+        ['field' => 'year_founded', 'label' => 'Established Year', 'filled' => !empty($company->year_founded)],
+        ['field' => 'campus_type', 'label' => 'Campus Type', 'filled' => !empty($company->campus_type)],
+        ['field' => 'standard_level', 'label' => 'Standard Level', 'filled' => !empty($company->standard_level)],
+        ['field' => 'staff_facilities', 'label' => 'Staff Facilities', 'filled' => !empty($company->staff_facilities)],
     ];
     $filledCount = collect($profileFields)->where('filled', true)->count();
     $empCompletion = count($profileFields) > 0 ? round(($filledCount / count($profileFields)) * 100) : 0;
@@ -123,6 +154,8 @@
         } catch (\Throwable $e) {
             $canAccessAdmission = false;
             $admissionLocked = true;
+        }
+    }
         }
     }
 
@@ -389,6 +422,85 @@
 }
 .enl-logout-btn-primary:hover { background: #2563eb; }
 
+/* ===== LOGOUT MODAL (2nd screenshot - exact same UI) ===== */
+.enl-logout-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+.enl-logout-modal-box {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04);
+    max-width: 400px;
+    width: 100%;
+    overflow: hidden;
+    text-align: center;
+}
+.enl-logout-modal-body { padding: 36px 28px 20px; }
+.enl-logout-modal-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #93c5fd;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.enl-logout-modal-icon { color: #fff; }
+.enl-logout-modal-title {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+}
+.enl-logout-modal-text {
+    margin: 0;
+    font-size: 15px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+.enl-logout-modal-actions {
+    padding: 0 32px 32px 32px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+}
+.enl-logout-btn-secondary {
+    background: transparent;
+    border: none;
+    color: #3b82f6;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 8px;
+    order: 1;
+}
+.enl-logout-btn-secondary:hover { color: #2563eb; background: #eff6ff; }
+.enl-logout-btn-primary {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 24px;
+    order: 2;
+}
+.enl-logout-btn-primary:hover { background: #2563eb; }
+
 /* ===== MEGA MENU STYLES ===== */
 .mega-menu-dropdown {
     position: static !important;
@@ -566,55 +678,6 @@
 /* Hide old plugin layout */
 .ps-main, .header--mobile, .ps-drawer--mobile, .ps-site-overlay { display: none !important; }
 
-/* Sidebar Toggle Button */
-.enl-sidebar-toggle {
-    display: none;
-    position: fixed;
-    top: 90px;
-    left: 15px;
-    z-index: 1001;
-    background: #0073d1;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    width: 45px;
-    height: 45px;
-    font-size: 18px;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    transition: all 0.3s ease;
-    align-items: center;
-    justify-content: center;
-}
-
-.enl-sidebar-toggle:hover {
-    background: #005bb5;
-    transform: scale(1.05);
-}
-
-.enl-sidebar-toggle.active {
-    left: 265px;
-}
-
-/* Sidebar Overlay */
-.enl-sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.enl-sidebar-overlay.show {
-    display: block;
-    opacity: 1;
-}
-
 /* Profile Sidebar */
 .enl-sidebar {
     background: #fff;
@@ -624,7 +687,6 @@
     margin-bottom: 20px;
     position: sticky;
     top: 20px;
-    transition: transform 0.3s ease;
 }
 
 .enl-avatar-wrap {
@@ -822,101 +884,12 @@
     .enl-sidebar { padding: 20px; }
     .enl-main { padding: 20px 0 0 0; }
     .enl-sidebar-col { flex: 0 0 250px; max-width: 250px; }
-    
-    /* Show sidebar toggle on tablet */
-    .enl-sidebar-toggle {
-        display: flex;
-    }
-    
-    .enl-sidebar-col {
-        position: fixed;
-        left: -280px;
-        top: 0;
-        height: 100vh;
-        z-index: 1000;
-        background: #fff;
-        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        transition: left 0.3s ease;
-        overflow-y: auto;
-        padding: 20px;
-        width: 280px;
-        max-width: 280px;
-    }
-    
-    .enl-sidebar-col.show {
-        left: 0;
-    }
-    
-    .enl-sidebar {
-        position: relative;
-        top: 0;
-        margin-bottom: 0;
-        box-shadow: none;
-    }
-    
-    .enl-main-col {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
 }
-
 @media (max-width: 768px) {
     .enl-row { flex-direction: column; }
-    
-    /* Show sidebar toggle on mobile */
-    .enl-sidebar-toggle {
-        display: flex;
-        top: 70px;
-        left: 10px;
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-    }
-    
-    .enl-sidebar-toggle.active {
-        left: 250px;
-    }
-    
-    .enl-sidebar-col {
-        width: 260px;
-        max-width: 260px;
-        left: -260px;
-    }
-    
-    .enl-sidebar-col.show {
-        left: 0;
-    }
-    
+    .enl-sidebar-col { display: none; }
     .enl-mobile-header { display: flex; }
     .enl-main { padding: 15px 0; }
-    
-    .emp-new-layout .container {
-        padding: 15px 10px;
-    }
-    
-    .enl-header-inner {
-        padding: 0 10px;
-        height: 60px;
-    }
-    
-    .enl-header-nav {
-        display: none;
-    }
-}
-
-@media (max-width: 576px) {
-    .enl-sidebar-col {
-        width: 100%;
-        max-width: 100%;
-    }
-    
-    .enl-sidebar-toggle.active {
-        left: calc(100% - 50px);
-    }
-    
-    .enl-main {
-        padding: 10px 0;
-    }
 }
 </style>
 
@@ -960,9 +933,12 @@
                         </li>
 
             <!-- Notifications -->
-                                     <li class="nav-item">
+                                     <li class="nav-item" style="position: relative;">
                 <a class="nav-link" style="color: black; font-size: 20px !important;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
                     <i class="feather-bell" style="font-size: 20px !important;"></i>
+                    @if($notificationBadge)
+                        <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;">{{ $notificationBadge }}</span>
+                    @endif
                             </a>
                         </li>
         </ul>
@@ -976,11 +952,15 @@
                     @endif
                     <span>{{ $account->first_name ?? $account->name }}</span>
                     <i class="fa fa-chevron-down enl-chevron"></i>
+                    <i class="fa fa-chevron-down enl-chevron"></i>
                 </button>
                 <div class="enl-header-dropdown" id="enlUserDropdown">
                     <a href="{{ route('public.account.dashboard') }}"><i class="fa fa-home"></i> Dashboard</a>
                     <a href="{{ route('public.account.employer.settings.edit') }}"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
+                    <a href="{{ route('public.account.logout') }}" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                    <a href="{{ route('public.account.logout') }}" id="logout-link-enl" onclick="event.preventDefault(); var f = document.getElementById('logout-form-enl'); if (!f) return false; if (typeof window.showDialogConfirm === 'function') { window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(ok) { if (ok) f.submit(); }).catch(function() { if (confirm('Do you want to logout?')) f.submit(); }); } else { if (confirm('Do you want to logout?')) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                    <a href="{{ route('public.account.logout') }}" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
                     <a href="{{ route('public.account.logout') }}" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
@@ -990,6 +970,22 @@
 
 <form id="logout-form-enl" style="display:none;" action="{{ route('public.account.logout') }}" method="POST">@csrf</form>
 
+<!-- Logout confirmation modal - reference UI (icon blue circle, Logout left / Cancel right) -->
+<div id="enl-logout-modal-overlay" class="enl-logout-overlay">
+    <div id="enl-logout-modal-box" class="enl-logout-modal-box">
+        <div class="enl-logout-modal-body">
+            <div class="enl-logout-modal-icon-wrap">
+                <svg class="enl-logout-modal-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </div>
+            <h4 class="enl-logout-modal-title">Logout</h4>
+            <p class="enl-logout-modal-text">Are you sure you want to logout?</p>
+        </div>
+        <div class="enl-logout-modal-actions">
+            <button type="button" id="enl-logout-modal-confirm" class="enl-logout-btn-secondary">Logout</button>
+            <button type="button" id="enl-logout-modal-cancel" class="enl-logout-btn-primary">Cancel</button>
+        </div>
+    </div>
+</div>
 <!-- Logout confirmation modal - reference UI (icon blue circle, Logout left / Cancel right) -->
 <div id="enl-logout-modal-overlay" class="enl-logout-overlay">
     <div id="enl-logout-modal-box" class="enl-logout-modal-box">
@@ -1029,89 +1025,35 @@
     };
     window.showEnlLogoutModal = showEnlLogoutModal;
 })();
-</script>
-
-<script>
-// Dashboard Sidebar Toggle Functionality
 (function() {
-    function initDashboardSidebar() {
-        const toggleBtn = document.getElementById('dashboard-sidebar-toggle');
-        const sidebar = document.getElementById('dashboard-sidebar');
-        const overlay = document.getElementById('dashboard-sidebar-overlay');
-        
-        if (toggleBtn && sidebar && overlay) {
-            toggleBtn.addEventListener('click', function() {
-                const isOpen = sidebar.classList.contains('show');
-                
-                if (isOpen) {
-                    // Close sidebar
-                    sidebar.classList.remove('show');
-                    overlay.classList.remove('show');
-                    toggleBtn.classList.remove('active');
-                    document.body.style.overflow = '';
-                } else {
-                    // Open sidebar
-                    sidebar.classList.add('show');
-                    overlay.classList.add('show');
-                    toggleBtn.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                }
-            });
-            
-            // Close on overlay click
-            overlay.addEventListener('click', function() {
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-                toggleBtn.classList.remove('active');
-                document.body.style.overflow = '';
-            });
-            
-            // Close on sidebar link click (mobile/tablet)
-            const sidebarLinks = sidebar.querySelectorAll('a');
-            sidebarLinks.forEach(function(link) {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth <= 991) {
-                        sidebar.classList.remove('show');
-                        overlay.classList.remove('show');
-                        toggleBtn.classList.remove('active');
-                        document.body.style.overflow = '';
-                    }
-                });
-            });
-            
-            // Close on window resize if desktop
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 991) {
-                    sidebar.classList.remove('show');
-                    overlay.classList.remove('show');
-                    toggleBtn.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
+    function showEnlLogoutModal() {
+        var overlay = document.getElementById('enl-logout-modal-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
         }
     }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDashboardSidebar);
-    } else {
-        initDashboardSidebar();
+    function hideEnlLogoutModal() {
+        var overlay = document.getElementById('enl-logout-modal-overlay');
+        if (overlay) overlay.style.display = 'none';
     }
+    document.getElementById('enl-logout-modal-cancel').onclick = hideEnlLogoutModal;
+    document.getElementById('enl-logout-modal-confirm').onclick = function() {
+        hideEnlLogoutModal();
+        var f = document.getElementById('logout-form-enl');
+        if (f) f.submit();
+    };
+    document.getElementById('enl-logout-modal-overlay').onclick = function(e) {
+        if (e.target === this) hideEnlLogoutModal();
+    };
+    window.showEnlLogoutModal = showEnlLogoutModal;
 })();
 </script>
 
 <div class="emp-new-layout">
-    <!-- Mobile Sidebar Toggle Button -->
-    <button class="enl-sidebar-toggle" id="dashboard-sidebar-toggle" aria-label="Toggle sidebar">
-        <i class="fa fa-bars"></i>
-    </button>
-    
-    <!-- Mobile Sidebar Overlay -->
-    <div class="enl-sidebar-overlay" id="dashboard-sidebar-overlay"></div>
-    
     <div class="container">
         <div class="enl-row">
             <!-- Sidebar -->
-            <div class="enl-sidebar-col" id="dashboard-sidebar">
+            <div class="enl-sidebar-col">
                 <div class="enl-sidebar">
                     <div class="text-center">
                         <div class="enl-avatar-wrap" style="cursor:pointer;" onclick="document.getElementById('enlAvatarModal').style.display='flex'">
@@ -1164,6 +1106,9 @@
                     <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
                     <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
                         @if($admissionLocked)
+                    <!-- Admission Button (employer only, same lock as Post Job: credits/package required) -->
+                    <a href="{{ $postJobLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $postJobLocked ? 'enl-postjob-locked' : '' }}" style="{{ $postJobLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $postJobLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
+                        @if($postJobLocked)
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
                             <span>{{ __('Admission') }}</span>
                         @else
@@ -1764,10 +1709,35 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Use native alert for now (except employer dashboard)
-        if (confirm('Do you want to logout?')) {
-            logoutForm.submit();
+        // Wait for dialog system to be available
+        function tryShowDialog(attempts) {
+            attempts = attempts || 0;
+            
+            if (typeof window.showDialogConfirm === 'function') {
+                // Use custom dialog
+                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
+                    if (confirmed) {
+                        logoutForm.submit();
+                    }
+                }).catch(function(error) {
+                    console.error('Dialog error:', error);
+                    // Fallback to native confirm
+                    if (confirm('Do you want to logout?')) {
+                        logoutForm.submit();
+                    }
+                });
+            } else if (attempts < 50) {
+                // Retry after 100ms
+                setTimeout(function() {
+                    tryShowDialog(attempts + 1);
+                }, 100);
+            } else {
+                if (confirm('Do you want to logout?')) {
+                    logoutForm.submit();
+                }
+            }
         }
+        tryShowDialog();
     }
     
     function initLogoutHandler() {
@@ -1775,10 +1745,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (logoutLink) {
             const newLogoutLink = logoutLink.cloneNode(true);
             newLogoutLink.removeAttribute('onclick');
+            newLogoutLink.removeAttribute('onclick');
             logoutLink.parentNode.replaceChild(newLogoutLink, logoutLink);
             newLogoutLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
+                if (typeof window.showEnlLogoutModal === 'function') {
+                    window.showEnlLogoutModal();
+                } else {
+                    var f = document.getElementById('logout-form-enl');
+                    if (f) f.submit();
+                }
                 if (typeof window.showEnlLogoutModal === 'function') {
                     window.showEnlLogoutModal();
                 } else {
@@ -1793,9 +1770,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() { setTimeout(initLogoutHandler, 100); });
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(initLogoutHandler, 100); });
     } else {
         setTimeout(initLogoutHandler, 100);
+        setTimeout(initLogoutHandler, 100);
     }
+    window.addEventListener('load', function() { setTimeout(initLogoutHandler, 100); });
     window.addEventListener('load', function() { setTimeout(initLogoutHandler, 100); });
 })();
 </script>

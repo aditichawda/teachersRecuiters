@@ -20,11 +20,11 @@ class Transaction extends BaseModel
         'user_id',
         'account_id',
         'account_type',
-        'feature_key',
-        'meta',
         'user_details',
         'institution_name',
         'payment_id',
+        'package_id',
+        'package_name',
         'package_id',
         'package_name',
     ];
@@ -35,7 +35,6 @@ class Transaction extends BaseModel
     protected $casts = [
         'description' => SafeContent::class,
         'user_details' => 'array',
-        'meta' => 'array',
     ];
 
     public function account(): BelongsTo
@@ -73,6 +72,9 @@ class Transaction extends BaseModel
         }
 
         $description = trans('plugins/job-board::messages.purchased_credits', ['credits' => $this->credits]);
+        if ($this->package_name) {
+            $description .= ' (' . $this->package_name . ')';
+        }
         if ($this->package_name) {
             $description .= ' (' . $this->package_name . ')';
         }

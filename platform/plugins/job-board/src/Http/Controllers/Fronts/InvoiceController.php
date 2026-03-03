@@ -6,6 +6,7 @@ use Botble\Base\Http\Controllers\BaseController;
 use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Models\Invoice;
 use Botble\JobBoard\Models\Transaction;
+use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Supports\InvoiceHelper;
 use Botble\JobBoard\Tables\Fronts\InvoiceTable;
 use Botble\SeoHelper\Facades\SeoHelper;
@@ -36,6 +37,7 @@ class InvoiceController extends BaseController
     public function show(Invoice $invoice)
     {
         $invoice->loadMissing(['payment', 'items']);
+        $invoice->loadMissing(['payment', 'items']);
         abort_unless($this->canViewInvoice($invoice), 404);
 
         $title = trans('plugins/job-board::messages.invoice_detail', ['code' => $invoice->code]);
@@ -55,32 +57,39 @@ class InvoiceController extends BaseController
     public function getGenerateInvoice(Invoice $invoice, Request $request, InvoiceHelper $invoiceHelper)
     {
         $invoice->loadMissing(['payment', 'items']);
+        $invoice->loadMissing(['payment', 'items']);
         abort_unless($this->canViewInvoice($invoice), 404);
 
-        session()->save();
         set_time_limit(120);
-
         try {
             if ($request->input('type') === 'print') {
                 return $invoiceHelper->streamInvoice($invoice);
             }
             return $invoiceHelper->downloadInvoice($invoice);
         } catch (\Throwable $e) {
-            Log::error('Invoice PDF generation failed', [
-                'invoice_id' => $invoice->id,
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return redirect()
-                ->route('public.account.invoices.show', $invoice)
-                ->with('error_msg', __('Failed to generate PDF. Please try again or contact support.') . ' (' . $e->getMessage() . ')');
+            report($e);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', trans('plugins/job-board::invoice.download_failed') ?: 'Invoice download failed. Please try again.');
         }
     }
 
     protected function canViewInvoice(Invoice $invoice): bool
     {
+        $payment = $invoice->payment;
+        if (! $payment) {
+            return false;
+        }
+        $accountId = auth('account')->id();
+        if ($payment->customer_id && (int) $payment->customer_id === (int) $accountId) {
+            return true;
+        }
+        // Fallback: payment may have been created with null customer_id (e.g. Razorpay callback)
+        return (bool) Transaction::query()
+            ->where('payment_id', $payment->id)
+            ->where('account_id', $accountId)
+            ->exists();
         $payment = $invoice->payment;
         if (! $payment) {
             return false;

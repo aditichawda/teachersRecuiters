@@ -685,8 +685,9 @@
                     
                     <!-- Wallet (click opens Profile Completion popup with Credits) -->
                     @if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
-                    <div class="js-wallet-badge js-wallet-open-profile-modal" style="cursor: pointer" onclick="document.getElementById('profileModal').style.display='flex'" title="{{ __('View credits & profile completion') }}">
+                    <a href="{{ url(route('public.account.jobseeker.wallet')) }}" target="_self" class="js-wallet-badge text-decoration-none d-block" style="cursor: pointer">
                         <i class="fa fa-wallet"></i>
+                        <span>{{__('Available Coins') }}:</span>
                         <span>{{__('Available Coins') }}:</span>
                         <span class="js-wallet-points">{{ format_credits_short($account->credits ?? 0) }}</span>
                     </div>

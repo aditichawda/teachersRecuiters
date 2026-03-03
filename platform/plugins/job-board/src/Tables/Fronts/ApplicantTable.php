@@ -54,6 +54,7 @@ class ApplicantTable extends TableAbstract
         $account = auth('account')->user();
         $jobChoices = ['' => trans('core/table::table.select_field')];
         if ($account) {
+            // Use same scope as table: jobs that have applications visible to this employer
             $jobIds = JobApplication::query()
                 ->whereHas('job.company.accounts', fn (Builder $q) => $q->where('account_id', $account->getKey()))
                 ->distinct()
@@ -61,6 +62,8 @@ class ApplicantTable extends TableAbstract
                 ->filter()
                 ->values();
             $jobs = Job::query()
+                ->whereIn('id', $jobIds)
+                ->orderBy('name')
                 ->whereIn('id', $jobIds)
                 ->orderBy('name')
                 ->pluck('name', 'id')

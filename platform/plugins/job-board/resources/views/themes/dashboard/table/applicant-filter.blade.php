@@ -68,10 +68,25 @@
             <div class="col-auto">
                 <button type="button" class="btn btn-primary btn-sm btn-apply">{{ trans('core/table::table.apply') }}</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm ms-1 applicant-filter-clear-btn" data-clear-href="{{ request()->url() }}">{{ trans('core/table::table.clear') }}</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm ms-1 applicant-filter-clear-btn" data-clear-href="{{ request()->url() }}">{{ trans('core/table::table.clear') }}</button>
             </div>
         </div>
     </form>
 </div>
+<script>
+(function() {
+    if (window._applicantFilterClearBound) return;
+    window._applicantFilterClearBound = true;
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.applicant-filter-clear-btn');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var url = btn.getAttribute('data-clear-href');
+        if (url) window.location.href = url;
+    });
+})();
+</script>
 <script>
 (function() {
     var form = document.querySelector('.applicant-filter-simple-form');

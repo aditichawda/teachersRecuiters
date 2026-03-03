@@ -89,6 +89,22 @@ class SubscribedPackageListener
             $institutionName = $company ? $company->name : null;
         }
 
+        $accountType = $account->isEmployer() ? 'employer' : 'job_seeker';
+        $userDetails = [
+            'name' => $account->name,
+            'email' => $account->email,
+            'phone' => $account->phone ? (($account->phone_country_code ?? '') . ' ' . $account->phone) : null,
+            'address' => $account->address,
+            'state' => $account->state_name,
+            'city' => $account->city_name,
+            'country' => $account->country_name,
+        ];
+        $institutionName = null;
+        if ($account->isEmployer()) {
+            $company = $account->companies()->first();
+            $institutionName = $company ? $company->name : null;
+        }
+
         Transaction::query()->create([
             'user_id' => 0,
             'account_id' => $account->id,

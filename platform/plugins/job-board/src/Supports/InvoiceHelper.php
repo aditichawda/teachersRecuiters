@@ -56,11 +56,19 @@ class InvoiceHelper
         }
 
         if (! $payment) {
+            $payment = Payment::query()
+                ->where('charge_id', $data['charge_id'])
+                ->first();
+        }
+
+        if (! $payment) {
             return false;
         }
 
         $isPaymentCompleted = $data['status'] === PaymentStatusEnum::COMPLETED;
 
+        $discountAmount = (float) (Arr::get($data, 'discount_amount') ?: 0);
+        $amount = (float) $data['amount'];
         $discountAmount = (float) (Arr::get($data, 'discount_amount') ?: 0);
         $amount = (float) $data['amount'];
         $subAmount = $amount + $discountAmount;
@@ -75,6 +83,14 @@ class InvoiceHelper
         } else {
             $reference = Package::query()->whereIn('id', $orderIds)->first();
             $company = $account->companies->first();
+        }
+
+        if (! $reference && $payment->order_id) {
+            $orderIds = array_filter(array_merge($orderIds, [(int) $payment->order_id]));
+            $reference = Package::query()->whereIn('id', $orderIds)->first();
+            if ($reference) {
+                $company = $account->companies->first();
+            }
         }
 
         if (! $reference && $payment->order_id) {
@@ -237,22 +253,9 @@ class InvoiceHelper
 
         $paymentMethod = $payment && $payment->payment_channel ? $payment->payment_channel->label() : '-';
         $paymentStatus = $payment && $payment->status ? $payment->status->label() : '-';
-        $transactionId = $payment && $payment->charge_id ? $payment->charge_id : '-';
         $paymentDescription = null;
         if ($payment && $payment->payment_channel == PaymentMethodEnum::BANK_TRANSFER && $payment->status == PaymentStatusEnum::PENDING) {
             $paymentDescription = BaseHelper::clean(get_payment_setting('description', $payment->payment_channel));
-        }
-
-        $logoFullPath = null;
-        if ($logo) {
-            $path = RvMedia::getRealPath($logo);
-            if ($path && is_string($path) && ! str_starts_with($path, 'http') && file_exists($path)) {
-                $logoFullPath = $path;
-            }
-        }
-        $companyLogoPath = null;
-        if ($companyLogo && is_string($companyLogo) && ! str_starts_with($companyLogo, 'http') && file_exists($companyLogo)) {
-            $companyLogoPath = $companyLogo;
         }
 
         return [
@@ -263,17 +266,9 @@ class InvoiceHelper
             'site_title' => theme_option('site_title'),
             'company_logo_full_path' => $companyLogoPath,
             'tax_id' => $invoice->tax_id,
-            'customer_gst_number' => $invoice->customer_gst_number ?? null,
-            'transaction_id' => $transactionId,
             'payment_method' => $paymentMethod,
             'payment_status' => $paymentStatus,
             'payment_description' => $paymentDescription,
-            'bank_details' => [
-                'account_number' => setting('job_board_bank_account_number', '3566282988'),
-                'account_name' => setting('job_board_bank_account_name', 'Teachers Recruiter'),
-                'ifsc' => setting('job_board_bank_ifsc', 'CBIN0281043'),
-                'bank_name' => setting('job_board_bank_name', 'Central Bank of India'),
-            ],
             'settings' => [
                 'using_custom_font_for_invoice' => setting('job_board_using_custom_font_for_invoice'),
                 'font_family' => setting('job_board_using_custom_font_for_invoice', 0) == 1

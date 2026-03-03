@@ -183,13 +183,14 @@
                    class="btn btn-outline-primary">
                     <x-core::icon name="ti ti-printer" class="icon-left" />
                     {{ trans('plugins/job-board::invoice.print') }}
-                </a>
-                <a href="{{ route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download']) }}"
-                   target="_blank"
-                   rel="noopener"
-                   download="invoice-{{ $invoice->code }}.pdf"
-                   class="btn btn-primary enl-invoice-download">
-                    <x-core::icon name="ti ti-download" class="icon-left" />
+                </x-core::button>
+                <x-core::button
+                    tag="a"
+                    :href="route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download'])"
+                    icon="ti ti-download"
+                    target="_blank"
+                    rel="noopener"
+                >
                     {{ trans('plugins/job-board::invoice.download') }}
                 </a>
             </div>

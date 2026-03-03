@@ -19,6 +19,7 @@ use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\Package;
 use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Supports\InvoiceHelper;
+use Botble\JobBoard\Supports\InvoiceHelper;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Botble\JobBoard\Services\CouponService;
 use Botble\Language\Facades\Language;
@@ -155,6 +156,14 @@ class DashboardController extends BaseController
             }
         } catch (\Throwable $e) {
             // If language/translations fail, continue without translations
+        try {
+            if (is_plugin_active('language') && is_plugin_active('language-advanced')) {
+                Language::setCurrentAdminLocale(App::getLocale());
+                LanguageAdvancedManager::initModelRelations();
+                $packages->load('translations');
+            }
+        } catch (\Throwable $e) {
+            // If language/translations fail, continue without translations
         }
 
         $paidPackages = $packages->filter(function ($package) {
@@ -229,13 +238,7 @@ class DashboardController extends BaseController
 
         if ((float) $package->price) {
             session(['subscribed_packaged_id' => $package->id]);
-            $checkoutUrl = route('public.account.package.subscribe.checkout', $package->id);
-
-            if ($request->expectsJson()) {
-                return $this->httpResponse()
-                    ->setNextUrl($checkoutUrl)
-                    ->setMessage(trans('plugins/job-board::package.subscribe_package', ['name' => $package->name]));
-            }
+            $checkoutUrl = url('account/packages/' . $package->id . '/subscribe');
 
             return redirect()->to($checkoutUrl);
         }
@@ -295,6 +298,13 @@ class DashboardController extends BaseController
             $payment->save();
         }
 
+        if ($payment && (! $payment->customer_id || ! $payment->customer_type)) {
+            $payment->customer_id = $account->getKey();
+            $payment->customer_type = Account::class;
+            $payment->order_id = $payment->order_id ?: $package->getKey();
+            $payment->save();
+        }
+
         if (($payment && $payment->status == PaymentStatusEnum::COMPLETED) || $force) {
             $creditsToAdd = $package->credits_included ?? $package->number_of_listings;
             $account->credits += $creditsToAdd;
@@ -319,14 +329,57 @@ class DashboardController extends BaseController
             $institutionName = $company ? $company->name : null;
         }
 
+        $accountType = $account->isEmployer() ? 'employer' : 'job_seeker';
+        $userDetails = [
+            'name' => $account->name,
+            'email' => $account->email,
+            'phone' => $account->phone ? (($account->phone_country_code ?? '') . ' ' . $account->phone) : null,
+            'address' => $account->address,
+            'state' => $account->state_name,
+            'city' => $account->city_name,
+            'country' => $account->country_name,
+        ];
+        $institutionName = null;
+        if ($account->isEmployer()) {
+            $company = $account->companies()->first();
+            $institutionName = $company ? $company->name : null;
+        }
+
         Transaction::query()->create([
             'user_id' => 0,
             'account_id' => $account->getKey(),
             'account_type' => $accountType,
             'user_details' => $userDetails,
             'institution_name' => $institutionName,
-            'credits' => $creditsToAdd ?? ($package->credits_included ?? $package->number_of_listings),
+            'credits' => $package->number_of_listings,
             'payment_id' => $payment?->id,
+            'package_id' => $package->getKey(),
+            'package_name' => $package->name,
+        ]);
+
+        if ($payment && $payment->status == PaymentStatusEnum::COMPLETED) {
+            $invoiceExists = \Botble\JobBoard\Models\Invoice::query()->where('payment_id', $payment->id)->exists();
+            if (! $invoiceExists) {
+                $invoiceCreated = InvoiceHelper::store([
+                    'order_id' => $package->getKey(),
+                    'customer_type' => Account::class,
+                    'customer_id' => $account->getKey(),
+                    'charge_id' => $payment->charge_id,
+                    'status' => PaymentStatusEnum::COMPLETED,
+                    'amount' => (float) $payment->amount,
+                    'discount_amount' => Session::get('coupon_discount_amount', 0),
+                    'coupon_code' => Session::get('applied_coupon_code'),
+                ]);
+                if (! $invoiceCreated) {
+                    \Illuminate\Support\Facades\Log::warning('JobBoard: Invoice could not be created for payment.', [
+                        'payment_id' => $payment->id,
+                        'charge_id' => $payment->charge_id,
+                        'package_id' => $package->getKey(),
+                        'order_id_on_payment' => $payment->order_id,
+                    ]);
+                }
+            }
+        }
             'package_id' => $package->getKey(),
             'package_name' => $package->name,
         ]);
@@ -417,11 +470,7 @@ class DashboardController extends BaseController
 
         $account = auth('account')->user();
 
-        $walletUrl = $account->isJobSeeker()
-            ? route('public.account.jobseeker.wallet')
-            : route('public.account.wallet');
-
-        return view(JobBoardHelper::viewPath('dashboard.checkout'), compact('package', 'account', 'walletUrl'));
+        return view(JobBoardHelper::viewPath('dashboard.checkout'), compact('package', 'account'));
     }
 
     public function getPackageSubscribeCallback(int $packageId, Request $request)
@@ -459,11 +508,20 @@ class DashboardController extends BaseController
                     ? route('public.account.jobseeker.wallet')
                     : route('public.account.wallet');
 
+                $walletUrl = auth('account')->user()->isJobSeeker()
+                    ? route('public.account.jobseeker.wallet')
+                    : route('public.account.wallet');
+
                 return $this
                     ->httpResponse()
                     ->setNextUrl($walletUrl)
+                    ->setNextUrl($walletUrl)
                     ->setMessage(trans('plugins/job-board::package.add_credit_success'));
             }
+
+            $walletUrl = auth('account')->user()->isJobSeeker()
+                ? route('public.account.jobseeker.wallet')
+                : route('public.account.wallet');
 
             $walletUrl = auth('account')->user()->isJobSeeker()
                 ? route('public.account.jobseeker.wallet')
@@ -473,33 +531,28 @@ class DashboardController extends BaseController
                 ->httpResponse()
                 ->setError()
                 ->setNextUrl($walletUrl)
+                ->setNextUrl($walletUrl)
                 ->setMessage($payPalService->getErrorMessage());
         }
 
-        $chargeId = $request->input('charge_id');
-        if ($chargeId) {
-            $payment = Payment::query()->where('charge_id', $chargeId)->first();
-            // Mark COMPLETED if still PENDING (COD, Razorpay, or any gateway that redirected here after success).
-            if ($payment && $payment->status != PaymentStatusEnum::COMPLETED) {
-                $payment->status = PaymentStatusEnum::COMPLETED;
-                $payment->save();
-                Invoice::query()
-                    ->where('reference_id', $package->getKey())
-                    ->where('reference_type', Package::class)
-                    ->update(['status' => InvoiceStatusEnum::COMPLETED]);
-            }
-        }
-        $this->savePayment($package, $chargeId);
+        $this->savePayment($package, $request->input('charge_id'));
 
         $walletUrl = auth('account')->user()->isJobSeeker()
             ? route('public.account.jobseeker.wallet')
             : route('public.account.wallet');
 
         if (! $request->has('success') || $request->input('success')) {
-            return redirect()->to($walletUrl);
+            return $this
+                ->httpResponse()
+                ->setNextUrl($walletUrl)
+                ->setMessage(session()->get('success_msg') ?: trans('plugins/job-board::package.add_credit_success'));
         }
 
-        return redirect()->to($walletUrl);
+        return $this
+            ->httpResponse()
+            ->setError()
+            ->setNextUrl($walletUrl)
+            ->setMessage(trans('plugins/job-board::messages.payment_failed'));
     }
 
     public function ajaxGetTransactions()
