@@ -182,11 +182,17 @@
                             <?php endif; ?>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                             <?php echo apply_filters('payment_detail_extra_info', '', $payment); ?>
 
 
 =======
 >>>>>>> 689f01a2 (payment update)
+=======
+                            <?php echo apply_filters('payment_detail_extra_info', '', $payment); ?>
+
+
+>>>>>>> 62ab1307 (3 feb update)
                             <?php if (isset($component)) { $__componentOriginal9d1723e55a4fe6f8bd7b5292f882d2ac = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal9d1723e55a4fe6f8bd7b5292f882d2ac = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::datagrid.item','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -198,6 +204,9 @@
 <?php endif; ?>
 <?php $component->withAttributes([]); ?>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 62ab1307 (3 feb update)
                                  <?php $__env->slot('title', null, []); ?> <?php echo e(__('Payment Method')); ?> <?php $__env->endSlot(); ?>
                                 <?php echo e($payment->payment_channel ? $payment->payment_channel->displayName() : '—'); ?>
 
@@ -444,10 +453,13 @@
 <?php $component->withAttributes([]); ?>
                                  <?php $__env->slot('title', null, []); ?> <?php echo e(__('Card ID / Card')); ?> <?php $__env->endSlot(); ?>
                                 <?php echo e($cardDisplay ? (is_string($cardDisplay) ? $cardDisplay : (string) $cardDisplay) : '—'); ?>
+<<<<<<< HEAD
 =======
                                  <?php $__env->slot('title', null, []); ?> <?php echo e(trans('plugins/payment::payment.payment_channel')); ?> <?php $__env->endSlot(); ?>
                                 <?php echo e($payment->payment_channel->displayName()); ?>
 >>>>>>> 689f01a2 (payment update)
+=======
+>>>>>>> 62ab1307 (3 feb update)
 
                              <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>

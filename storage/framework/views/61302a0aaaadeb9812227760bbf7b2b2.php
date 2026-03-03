@@ -16,10 +16,14 @@
      <?php $__env->endSlot(); ?>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     <?php echo Form::repeater($name, $options['value'] ?? Arr::get($options, 'selected'), Arr::get($options, 'fields', [])); ?>
 =======
     <?php echo Form::repeater($name, $options['value'] ?: Arr::get($options, 'selected'), $options['fields'] ?: []); ?>
 >>>>>>> 689f01a2 (payment update)
+=======
+    <?php echo Form::repeater($name, $options['value'] ?? Arr::get($options, 'selected'), Arr::get($options, 'fields', [])); ?>
+>>>>>>> 62ab1307 (3 feb update)
 
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>

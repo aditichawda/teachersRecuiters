@@ -1,9 +1,12 @@
 <?php $__env->startPush('header'); ?>
 <style>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 /* Same card layout as job seeker: blue + yellow separate cards, equal width */
 >>>>>>> 689f01a2 (payment update)
+=======
+>>>>>>> 62ab1307 (3 feb update)
 .wallet-em-page .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 1.25rem !important; height: 200px !important; max-height: 200px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; overflow: hidden !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
 .wallet-em-page .wallet-js-card-blue .card-body { padding: 0 !important; border: none !important; background: transparent !important; flex: 1 1 auto; min-height: 0; }
 .wallet-em-page .wallet-js-card-blue .card-footer { border: none !important; padding: 0.75rem 0 0 !important; background: transparent !important; flex-shrink: 0; }
@@ -27,9 +30,13 @@
     .wallet-em-page .wallet-js-package-col { flex: 0 0 100% !important; }
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
    
 =======
 >>>>>>> 689f01a2 (payment update)
+=======
+   
+>>>>>>> 62ab1307 (3 feb update)
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -482,16 +489,22 @@
 <?php $component->withAttributes([]); ?>
                     <p class="mb-1"><?php echo e(trans('plugins/job-board::dashboard.wallet_billing_name')); ?>: <strong><?php echo e($billingName ?? $account->name); ?></strong></p>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 62ab1307 (3 feb update)
                     <p class="mb-2 small text-muted"><?php echo e(trans('plugins/job-board::dashboard.wallet_add_billing_details')); ?></p>
                     <a href="<?php echo e(route('public.account.employer.settings.edit')); ?>" class="btn btn-sm btn-primary"><?php echo e(__('Add Remaining Details')); ?></a>
                     <div class="mt-2 small" id="wallet-em-remaining-details">
                         <div class="border rounded p-2 bg-light mt-2">
+<<<<<<< HEAD
 =======
                     <a href="<?php echo e(route('public.account.employer.settings.edit')); ?>" class="small d-block mb-2"><?php echo e(trans('plugins/job-board::dashboard.wallet_add_billing_details')); ?></a>
                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#wallet-em-remaining-details" aria-expanded="false">Remaining details</button>
                     <div class="collapse mt-2 small" id="wallet-em-remaining-details">
                         <div class="border rounded p-2 bg-light">
 >>>>>>> 689f01a2 (payment update)
+=======
+>>>>>>> 62ab1307 (3 feb update)
                             <p class="mb-1"><strong>Name:</strong> <?php echo e($account->name ?? trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) ?: '—'); ?></p>
                             <p class="mb-1"><strong>Address:</strong> <?php echo e($account->address ?? '—'); ?></p>
                             <p class="mb-1"><strong>Mobile:</strong> <?php echo e($account->phone ? (($account->phone_country_code ?? '') . ' ' . $account->phone) : '—'); ?></p>
@@ -734,9 +747,13 @@
     </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     <div class="wallet-consumption-invoice-section">
 =======
 >>>>>>> 689f01a2 (payment update)
+=======
+    <div class="wallet-consumption-invoice-section">
+>>>>>>> 62ab1307 (3 feb update)
     
     <?php if (isset($component)) { $__componentOriginalc107e2f90dff5eb05519f33918d2c807 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalc107e2f90dff5eb05519f33918d2c807 = $attributes; } ?>
@@ -823,21 +840,31 @@
             <?php if($transactions->isNotEmpty()): ?>
                 <div class="table-responsive">
 <<<<<<< HEAD
+<<<<<<< HEAD
                     <table class="table table-vcenter table-hover card-table mb-0 wallet-consumption-table" style="table-layout: fixed; width: 100%;">
                         
 =======
                     <table class="table table-vcenter table-hover card-table mb-0">
 >>>>>>> 689f01a2 (payment update)
+=======
+                    <table class="table table-vcenter table-hover card-table mb-0 wallet-consumption-table" style="table-layout: fixed; width: 100%;">
+                        
+>>>>>>> 62ab1307 (3 feb update)
                         <thead>
                             <tr>
                                 <th><?php echo e(trans('plugins/job-board::dashboard.wallet_sl_no')); ?></th>
                                 <th><?php echo e(trans('plugins/job-board::dashboard.wallet_date_of_transaction')); ?></th>
+<<<<<<< HEAD
 <<<<<<< HEAD
                                 <th class="wallet-th-type"><?php echo e(trans('plugins/job-board::dashboard.wallet_type_of_transaction')); ?></th>
                                 <th><?php echo e(__('Package')); ?></th>
 =======
                                 <th><?php echo e(trans('plugins/job-board::dashboard.wallet_type_of_transaction')); ?></th>
 >>>>>>> 689f01a2 (payment update)
+=======
+                                <th class="wallet-th-type"><?php echo e(trans('plugins/job-board::dashboard.wallet_type_of_transaction')); ?></th>
+                                <th><?php echo e(__('Package')); ?></th>
+>>>>>>> 62ab1307 (3 feb update)
                                 <th class="text-end"><?php echo e(trans('plugins/job-board::dashboard.wallet_amount_coins')); ?></th>
                                 <th class="text-end"><?php echo e(trans('plugins/job-board::dashboard.wallet_current_balance')); ?></th>
                             </tr>
@@ -852,6 +879,7 @@
                                 <tr>
                                     <td><?php echo e($sn); ?></td>
 <<<<<<< HEAD
+<<<<<<< HEAD
                                     <td class="text-nowrap"><?php echo e($txn->created_at->format('M d, Y H:i')); ?></td>
                                     <td class="wallet-txn-description"><?php echo BaseHelper::clean($txn->getDescription()); ?></td>
                                     <td><?php echo e($txn->package_name ?? '—'); ?></td>
@@ -863,12 +891,21 @@
 =======
                                     <td><?php echo e($txn->created_at->format('M d, Y H:i')); ?></td>
                                     <td><?php echo BaseHelper::clean($txn->getDescription()); ?></td>
+=======
+                                    <td class="text-nowrap"><?php echo e($txn->created_at->format('M d, Y H:i')); ?></td>
+                                    <td class="wallet-txn-description"><?php echo BaseHelper::clean($txn->getDescription()); ?></td>
+                                    <td><?php echo e($txn->package_name ?? '—'); ?></td>
+>>>>>>> 62ab1307 (3 feb update)
                                     <td class="text-end">
                                         <?php if($txn->isCredit()): ?>
-                                            <span class="text-success">+<?php echo e(format_credits_short($txn->credits)); ?></span>
+                                            <span class="text-success fw-medium">+<?php echo e(format_credits_short($txn->credits)); ?></span>
                                         <?php else: ?>
+<<<<<<< HEAD
                                             <span class="text-danger">-<?php echo e(format_credits_short($txn->credits)); ?></span>
 >>>>>>> 689f01a2 (payment update)
+=======
+                                            <span class="text-danger fw-medium">-<?php echo e(format_credits_short($txn->credits)); ?></span>
+>>>>>>> 62ab1307 (3 feb update)
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end"><?php echo e(format_credits_short($runningBalance)); ?></td>
@@ -1097,12 +1134,18 @@
                                 ?>
                                 <tr>
 <<<<<<< HEAD
+<<<<<<< HEAD
                                     <td>
                                         <a href="<?php echo e(route('public.account.invoices.show', $invoice)); ?>" class="text-primary text-decoration-none fw-medium">#<?php echo e($invoice->code); ?></a>
                                     </td>
 =======
                                     <td>#<?php echo e($invoice->code); ?></td>
 >>>>>>> 689f01a2 (payment update)
+=======
+                                    <td>
+                                        <a href="<?php echo e(route('public.account.invoices.show', $invoice)); ?>" class="text-primary text-decoration-none fw-medium">#<?php echo e($invoice->code); ?></a>
+                                    </td>
+>>>>>>> 62ab1307 (3 feb update)
                                     <td><?php echo e(format_price($invoice->amount, $currency)); ?></td>
                                     <td>
                                         <?php if (isset($component)) { $__componentOriginal86e87e37d100cbb441f5e9e293185347 = $component; } ?>
@@ -1155,10 +1198,14 @@
                                         <?php if (isset($component)) { $__componentOriginal922f7d3260a518f4cf606eecf9669dcb = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal922f7d3260a518f4cf606eecf9669dcb = $attributes; } ?>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::button','data' => ['tag' => 'a','href' => route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download']),'size' => 'sm','color' => 'primary','icon' => 'ti ti-download','target' => '_blank','rel' => 'noopener','download' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 =======
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::button','data' => ['tag' => 'a','href' => route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download']),'size' => 'sm','color' => 'primary','icon' => 'ti ti-download','target' => '_blank']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 >>>>>>> 689f01a2 (payment update)
+=======
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::button','data' => ['tag' => 'a','href' => route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download']),'size' => 'sm','color' => 'primary','icon' => 'ti ti-download','target' => '_blank','rel' => 'noopener','download' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+>>>>>>> 62ab1307 (3 feb update)
 <?php $component->withName('core::button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
@@ -1166,10 +1213,14 @@
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <?php $component->withAttributes(['tag' => 'a','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download'])),'size' => 'sm','color' => 'primary','icon' => 'ti ti-download','target' => '_blank','rel' => 'noopener','download' => true]); ?>
 =======
 <?php $component->withAttributes(['tag' => 'a','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download'])),'size' => 'sm','color' => 'primary','icon' => 'ti ti-download','target' => '_blank']); ?>
 >>>>>>> 689f01a2 (payment update)
+=======
+<?php $component->withAttributes(['tag' => 'a','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('public.account.invoices.generate_invoice', ['invoice' => $invoice->id, 'type' => 'download'])),'size' => 'sm','color' => 'primary','icon' => 'ti ti-download','target' => '_blank','rel' => 'noopener','download' => true]); ?>
+>>>>>>> 62ab1307 (3 feb update)
                                             <?php echo e(trans('plugins/job-board::dashboard.wallet_download_invoice')); ?>
 
                                          <?php echo $__env->renderComponent(); ?>
@@ -1241,9 +1292,13 @@
 <?php endif; ?>
     </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
     </div>
 =======
 >>>>>>> 689f01a2 (payment update)
+=======
+    </div>
+>>>>>>> 62ab1307 (3 feb update)
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make(JobBoardHelper::viewPath('dashboard.layouts.master'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Aditi\platform\plugins\job-board\/resources/views/themes/dashboard/wallet.blade.php ENDPATH**/ ?>

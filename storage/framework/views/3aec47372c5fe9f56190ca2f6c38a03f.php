@@ -223,6 +223,85 @@
     .enl-header-user-btn span { display: none; }
 }
 
+/* ===== LOGOUT MODAL (2nd screenshot - exact same UI) ===== */
+.enl-logout-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+.enl-logout-modal-box {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04);
+    max-width: 400px;
+    width: 100%;
+    overflow: hidden;
+    text-align: center;
+}
+.enl-logout-modal-body { padding: 36px 28px 20px; }
+.enl-logout-modal-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #93c5fd;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.enl-logout-modal-icon { color: #fff; }
+.enl-logout-modal-title {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+}
+.enl-logout-modal-text {
+    margin: 0;
+    font-size: 15px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+.enl-logout-modal-actions {
+    padding: 0 32px 32px 32px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+}
+.enl-logout-btn-secondary {
+    background: transparent;
+    border: none;
+    color: #3b82f6;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 8px;
+    order: 1;
+}
+.enl-logout-btn-secondary:hover { color: #2563eb; background: #eff6ff; }
+.enl-logout-btn-primary {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 24px;
+    order: 2;
+}
+.enl-logout-btn-primary:hover { background: #2563eb; }
+
 /* ===== MEGA MENU STYLES ===== */
 .mega-menu-dropdown {
     position: static !important;
@@ -671,13 +750,13 @@
                         <img src="<?php echo e($account->avatar_url); ?>" alt="<?php echo e($account->name); ?>">
                     <?php endif; ?>
                     <span><?php echo e($account->first_name ?? $account->name); ?></span>
-                    <i class="fa fa-chevron-down"></i>
+                    <i class="fa fa-chevron-down enl-chevron"></i>
                 </button>
                 <div class="enl-header-dropdown" id="enlUserDropdown">
                     <a href="<?php echo e(route('public.account.dashboard')); ?>"><i class="fa fa-home"></i> Dashboard</a>
                     <a href="<?php echo e(route('public.account.employer.settings.edit')); ?>"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
-                    <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); var f = document.getElementById('logout-form-enl'); if (!f) return false; if (typeof window.showDialogConfirm === 'function') { window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(ok) { if (ok) f.submit(); }).catch(function() { if (confirm('Do you want to logout?')) f.submit(); }); } else { if (confirm('Do you want to logout?')) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                    <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -686,30 +765,45 @@
 
 <form id="logout-form-enl" style="display:none;" action="<?php echo e(route('public.account.logout')); ?>" method="POST"><?php echo csrf_field(); ?></form>
 
-<!-- Dialog Alert Container - Required for logout dialog -->
-<div id="dialog-alert-container"></div>
-
-<!-- Ensure Dialog System is Loaded -->
-<?php if(!isset($dialogSystemLoaded)): ?>
-    <?php
-        Theme::asset()->usePath()->add('dialog-alert-css', 'css/dialog-alert.css', [], [], '1.0');
-        Theme::asset()->container('footer')->usePath()->add('dialog-alert-js', 'js/dialog-alert.js', ['jquery'], [], '1.0');
-        $dialogSystemLoaded = true;
-    ?>
-<?php endif; ?>
-
-<!-- Ensure jQuery is loaded before dialog system -->
+<!-- Logout confirmation modal - reference UI (icon blue circle, Logout left / Cancel right) -->
+<div id="enl-logout-modal-overlay" class="enl-logout-overlay">
+    <div id="enl-logout-modal-box" class="enl-logout-modal-box">
+        <div class="enl-logout-modal-body">
+            <div class="enl-logout-modal-icon-wrap">
+                <svg class="enl-logout-modal-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </div>
+            <h4 class="enl-logout-modal-title">Logout</h4>
+            <p class="enl-logout-modal-text">Are you sure you want to logout?</p>
+        </div>
+        <div class="enl-logout-modal-actions">
+            <button type="button" id="enl-logout-modal-confirm" class="enl-logout-btn-secondary">Logout</button>
+            <button type="button" id="enl-logout-modal-cancel" class="enl-logout-btn-primary">Cancel</button>
+        </div>
+    </div>
+</div>
 <script>
-    // Ensure jQuery is available
-    if (typeof jQuery === 'undefined' && typeof $ === 'undefined') {
-        console.warn('jQuery not found, loading from CDN');
-        var script = document.createElement('script');
-        script.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
-        script.onload = function() {
-            console.log('jQuery loaded from CDN');
-        };
-        document.head.appendChild(script);
+(function() {
+    function showEnlLogoutModal() {
+        var overlay = document.getElementById('enl-logout-modal-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
     }
+    function hideEnlLogoutModal() {
+        var overlay = document.getElementById('enl-logout-modal-overlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+    document.getElementById('enl-logout-modal-cancel').onclick = hideEnlLogoutModal;
+    document.getElementById('enl-logout-modal-confirm').onclick = function() {
+        hideEnlLogoutModal();
+        var f = document.getElementById('logout-form-enl');
+        if (f) f.submit();
+    };
+    document.getElementById('enl-logout-modal-overlay').onclick = function(e) {
+        if (e.target === this) hideEnlLogoutModal();
+    };
+    window.showEnlLogoutModal = showEnlLogoutModal;
+})();
 </script>
 
 <div class="emp-new-layout">
@@ -1338,52 +1432,41 @@ document.addEventListener('DOMContentLoaded', function() {
                     tryShowDialog(attempts + 1);
                 }, 100);
             } else {
-                // Fallback to native confirm after max attempts
                 if (confirm('Do you want to logout?')) {
                     logoutForm.submit();
                 }
             }
         }
-        
         tryShowDialog();
     }
     
     function initLogoutHandler() {
         const logoutLink = document.getElementById('logout-link-enl');
-        
         if (logoutLink) {
-            // Remove any existing listeners by cloning
             const newLogoutLink = logoutLink.cloneNode(true);
+            newLogoutLink.removeAttribute('onclick');
             logoutLink.parentNode.replaceChild(newLogoutLink, logoutLink);
-            
-            // Add click handler
             newLogoutLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                showLogoutDialog();
+                if (typeof window.showEnlLogoutModal === 'function') {
+                    window.showEnlLogoutModal();
+                } else {
+                    var f = document.getElementById('logout-form-enl');
+                    if (f) f.submit();
+                }
                 return false;
             });
-            
-            console.log('Employer dashboard logout handler initialized');
         } else {
-            // Retry if element not found
             setTimeout(initLogoutHandler, 200);
         }
     }
-    
-    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initLogoutHandler, 500);
-        });
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(initLogoutHandler, 100); });
     } else {
-        setTimeout(initLogoutHandler, 500);
+        setTimeout(initLogoutHandler, 100);
     }
-    
-    // Also try after window load
-    window.addEventListener('load', function() {
-        setTimeout(initLogoutHandler, 500);
-    });
+    window.addEventListener('load', function() { setTimeout(initLogoutHandler, 100); });
 })();
 </script>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/dashboard/layouts/body.blade.php ENDPATH**/ ?>

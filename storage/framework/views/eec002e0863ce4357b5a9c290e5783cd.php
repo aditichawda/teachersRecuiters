@@ -7,10 +7,14 @@
         'amount' => $package->price,
         'name' => $package->name,
 <<<<<<< HEAD
+<<<<<<< HEAD
         'returnUrl' => url('account/packages/' . $package->id . '/subscribe'),
 =======
         'returnUrl' => route('public.account.package.subscribe', $package->id),
 >>>>>>> 689f01a2 (payment update)
+=======
+        'returnUrl' => url('account/packages/' . $package->id . '/subscribe'),
+>>>>>>> 62ab1307 (3 feb update)
         'callbackUrl' => route('public.account.package.subscribe.callback', $package->id),
     ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php $__env->stopSection(); ?>
