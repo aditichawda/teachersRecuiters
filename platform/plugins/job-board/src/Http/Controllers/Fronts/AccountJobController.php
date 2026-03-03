@@ -482,7 +482,6 @@ class AccountJobController extends BaseController
             ->httpResponse()
             ->setPreviousUrl(route('public.account.jobs.index'))
             ->setNextUrl(route('public.account.jobs.edit', $job->id))
-            ->setMessage($successMessage)
             ->withCreatedSuccessMessage();
 
     }
