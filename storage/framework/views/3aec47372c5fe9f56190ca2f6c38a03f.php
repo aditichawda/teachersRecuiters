@@ -1469,8 +1469,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
-
-
         tryShowDialog();
     }
     
