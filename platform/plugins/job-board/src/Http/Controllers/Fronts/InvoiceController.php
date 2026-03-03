@@ -24,7 +24,12 @@ class InvoiceController extends BaseController
 
         SeoHelper::setTitle(trans('plugins/job-board::messages.invoices'));
 
-        return $invoiceTable->render(JobBoardHelper::viewPath('dashboard.table.base'));
+        $account = auth('account')->user();
+        $layout = ($account && $account->isJobSeeker())
+            ? Theme::getThemeNamespace('views.job-board.account.partials.layout-settings')
+            : JobBoardHelper::viewPath('dashboard.layouts.master');
+
+        return $invoiceTable->render(JobBoardHelper::viewPath('dashboard.table.base'), [], ['layout' => $layout]);
     }
 
     public function show(Invoice $invoice)
@@ -38,7 +43,12 @@ class InvoiceController extends BaseController
 
         SeoHelper::setTitle($title);
 
-        return JobBoardHelper::view('dashboard.invoices.detail', compact('invoice'));
+        $account = auth('account')->user();
+        $layout = ($account && $account->isJobSeeker())
+            ? Theme::getThemeNamespace('views.job-board.account.partials.layout-settings')
+            : JobBoardHelper::viewPath('dashboard.layouts.master');
+
+        return JobBoardHelper::view('dashboard.invoices.detail', compact('invoice', 'layout'));
     }
 
     public function getGenerateInvoice(Invoice $invoice, Request $request, InvoiceHelper $invoiceHelper)
@@ -46,19 +56,16 @@ class InvoiceController extends BaseController
         $invoice->loadMissing(['payment', 'items']);
         abort_unless($this->canViewInvoice($invoice), 404);
 
+        // Release session lock so PDF generation does not block rest of the site
+        session()->save();
+
         set_time_limit(120);
-        try {
-            if ($request->input('type') === 'print') {
-                return $invoiceHelper->streamInvoice($invoice);
-            }
-            return $invoiceHelper->downloadInvoice($invoice);
-        } catch (\Throwable $e) {
-            report($e);
-            if ($request->expectsJson()) {
-                return response()->json(['message' => $e->getMessage()], 500);
-            }
-            return redirect()->back()->with('error', trans('plugins/job-board::invoice.download_failed') ?: 'Invoice download failed. Please try again.');
+
+        if ($request->input('type') === 'print') {
+            return $invoiceHelper->streamInvoice($invoice);
         }
+
+        return $invoiceHelper->downloadInvoice($invoice);
     }
 
     protected function canViewInvoice(Invoice $invoice): bool

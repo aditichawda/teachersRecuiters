@@ -14,7 +14,7 @@
 ?>
 
 <div class="twm-sidebar-ele-filter">
-    <h4 class="section-head-small mb-4"><?php echo e(__('Type of employment')); ?></h4>
+    <h4 class="section-head-small mb-4"><?php echo e(__('Job Type')); ?></h4>
     <ul>
         <?php $__currentLoopData = $jobTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $jobType): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <li>

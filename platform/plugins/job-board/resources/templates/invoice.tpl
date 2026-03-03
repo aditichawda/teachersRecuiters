@@ -4,9 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>{{ 'plugins/job-board::invoice.heading'|trans }} - #{{ invoice.code }}</title>
-    {% if settings.using_custom_font_for_invoice %}
-        <link href="https://fonts.googleapis.com/css2?family={{ settings.custom_font_family | urlencode }}:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    {% endif %}
+    {# External font link removed for PDF - DomPDF can hang when fetching remote URLs #}
     <style>
         body {
             font-size: 15px;
@@ -143,8 +141,8 @@
             {{ invoice.status }}
         </span>
     {% else %}
-        <span class="stamp {% if invoice.payment.status == 'completed' %} is-completed {% else %} is-failed {% endif %}">
-            {{ invoice.payment.status }}
+        <span class="stamp {% if payment_status is defined and payment_status == 'Completed' %} is-completed {% else %} is-failed {% endif %}">
+            {{ payment_status is defined ? payment_status : '-' }}
         </span>
     {% endif %}
 {% endif %}
