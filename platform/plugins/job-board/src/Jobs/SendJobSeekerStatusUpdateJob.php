@@ -10,7 +10,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -40,35 +39,12 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
                 return;
             }
 
-            // Load account relationship if not already loaded
-            if (!$this->application->relationLoaded('account') && $this->application->account_id) {
-                $this->application->load('account');
-            }
-
-            // Get email from application (submitted during job apply)
-            // Fallback to account email if application email is empty
             $jobSeekerEmail = $this->application->email;
             
-            // If application email is empty, try to get from account
-            if (empty($jobSeekerEmail) && $this->application->account_id) {
-                $account = $this->application->account;
-                if ($account && $account->email) {
-                    $jobSeekerEmail = $account->email;
-                    Log::info('Using account email as fallback for job seeker status update', [
-                        'application_id' => $this->application->id,
-                        'account_id' => $this->application->account_id,
-                        'email' => $jobSeekerEmail,
-                    ]);
-                }
-            }
-            
-            if (empty($jobSeekerEmail) || !filter_var($jobSeekerEmail, FILTER_VALIDATE_EMAIL)) {
-                Log::warning('Invalid or missing email for job seeker status update', [
+            if (!filter_var($jobSeekerEmail, FILTER_VALIDATE_EMAIL)) {
+                Log::warning('Invalid email for job seeker status update', [
                     'application_id' => $this->application->id,
-                    'application_email' => $this->application->email,
-                    'account_id' => $this->application->account_id,
-                    'account_email' => $this->application->account?->email ?? 'N/A',
-                    'final_email' => $jobSeekerEmail,
+                    'email' => $jobSeekerEmail,
                 ]);
                 return;
             }
@@ -93,7 +69,7 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
             ]);
 
             $emailSubject = $isShortlisted 
-                ? 'Congratulations! You\'ve been Shortlisted - ' . $this->jobModel->name
+                ? 'Congratulations! You\'ve been Shortlisted - ' . $this->job->name
                 : 'Update on Your Application - ' . $this->jobModel->name;
 
             Mail::send([], [], function ($message) use ($emailSubject, $emailContent, $jobSeekerEmail) {
@@ -110,9 +86,6 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
                 'new_status' => $this->newStatus->getValue(),
                 'email' => $jobSeekerEmail,
             ]);
-
-            // Send WhatsApp notification to job seeker
-            $this->sendWhatsAppNotification($isShortlisted, $isRejected, $jobSeekerName, $jobSeekerEmail);
 
         } catch (\Exception $e) {
             Log::error('Failed to send job seeker status update email', [
@@ -288,245 +261,5 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
             </body>
             </html>
         ";
-    }
-
-    /**
-     * Send WhatsApp notification to job seeker about status update (shortlist/reject)
-     * Uses OTP template with hint message for easy understanding
-     */
-    protected function sendWhatsAppNotification(bool $isShortlisted, bool $isRejected, string $jobSeekerName, string $jobSeekerEmail): void
-    {
-        try {
-            // Get job seeker phone number
-            $jobSeekerPhone = $this->application->phone ?? null;
-            
-            if (empty($jobSeekerPhone)) {
-                Log::info('[WHATSAPP_STATUS_UPDATE] No phone number found for job seeker', [
-                    'application_id' => $this->application->id,
-                    'job_id' => $this->jobModel->id,
-                    'email' => $jobSeekerEmail,
-                ]);
-                return;
-            }
-
-            // Build WhatsApp message with hint
-            $whatsappMessage = $this->buildWhatsAppStatusMessage($isShortlisted, $isRejected);
-
-            // Send WhatsApp notification
-            $sent = $this->sendWhatsAppMessage($jobSeekerPhone, $whatsappMessage);
-            
-            if ($sent) {
-                Log::info('[WHATSAPP_STATUS_UPDATE] ✓ Notification sent successfully', [
-                    'phone' => $jobSeekerPhone,
-                    'job_id' => $this->jobModel->id,
-                    'application_id' => $this->application->id,
-                    'status' => $isShortlisted ? 'SHORTLISTED' : 'REJECTED',
-                    'job_title' => $this->jobModel->name,
-                    'candidate_name' => $jobSeekerName,
-                ]);
-            } else {
-                Log::warning('[WHATSAPP_STATUS_UPDATE] ✗ Failed to send notification', [
-                    'phone' => $jobSeekerPhone,
-                    'job_id' => $this->jobModel->id,
-                    'application_id' => $this->application->id,
-                ]);
-            }
-
-        } catch (\Exception $e) {
-            Log::error('[WHATSAPP_STATUS_UPDATE] ✗ Error sending notification', [
-                'application_id' => $this->application->id,
-                'job_id' => $this->jobModel->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            // Don't throw exception - WhatsApp failure shouldn't break email notifications
-        }
-    }
-
-    /**
-     * Build WhatsApp message content for status update notification
-     * Uses OTP template structure with hint message
-     * Format: "SHORT{code}" or "REJECT{code}" for easy understanding
-     */
-    protected function buildWhatsAppStatusMessage(bool $isShortlisted, bool $isRejected): string
-    {
-        $applicationId = $this->application->id ?? 0;
-        $jobId = $this->jobModel->id ?? 0;
-        
-        // Create a 6-digit code: last 3 digits of job ID + last 3 digits of application ID
-        $code = str_pad($jobId % 1000, 3, '0', STR_PAD_LEFT) . str_pad($applicationId % 1000, 3, '0', STR_PAD_LEFT);
-        
-        // Add hint prefix based on status
-        if ($isShortlisted) {
-            // Format: "SHORT{code}" - Example: "SHORT123456"
-            // Hint: This indicates shortlist status
-            $message = "SHORT" . $code;
-        } elseif ($isRejected) {
-            // Format: "REJECT{code}" - Example: "REJECT123456"
-            // Hint: This indicates rejection status
-            $message = "REJECT" . $code;
-        } else {
-            // Fallback (shouldn't happen, but just in case)
-            $message = "STATUS" . $code;
-        }
-        
-        return $message;
-    }
-
-    /**
-     * Send WhatsApp message using MSG Club API (Template-based)
-     * Uses OTP template (otp_signup_login) for consistency
-     */
-    protected function sendWhatsAppMessage(string $phone, string $message): bool
-    {
-        // Get WhatsApp API configuration
-        $apiUrl = config('services.msgclub.url', env('MSGCLUB_WHATSAPP_URL', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate'));
-        $authKey = config('services.msgclub.key', env('MSGCLUB_AUTH_KEY', env('WHATSAPP_API_KEY', '4625770ffb62853af287cedec7f50b0')));
-        $senderId = setting('whatsapp_sender_id', env('WHATSAPP_SENDER_ID', '919039632383'));
-        
-        // Use OTP template (otp_signup_login) - which is working and tested
-        $templateName = setting('whatsapp_otp_template', env('WHATSAPP_OTP_TEMPLATE', 'otp_signup_login'));
-        
-        Log::debug('[WHATSAPP_STATUS_UPDATE] Using OTP template for status update notification', [
-            'template_name' => $templateName,
-            'note' => 'Using working OTP template with status update details and hint',
-        ]);
-
-        if (!$apiUrl || !$authKey) {
-            Log::error('[WHATSAPP_STATUS_UPDATE] WhatsApp API configuration missing');
-            return false;
-        }
-
-        // Clean phone number (remove any non-numeric characters)
-        $phone = preg_replace('/[^0-9]/', '', $phone);
-        
-        // Handle Indian phone numbers (10-digit format required by API)
-        // If 12 digits starting with 91, remove 91 (country code)
-        if (strlen($phone) == 12 && substr($phone, 0, 2) == '91') {
-            $phone = substr($phone, 2);
-        }
-        // If more than 10 digits, take last 10 digits
-        elseif (strlen($phone) > 10) {
-            $phone = substr($phone, -10);
-        }
-        // If less than 10 digits, it's invalid
-        elseif (strlen($phone) < 10) {
-            Log::warning('[WHATSAPP_STATUS_UPDATE] Invalid phone number length', [
-                'phone' => $phone,
-                'length' => strlen($phone),
-            ]);
-            return false;
-        }
-
-        // Ensure phone is exactly 10 digits
-        if (strlen($phone) !== 10) {
-            Log::warning('[WHATSAPP_STATUS_UPDATE] Phone number is not 10 digits after cleaning', [
-                'phone' => $phone,
-                'length' => strlen($phone),
-            ]);
-            return false;
-        }
-
-        try {
-            // Payload structure exactly as OTP template (body + button components)
-            $requestBody = [
-                'mobileNumbers' => $phone,
-                'senderId' => $senderId,
-                'component' => [
-                    'messaging_product' => 'whatsapp',
-                    'recipient_type' => 'individual',
-                    'type' => 'template',
-                    'template' => [
-                        'name' => $templateName,
-                        'language' => [
-                            'code' => 'en'
-                        ],
-                        'components' => [
-                            [
-                                'type' => 'body',
-                                'index' => 0,
-                                'parameters' => [
-                                    [
-                                        'type' => 'text',
-                                        'text' => $message // Status update details with hint
-                                    ]
-                                ]
-                            ],
-                            [
-                                'type' => 'button',
-                                'sub_type' => 'url',
-                                'index' => 0,
-                                'parameters' => [
-                                    [
-                                        'type' => 'text',
-                                        'text' => $message // Same message in button component
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ],
-                'qrImageUrl' => false,
-                'qrLinkUrl' => false,
-                'to' => $phone
-            ];
-
-            Log::debug('[WHATSAPP_STATUS_UPDATE] Sending API request', [
-                'phone' => $phone,
-                'template_name' => $templateName,
-                'message' => $message,
-                'api_url' => $apiUrl,
-            ]);
-
-            // Make API call with timeout and retry
-            $response = Http::withHeaders([
-                'Accept' => 'application/json',
-            ])
-            ->timeout(500)
-            ->retry(3, 2000, function ($exception, $request) {
-                return $exception instanceof \Illuminate\Http\Client\ConnectionException 
-                    || $exception instanceof \GuzzleHttp\Exception\ConnectException
-                    || $exception instanceof \GuzzleHttp\Exception\RequestException;
-            })
-            ->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
-
-            $responseData = $response->json();
-            $statusCode = $response->status();
-
-            Log::info('[WHATSAPP_STATUS_UPDATE] API Response received', [
-                'phone' => $phone,
-                'status_code' => $statusCode,
-                'response' => $responseData,
-                'response_body' => $response->body(),
-            ]);
-
-            // Check if response indicates success
-            // MSG Club API typically returns responseCode: 3001 for success
-            $responseCode = $responseData['responseCode'] ?? null;
-            $isSuccess = ($statusCode === 200 && ($responseCode === '3001' || $responseCode === 3001));
-
-            if ($isSuccess) {
-                Log::info('[WHATSAPP_STATUS_UPDATE] ✓ WhatsApp message sent successfully', [
-                    'phone' => $phone,
-                    'response_code' => $responseCode,
-                ]);
-                return true;
-            } else {
-                Log::warning('[WHATSAPP_STATUS_UPDATE] ✗ WhatsApp API returned non-success response', [
-                    'phone' => $phone,
-                    'response_code' => $responseCode,
-                    'response' => $responseData,
-                ]);
-                return false;
-            }
-
-        } catch (\Exception $e) {
-            Log::error('[WHATSAPP_STATUS_UPDATE] ✗ Exception while sending WhatsApp message', [
-                'phone' => $phone,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return false;
-        }
     }
 }

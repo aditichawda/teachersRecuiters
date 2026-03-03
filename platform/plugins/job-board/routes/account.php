@@ -436,6 +436,8 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 Route::resource('', 'ApplicantController')
                     ->parameters(['' => 'applicant'])
                     ->only(['edit', 'update']);
+                Route::post('{applicant}/send-email', ['as' => 'send-email', 'uses' => 'ApplicantController@sendEmail'])->whereNumber('applicant');
+                Route::post('{applicant}/send-whatsapp', ['as' => 'send-whatsapp', 'uses' => 'ApplicantController@sendWhatsApp'])->whereNumber('applicant');
             });
 
             Route::get('applicants/download-cv/{application}', [JobApplicationController::class, 'downloadCv'])
