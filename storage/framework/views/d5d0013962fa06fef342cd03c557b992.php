@@ -2,7 +2,10 @@
     <?php
         $invoice = $invoice->load('payment');
         $payment = $invoice->payment;
-        $currency = $payment ? \Botble\JobBoard\Models\Currency::query()->where('title', strtoupper($payment->currency))->first() : null;
+        $currency = $payment && !empty($payment->currency)
+            ? \Botble\JobBoard\Models\Currency::query()->where('title', strtoupper($payment->currency))->first()
+            : null;
+        $paymentMethodLabel = $payment && $payment->payment_channel ? $payment->payment_channel->label() : '-';
     ?>
 
     <?php if (isset($component)) { $__componentOriginalc107e2f90dff5eb05519f33918d2c807 = $component; } ?>
@@ -63,7 +66,7 @@
                     </div>
                     <div class="col-lg-4">
                         <strong class="text-brand"><?php echo e(trans('plugins/job-board::invoice.payment_method')); ?>:</strong>
-                        <?php echo e($invoice->payment->payment_channel->label()); ?>
+                        <?php echo e($paymentMethodLabel); ?>
 
                     </div>
                 </div>
@@ -769,4 +772,4 @@
 <?php endif; ?>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make(JobBoardHelper::viewPath('dashboard.layouts.master'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Aditi\platform\plugins\job-board\/resources/views/themes/dashboard/invoices/detail.blade.php ENDPATH**/ ?>
+<?php echo $__env->make($layout ?? JobBoardHelper::viewPath('dashboard.layouts.master'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Aditi\platform\plugins\job-board\/resources/views/themes/dashboard/invoices/detail.blade.php ENDPATH**/ ?>

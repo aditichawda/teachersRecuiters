@@ -132,7 +132,17 @@ class InvoiceHelper
 
     public function downloadInvoice(Invoice $invoice): Response
     {
-        return $this->makeInvoice($invoice)->download('invoice-' . $invoice->code . '.pdf');
+        $pdf = $this->makeInvoice($invoice);
+        $content = $pdf->output();
+        $filename = 'invoice-' . $invoice->code . '.pdf';
+
+        return response($content, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Length' => strlen($content),
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     public function streamInvoice(Invoice $invoice): Response

@@ -11,7 +11,7 @@
 ?>
 
 <div class="twm-sidebar-ele-filter">
-    <h4 class="section-head-small mb-4"><?php echo e(__('Industry')); ?></h4>
+    <h4 class="section-head-small mb-4"><?php echo e(__('Job Role')); ?></h4>
     <ul>
         <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <li>

@@ -865,7 +865,7 @@
                         <?php $__currentLoopData = $menuItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php if(! $item['name']) continue; ?>
                             <?php
-                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages', 'cms-account-invoices'];
+                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages'];
                                 if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
                                     continue;
                                 }

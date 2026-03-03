@@ -1,10 +1,13 @@
-@extends(JobBoardHelper::viewPath('dashboard.layouts.master'))
+@extends($layout ?? JobBoardHelper::viewPath('dashboard.layouts.master'))
 
 @section('content')
     @php
         $invoice = $invoice->load('payment');
         $payment = $invoice->payment;
-        $currency = $payment ? \Botble\JobBoard\Models\Currency::query()->where('title', strtoupper($payment->currency))->first() : null;
+        $currency = $payment && !empty($payment->currency)
+            ? \Botble\JobBoard\Models\Currency::query()->where('title', strtoupper($payment->currency))->first()
+            : null;
+        $paymentMethodLabel = $payment && $payment->payment_channel ? $payment->payment_channel->label() : '-';
     @endphp
 
     <x-core::card size="lg">
@@ -44,7 +47,7 @@
                     </div>
                     <div class="col-lg-4">
                         <strong class="text-brand">{{ trans('plugins/job-board::invoice.payment_method') }}:</strong>
-                        {{ $invoice->payment->payment_channel->label() }}
+                        {{ $paymentMethodLabel }}
                     </div>
                 </div>
             </div>

@@ -2,27 +2,8 @@
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
-    use Botble\JobBoard\Models\UserNotification;
-    use Illuminate\Support\Facades\Schema;
     
     $account = auth('account')->user();
-    
-    // Get unread notification count
-    $notificationCount = 0;
-    if ($account) {
-        try {
-            if (Schema::hasTable('jb_user_notifications')) {
-                $notificationCount = UserNotification::where('account_id', $account->id)
-                    ->whereNull('read_at')
-                    ->count();
-            }
-        } catch (\Exception $e) {
-            // Silently fail
-        }
-    }
-    
-    // Format count: show "9+" if more than 9
-    $notificationBadge = $notificationCount > 9 ? '9+' : ($notificationCount > 0 ? $notificationCount : '');
     $company = $account->companies()->with('slugable')->first();
     $employerPublicProfileUrl = null;
     if ($account->isEmployer() && $company) {
@@ -753,12 +734,9 @@
                         </li>
 
             <!-- Notifications -->
-                                     <li class="nav-item" style="position: relative;">
+                                     <li class="nav-item">
                 <a class="nav-link" style="color: black; font-size: 20px !important;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
                     <i class="feather-bell" style="font-size: 20px !important;"></i>
-                    @if($notificationBadge)
-                        <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;">{{ $notificationBadge }}</span>
-                    @endif
                             </a>
                         </li>
         </ul>
@@ -885,7 +863,7 @@
                         @foreach ($menuItems as $item)
                             @continue(! $item['name'])
                             @php
-                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages', 'cms-account-invoices'];
+                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages'];
                                 if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
                                     continue;
                                 }

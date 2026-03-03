@@ -48,29 +48,15 @@ class InvoiceController extends BaseController
     {
         $invoice = Invoice::query()->with('payment')->findOrFail($invoiceId);
 
+        // Release session lock so PDF generation does not block rest of the site
+        session()->save();
+
         set_time_limit(120);
 
-        try {
-            if ($request->input('type') === 'print') {
-                $response = $invoiceHelper->streamInvoice($invoice);
-            } else {
-                $response = $invoiceHelper->downloadInvoice($invoice);
-            }
-
-            if ($response instanceof \Illuminate\Http\Response) {
-                return $response;
-            }
-            if (is_string($response)) {
-                return response($response, 200, [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'attachment; filename="invoice-' . $invoice->code . '.pdf"',
-                ]);
-            }
-        } catch (\Throwable $e) {
-            report($e);
-            return back()->with('error', $e->getMessage());
+        if ($request->input('type') === 'print') {
+            return $invoiceHelper->streamInvoice($invoice);
         }
 
-        return back()->with('error', __('Failed to generate PDF.'));
+        return $invoiceHelper->downloadInvoice($invoice);
     }
 }

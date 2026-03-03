@@ -194,6 +194,10 @@ class BaseHttpResponse extends Response implements Responsable
                 'message' => $this->message,
             ];
 
+            if (! empty($this->nextUrl)) {
+                $data['next_url'] = $this->nextUrl;
+            }
+
             if ($this->additional) {
                 $data = array_merge($data, ['additional' => $this->additional]);
             }

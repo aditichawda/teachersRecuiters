@@ -5,6 +5,7 @@ namespace Botble\JobBoard\Tables\Fronts;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\Currency;
 use Botble\JobBoard\Models\Invoice;
+use Botble\JobBoard\Models\Transaction;
 use Botble\Table\Abstracts\TableAbstract;
 use Botble\Table\Actions\Action;
 use Botble\Table\Columns\Column;
@@ -43,8 +44,10 @@ class InvoiceTable extends TableAbstract
             ->editColumn('amount', function (Invoice $item) {
                 $item->loadMissing('payment');
                 $payment = $item->payment;
-
-                $currency = $payment ? Currency::query()->where('title', strtoupper($payment->currency))->first() : null;
+                $currency = null;
+                if ($payment && ! empty($payment->currency)) {
+                    $currency = Currency::query()->where('title', strtoupper($payment->currency))->first();
+                }
 
                 return format_price($item->amount, $currency);
             });
@@ -54,6 +57,8 @@ class InvoiceTable extends TableAbstract
 
     public function query(): Relation|Builder|QueryBuilder
     {
+        $accountId = auth('account')->id();
+
         $query = $this
             ->getModel()
             ->query()
@@ -65,8 +70,18 @@ class InvoiceTable extends TableAbstract
                 'status',
                 'created_at',
             ])
-            ->whereHas('payment', function (Builder $query): void {
-                $query->where('customer_id', auth('account')->id());
+            ->where(function (Builder $q) use ($accountId): void {
+                $q->whereHas('payment', function (Builder $sub) use ($accountId): void {
+                    $sub->where('customer_id', $accountId);
+                })
+                ->orWhere(function (Builder $q2) use ($accountId): void {
+                    $q2->whereHas('payment', function (Builder $sub): void {
+                        $sub->whereNull('customer_id');
+                    })->whereIn('payment_id', Transaction::query()
+                        ->where('account_id', $accountId)
+                        ->whereNotNull('payment_id')
+                        ->select('payment_id'));
+                });
             });
 
         return $this->applyScopes($query);
