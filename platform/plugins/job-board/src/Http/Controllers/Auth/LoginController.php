@@ -601,10 +601,19 @@ class LoginController extends Controller
             ];
 
             // Make API call with AUTH_KEY as query parameter
+            // Added timeout and retry mechanism for better reliability
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
+            ])
+            ->timeout(90) // Increased timeout to 90 seconds
+            ->retry(3, 2000, function ($exception, $request) {
+                // Retry on timeout or connection errors
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException
+                    || $exception instanceof \GuzzleHttp\Exception\ConnectException
+                    || $exception instanceof \GuzzleHttp\Exception\RequestException;
+            })
+            ->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
 
             // Check if request was successful
             if ($response->successful()) {

@@ -1307,11 +1307,20 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
         ]);
 
         // Make API call - EXACT SAME as OTP notification in LoginController
+        // Added timeout and retry mechanism for better reliability
         try {
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
+            ])
+            ->timeout(90) // Increased timeout to 90 seconds (same as other WhatsApp calls)
+            ->retry(3, 2000, function ($exception, $request) {
+                // Retry on timeout or connection errors (same as OTP and other WhatsApp calls)
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException
+                    || $exception instanceof \GuzzleHttp\Exception\ConnectException
+                    || $exception instanceof \GuzzleHttp\Exception\RequestException;
+            })
+            ->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
 
             // Check if request was successful - SAME as OTP
             if ($response->successful()) {

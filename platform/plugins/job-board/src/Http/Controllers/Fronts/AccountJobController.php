@@ -385,10 +385,10 @@ class AccountJobController extends BaseController
         $job->jobTypes()->sync($request->input('jobTypes', []));
         $job->categories()->sync($request->input('categories', []));
         
-        // COMMENTED OUT: Job alert notifications disabled
-        /*
+        // Job alert notifications ENABLED - sending email and WhatsApp to matching candidates
         // Trigger event after all relationships are synced
-        if ($job->moderation_status == ModerationStatusEnum::APPROVED && $job->status == JobStatusEnum::PUBLISHED) {
+        // Trigger if job is published (even if moderation is pending - approval might be disabled)
+        if ($job->status == JobStatusEnum::PUBLISHED) {
             // Reload job with relationships before triggering event
             try {
                 $job->load(['categories', 'jobTypes', 'skills', 'company', 'city', 'state', 'country', 'currency']);
@@ -406,7 +406,6 @@ class AccountJobController extends BaseController
             \Log::info('JobPublishedEvent NOT triggered - Job status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
             error_log('[JOB_CREATE] JobPublishedEvent NOT triggered - Status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
         }
-        */
 
         // Sync screening questions (from admin pool) with is_required, overrides, correct_answer per job
         $sqIds = array_filter((array) $request->input('screening_question_ids', []));

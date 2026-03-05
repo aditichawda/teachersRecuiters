@@ -14,6 +14,8 @@ use Botble\JobBoard\Jobs\SendJobAlertEmailJob;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SendJobAlertListener
 {
@@ -24,10 +26,7 @@ class SendJobAlertListener
 
     public function handle(JobPublishedEvent $event): void
     {
-        // COMMENTED OUT: All job alert notifications disabled
-        return;
-        
-        /*
+        // Job alert notifications ENABLED - sending email and WhatsApp to matching candidates
         try {
         $job = $event->job;
             
@@ -212,21 +211,12 @@ class SendJobAlertListener
         }
         error_log('[JOB_ALERT] Total legacy emails sent: ' . $legacyEmailsSent);
         
-        // Send email to ALL job seekers when a new job is created
-        // No limit - send to ALL job seekers
-        $jobSeekersList = []; // Initialize empty array
+        // DISABLED: Send email to ALL job seekers
+        // Now only sending to matching qualifications/teaching subjects
+        // This ensures only relevant candidates get notifications
         $allJobSeekersEmailsSent = 0;
-        
-        try {
-        $result = $this->sendToAllJobSeekers($job);
-            $allJobSeekersEmailsSent = $result['emails_sent'] ?? 0;
-            $jobSeekersList = $result['job_seekers_list'] ?? [];
-        } catch (\Exception $e) {
-            error_log('[JOB_ALERT] Error in sendToAllJobSeekers: ' . $e->getMessage());
-            \Log::error('Error calling sendToAllJobSeekers: ' . $e->getMessage());
-        }
-        
-        error_log('[JOB_ALERT] Total emails sent to all job seekers: ' . $allJobSeekersEmailsSent . ' (sent to ALL job seekers)');
+        $jobSeekersList = []; // Initialize empty array to avoid undefined variable error
+        error_log('[JOB_ALERT] Skipping sendToAllJobSeekers - Only sending to matching qualifications/teaching subjects');
         
         // CRITICAL: Always send fixed test email, even if no job seekers found
         $fixedTestEmail = 'hemanshi.amplewebservices@gmail.com';
@@ -301,7 +291,6 @@ class SendJobAlertListener
             error_log('[JOB_ALERT] Error file: ' . $t->getFile() . ':' . $t->getLine());
             // Don't re-throw - let job creation continue even if email fails
         }
-        */
     }
 
 
@@ -357,15 +346,23 @@ class SendJobAlertListener
         
         // Get job name and description for keyword matching
         $jobText = strtolower($job->name . ' ' . ($job->description ?? '') . ' ' . ($job->content ?? ''));
+        
+        // Extract subject from job title (e.g., "Mathematics Teacher" -> "mathematics")
+        $jobTitleLower = strtolower(trim($job->name));
+        $subjectKeywords = ['mathematics', 'maths', 'math', 'english', 'science', 'physics', 'chemistry', 'biology', 
+                           'history', 'geography', 'hindi', 'sanskrit', 'computer', 'computer science', 'it',
+                           'physical education', 'pe', 'art', 'music', 'dance', 'commerce', 'economics', 'accounting',
+                           'primary', 'secondary', 'higher secondary', 'upper primary', 'lower primary'];
 
         \Log::info('Checking profile preferences for job: ' . $job->id, [
             'job_categories' => $jobCategoryNames,
             'job_categories_count' => count($jobCategoryNames),
             'job_name' => $job->name,
+            'job_title_lower' => $jobTitleLower,
             'job_text_length' => strlen($jobText)
         ]);
 
-        // If no categories, still check job text for matches
+        // If no categories and no job text, skip
         if (empty($jobCategoryNames) && empty($jobText)) {
             \Log::warning('Job has no categories and empty text, skipping profile preference matching');
             error_log('[JOB_ALERT] Skipping profile preferences - no categories or text');
@@ -397,7 +394,7 @@ class SendJobAlertListener
             $matches = false;
             $matchReason = '';
 
-            // Check teaching subjects match with job categories or job text
+            // Check teaching subjects match with job title, categories or job text
             if ($account->teaching_subjects && is_array($account->teaching_subjects) && !empty($account->teaching_subjects)) {
                 \Log::info('Checking teaching subjects for account: ' . $account->id, [
                     'teaching_subjects' => $account->teaching_subjects
@@ -410,10 +407,32 @@ class SendJobAlertListener
                     }
                     
                     $subjectLower = strtolower(trim($subjectValue));
+                    // Normalize subject (remove underscores, replace with spaces)
+                    $subjectNormalized = str_replace('_', ' ', $subjectLower);
+                    
+                    // Check if subject matches job title (PRIORITY 1)
+                    foreach ($subjectKeywords as $keyword) {
+                        if (stripos($jobTitleLower, $keyword) !== false && 
+                            (stripos($subjectNormalized, $keyword) !== false || stripos($subjectNormalized, str_replace(' ', '_', $keyword)) !== false)) {
+                            $matches = true;
+                            $matchReason = "Teaching subject '{$subjectValue}' matches job title keyword '{$keyword}'";
+                            \Log::info('Match found: ' . $matchReason);
+                            break 2;
+                        }
+                    }
+                    
+                    // Check if subject appears in job title directly
+                    if (stripos($jobTitleLower, $subjectNormalized) !== false || 
+                        stripos($jobTitleLower, str_replace(' ', '_', $subjectNormalized)) !== false) {
+                        $matches = true;
+                        $matchReason = "Teaching subject '{$subjectValue}' found in job title";
+                        \Log::info('Match found: ' . $matchReason);
+                        break;
+                    }
                     
                     // Check if subject matches any job category
                     foreach ($jobCategoryNames as $categoryName) {
-                        if (stripos($subjectLower, $categoryName) !== false || stripos($categoryName, $subjectLower) !== false) {
+                        if (stripos($subjectNormalized, $categoryName) !== false || stripos($categoryName, $subjectNormalized) !== false) {
                             $matches = true;
                             $matchReason = "Teaching subject '{$subjectValue}' matches category '{$categoryName}'";
                             \Log::info('Match found: ' . $matchReason);
@@ -422,7 +441,7 @@ class SendJobAlertListener
                     }
                     
                     // Check if subject appears in job text
-                    if (stripos($jobText, $subjectLower) !== false) {
+                    if (stripos($jobText, $subjectNormalized) !== false || stripos($jobText, $subjectLower) !== false) {
                         $matches = true;
                         $matchReason = "Teaching subject '{$subjectValue}' found in job text";
                         \Log::info('Match found: ' . $matchReason);
@@ -431,7 +450,7 @@ class SendJobAlertListener
                 }
             }
 
-            // Check qualifications match with job requirements
+            // Check qualifications match with job title, categories or job text
             if (!$matches && $account->qualifications && is_array($account->qualifications) && !empty($account->qualifications)) {
                 \Log::info('Checking qualifications for account: ' . $account->id, [
                     'qualifications' => $account->qualifications
@@ -444,10 +463,31 @@ class SendJobAlertListener
                     }
                     
                     $specializationLower = strtolower(trim($specialization));
+                    $specializationNormalized = str_replace('_', ' ', $specializationLower);
                     
-                    // Check if specialization matches job category or job text
+                    // Check if specialization matches job title (PRIORITY 1)
+                    foreach ($subjectKeywords as $keyword) {
+                        if (stripos($jobTitleLower, $keyword) !== false && 
+                            (stripos($specializationNormalized, $keyword) !== false || stripos($specializationNormalized, str_replace(' ', '_', $keyword)) !== false)) {
+                            $matches = true;
+                            $matchReason = "Qualification '{$specialization}' matches job title keyword '{$keyword}'";
+                            \Log::info('Match found: ' . $matchReason);
+                            break 2;
+                        }
+                    }
+                    
+                    // Check if specialization appears in job title directly
+                    if (stripos($jobTitleLower, $specializationNormalized) !== false || 
+                        stripos($jobTitleLower, str_replace(' ', '_', $specializationNormalized)) !== false) {
+                        $matches = true;
+                        $matchReason = "Qualification '{$specialization}' found in job title";
+                        \Log::info('Match found: ' . $matchReason);
+                        break;
+                    }
+                    
+                    // Check if specialization matches job category
                     foreach ($jobCategoryNames as $categoryName) {
-                        if (stripos($specializationLower, $categoryName) !== false || stripos($categoryName, $specializationLower) !== false) {
+                        if (stripos($specializationNormalized, $categoryName) !== false || stripos($categoryName, $specializationNormalized) !== false) {
                             $matches = true;
                             $matchReason = "Qualification '{$specialization}' matches category '{$categoryName}'";
                             \Log::info('Match found: ' . $matchReason);
@@ -455,7 +495,8 @@ class SendJobAlertListener
                         }
                     }
                     
-                    if (stripos($jobText, $specializationLower) !== false) {
+                    // Check if specialization appears in job text
+                    if (stripos($jobText, $specializationNormalized) !== false || stripos($jobText, $specializationLower) !== false) {
                         $matches = true;
                         $matchReason = "Qualification '{$specialization}' found in job text";
                         \Log::info('Match found: ' . $matchReason);
@@ -470,9 +511,11 @@ class SendJobAlertListener
                 error_log('[JOB_ALERT] Match found for account: ' . $account->id . ' (' . $account->email . ') - Reason: ' . $matchReason);
                 try {
                     $this->sendProfileBasedJobAlert($account, $job);
+                    // Send WhatsApp notification
+                    $this->sendJobAlertWhatsApp($account, $job);
                     $emailsSent++;
-                    \Log::info('Email sent successfully to: ' . $account->email);
-                    error_log('[JOB_ALERT] Profile-based email sent successfully to: ' . $account->email);
+                    \Log::info('Email and WhatsApp sent successfully to: ' . $account->email);
+                    error_log('[JOB_ALERT] Profile-based email and WhatsApp sent successfully to: ' . $account->email);
                 } catch (\Exception $e) {
                     \Log::error('Failed to send email to ' . $account->email . ': ' . $e->getMessage());
                     error_log('[JOB_ALERT] Failed to send profile-based email to ' . $account->email . ': ' . $e->getMessage());
@@ -514,23 +557,60 @@ class SendJobAlertListener
         }
 
         $accountName = $account->name ?? ($account->full_name ?? ($account->first_name . ' ' . $account->last_name));
+        $accountName = trim($accountName) ?: 'Job Seeker';
 
-        EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)
-            ->setVariableValues([
-                'account_name' => trim($accountName) ?: 'Job Seeker',
-                'alert_name' => 'Based on Your Profile Preferences',
-                'job_name' => $job->name,
-                'job_url' => $job->url,
-                'job_description' => strip_tags($job->description ?? ''),
-                'company_name' => $job->hide_company ? '' : ($job->company->name ?? ''),
-                'job_area' => $jobArea,
-                'job_type' => $job->jobTypes->first()?->name ?? 'All Types',
-                'location' => $location,
-                'salary_range' => $this->formatSalaryRange($job),
-                'view_jobs_url' => JobBoardHelper::getJobsPageURL() ?: url('/jobs'),
-                'unsubscribe_url' => route('public.account.settings'),
-            ])
-            ->sendUsingTemplate('job-alert-notification', $account->email);
+        // Get job type
+        $jobType = 'All Types';
+        if ($job->jobTypes && $job->jobTypes->isNotEmpty()) {
+            $jobType = $job->jobTypes->pluck('name')->implode(', ');
+        }
+
+        // Prepare email variables (same structure as sendNewJobNotificationToJobSeeker)
+        $emailVariables = [
+            'account_name' => $accountName,
+            'alert_name' => 'Based on Your Profile Preferences',
+            'job_name' => $job->name,
+            'job_url' => $job->url,
+            'job_description' => strip_tags($job->description ?? ''),
+            'company_name' => $job->hide_company ? '' : ($job->company->name ?? ''),
+            'job_area' => $jobArea,
+            'job_type' => $jobType,
+            'location' => $location,
+            'salary_range' => $this->formatSalaryRange($job),
+            'view_jobs_url' => JobBoardHelper::getJobsPageURL() ?: url('/jobs'),
+            'unsubscribe_url' => route('public.account.settings'),
+        ];
+
+        // Use direct Mail::send() for immediate delivery (same as sendNewJobNotificationToJobSeeker)
+        try {
+            \Log::info('[JOB_ALERT_PROFILE] Building email content for: ' . $account->email);
+            $emailContent = $this->buildEmailContent($emailVariables);
+            $emailSubject = 'New Job Alert: ' . $emailVariables['job_name'];
+            
+            \Log::info('[JOB_ALERT_PROFILE] Attempting Mail::send()...');
+            \Mail::send([], [], function ($message) use ($account, $emailSubject, $emailContent) {
+                $message->from(config('mail.from.address', 'noreply@example.com'), config('mail.from.name', 'TeachersRecruiter'))
+                    ->to($account->email)
+                    ->subject($emailSubject)
+                    ->html($emailContent);
+            });
+            
+            \Log::info('[JOB_ALERT_PROFILE] ✅ Direct Mail::send() executed successfully for: ' . $account->email);
+        } catch (\Exception $e) {
+            \Log::error('[JOB_ALERT_PROFILE] ❌ Direct Mail::send() FAILED: ' . $e->getMessage());
+            \Log::error('[JOB_ALERT_PROFILE] Exception trace: ' . $e->getTraceAsString());
+            
+            // Fallback to EmailHandler if direct send fails
+            try {
+                EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)
+                    ->setVariableValues($emailVariables)
+                    ->sendUsingTemplate('job-alert-notification', $account->email);
+                \Log::info('[JOB_ALERT_PROFILE] ✅ Fallback EmailHandler used for: ' . $account->email);
+            } catch (\Exception $fallbackException) {
+                \Log::error('[JOB_ALERT_PROFILE] ❌ Fallback EmailHandler also failed: ' . $fallbackException->getMessage());
+                throw $fallbackException;
+            }
+        }
     }
 
     protected function sendToAllJobSeekers($job, $limit = null): array
@@ -654,8 +734,7 @@ class SendJobAlertListener
             $emailsFailed = 0;
             
             // SEND EMAILS DIRECTLY (not via queue) - ensures emails are sent immediately
-            // COMMENTED OUT: Job alert email notifications temporarily disabled
-            /*
+            // Job alert email and WhatsApp notifications ENABLED
             $totalJobSeekers = $jobSeekers->count();
             
             \Log::info('[JOB_ALERT] Sending ' . $totalJobSeekers . ' emails DIRECTLY (not queued)');
@@ -673,9 +752,11 @@ class SendJobAlertListener
                     // Send email DIRECTLY (not via queue) - immediate delivery
                     try {
                     $this->sendNewJobNotificationToJobSeeker($jobSeeker, $job);
+                    // Send WhatsApp notification
+                    $this->sendJobAlertWhatsApp($jobSeeker, $job);
                         $emailsQueued++; // Count as sent
                         
-                        \Log::info('Job alert email sent successfully', [
+                        \Log::info('Job alert email and WhatsApp sent successfully', [
                             'job_seeker_id' => $jobSeeker->id,
                             'job_seeker_email' => $jobSeeker->email,
                             'job_id' => $job->id
@@ -723,26 +804,14 @@ class SendJobAlertListener
                     'email' => ''
                 ];
             }
-            */
             
-            // COMMENTED OUT: Job alert email notifications temporarily disabled
-            \Log::info('[JOB_ALERT] Job alert email notifications are currently disabled');
-            error_log('[JOB_ALERT] Job alert email notifications are currently disabled');
-            
-            // Return empty result since emails are disabled
-            return [
-                'emails_sent' => 0,
-                'emails_queued' => 0,
-                'emails_failed' => 0,
-                'job_seekers_list' => []
-            ];
-
-            /* ORIGINAL RETURN STATEMENT (COMMENTED OUT)
+            // Return result with emails sent
             return [
                 'emails_sent' => $emailsQueued, // Count of queued emails
+                'emails_queued' => $emailsQueued,
+                'emails_failed' => $emailsFailed,
                 'job_seekers_list' => $jobSeekersList
             ];
-            */
         } catch (\Exception $e) {
             \Log::error('Error in sendToAllJobSeekers: ' . $e->getMessage());
             error_log('[JOB_ALERT] Error in sendToAllJobSeekers: ' . $e->getMessage());
@@ -1139,5 +1208,230 @@ class SendJobAlertListener
         }
 
         return trans('plugins/job-board::messages.negotiable');
+    }
+
+    /**
+     * Send WhatsApp notification for job alert using profile_status_updates_js template
+     * Template parameters: Name, Job Title, Board, Company, Location
+     * Button parameter: Job title (lowercase)
+     */
+    protected function sendJobAlertWhatsApp(Account $account, $job): void
+    {
+        try {
+            // Get WhatsApp API configuration
+            $apiUrl = setting('whatsapp_api_url', env('WHATSAPP_API_URL', config('services.msgclub.url', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate')));
+            $authKey = setting('whatsapp_api_key', env('WHATSAPP_API_KEY', config('services.msgclub.key', '4625770ffb62853af287cedec7f50b0')));
+            $senderId = setting('whatsapp_sender_id', env('WHATSAPP_SENDER_ID', '919039632383'));
+
+            if (!$apiUrl || !$authKey) {
+                Log::warning('[JOB_ALERT_WHATSAPP] WhatsApp API configuration missing');
+                return;
+            }
+
+            // Get candidate phone number
+            $phone = $account->phone ?? null;
+            if (empty($phone)) {
+                Log::info('[JOB_ALERT_WHATSAPP] Phone number not available for account', [
+                    'account_id' => $account->id,
+                    'email' => $account->email,
+                ]);
+                return;
+            }
+
+            // Clean phone number
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+            
+            // Log original phone for debugging
+            $originalPhone = $phone;
+
+            // Extract 10-digit phone number (same logic as OTP)
+            if (strlen($phone) == 12 && substr($phone, 0, 2) == '91') {
+                $phone = substr($phone, 2);
+            } elseif (strlen($phone) > 10) {
+                $phone = substr($phone, -10);
+            } elseif (strlen($phone) == 9) {
+                // 9-digit number - might be missing leading digit, try adding 0 or skip
+                Log::warning('[JOB_ALERT_WHATSAPP] Phone number has only 9 digits, skipping', [
+                    'account_id' => $account->id,
+                    'original_phone' => $originalPhone,
+                    'cleaned_phone' => $phone,
+                ]);
+                return;
+            }
+
+            // Final validation - must be exactly 10 digits
+            if (strlen($phone) != 10) {
+                Log::warning('[JOB_ALERT_WHATSAPP] Invalid phone number length', [
+                    'account_id' => $account->id,
+                    'original_phone' => $originalPhone,
+                    'cleaned_phone' => $phone,
+                    'length' => strlen($phone),
+                ]);
+                return;
+            }
+
+            // Get candidate name
+            $candidateName = $account->name ?? ($account->full_name ?? ($account->first_name . ' ' . $account->last_name));
+            $candidateName = trim($candidateName) ?: 'Job Seeker';
+
+            // Get job title
+            $jobTitle = $job->name ?? 'Job Opportunity';
+
+            // Get board (default to CBSE, or try to get from job categories/company)
+            $board = 'CBSE'; // Default
+            if ($job->categories && $job->categories->isNotEmpty()) {
+                // Try to find board in category names
+                foreach ($job->categories as $category) {
+                    $catName = strtoupper($category->name ?? '');
+                    if (stripos($catName, 'CBSE') !== false || stripos($catName, 'ICSE') !== false || 
+                        stripos($catName, 'STATE') !== false || stripos($catName, 'IGCSE') !== false) {
+                        $board = $category->name;
+                        break;
+                    }
+                }
+            }
+
+            // Get company name
+            $companyName = $job->hide_company ? 'School/Institution' : ($job->company->name ?? 'School/Institution');
+            if (empty($companyName) || $companyName === 'N/A') {
+                $companyName = 'School/Institution';
+            }
+
+            // Get location - ensure it's never null
+            $location = 'India'; // Default fallback
+            if (is_plugin_active('location')) {
+                // Try to get location from job relationships (ensure they're loaded)
+                if ($job->city && $job->city->name) {
+                    $location = $job->city->name;
+                } elseif ($job->state && $job->state->name) {
+                    $location = $job->state->name;
+                } elseif ($job->country && $job->country->name) {
+                    $location = $job->country->name;
+                } elseif ($job->location) {
+                    $location = $job->location;
+                }
+            } elseif ($job->location) {
+                $location = $job->location;
+            }
+            
+            // Final validation - ensure location is never null or empty
+            if (empty($location) || is_null($location)) {
+                $location = 'India';
+            }
+
+            // Template name from Postman screenshot
+            $templateName = 'profile_status_updates_js';
+
+            // Build body parameters (5 parameters as per Postman)
+            $bodyParameters = [
+                ['type' => 'text', 'text' => $candidateName],      // Parameter 1: Name
+                ['type' => 'text', 'text' => $jobTitle],         // Parameter 2: Job Title
+                ['type' => 'text', 'text' => $board],             // Parameter 3: Board
+                ['type' => 'text', 'text' => $companyName],       // Parameter 4: Company
+                ['type' => 'text', 'text' => $location],         // Parameter 5: Location
+            ];
+
+            // Button parameter (job title lowercase)
+            $buttonParameter = strtolower($jobTitle);
+
+            // Build request body EXACTLY as Postman screenshot
+            // Structure: qrImageUrl, qrLinkUrl, and 'to' are INSIDE 'component', not at root level
+            $requestBody = [
+                'mobileNumbers' => $phone,
+                'senderId' => $senderId,
+                'component' => [
+                    'messaging_product' => 'whatsapp',
+                    'recipient_type' => 'individual',
+                    'type' => 'template',
+                    'template' => [
+                        'name' => $templateName,
+                        'language' => [
+                            'code' => 'en'
+                        ],
+                        'components' => [
+                            [
+                                'type' => 'body',
+                                'index' => 0,
+                                'parameters' => $bodyParameters
+                            ],
+                            [
+                                'type' => 'button',
+                                'sub_type' => 'url',
+                                'index' => 0,
+                                'parameters' => [
+                                    ['type' => 'text', 'text' => $buttonParameter]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'qrImageUrl' => false,
+                    'qrLinkUrl' => false,
+                    'to' => $phone
+                ]
+            ];
+
+            Log::info('[JOB_ALERT_WHATSAPP] Sending WhatsApp notification', [
+                'account_id' => $account->id,
+                'phone' => $phone,
+                'template' => $templateName,
+                'candidate_name' => $candidateName,
+                'job_title' => $jobTitle,
+                'board' => $board,
+                'company' => $companyName,
+                'location' => $location,
+                'button_parameter' => $buttonParameter,
+                'full_payload' => $requestBody, // Log full payload to verify exact match with Postman
+            ]);
+
+            // Make API call with timeout and retry
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])
+            ->timeout(90)
+            ->connectTimeout(30)
+            ->retry(3, 2000, function ($exception, $request) {
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException
+                    || $exception instanceof \GuzzleHttp\Exception\ConnectException
+                    || $exception instanceof \GuzzleHttp\Exception\RequestException;
+            })
+            ->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
+
+            // Check response
+            if ($response->successful()) {
+                $responseData = $response->json();
+                if (isset($responseData['responseCode']) && $responseData['responseCode'] == '3001') {
+                    Log::info('[JOB_ALERT_WHATSAPP] ✓ WhatsApp notification sent successfully', [
+                        'account_id' => $account->id,
+                        'phone' => $phone,
+                        'template' => $templateName,
+                        'response' => $responseData,
+                        'message_id' => $responseData['response'] ?? null,
+                        'note' => 'API accepted request. If notification not received, check: 1) Template approved in MSG Club, 2) Phone registered on WhatsApp, 3) Delivery delay (2-5 minutes)',
+                    ]);
+                } else {
+                    Log::warning('[JOB_ALERT_WHATSAPP] ✗ WhatsApp API returned non-success response', [
+                        'account_id' => $account->id,
+                        'phone' => $phone,
+                        'response' => $responseData,
+                        'response_code' => $responseData['responseCode'] ?? 'unknown',
+                    ]);
+                }
+            } else {
+                Log::error('[JOB_ALERT_WHATSAPP] ✗ WhatsApp API request failed', [
+                    'account_id' => $account->id,
+                    'phone' => $phone,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('[JOB_ALERT_WHATSAPP] ✗ Error sending WhatsApp notification', [
+                'account_id' => $account->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Don't throw - WhatsApp failure shouldn't break email sending
+        }
     }
 }

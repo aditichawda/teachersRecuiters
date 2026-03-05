@@ -23,8 +23,8 @@ class SendJobSeekerStatusUpdateWhatsAppJob implements ShouldQueue
     public function __construct(
         public JobApplication $application,
         public Job $jobModel,
-        public JobApplicationStatusEnum $oldStatus,
-        public JobApplicationStatusEnum $newStatus
+        public JobApplicationStatusEnum|string $oldStatus,
+        public JobApplicationStatusEnum|string $newStatus
     ) {
         $this->onQueue('default');
     }
@@ -32,19 +32,215 @@ class SendJobSeekerStatusUpdateWhatsAppJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            // Only send WhatsApp for shortlisted and rejected statuses
-            $newStatusValue = $this->newStatus->getValue();
-            if ($newStatusValue !== JobApplicationStatusEnum::SHORT_LIST->getValue() &&
-                $newStatusValue !== JobApplicationStatusEnum::REJECTED->getValue()) {
+            // Handle enum serialization issue FIRST - convert string to enum if needed
+            // This must happen before any getValue() calls
+            // Check if status is string or not an enum object
+            $oldStatusValue = null;
+            $newStatusValue = null;
+            
+            // Convert string to enum if needed - SIMPLIFIED APPROACH
+            if (is_string($this->oldStatus)) {
+                $oldStatusValue = $this->oldStatus;
+                $enumInstance = new JobApplicationStatusEnum();
+                $this->oldStatus = $enumInstance->make($oldStatusValue);
+                Log::info('[WHATSAPP_STATUS_UPDATE] Converted oldStatus from string to enum', [
+                    'original_value' => $oldStatusValue,
+                    'converted_class' => get_class($this->oldStatus),
+                ]);
+            } elseif (!($this->oldStatus instanceof JobApplicationStatusEnum)) {
+                // If it's an object but not an enum, try to get its value safely
+                if (is_string($this->oldStatus)) {
+                    $oldStatusValue = $this->oldStatus;
+                } elseif (is_object($this->oldStatus)) {
+                    try {
+                        // Only call getValue() if it's actually an enum-like object
+                        if ($this->oldStatus instanceof JobApplicationStatusEnum) {
+                            $oldStatusValue = $this->oldStatus->getValue();
+                        } elseif (method_exists($this->oldStatus, 'getValue') && !is_string($this->oldStatus)) {
+                            $oldStatusValue = $this->oldStatus->getValue();
+                        } else {
+                            $oldStatusValue = (string)$this->oldStatus;
+                        }
+                    } catch (\Exception $e) {
+                        $oldStatusValue = (string)$this->oldStatus;
+                    }
+                } else {
+                    $oldStatusValue = (string)$this->oldStatus;
+                }
+                $enumInstance = new JobApplicationStatusEnum();
+                $this->oldStatus = $enumInstance->make($oldStatusValue);
+                Log::info('[WHATSAPP_STATUS_UPDATE] Converted oldStatus from object to enum', [
+                    'original_value' => $oldStatusValue,
+                    'original_type' => gettype($oldStatusValue),
+                    'converted_class' => get_class($this->oldStatus),
+                ]);
+            }
+            
+            if (is_string($this->newStatus)) {
+                $newStatusValue = $this->newStatus;
+                $enumInstance = new JobApplicationStatusEnum();
+                $this->newStatus = $enumInstance->make($newStatusValue);
+                Log::info('[WHATSAPP_STATUS_UPDATE] Converted newStatus from string to enum', [
+                    'original_value' => $newStatusValue,
+                    'converted_class' => get_class($this->newStatus),
+                ]);
+            } elseif (!($this->newStatus instanceof JobApplicationStatusEnum)) {
+                // If it's an object but not an enum, try to get its value safely
+                if (is_string($this->newStatus)) {
+                    $newStatusValue = $this->newStatus;
+                } elseif (is_object($this->newStatus)) {
+                    try {
+                        // Only call getValue() if it's actually an enum-like object
+                        if ($this->newStatus instanceof JobApplicationStatusEnum) {
+                            $newStatusValue = $this->newStatus->getValue();
+                        } elseif (method_exists($this->newStatus, 'getValue') && !is_string($this->newStatus)) {
+                            $newStatusValue = $this->newStatus->getValue();
+                        } else {
+                            $newStatusValue = (string)$this->newStatus;
+                        }
+                    } catch (\Exception $e) {
+                        $newStatusValue = (string)$this->newStatus;
+                    }
+                } else {
+                    $newStatusValue = (string)$this->newStatus;
+                }
+                $enumInstance = new JobApplicationStatusEnum();
+                $this->newStatus = $enumInstance->make($newStatusValue);
+                Log::info('[WHATSAPP_STATUS_UPDATE] Converted newStatus from object to enum', [
+                    'original_value' => $newStatusValue,
+                    'original_type' => gettype($newStatusValue),
+                    'converted_class' => get_class($this->newStatus),
+                ]);
+            }
+            
+            // Ensure we have valid enum objects - DOUBLE CHECK
+            if (!($this->newStatus instanceof JobApplicationStatusEnum)) {
+                // Try one more time to convert
+                if (is_string($this->newStatus)) {
+                    $enumInstance = new JobApplicationStatusEnum();
+                    $this->newStatus = $enumInstance->make($this->newStatus);
+                    Log::info('[WHATSAPP_STATUS_UPDATE] Second attempt: Converted newStatus from string to enum');
+                } else {
+                    Log::error('[WHATSAPP_STATUS_UPDATE] newStatus is not an enum instance after conversion', [
+                        'new_status_type' => gettype($this->newStatus),
+                        'new_status_class' => is_object($this->newStatus) ? get_class($this->newStatus) : 'not_object',
+                        'new_status_value' => is_string($this->newStatus) ? $this->newStatus : 'not_string',
+                    ]);
+                    return;
+                }
+            }
+            
+            if (!($this->oldStatus instanceof JobApplicationStatusEnum)) {
+                // Try one more time to convert
+                if (is_string($this->oldStatus)) {
+                    $enumInstance = new JobApplicationStatusEnum();
+                    $this->oldStatus = $enumInstance->make($this->oldStatus);
+                    Log::info('[WHATSAPP_STATUS_UPDATE] Second attempt: Converted oldStatus from string to enum');
+                } else {
+                    Log::error('[WHATSAPP_STATUS_UPDATE] oldStatus is not an enum instance after conversion', [
+                        'old_status_type' => gettype($this->oldStatus),
+                        'old_status_class' => is_object($this->oldStatus) ? get_class($this->oldStatus) : 'not_object',
+                        'old_status_value' => is_string($this->oldStatus) ? $this->oldStatus : 'not_string',
+                    ]);
+                    return;
+                }
+            }
+            
+            // Get status values from enum objects - with EXTRA defensive error handling
+            $oldStatusValue = null;
+            $newStatusValue = null;
+            
+            // Safely get oldStatus value
+            if ($this->oldStatus instanceof JobApplicationStatusEnum) {
+                try {
+                    $oldStatusValue = $this->oldStatus->getValue();
+                } catch (\Exception $e) {
+                    Log::error('[WHATSAPP_STATUS_UPDATE] Error getting oldStatus value', [
+                        'error' => $e->getMessage(),
+                        'old_status_type' => gettype($this->oldStatus),
+                        'old_status_class' => get_class($this->oldStatus),
+                    ]);
+                    return;
+                }
+            } else {
+                Log::error('[WHATSAPP_STATUS_UPDATE] oldStatus is not an enum instance when trying to get value', [
+                    'old_status_type' => gettype($this->oldStatus),
+                ]);
+                return;
+            }
+            
+            // Safely get newStatus value
+            if ($this->newStatus instanceof JobApplicationStatusEnum) {
+                try {
+                    $newStatusValue = $this->newStatus->getValue();
+                } catch (\Exception $e) {
+                    Log::error('[WHATSAPP_STATUS_UPDATE] Error getting newStatus value', [
+                        'error' => $e->getMessage(),
+                        'new_status_type' => gettype($this->newStatus),
+                        'new_status_class' => get_class($this->newStatus),
+                    ]);
+                    return;
+                }
+            } else {
+                Log::error('[WHATSAPP_STATUS_UPDATE] newStatus is not an enum instance when trying to get value', [
+                    'new_status_type' => gettype($this->newStatus),
+                ]);
+                return;
+            }
+            
+            Log::info('[WHATSAPP_STATUS_UPDATE] Job started', [
+                'application_id' => $this->application->id,
+                'job_id' => $this->jobModel->id,
+                'old_status_type' => get_class($this->oldStatus),
+                'new_status_type' => get_class($this->newStatus),
+                'old_status_value' => $oldStatusValue,
+                'new_status_value' => $newStatusValue,
+            ]);
+            
+            // Use string values to avoid enum serialization issues
+            $shortListValue = 'short_list';
+            $rejectedValue = 'rejected';
+            
+            Log::info('[WHATSAPP_STATUS_UPDATE] Status values extracted', [
+                'application_id' => $this->application->id,
+                'old_status' => $oldStatusValue,
+                'new_status' => $newStatusValue,
+                'short_list_value' => $shortListValue,
+                'rejected_value' => $rejectedValue,
+            ]);
+            
+            if ($newStatusValue !== $shortListValue && $newStatusValue !== $rejectedValue) {
+                Log::info('[WHATSAPP_STATUS_UPDATE] Status not shortlisted/rejected, skipping', [
+                    'application_id' => $this->application->id,
+                    'new_status' => $newStatusValue,
+                ]);
                 return;
             }
 
-            // Get job seeker phone number
-            $jobSeekerPhone = $this->application->phone ?? $this->application->account->phone ?? null;
+            // CRITICAL: Get job seeker phone number DIRECTLY from jb_applications table
+            // This is the phone column value from jb_applications table (screenshot shows this table)
+            // Example: For application_id 96, phone is "+919109459959" from jb_applications table
+            // NOT the employer's phone
+            $jobSeekerPhone = $this->application->getAttribute('phone') ?? $this->application->account->phone ?? null; // Direct column access from jb_applications table
+            
+            // This matches the screenshot: jb_applications table has phone column
+            Log::info('[WHATSAPP_STATUS_UPDATE] Phone number fetched DIRECTLY from jb_applications table', [
+                'application_id' => $this->application->id,
+                'table' => 'jb_applications',
+                'table_column' => 'phone',
+                'phone_from_jb_applications_table' => $this->application->getAttribute('phone') ?? 'not_set',
+                'raw_phone_value' => $this->application->getRawOriginal('phone') ?? 'not_set',
+                'phone_from_account' => $this->application->account->phone ?? 'not_set',
+                'final_phone' => $jobSeekerPhone ?? 'not_set',
+                'recipient_type' => 'JOB_SEEKER_CANDIDATE',
+                'note' => 'Phone is from jb_applications.phone column - the candidate who applied (see screenshot)',
+            ]);
             
             if (empty($jobSeekerPhone)) {
                 Log::warning('[WHATSAPP_STATUS_UPDATE] Job seeker phone not available', [
                     'application_id' => $this->application->id,
+                    'application_phone' => $this->application->phone ?? null,
+                    'account_phone' => $this->application->account->phone ?? null,
                 ]);
                 return;
             }
@@ -67,26 +263,40 @@ class SendJobSeekerStatusUpdateWhatsAppJob implements ShouldQueue
                 $jobSeekerPhone = substr($jobSeekerPhone, -10);
             }
 
-            $isShortlisted = $newStatusValue === JobApplicationStatusEnum::SHORT_LIST->getValue();
-            $isRejected = $newStatusValue === JobApplicationStatusEnum::REJECTED->getValue();
+            // Use string comparison to avoid enum serialization issues
+            $isShortlisted = $newStatusValue === 'short_list';
+            $isRejected = $newStatusValue === 'rejected';
 
             // Build message parameters
             $messageParams = $this->buildMessageParameters($isShortlisted);
 
             // Send WhatsApp notification
-            $this->sendWhatsAppMessage($jobSeekerPhone, $messageParams, $isShortlisted);
+            $sendResult = $this->sendWhatsAppMessage($jobSeekerPhone, $messageParams, $isShortlisted);
 
-            $statusLabel = $isShortlisted ? 'SHORTLISTED' : 'REJECTED';
-            Log::info('[WHATSAPP_STATUS_UPDATE] ✓ WhatsApp notification sent successfully', [
-                'application_id' => $this->application->id,
-                'job_id' => $this->jobModel->id,
-                'status' => $newStatusValue,
-                'status_label' => $statusLabel,
-                'phone' => $jobSeekerPhone,
-                'is_shortlisted' => $isShortlisted,
-                'is_rejected' => $isRejected,
-                'template' => $isShortlisted ? 'shortlist_application_for_job' : 'application_reject_for_position',
-            ]);
+            // Only log success if API call was actually successful
+            if ($sendResult) {
+                $statusLabel = $isShortlisted ? 'SHORTLISTED' : 'REJECTED';
+                Log::info('[WHATSAPP_STATUS_UPDATE] ✓ WhatsApp notification sent successfully', [
+                    'application_id' => $this->application->id,
+                    'job_id' => $this->jobModel->id,
+                    'status' => $newStatusValue,
+                    'status_label' => $statusLabel,
+                    'phone' => $jobSeekerPhone,
+                    'is_shortlisted' => $isShortlisted,
+                    'is_rejected' => $isRejected,
+                    'template' => $isShortlisted ? 'shortlist_application_for_job' : 'application_reject_for_position',
+                ]);
+            } else {
+                Log::error('[WHATSAPP_STATUS_UPDATE] ✗ Failed to send WhatsApp notification', [
+                    'application_id' => $this->application->id,
+                    'job_id' => $this->jobModel->id,
+                    'status' => $newStatusValue,
+                    'phone' => $jobSeekerPhone,
+                    'is_shortlisted' => $isShortlisted,
+                    'is_rejected' => $isRejected,
+                    'template' => $isShortlisted ? 'shortlist_application_for_job' : 'application_reject_for_position',
+                ]);
+            }
 
         } catch (\Exception $e) {
             Log::error('[WHATSAPP_STATUS_UPDATE] Failed to send WhatsApp notification', [
@@ -224,12 +434,21 @@ class SendJobSeekerStatusUpdateWhatsAppJob implements ShouldQueue
             'is_shortlisted' => $isShortlisted,
         ]);
 
-        // Make API call - EXACT SAME as OTP notification
+        // Make API call - EXACT SAME as OTP notification (with timeout and retry)
         try {
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
+            ])
+            ->timeout(90) // 90 seconds timeout (same as OTP)
+            ->connectTimeout(30) // 30 seconds to establish connection
+            ->retry(3, 2000, function ($exception, $request) {
+                // Retry on timeout or connection errors
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException
+                    || $exception instanceof \GuzzleHttp\Exception\ConnectException
+                    || $exception instanceof \GuzzleHttp\Exception\RequestException;
+            })
+            ->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
 
             // Check if request was successful - SAME as OTP
             if ($response->successful()) {
