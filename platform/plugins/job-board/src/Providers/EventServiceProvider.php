@@ -34,12 +34,10 @@ class EventServiceProvider extends ServiceProvider
         RenderingSiteMapEvent::class => [
             RenderingSiteMapListener::class,
         ],
-        // COMMENTED OUT: Job alert notifications disabled
-        /*
+        // Job alert notifications ENABLED - sending email and WhatsApp to matching candidates
         JobPublishedEvent::class => [
             SendJobAlertListener::class,
         ],
-        */
         EmployerPostedJobEvent::class => [
             EmployerPostedJobListener::class,
         ],

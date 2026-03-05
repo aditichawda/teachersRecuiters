@@ -83,7 +83,23 @@ class ApplicantController extends BaseController
             $jobApplication->save();
 
             $newStatus = $jobApplication->status ?? JobApplicationStatusEnum::PENDING();
+            
+            // Debug logging for status update
+            Log::info('[STATUS_UPDATE_DEBUG] Status update initiated', [
+                'application_id' => $jobApplication->id,
+                'old_status' => $oldStatus->getValue(),
+                'new_status' => $newStatus->getValue(),
+                'old_status_type' => get_class($oldStatus),
+                'new_status_type' => get_class($newStatus),
+            ]);
+            
             if ($oldStatus->getValue() !== $newStatus->getValue()) {
+                Log::info('[STATUS_UPDATE_DEBUG] Status changed, dispatching event', [
+                    'application_id' => $jobApplication->id,
+                    'old_status' => $oldStatus->getValue(),
+                    'new_status' => $newStatus->getValue(),
+                ]);
+                
                 try {
                     JobApplicationStatusUpdatedEvent::dispatch(
                         $jobApplication,
@@ -91,10 +107,25 @@ class ApplicantController extends BaseController
                         $oldStatus,
                         $newStatus
                     );
+                    
+                    Log::info('[STATUS_UPDATE_DEBUG] Event dispatched successfully', [
+                        'application_id' => $jobApplication->id,
+                        'new_status' => $newStatus->getValue(),
+                    ]);
                 } catch (\Throwable $e) {
+                    Log::error('[STATUS_UPDATE_DEBUG] Event dispatch failed', [
+                        'application_id' => $jobApplication->id,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
                     Log::warning('JobApplicationStatusUpdatedEvent failed: ' . $e->getMessage());
                     report($e);
                 }
+            } else {
+                Log::info('[STATUS_UPDATE_DEBUG] Status unchanged, skipping event', [
+                    'application_id' => $jobApplication->id,
+                    'status' => $newStatus->getValue(),
+                ]);
             }
 
             try {

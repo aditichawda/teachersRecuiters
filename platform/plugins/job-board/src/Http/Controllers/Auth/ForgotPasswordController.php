@@ -168,12 +168,12 @@ class ForgotPasswordController extends Controller
                                 'parameters' => $bodyParameters
                             ]
                             // NO button component (as per Postman screenshot)
+                            ]
                         ]
-                    ]
-                ],
-                'qrImageUrl' => false,
-                'qrLinkUrl' => false,
-                'to' => $phone
+                    ],
+                    'qrImageUrl' => false,
+                    'qrLinkUrl' => false,
+                    'to' => $phone
             ];
 
             \Log::info('[PASSWORD_RESET_WHATSAPP] Sending WhatsApp notification (EXACT Postman structure)', [
@@ -192,21 +192,21 @@ class ForgotPasswordController extends Controller
 
             // Check if request was successful - SAME as OTP
             if ($response->successful()) {
-                $responseData = $response->json();
-                
+            $responseData = $response->json();
+            
                 // Check response code (3001 seems to be success)
                 if (isset($responseData['responseCode']) && $responseData['responseCode'] == '3001') {
                     \Log::info('[PASSWORD_RESET_WHATSAPP] ✓ WhatsApp notification sent successfully', [
-                        'phone' => $phone,
-                        'response' => $responseData,
+                'phone' => $phone,
+                'response' => $responseData,
                         'template' => $templateName,
                         'message_id' => $responseData['response'] ?? null,
-                    ]);
-                    return true;
-                } else {
-                    \Log::warning('[PASSWORD_RESET_WHATSAPP] ✗ WhatsApp API returned non-success response', [
-                        'phone' => $phone,
-                        'response' => $responseData,
+                ]);
+                return true;
+            } else {
+                \Log::warning('[PASSWORD_RESET_WHATSAPP] ✗ WhatsApp API returned non-success response', [
+                    'phone' => $phone,
+                    'response' => $responseData,
                         'response_code' => $responseData['responseCode'] ?? 'unknown',
                         'template' => $templateName,
                     ]);

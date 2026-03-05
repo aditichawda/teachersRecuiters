@@ -22,7 +22,7 @@ class SendCompanyStatusUpdateNotificationJob implements ShouldQueue
 
     public function __construct(
         public JobApplication $application,
-        public Job $job,
+        public Job $jobModel,
         public JobApplicationStatusEnum $oldStatus,
         public JobApplicationStatusEnum $newStatus
     ) {
@@ -32,12 +32,20 @@ class SendCompanyStatusUpdateNotificationJob implements ShouldQueue
     public function handle(): void
     {
         try {
+            // Handle enum serialization issue - convert string to enum if needed
+            if (is_string($this->oldStatus)) {
+                $this->oldStatus = (new JobApplicationStatusEnum())->make($this->oldStatus);
+            }
+            if (is_string($this->newStatus)) {
+                $this->newStatus = (new JobApplicationStatusEnum())->make($this->newStatus);
+            }
+            
             // Get employer emails
-            $employerEmails = array_filter($this->job->employer_emails ?: []);
+            $employerEmails = array_filter($this->jobModel->employer_emails ?: []);
 
             if (empty($employerEmails)) {
                 Log::warning('No employer emails found for status update notification', [
-                    'job_id' => $this->job->id,
+                    'job_id' => $this->jobModel->id,
                     'application_id' => $this->application->id,
                 ]);
                 return;
@@ -55,17 +63,17 @@ class SendCompanyStatusUpdateNotificationJob implements ShouldQueue
                 'candidate_name' => $candidateName,
                 'candidate_email' => $candidateEmail,
                 'candidate_phone' => $candidatePhone,
-                'job_name' => $this->job->name,
-                'company_name' => $this->job->company->name ?? 'N/A',
+                'job_name' => $this->jobModel->name,
+                'company_name' => $this->jobModel->company->name ?? 'N/A',
                 'status' => $status,
                 'status_label' => $statusLabel,
                 'old_status' => $this->oldStatus->getValue(),
                 'old_status_label' => $this->oldStatus->label(),
                 'application_url' => route('public.account.applicants.edit', $this->application->id),
-                'job_url' => $this->job->url,
+                'job_url' => $this->jobModel->url,
             ]);
 
-            $emailSubject = 'Application Status Updated: ' . $candidateName . ' - ' . $this->job->name . ' (' . $statusLabel . ')';
+            $emailSubject = 'Application Status Updated: ' . $candidateName . ' - ' . $this->jobModel->name . ' (' . $statusLabel . ')';
 
             // Send to all employer emails
             foreach ($employerEmails as $email) {
@@ -83,7 +91,7 @@ class SendCompanyStatusUpdateNotificationJob implements ShouldQueue
 
             Log::info('Company status update notification email sent', [
                 'application_id' => $this->application->id,
-                'job_id' => $this->job->id,
+                'job_id' => $this->jobModel->id,
                 'old_status' => $this->oldStatus->getValue(),
                 'new_status' => $this->newStatus->getValue(),
                 'employer_emails' => $employerEmails,
@@ -92,7 +100,7 @@ class SendCompanyStatusUpdateNotificationJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::error('Failed to send company status update notification email', [
                 'application_id' => $this->application->id,
-                'job_id' => $this->job->id,
+                'job_id' => $this->jobModel->id,
                 'error' => $e->getMessage(),
             ]);
 
