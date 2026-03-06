@@ -351,6 +351,85 @@
     .emp-pm-badge { font-size: 14px; padding: 10px 18px; }
     .emp-pm-badge-points { font-size: 20px; }
 }
+
+/* ===== LOGOUT MODAL (Same as Employer Dashboard Body) ===== */
+.enl-logout-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+.enl-logout-modal-box {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04);
+    max-width: 400px;
+    width: 100%;
+    overflow: hidden;
+    text-align: center;
+}
+.enl-logout-modal-body { padding: 36px 28px 20px; }
+.enl-logout-modal-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #93c5fd;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.enl-logout-modal-icon { color: #fff; }
+.enl-logout-modal-title {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+}
+.enl-logout-modal-text {
+    margin: 0;
+    font-size: 15px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+.enl-logout-modal-actions {
+    padding: 0 32px 32px 32px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+}
+.enl-logout-btn-secondary {
+    background: transparent;
+    border: none;
+    color: #3b82f6;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 8px;
+    order: 1;
+}
+.enl-logout-btn-secondary:hover { color: #2563eb; background: #eff6ff; }
+.enl-logout-btn-primary {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 24px;
+    order: 2;
+}
+.enl-logout-btn-primary:hover { background: #2563eb; }
 </style>
 
 <div class="emp-settings-page crop-avatar">
@@ -470,6 +549,23 @@
 <form id="logout-form-emp" style="display:none;" action="{{ route('public.account.logout') }}" method="POST">@csrf</form>
 <div id="dialog-alert-container"></div>
 
+<!-- Logout confirmation modal (Same as Employer Dashboard Body) -->
+<div id="emp-logout-modal-overlay" class="enl-logout-overlay">
+    <div id="emp-logout-modal-box" class="enl-logout-modal-box">
+        <div class="enl-logout-modal-body">
+            <div class="enl-logout-modal-icon-wrap">
+                <svg class="enl-logout-modal-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </div>
+            <h4 class="enl-logout-modal-title">Logout</h4>
+            <p class="enl-logout-modal-text">Are you sure you want to logout?</p>
+        </div>
+        <div class="enl-logout-modal-actions">
+            <button type="button" id="emp-logout-modal-confirm" class="enl-logout-btn-secondary">Logout</button>
+            <button type="button" id="emp-logout-modal-cancel" class="enl-logout-btn-primary">Cancel</button>
+        </div>
+    </div>
+</div>
+
 @if (!isset($dialogSystemLoadedEmp))
     @php
         Theme::asset()->usePath()->add('dialog-alert-css-emp', 'css/dialog-alert.css', [], [], '1.0');
@@ -538,37 +634,60 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Logout with confirmation modal (same as job seeker dashboard)
+// Logout with confirmation modal (Same as Employer Dashboard Body)
 (function() {
+    function showEmpLogoutModal() {
+        var overlay = document.getElementById('emp-logout-modal-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+    }
+    function hideEmpLogoutModal() {
+        var overlay = document.getElementById('emp-logout-modal-overlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+    
     function handleEmpLogoutClick(e) {
         e.preventDefault();
         e.stopPropagation();
-        var logoutForm = document.getElementById('logout-form-emp');
-        if (!logoutForm) return false;
-        function tryShow(attempts) {
-            attempts = attempts || 0;
-            if (typeof window.showDialogConfirm === 'function') {
-                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(ok) {
-                    if (ok) logoutForm.submit();
-                });
-            } else if (attempts < 50) {
-                setTimeout(function() { tryShow(attempts + 1); }, 100);
-            } else {
-                if (confirm('Do you want to logout?')) logoutForm.submit();
-            }
+        if (typeof window.showEmpLogoutModal === 'function') {
+            window.showEmpLogoutModal();
+        } else {
+            var f = document.getElementById('logout-form-emp');
+            if (f) f.submit();
         }
-        tryShow();
         return false;
     }
+    
     function initEmpLogout() {
         var link = document.getElementById('logout-link-emp');
+        var cancelBtn = document.getElementById('emp-logout-modal-cancel');
+        var confirmBtn = document.getElementById('emp-logout-modal-confirm');
+        var overlay = document.getElementById('emp-logout-modal-overlay');
+        var logoutForm = document.getElementById('logout-form-emp');
+        
         if (link) {
             link.removeEventListener('click', handleEmpLogoutClick);
             link.addEventListener('click', handleEmpLogoutClick);
-        } else {
+        }
+        
+        if (cancelBtn && confirmBtn && overlay && logoutForm) {
+            cancelBtn.onclick = hideEmpLogoutModal;
+            confirmBtn.onclick = function() {
+                hideEmpLogoutModal();
+                logoutForm.submit();
+            };
+            overlay.onclick = function(e) {
+                if (e.target === this) hideEmpLogoutModal();
+            };
+            window.showEmpLogoutModal = showEmpLogoutModal;
+        }
+        
+        if (!link || !cancelBtn || !confirmBtn) {
             setTimeout(initEmpLogout, 150);
         }
     }
+    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() { setTimeout(initEmpLogout, 300); });
     } else {

@@ -510,15 +510,24 @@ class SendJobAlertListener
                 \Log::info('Sending email to account: ' . $account->id . ' (' . $account->email . ') - Reason: ' . $matchReason);
                 error_log('[JOB_ALERT] Match found for account: ' . $account->id . ' (' . $account->email . ') - Reason: ' . $matchReason);
                 try {
+                    // Ensure job relationships are loaded before sending notifications
+                    $job->loadMissing(['city', 'state', 'country', 'company', 'categories', 'jobTypes']);
+                    
+                    // Send email first
                     $this->sendProfileBasedJobAlert($account, $job);
+                    \Log::info('[JOB_ALERT] Email sent successfully to: ' . $account->email);
+                    
                     // Send WhatsApp notification
                     $this->sendJobAlertWhatsApp($account, $job);
+                    \Log::info('[JOB_ALERT] WhatsApp sent successfully to: ' . $account->email);
+                    
                     $emailsSent++;
-                    \Log::info('Email and WhatsApp sent successfully to: ' . $account->email);
-                    error_log('[JOB_ALERT] Profile-based email and WhatsApp sent successfully to: ' . $account->email);
+                    \Log::info('[JOB_ALERT] ✅ Email and WhatsApp sent successfully to: ' . $account->email);
+                    error_log('[JOB_ALERT] ✅ Profile-based email and WhatsApp sent successfully to: ' . $account->email);
                 } catch (\Exception $e) {
-                    \Log::error('Failed to send email to ' . $account->email . ': ' . $e->getMessage());
-                    error_log('[JOB_ALERT] Failed to send profile-based email to ' . $account->email . ': ' . $e->getMessage());
+                    \Log::error('[JOB_ALERT] ❌ Failed to send notifications to ' . $account->email . ': ' . $e->getMessage());
+                    \Log::error('[JOB_ALERT] Exception trace: ' . $e->getTraceAsString());
+                    error_log('[JOB_ALERT] ❌ Failed to send profile-based notifications to ' . $account->email . ': ' . $e->getMessage());
                 }
             } else {
                 \Log::info('No match for account: ' . $account->id . ' (' . $account->email . ')');
@@ -568,17 +577,17 @@ class SendJobAlertListener
         // Prepare email variables (same structure as sendNewJobNotificationToJobSeeker)
         $emailVariables = [
             'account_name' => $accountName,
-            'alert_name' => 'Based on Your Profile Preferences',
-            'job_name' => $job->name,
-            'job_url' => $job->url,
-            'job_description' => strip_tags($job->description ?? ''),
-            'company_name' => $job->hide_company ? '' : ($job->company->name ?? ''),
-            'job_area' => $jobArea,
+                'alert_name' => 'Based on Your Profile Preferences',
+                'job_name' => $job->name,
+                'job_url' => $job->url,
+                'job_description' => strip_tags($job->description ?? ''),
+                'company_name' => $job->hide_company ? '' : ($job->company->name ?? ''),
+                'job_area' => $jobArea,
             'job_type' => $jobType,
-            'location' => $location,
-            'salary_range' => $this->formatSalaryRange($job),
-            'view_jobs_url' => JobBoardHelper::getJobsPageURL() ?: url('/jobs'),
-            'unsubscribe_url' => route('public.account.settings'),
+                'location' => $location,
+                'salary_range' => $this->formatSalaryRange($job),
+                'view_jobs_url' => JobBoardHelper::getJobsPageURL() ?: url('/jobs'),
+                'unsubscribe_url' => route('public.account.settings'),
         ];
 
         // Use direct Mail::send() for immediate delivery (same as sendNewJobNotificationToJobSeeker)
@@ -604,7 +613,7 @@ class SendJobAlertListener
             try {
                 EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)
                     ->setVariableValues($emailVariables)
-                    ->sendUsingTemplate('job-alert-notification', $account->email);
+            ->sendUsingTemplate('job-alert-notification', $account->email);
                 \Log::info('[JOB_ALERT_PROFILE] ✅ Fallback EmailHandler used for: ' . $account->email);
             } catch (\Exception $fallbackException) {
                 \Log::error('[JOB_ALERT_PROFILE] ❌ Fallback EmailHandler also failed: ' . $fallbackException->getMessage());
@@ -1218,6 +1227,37 @@ class SendJobAlertListener
     protected function sendJobAlertWhatsApp(Account $account, $job): void
     {
         try {
+            // CRITICAL: Ensure job relationships are loaded for location (explicit loading)
+            if (!$job->relationLoaded('city')) {
+                $job->load('city');
+            }
+            if (!$job->relationLoaded('state')) {
+                $job->load('state');
+            }
+            if (!$job->relationLoaded('country')) {
+                $job->load('country');
+            }
+            if (!$job->relationLoaded('company')) {
+                $job->load('company');
+            }
+            if (!$job->relationLoaded('categories')) {
+                $job->load('categories');
+            }
+            
+            // Log relationship status for debugging
+            \Log::info('[JOB_ALERT_WHATSAPP] Job relationships status', [
+                'job_id' => $job->id,
+                'city_id' => $job->city_id,
+                'state_id' => $job->state_id,
+                'country_id' => $job->country_id,
+                'has_city' => $job->city ? 'yes' : 'no',
+                'has_state' => $job->state ? 'yes' : 'no',
+                'has_country' => $job->country ? 'yes' : 'no',
+                'city_name' => $job->city ? $job->city->name : 'null',
+                'state_name' => $job->state ? $job->state->name : 'null',
+                'country_name' => $job->country ? $job->country->name : 'null',
+            ]);
+            
             // Get WhatsApp API configuration
             $apiUrl = setting('whatsapp_api_url', env('WHATSAPP_API_URL', config('services.msgclub.url', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate')));
             $authKey = setting('whatsapp_api_key', env('WHATSAPP_API_KEY', config('services.msgclub.key', '4625770ffb62853af287cedec7f50b0')));
@@ -1335,7 +1375,7 @@ class SendJobAlertListener
             $buttonParameter = strtolower($jobTitle);
 
             // Build request body EXACTLY as Postman screenshot
-            // Structure: qrImageUrl, qrLinkUrl, and 'to' are INSIDE 'component', not at root level
+            // Structure: qrImageUrl, qrLinkUrl, and 'to' are at ROOT level (NOT inside component)
             $requestBody = [
                 'mobileNumbers' => $phone,
                 'senderId' => $senderId,
@@ -1363,11 +1403,11 @@ class SendJobAlertListener
                                 ]
                             ]
                         ]
-                    ],
-                    'qrImageUrl' => false,
-                    'qrLinkUrl' => false,
-                    'to' => $phone
-                ]
+                    ]
+                ],
+                'qrImageUrl' => false,
+                'qrLinkUrl' => false,
+                'to' => $phone
             ];
 
             Log::info('[JOB_ALERT_WHATSAPP] Sending WhatsApp notification', [

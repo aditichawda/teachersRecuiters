@@ -1045,6 +1045,85 @@
     opacity: 1 !important;
     visibility: visible !important;
 }
+
+/* ===== LOGOUT MODAL (Same as Employer Dashboard) ===== */
+.enl-logout-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+.enl-logout-modal-box {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04);
+    max-width: 400px;
+    width: 100%;
+    overflow: hidden;
+    text-align: center;
+}
+.enl-logout-modal-body { padding: 36px 28px 20px; }
+.enl-logout-modal-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #93c5fd;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.enl-logout-modal-icon { color: #fff; }
+.enl-logout-modal-title {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+}
+.enl-logout-modal-text {
+    margin: 0;
+    font-size: 15px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+.enl-logout-modal-actions {
+    padding: 0 32px 32px 32px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+}
+.enl-logout-btn-secondary {
+    background: transparent;
+    border: none;
+    color: #3b82f6;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 8px;
+    order: 1;
+}
+.enl-logout-btn-secondary:hover { color: #2563eb; background: #eff6ff; }
+.enl-logout-btn-primary {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 24px;
+    order: 2;
+}
+.enl-logout-btn-primary:hover { background: #2563eb; }
 </style>
 
 <script>
@@ -1334,12 +1413,19 @@ document.addEventListener('DOMContentLoaded', function() {
 // Logout Button Handler - Enhanced with better dialog system detection
 (function() {
     function waitForDialogSystem(callback, maxAttempts) {
-        maxAttempts = maxAttempts || 100; // 10 seconds max (100 * 100ms)
+        maxAttempts = maxAttempts || 150; // 15 seconds max (150 * 100ms)
         let attempts = 0;
         
         function check() {
             attempts++;
-            // Check if showDialogConfirm function exists (it should work even without jQuery check)
+            // Check if jQuery is loaded first (dialog system depends on it)
+            if (typeof jQuery === 'undefined' && attempts < 50) {
+                // Wait for jQuery to load first
+                setTimeout(check, 100);
+                return;
+            }
+            
+            // Check if showDialogConfirm function exists
             if (typeof window.showDialogConfirm === 'function') {
                 // Also ensure dialog container exists
                 if (typeof jQuery !== 'undefined' && jQuery('#dialog-alert-container').length === 0) {
@@ -1349,7 +1435,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     container.id = 'dialog-alert-container';
                     document.body.appendChild(container);
                 }
-                callback();
+                callback(false); // Pass false to indicate dialog system is ready
             } else if (attempts < maxAttempts) {
                 setTimeout(check, 100);
             } else {
@@ -1395,41 +1481,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.stopPropagation();
                 e.stopImmediatePropagation();
                 
-                // Wait for dialog system
-                waitForDialogSystem(function(useFallback) {
-                    if (useFallback) {
-                        // Use native confirm as fallback
-                        if (confirm('Do you want to logout?')) {
-                            allowSubmit = true;
-                            logoutForm.submit();
-                        }
-                    } else {
-                        // Use custom dialog
-                        try {
-                            window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
-                                if (confirmed) {
-                                    allowSubmit = true;
-                                    logoutForm.removeEventListener('submit', submitHandler, true);
-                                    logoutForm.submit();
-                                }
-                            }).catch(function(error) {
-                                console.error('Dialog error:', error);
-                                // Fallback to native confirm on error
-                                if (confirm('Do you want to logout?')) {
-                                    allowSubmit = true;
-                                    logoutForm.submit();
-                                }
-                            });
-                        } catch (error) {
-                            console.error('Dialog system error:', error);
-                            // Fallback to native confirm on error
-                            if (confirm('Do you want to logout?')) {
-                                allowSubmit = true;
-                                logoutForm.submit();
-                            }
-                        }
+                // Use showDialogConfirm if available, otherwise fallback to native confirm
+                function performLogout() {
+                    allowSubmit = true;
+                    logoutForm.removeEventListener('submit', submitHandler, true);
+                    logoutForm.submit();
+                }
+                
+                // Use the same logout modal as employer dashboard
+                if (typeof window.showNavbarLogoutModal === 'function') {
+                    window.showNavbarLogoutModal();
+                } else {
+                    // Fallback to native confirm if modal not ready
+                    if (confirm('Do you want to logout?')) {
+                        performLogout();
                     }
-                });
+                }
                 
                 return false;
             }, true); // Use capture phase
@@ -1457,4 +1524,66 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <div id="dialog-alert-container" style="display: none;"></div>
+
+<!-- Logout confirmation modal (Same as Employer Dashboard) -->
+<div id="navbar-logout-modal-overlay" class="enl-logout-overlay">
+    <div id="navbar-logout-modal-box" class="enl-logout-modal-box">
+        <div class="enl-logout-modal-body">
+            <div class="enl-logout-modal-icon-wrap">
+                <svg class="enl-logout-modal-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </div>
+            <h4 class="enl-logout-modal-title">Logout</h4>
+            <p class="enl-logout-modal-text">Are you sure you want to logout?</p>
+        </div>
+        <div class="enl-logout-modal-actions">
+            <button type="button" id="navbar-logout-modal-confirm" class="enl-logout-btn-secondary">Logout</button>
+            <button type="button" id="navbar-logout-modal-cancel" class="enl-logout-btn-primary">Cancel</button>
+        </div>
+    </div>
+</div>
+<script>
+// Navbar Logout Modal Handler (Same as Employer Dashboard)
+(function() {
+    function showNavbarLogoutModal() {
+        var overlay = document.getElementById('navbar-logout-modal-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+    }
+    function hideNavbarLogoutModal() {
+        var overlay = document.getElementById('navbar-logout-modal-overlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+    
+    // Initialize modal handlers when DOM is ready
+    function initNavbarLogoutModal() {
+        var cancelBtn = document.getElementById('navbar-logout-modal-cancel');
+        var confirmBtn = document.getElementById('navbar-logout-modal-confirm');
+        var overlay = document.getElementById('navbar-logout-modal-overlay');
+        var logoutForm = document.getElementById('logout-form');
+        
+        if (cancelBtn && confirmBtn && overlay && logoutForm) {
+            cancelBtn.onclick = hideNavbarLogoutModal;
+            confirmBtn.onclick = function() {
+                hideNavbarLogoutModal();
+                logoutForm.submit();
+            };
+            overlay.onclick = function(e) {
+                if (e.target === this) hideNavbarLogoutModal();
+            };
+            window.showNavbarLogoutModal = showNavbarLogoutModal;
+        } else {
+            setTimeout(initNavbarLogoutModal, 100);
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initNavbarLogoutModal, 100);
+        });
+    } else {
+        setTimeout(initNavbarLogoutModal, 100);
+    }
+})();
+</script>
 <?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/navbar.blade.php ENDPATH**/ ?>
