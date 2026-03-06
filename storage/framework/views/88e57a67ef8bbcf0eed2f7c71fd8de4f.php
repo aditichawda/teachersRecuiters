@@ -1,4 +1,4 @@
-@php
+<?php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
@@ -76,33 +76,37 @@
         // Silently fail if there's an error
         $institutionTypes = collect();
     }
-@endphp
+?>
 
-<header class="site-header {{ Theme::get('header_css_class') ?: 'header-style-3' }} mobile-sider-drawer-menu">
-    {!! Theme::partial('header-top') !!}
+<header class="site-header <?php echo e(Theme::get('header_css_class') ?: 'header-style-3'); ?> mobile-sider-drawer-menu">
+    <?php echo Theme::partial('header-top'); ?>
+
     <div class="sticky-header main-bar-wraper navbar-expand-lg">
         <div class="main-bar">
             <div class="container-fluid clearfix">
-               @if (Theme::getLogo())
+               <?php if(Theme::getLogo()): ?>
                     <div class="logo-header">
                         <div class="logo-header-inner logo-header-one">
-                            <a href="{{ BaseHelper::getHomepageUrl()  }}">
-                                @if (Theme::get('header_css_class') == 'header-style-light')
-                                    {!! Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo_light', 44) ?: Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo', 44) !!}
-                                    {!! Theme::getLogoImage(['class' => 'on-scroll-show'], 'logo_light', 44) !!}
-                                @else
-                                    {!! Theme::getLogoImage([], 'logo_light', 44) !!}
-                                @endif
+                            <a href="<?php echo e(BaseHelper::getHomepageUrl()); ?>">
+                                <?php if(Theme::get('header_css_class') == 'header-style-light'): ?>
+                                    <?php echo Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo_light', 44) ?: Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo', 44); ?>
+
+                                    <?php echo Theme::getLogoImage(['class' => 'on-scroll-show'], 'logo_light', 44); ?>
+
+                                <?php else: ?>
+                                    <?php echo Theme::getLogoImage([], 'logo_light', 44); ?>
+
+                                <?php endif; ?>
 
                             </a>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
 
                 <!-- NAV Toggle Button -->
                 <button id="mobile-side-drawer" data-target=".header-nav" data-toggle="collapse" type="button"
                     class="navbar-toggler collapsed">
-                    <span class="sr-only">{{ __('Toggle navigation') }}</span>
+                    <span class="sr-only"><?php echo e(__('Toggle navigation')); ?></span>
                     <span class="icon-bar icon-bar-first"></span>
                     <span class="icon-bar icon-bar-two"></span>
                     <span class="icon-bar icon-bar-three"></span>
@@ -111,100 +115,103 @@
                 <!-- MAIN Nav -->
                 <div class="nav-animation header-nav navbar-collapse collapse d-flex justify-content-end">
                     <ul class="nav navbar-nav">
-                        @php
+                        <?php
                             $isJobSeeker = auth('account')->check() && auth('account')->user()->isJobSeeker();
                             $isEmployer = auth('account')->check() && auth('account')->user()->isEmployer();
-                        @endphp
+                        ?>
 
                         <!-- Home Icon - Visible for All Users -->
                         <li class="nav-item">
-                            <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="{{ BaseHelper::getHomepageUrl() }}" title="{{ __('Home') }}">
+                            <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="<?php echo e(BaseHelper::getHomepageUrl()); ?>" title="<?php echo e(__('Home')); ?>">
                                 <i class="feather-home" style="font-size: 20px !important;"></i>
                             </a>
                         </li>
 
-                        @if($isJobSeeker)
+                        <?php if($isJobSeeker): ?>
                             <!-- Job Seeker Menu -->
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ JobBoardHelper::getJobsPageURL() }}">
-                                    <span>{{ __('Jobs') }}</span>
+                                <a class="nav-link" style="color: black;" href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>">
+                                    <span><?php echo e(__('Jobs')); ?></span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ JobBoardHelper::getJobcompaniesPageURL() }}">
-                                    <span>{{ __('Schools/Institutions') }}</span>
+                                <a class="nav-link" style="color: black;" href="<?php echo e(JobBoardHelper::getJobcompaniesPageURL()); ?>">
+                                    <span><?php echo e(__('Schools/Institutions')); ?></span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ route('public.faq') }}">
-                                    <span>{{ __('FAQ') }}</span>
+                                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.faq')); ?>">
+                                    <span><?php echo e(__('FAQ')); ?></span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ route('public.premium-service') }}">
-                                    <span>{{ __('Premium Service') }}</span>
+                                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.premium-service')); ?>">
+                                    <span><?php echo e(__('Premium Service')); ?></span>
                                 </a>
                             </li>
                             <li class="nav-item" style="position: relative;">
-                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
                                     <i class="feather-bell" style="font-size: 20px !important"></i>
-                                    @if($notificationBadge)
-                                        <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;">{{ $notificationBadge }}</span>
-                                    @endif
+                                    <?php if($notificationBadge): ?>
+                                        <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;"><?php echo e($notificationBadge); ?></span>
+                                    <?php endif; ?>
                                 </a>
                             </li>
-                        @elseif($isEmployer)
+                        <?php elseif($isEmployer): ?>
                             <!-- Employer Menu -->
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ route('public.faq') }}">
-                                    <span>{{ __('FAQ') }}</span>
+                                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.faq')); ?>">
+                                    <span><?php echo e(__('FAQ')); ?></span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" style="color: black;" href="{{ route('public.premium-service') }}">
-                                    <span>{{ __('Plans') }}</span>
+                                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.premium-service')); ?>">
+                                    <span><?php echo e(__('Plans')); ?></span>
                                 </a>
                             </li>
                             <li class="nav-item" style="position: relative;">
-                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
                                     <i class="feather-bell" style="font-size: 20px !important"></i>
-                                    @if($notificationBadge)
-                                        <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;">{{ $notificationBadge }}</span>
-                                    @endif
+                                    <?php if($notificationBadge): ?>
+                                        <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;"><?php echo e($notificationBadge); ?></span>
+                                    <?php endif; ?>
                                 </a>
                             </li>
-                        @else
+                        <?php else: ?>
                             <!-- Default Menu for Non-logged-in Users Only -->
                         <!-- <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="{{ url('/') }}">
-                                <span>{{ __('Home') }}</span>
+                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/')); ?>">
+                                <span><?php echo e(__('Home')); ?></span>
                             </a>
                         </li> -->
                         <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="{{ url('/how-it-works') }}">
-                                <span>{{ __('How it Works') }}</span>
+                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/how-it-works')); ?>">
+                                <span><?php echo e(__('How it Works')); ?></span>
                             </a>
                         </li>
 
                         <!-- Jobs Mega Menu Dropdown -->
                         <li class="nav-item dropdown mega-menu-dropdown" onmouseenter="showMegaMenu()" onmouseleave="hideMegaMenu()">
-                            <a class="nav-link dropdown-toggle" style="color: black;" href="{{ JobBoardHelper::getJobsPageURL() }}" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
-                                <span>{{ __('Jobs') }}</span>
+                            <a class="nav-link dropdown-toggle" style="color: black;" href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>" role="button" id="jobs-dropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="toggleMegaMenu(event)">
+                                <span><?php echo e(__('Jobs')); ?></span>
                             </a>
                             <div class="dropdown-menu mega-menu" id="jobs-mega-menu" aria-labelledby="jobs-dropdown">
                                 <div class="mega-menu-wrapper">
                                     <!-- Tabs Navigation -->
                                     <div class="mega-menu-tabs-wrapper">
                                         <button class="mega-menu-tab-btn active" onclick="switchMegaMenuTab('categories')" data-tab="categories">
-                                            {{ __('JOBS BY CATEGORIES') }}
+                                            <?php echo e(__('JOBS BY CATEGORIES')); ?>
+
                                             <i class="feather-chevron-down"></i>
                                         </button>
                                         <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('location')" data-tab="location">
-                                            {{ __('JOBS BY LOCATIONS') }}
+                                            <?php echo e(__('JOBS BY LOCATIONS')); ?>
+
                                             <i class="feather-chevron-down"></i>
                                         </button>
                                         <button class="mega-menu-tab-btn" onclick="switchMegaMenuTab('institution')" data-tab="institution">
-                                            {{ __('JOBS BY INSTITUTION TYPE') }}
+                                            <?php echo e(__('JOBS BY INSTITUTION TYPE')); ?>
+
                                             <i class="feather-chevron-down"></i>
                                         </button>
                                     </div>
@@ -214,84 +221,84 @@
                                         <!-- Jobs by Categories Content -->
                                         <div class="mega-menu-tab-content active" id="content-categories">
                                             <div class="mega-menu-grid">
-                                                @php
+                                                <?php
                                                     $categories = $featuredCategories->chunk(ceil($featuredCategories->count() / 2));
-                                                @endphp
-                                                @foreach($categories as $chunk)
+                                                ?>
+                                                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="mega-menu-column">
-                                                        @foreach($chunk as $category)
-                                                            <a href="{{ $category->url }}" class="mega-menu-grid-item">
+                                                        <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                            <a href="<?php echo e($category->url); ?>" class="mega-menu-grid-item">
                                                                 <div class="mega-menu-grid-icon">
-                                                                    @if($category->icon)
-                                                                        <i class="{{ $category->icon }}"></i>
-                                                                    @else
+                                                                    <?php if($category->icon): ?>
+                                                                        <i class="<?php echo e($category->icon); ?>"></i>
+                                                                    <?php else: ?>
                                                                         <i class="feather-briefcase"></i>
-                                                                    @endif
+                                                                    <?php endif; ?>
                                                                 </div>
                                                                 <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name">{{ $category->name }}</span>
-                                                                    <span class="mega-menu-grid-count">{{ number_format($category->active_jobs_count ?? 0) }} Jobs</span>
+                                                                    <span class="mega-menu-grid-name"><?php echo e($category->name); ?></span>
+                                                                    <span class="mega-menu-grid-count"><?php echo e(number_format($category->active_jobs_count ?? 0)); ?> Jobs</span>
                                                                 </div>
                                                             </a>
-                                                        @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                     </div>
-                                                @endforeach
-                                                @if($featuredCategories->isEmpty())
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                <?php if($featuredCategories->isEmpty()): ?>
                                                     <div class="mega-menu-empty">No categories available</div>
-                                                @endif
+                                                <?php endif; ?>
                                             </div>
                                         </div>
 
                                         <!-- Jobs by Location Content -->
                                         <div class="mega-menu-tab-content" id="content-location">
                                             <div class="mega-menu-grid">
-                                                @php
+                                                <?php
                                                     $locations = $topLocations->chunk(ceil($topLocations->count() / 2));
-                                                @endphp
-                                                @foreach($locations as $chunk)
+                                                ?>
+                                                <?php $__currentLoopData = $locations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="mega-menu-column">
-                                                        @foreach($chunk as $location)
-                                                            <a href="{{ route('public.jobs-by-city', $location->slug) }}" class="mega-menu-grid-item">
+                                                        <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $location): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                            <a href="<?php echo e(route('public.jobs-by-city', $location->slug)); ?>" class="mega-menu-grid-item">
                                                                 <div class="mega-menu-grid-icon">
                                                                     <i class="feather-map-pin"></i>
                                                                 </div>
                                                                 <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name">Teacher jobs in {{ $location->name }}</span>
+                                                                    <span class="mega-menu-grid-name">Teacher jobs in <?php echo e($location->name); ?></span>
                                                                 </div>
                                                             </a>
-                                                        @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                     </div>
-                                                @endforeach
-                                                @if($topLocations->isEmpty())
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                <?php if($topLocations->isEmpty()): ?>
                                                     <div class="mega-menu-empty">No locations available</div>
-                                                @endif
+                                                <?php endif; ?>
                                             </div>
                                         </div>
 
                                         <!-- Jobs by Institution Type Content -->
                                         <div class="mega-menu-tab-content" id="content-institution">
                                             <div class="mega-menu-grid">
-                                                @php
+                                                <?php
                                                     $institutions = $institutionTypes->chunk(ceil($institutionTypes->count() / 2));
-                                                @endphp
-                                                @foreach($institutions as $chunk)
+                                                ?>
+                                                <?php $__currentLoopData = $institutions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $chunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="mega-menu-column">
-                                                        @foreach($chunk as $institution)
-                                                            <a href="{{ $institution->url }}" class="mega-menu-grid-item">
+                                                        <?php $__currentLoopData = $chunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $institution): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                            <a href="<?php echo e($institution->url); ?>" class="mega-menu-grid-item">
                                                                 <div class="mega-menu-grid-icon">
                                                                     <i class="feather-building"></i>
                                                                 </div>
                                                                 <div class="mega-menu-grid-text">
-                                                                    <span class="mega-menu-grid-name">{{ $institution->name }}</span>
-                                                                    <span class="mega-menu-grid-count">{{ number_format($institution->active_jobs_count ?? 0) }} Jobs</span>
+                                                                    <span class="mega-menu-grid-name"><?php echo e($institution->name); ?></span>
+                                                                    <span class="mega-menu-grid-count"><?php echo e(number_format($institution->active_jobs_count ?? 0)); ?> Jobs</span>
                                                                 </div>
                                                             </a>
-                                                        @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                     </div>
-                                                @endforeach
-                                                @if($institutionTypes->isEmpty())
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                <?php if($institutionTypes->isEmpty()): ?>
                                                     <div class="mega-menu-empty">No institution types available</div>
-                                                @endif
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
@@ -301,23 +308,19 @@
 
                         <!-- For Schools / Start Hiring -->
                                      <li class="nav-item">
-                            <a class="nav-link" style="color: black;" href="{{ url('/start-hiring') }}">
-                                <span>{{ __('Start Hiring') }}</span>
+                            <a class="nav-link" style="color: black;" href="<?php echo e(url('/start-hiring')); ?>">
+                                <span><?php echo e(__('Start Hiring')); ?></span>
                             </a>
                         </li>
-                        @endif
+                        <?php endif; ?>
                     </ul>
                 </div>
 
-                @if (is_plugin_active('job-board'))
+                <?php if(is_plugin_active('job-board')): ?>
                     <!-- Header Right Section-->
                     <div class="extra-nav header-2-nav">
                         <div class="extra-cell">
-                            {{-- <div class="header-search">
-                                <a href="#search" class="header-search-icon">
-                                    <i class="feather-search"></i>
-                                </a>
-                            </div> --}}
+                            
                         </div>
                         <div class="extra-cell">
                             <style>
@@ -344,87 +347,89 @@
                             }
                             </style>
                             <div class="header-nav-btn-section">
-                                @if (auth('account')->check() && $account = auth('account')->user())
+                                <?php if(auth('account')->check() && $account = auth('account')->user()): ?>
                                     <div>
                                         <div class="twm-nav-btn-left dropdown">
                                             <a href="javascript:void(0)" class="dropdown-toggle" role="button" id="account-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}" width="35" height="35" class="rounded-circle me-1">
-                                                <span class="d-none d-md-inline-block fw-medium">{{ $account->first_name ?? $account->name }}</span>
+                                                <img src="<?php echo e($account->avatar_url); ?>" alt="<?php echo e($account->name); ?>" width="35" height="35" class="rounded-circle me-1">
+                                                <span class="d-none d-md-inline-block fw-medium"><?php echo e($account->first_name ?? $account->name); ?></span>
                                             </a>
                                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="account-dropdown">
-                                                @if ($account->isEmployer())
+                                                <?php if($account->isEmployer()): ?>
                                                     <li>
-                                                        <a class="dropdown-item" href="{{ route('public.account.dashboard') }}">
+                                                        <a class="dropdown-item" href="<?php echo e(route('public.account.dashboard')); ?>">
                                                             <i class="feather-home"></i>
-                                                            <span>{{ __('Dashboard') }}</span>
+                                                            <span><?php echo e(__('Dashboard')); ?></span>
                                                         </a>
                                                     </li>
-                                                @else
+                                                <?php else: ?>
                                                     <li>
-                                                        <a class="dropdown-item" href="{{ route('public.account.jobseeker.dashboard') }}">
+                                                        <a class="dropdown-item" href="<?php echo e(route('public.account.jobseeker.dashboard')); ?>">
                                                             <i class="feather-home"></i>
-                                                            <span>{{ __('Dashboard') }}</span>
+                                                            <span><?php echo e(__('Dashboard')); ?></span>
                                                         </a>
                                                     </li>
-                                                @endif
+                                                <?php endif; ?>
                                                 <li>
-                                                    @if ($account->isEmployer())
-                                                        <a class="dropdown-item" href="{{ route('public.account.employer.settings.edit') }}">
+                                                    <?php if($account->isEmployer()): ?>
+                                                        <a class="dropdown-item" href="<?php echo e(route('public.account.employer.settings.edit')); ?>">
                                                             <i class="feather-settings"></i>
-                                                            <span>{{ __('Account Settings') }}</span>
+                                                            <span><?php echo e(__('Account Settings')); ?></span>
                                                         </a>
-                                                    @else
-                                                        <a class="dropdown-item" href="{{ route('public.account.settings') }}">
+                                                    <?php else: ?>
+                                                        <a class="dropdown-item" href="<?php echo e(route('public.account.settings')); ?>">
                                                             <i class="feather-settings"></i>
-                                                            <span>{{ __('Account Settings') }}</span>
+                                                            <span><?php echo e(__('Account Settings')); ?></span>
                                                         </a>
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li>
-                                                    {!! Form::open([
+                                                    <?php echo Form::open([
                                                         'route' => 'public.account.logout',
-                                                        'id' => 'logout-form']) !!}
-                                                        <button type="button" class="dropdown-item" id="logout-btn" onclick="event.preventDefault(); if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form'); if (f) f.submit(); }">
+                                                        'id' => 'logout-form']); ?>
+
+                                                        <button type="button" class="dropdown-item" id="logout-btn">
                                                             <i class="feather-log-out"></i>
-                                                            <span>{{ __('Logout') }}</span>
+                                                            <span><?php echo e(__('Logout')); ?></span>
                                                         </button>
-                                                    {!! Form::close() !!}
+                                                    <?php echo Form::close(); ?>
+
                                                 </li>
                                             </ul>
                                         </div>
                                     </div>
-                                @else
+                                <?php else: ?>
                                     <div class="d-flex align-items-center gap-2">
                                         <!-- Login Button -->
                                         <div class="twm-nav-btn-left">
-                                            <a class="twm-nav-sign-up" href="{{ route('public.account.login') }}">
+                                            <a class="twm-nav-sign-up" href="<?php echo e(route('public.account.login')); ?>">
                                                 <i class="feather-log-in"></i>
-                                                <span>{{ __('Login') }}</span>
+                                                <span><?php echo e(__('Login')); ?></span>
                                             </a>
                                         </div>
                                         <!-- Post a Job Button -->
                                         <div class="twm-nav-btn-right">
-                                            <a href="{{ auth('account')->check() ? route('public.account.jobs.create') : route('public.account.register.employer') }}" class="twm-nav-post-a-job">
+                                            <a href="<?php echo e(auth('account')->check() ? route('public.account.jobs.create') : route('public.account.register.employer')); ?>" class="twm-nav-post-a-job">
                                                 <i class="feather-briefcase"></i>
-                                                <span>{{ __('Post a Job') }}</span>
+                                                <span><?php echo e(__('Post a Job')); ?></span>
                                             </a>
                                         </div>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
 
-        @if (is_plugin_active('job-board'))
+        <?php if(is_plugin_active('job-board')): ?>
             <!-- SITE Search -->
             <div id="search">
                 <span class="close"></span>
-                <form role="search" id="searchform" action="{{ JobBoardHelper::getJobsPageURL() }}" method="GET" class="radius-xl">
-                    <input class="form-control" value="{{ request()->input('q') }}" name="q" type="search" placeholder="{{ __('Type to search') }}" />
+                <form role="search" id="searchform" action="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>" method="GET" class="radius-xl">
+                    <input class="form-control" value="<?php echo e(request()->input('q')); ?>" name="q" type="search" placeholder="<?php echo e(__('Type to search')); ?>" />
                     <span class="input-group-append">
                         <button type="submit" class="search-btn">
                             <i class="fa fa-paper-plane"></i>
@@ -432,7 +437,7 @@
                     </span>
                 </form>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
     <div class="clearfix"></div>
 </header>
@@ -1517,7 +1522,7 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 
-{{-- Ensure dialog container exists --}}
+
 <div id="dialog-alert-container" style="display: none;"></div>
 
 <!-- Logout confirmation modal (Same as Employer Dashboard) -->
@@ -1581,3 +1586,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 })();
 </script>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/partials/navbar.blade.php ENDPATH**/ ?>

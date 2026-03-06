@@ -135,10 +135,10 @@
     color: #3b82f6;
 }
 
-/* Logout Icon Styling - Light Grey Circular Background with Black Icon */
+/* Logout Icon Styling - Light Blue Circular Background with Darker Blue Icon */
 .dialog-alert-box[data-type="logout"] .dialog-alert-icon-container .dialog-alert-icon,
 .dialog-alert-icon[data-type="logout"] {
-    background: #f3f4f6 !important;
+    background: #e0f2fe !important;
     border-radius: 50% !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     width: 56px !important;
@@ -148,8 +148,8 @@
 .dialog-alert-box[data-type="logout"] .dialog-alert-icon-container .dialog-alert-icon svg,
 .dialog-alert-box[data-type="logout"] .dialog-alert-icon svg,
 .dialog-alert-icon[data-type="logout"] svg {
-    color: #1a1a1a !important;
-    stroke: #1a1a1a !important;
+    color: #0284c7 !important;
+    stroke: #0284c7 !important;
     fill: none !important;
     stroke-width: 2 !important;
     width: 24px !important;
