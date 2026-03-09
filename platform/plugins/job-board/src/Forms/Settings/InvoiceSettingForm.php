@@ -40,6 +40,26 @@ class InvoiceSettingForm extends SettingForm
                 'label' => trans('plugins/job-board::settings.invoice.company_logo'),
                 'value' => setting('job_board_company_logo_for_invoicing') ?: theme_option('logo'),
             ])
+            ->add('job_board_company_gst_for_invoicing', 'text', [
+                'label' => trans('plugins/job-board::settings.invoice.company_gst'),
+                'value' => setting('job_board_company_gst_for_invoicing'),
+            ])
+            ->add('job_board_bank_account_number', 'text', [
+                'label' => trans('plugins/job-board::settings.invoice.bank_account_number'),
+                'value' => setting('job_board_bank_account_number', '3566282988'),
+            ])
+            ->add('job_board_bank_account_name', 'text', [
+                'label' => trans('plugins/job-board::settings.invoice.bank_account_name'),
+                'value' => setting('job_board_bank_account_name', 'Teachers Recruiter'),
+            ])
+            ->add('job_board_bank_ifsc', 'text', [
+                'label' => trans('plugins/job-board::settings.invoice.bank_ifsc'),
+                'value' => setting('job_board_bank_ifsc', 'CBIN0281043'),
+            ])
+            ->add('job_board_bank_name', 'text', [
+                'label' => trans('plugins/job-board::settings.invoice.bank_name'),
+                'value' => setting('job_board_bank_name', 'Central Bank of India'),
+            ])
             ->add('job_board_using_custom_font_for_invoice', 'onOffCheckbox', [
                 'label' => trans('plugins/job-board::settings.invoice.using_custom_font_for_invoice'),
                 'value' => setting('job_board_using_custom_font_for_invoice', false),

@@ -144,7 +144,14 @@
     }
 </style>
 
-<form id="jobPostForm" method="POST" action="{{ route('public.account.jobs.store') }}" enctype="multipart/form-data">
+@if(!$canPost)
+    <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4" role="alert">
+        <span>{{ trans('plugins/job-board::messages.insufficient_credits') }}</span>
+        <a href="{{ route('public.account.wallet') }}" class="btn btn-sm btn-warning">{{ trans('plugins/job-board::dashboard.wallet_buy_credits') }}</a>
+    </div>
+@endif
+
+<form id="jobPostForm" method="POST" action="{{ route('public.account.jobs.store') }}" enctype="multipart/form-data" data-can-post="{{ $canPost ? '1' : '0' }}">
     @csrf
 
     {{-- ====== SECTION 1: Company & Job Title ====== --}}
@@ -625,7 +632,7 @@
 
     {{-- ====== SUBMIT ====== --}}
     <div class="jp-card" style="text-align: center;">
-        <button type="submit" class="jp-submit-btn" id="submitJobBtn">
+        <button type="submit" class="jp-submit-btn" id="submitJobBtn" @disabled(!$canPost)>
             <i class="ti ti-check"></i> Post Job
         </button>
         <a href="{{ route('public.account.jobs.index') }}" class="btn btn-outline-secondary ms-3" style="border-radius:8px; padding:12px 30px;">
@@ -1080,6 +1087,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== FORM VALIDATION =====
     document.getElementById('jobPostForm').addEventListener('submit', function(e) {
+        if (this.dataset.canPost === '0') {
+            e.preventDefault();
+            alert('{{ addslashes(trans('plugins/job-board::messages.insufficient_credits')) }}');
+            return;
+        }
         let valid = true;
 
         // Company

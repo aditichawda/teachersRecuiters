@@ -32,10 +32,10 @@
                         @endif
 
                         @if($features = $package->formatted_features)
+                            <p class="small text-muted mb-1">{{ trans('plugins/job-board::dashboard.package_includes') }}:</p>
                             <ul class="box-package-features list-unstyled">
                                 @foreach($features as $feature)
                                     @continue(! $feature)
-
                                     <li class="item">
                                         <x-core::icon name="ti ti-check" class="text-success" />
                                         <span>{{ $feature }}</span>

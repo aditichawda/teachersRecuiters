@@ -41,9 +41,9 @@
     flex-wrap: wrap;
     margin: 0 -15px;
 }
-[class*="col-"] {
+/* [class*="col-"] {
     padding: 0 15px;
-}
+} */
 @media (max-width: 767px) {
     [class*="col-lg-"], [class*="col-md-"], [class*="col-xl-"] {
         flex: 0 0 100%;

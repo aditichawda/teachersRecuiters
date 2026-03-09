@@ -293,6 +293,7 @@
             <div class="cd-hero-info">
                 <h1><?php echo e($company->name); ?> <?php echo $company->badge; ?></h1>
                 <div class="cd-hero-meta">
+<<<<<<< HEAD
                     <?php if($company->address): ?>
                         <span><i class="feather-map-pin"></i> <?php echo e($company->address); ?></span>
                     <?php endif; ?>
@@ -305,6 +306,33 @@
                 <?php endif; ?>
                 <?php
                     $admissionOpen = $company->admission && $company->admission->status === 'published' && trim($company->admission->content ?? '') !== '' && $company->admission->admission_deadline && !\Carbon\Carbon::parse($company->admission->admission_deadline)->endOfDay()->isPast();
+=======
+                    <?php if($company->full_address): ?>
+                        <span><i class="feather-map-pin"></i> <?php echo e($company->full_address); ?></span>
+                    <?php elseif($company->address): ?>
+                        <span><i class="feather-map-pin"></i> <?php echo e($company->address); ?></span>
+                    <?php endif; ?>
+                    <?php if($company->website && !empty(trim($company->website))): ?>
+                        <a href="<?php echo e($company->website); ?>" target="_blank" rel="noopener"><i class="feather-globe"></i> <?php echo e(Str::limit($company->website, 50)); ?></a>
+                    <?php endif; ?>
+                </div>
+                <?php if($company->description && !empty(trim($company->description))): ?>
+                    <p class="cd-hero-desc"><?php echo e(Str::limit($company->description, 200)); ?></p>
+                <?php endif; ?>
+                <?php
+                    $admissionOpen = false;
+                    if ($company->admission && isset($company->admission->status) && $company->admission->status === 'published') {
+                        $content = $company->admission->content ?? '';
+                        $deadline = $company->admission->admission_deadline ?? null;
+                        if (trim($content) !== '' && $deadline) {
+                            try {
+                                $admissionOpen = !\Carbon\Carbon::parse($deadline)->endOfDay()->isPast();
+                            } catch (\Exception $e) {
+                                $admissionOpen = false;
+                            }
+                        }
+                    }
+>>>>>>> 7f84a288 (9 march update)
                 ?>
                 <?php if($admissionOpen): ?>
                 <div class="mt-3">
@@ -345,6 +373,300 @@
                 <?php endif; ?>
 
                 
+<<<<<<< HEAD
+=======
+                <div class="cd-content-card">
+                    <h4 class="cd-section-title"><?php echo e(__('Company Details')); ?></h4>
+                    
+                    
+                    <div class="company-details-list" style="display: grid; gap: 20px;">
+                        <?php if($company->institution_type): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Institution Type')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e(ucfirst(str_replace('-', ' ', $company->institution_type))); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->campus_type): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Campus Type')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <?php
+                                        $campusTypes = is_array($company->campus_type) 
+                                            ? $company->campus_type 
+                                            : (is_string($company->campus_type) ? json_decode($company->campus_type, true) : [$company->campus_type]);
+                                        $campusTypes = array_filter((array)$campusTypes);
+                                    ?>
+                                    <?php if(!empty($campusTypes)): ?>
+                                        <?php echo e(implode(', ', array_map('ucfirst', array_map('trim', $campusTypes)))); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e(ucfirst($company->campus_type)); ?>
+
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->email): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Email')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->email); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->phone): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Phone')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->phone); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->website): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Website')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <a href="<?php echo e($company->website); ?>" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;"><?php echo e($company->website); ?></a>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->year_founded): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Year Founded')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->year_founded); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->ceo): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('CEO')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->ceo); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->number_of_offices): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Number of Offices')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->number_of_offices); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->number_of_employees): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Number of Employees')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->number_of_employees); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->total_staff): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Total Staff')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->total_staff); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->annual_revenue): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Annual Revenue')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->annual_revenue); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->full_address): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Full Address')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->full_address); ?></span>
+                            </div>
+                        <?php elseif($company->address): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Address')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->address); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if(is_plugin_active('location')): ?>
+                            <?php if($company->city && $company->city->name): ?>
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('City')); ?>:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->city->name); ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <?php if($company->state && $company->state->name): ?>
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('State')); ?>:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->state->name); ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <?php if($company->country && $company->country->name): ?>
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Country')); ?>:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->country->name); ?></span>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
+                        <?php if($company->postal_code): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Postal Code')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->postal_code); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->tax_id): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Tax ID')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->tax_id); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->working_days): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Working Days')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <?php
+                                        $workingDays = is_array($company->working_days) 
+                                            ? $company->working_days 
+                                            : (is_string($company->working_days) ? json_decode($company->working_days, true) : [$company->working_days]);
+                                        $workingDays = array_filter((array)$workingDays);
+                                    ?>
+                                    <?php if(!empty($workingDays)): ?>
+                                        <?php echo e(implode(', ', array_map('ucfirst', array_map('trim', $workingDays)))); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e($company->working_days); ?>
+
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->working_hours_start && $company->working_hours_end): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Working Hours')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->working_hours_start); ?> - <?php echo e($company->working_hours_end); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->staff_facilities): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Staff Facilities')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <?php
+                                        $facilities = is_array($company->staff_facilities) 
+                                            ? $company->staff_facilities 
+                                            : (is_string($company->staff_facilities) ? json_decode($company->staff_facilities, true) : [$company->staff_facilities]);
+                                        $facilities = array_filter((array)$facilities);
+                                    ?>
+                                    <?php if(!empty($facilities)): ?>
+                                        <?php echo e(implode(', ', array_map('ucfirst', array_map('trim', $facilities)))); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e($company->staff_facilities); ?>
+
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->standard_level): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Standard Level')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <?php
+                                        $levels = is_array($company->standard_level) 
+                                            ? $company->standard_level 
+                                            : (is_string($company->standard_level) ? json_decode($company->standard_level, true) : [$company->standard_level]);
+                                        $levels = array_filter((array)$levels);
+                                    ?>
+                                    <?php if(!empty($levels)): ?>
+                                        <?php echo e(implode(', ', array_map('ucfirst', array_map('trim', $levels)))); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e($company->standard_level); ?>
+
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->awards): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Awards')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <?php
+                                        $awards = is_array($company->awards) 
+                                            ? $company->awards 
+                                            : (is_string($company->awards) ? json_decode($company->awards, true) : [$company->awards]);
+                                        $awards = array_filter((array)$awards);
+                                    ?>
+                                    <?php if(!empty($awards)): ?>
+                                        <?php echo e(implode(', ', array_map('trim', $awards))); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e($company->awards); ?>
+
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->affiliations): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Affiliations')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <?php
+                                        $affiliations = is_array($company->affiliations) 
+                                            ? $company->affiliations 
+                                            : (is_string($company->affiliations) ? json_decode($company->affiliations, true) : [$company->affiliations]);
+                                        $affiliations = array_filter((array)$affiliations);
+                                    ?>
+                                    <?php if(!empty($affiliations)): ?>
+                                        <?php echo e(implode(', ', array_map('trim', $affiliations))); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e($company->affiliations); ?>
+
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->youtube_video): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('YouTube Video')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <a href="<?php echo e($company->youtube_video); ?>" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;"><?php echo e(__('Watch Video')); ?></a>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->google): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Google')); ?>:</strong>
+                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                    <a href="<?php echo e($company->google); ?>" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;"><?php echo e(__('View on Google')); ?></a>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if($company->is_verified): ?>
+                            <div class="company-detail-item">
+                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Verification Status')); ?>:</strong>
+                                <span style="color: #16a34a; font-size: 15px; margin-left: 10px;">
+                                    <i class="fas fa-check-circle"></i> <?php echo e(__('Verified')); ?>
+
+                                    <?php if($company->verified_at): ?>
+                                        (<?php echo e(Theme::formatDate($company->verified_at)); ?>)
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                
+>>>>>>> 7f84a288 (9 march update)
                 <?php if($company->facebook || $company->twitter || $company->linkedin || $company->instagram): ?>
                     <div class="cd-content-card">
                         <h4 class="cd-section-title"><?php echo e(__('Social Links')); ?></h4>
@@ -366,12 +688,20 @@
                 <?php endif; ?>
 
                 
+<<<<<<< HEAD
                 <?php if($jobs->isNotEmpty()): ?>
+=======
+                <?php if(isset($jobs) && $jobs && method_exists($jobs, 'isNotEmpty') && $jobs->isNotEmpty()): ?>
+>>>>>>> 7f84a288 (9 march update)
                     <div class="cd-content-card">
                         <h4 class="cd-section-title"><?php echo e(__('Available Jobs')); ?> (<?php echo e($jobs->count()); ?>)</h4>
                         <div class="twm-jobs-list-wrap">
                             <ul style="list-style:none; padding:0; margin:0;">
+<<<<<<< HEAD
                                 <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.job-items'), ['job' => $jobs, 'layout'=> 'list'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+=======
+                                <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.job-items'), ['jobs' => $jobs, 'layout'=> 'list'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+>>>>>>> 7f84a288 (9 march update)
                             </ul>
                         </div>
                     </div>
@@ -386,12 +716,22 @@
                 <?php endif; ?>
 
                 
+<<<<<<< HEAD
                 <?php if($admissionOpen): ?>
+=======
+                <?php if(isset($admissionOpen) && $admissionOpen && $company->admission): ?>
+>>>>>>> 7f84a288 (9 march update)
                 <div class="cd-content-card">
                     <h4 class="cd-section-title"><?php echo e(__('Get Admission with :name', ['name' => $company->name])); ?></h4>
                     <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;"><?php echo e(__('About School / Institution')); ?></h5>
                     <p class="text-muted small mb-2" style="font-size: 0.85rem;"><?php echo e(__('Details added by the institution for admission.')); ?></p>
+<<<<<<< HEAD
                     <div class="mb-4" style="color: #475569; line-height: 1.6;"><?php echo BaseHelper::clean($company->admission->content); ?></div>
+=======
+                    <?php if($company->admission->content): ?>
+                        <div class="mb-4" style="color: #475569; line-height: 1.6;"><?php echo BaseHelper::clean($company->admission->content); ?></div>
+                    <?php endif; ?>
+>>>>>>> 7f84a288 (9 march update)
                     <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;"><?php echo e(__('Enquiry Form')); ?></h5>
                     <p class="text-muted small mb-3"><?php echo e(__('Submit your admission enquiry using the form below or use the button above.')); ?></p>
                     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
@@ -413,9 +753,17 @@
                 <?php endif; ?>
 
                 
+<<<<<<< HEAD
                 <div class="cd-sidebar-card">
                     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.company-map'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 </div>
+=======
+                <?php if($company->latitude && $company->longitude): ?>
+                    <div class="cd-sidebar-card">
+                        <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.company-map'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                    </div>
+                <?php endif; ?>
+>>>>>>> 7f84a288 (9 march update)
 
                 
                 <?php if(! JobBoardHelper::hideCompanyEmailEnabled()): ?>

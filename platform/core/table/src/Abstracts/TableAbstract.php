@@ -627,6 +627,8 @@ abstract class TableAbstract extends DataTable implements ExtensibleContract
     public function htmlInitCompleteFunction(): ?string
     {
         return '
+            var wrapper = $(this.table().container()).closest(".dataTables_wrapper");
+            if (wrapper.length) wrapper.find(".dataTables_processing").hide();
             Botble.initResources();
 
             document.dispatchEvent(new CustomEvent("core-table-init-completed", {
@@ -650,6 +652,7 @@ abstract class TableAbstract extends DataTable implements ExtensibleContract
     {
         return <<<'JS'
             var tableWrapper = $(this).closest(".dataTables_wrapper");
+            tableWrapper.find(".dataTables_processing").hide();
             var dtDataCount = this.api().data().count();
 
             if (dtDataCount === 0) {

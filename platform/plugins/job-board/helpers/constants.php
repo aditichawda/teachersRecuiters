@@ -68,6 +68,10 @@ if (! defined('PACKAGE_MODULE_SCREEN_NAME')) {
     define('PACKAGE_MODULE_SCREEN_NAME', 'package');
 }
 
+if (! defined('CREDIT_CONSUMPTION_MODULE_SCREEN_NAME')) {
+    define('CREDIT_CONSUMPTION_MODULE_SCREEN_NAME', 'credit-consumption');
+}
+
 if (! defined('COMPANY_MODULE_SCREEN_NAME')) {
     define('COMPANY_MODULE_SCREEN_NAME', 'company');
 }

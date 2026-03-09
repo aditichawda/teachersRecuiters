@@ -60,6 +60,7 @@ class Plugin extends PluginOperationAbstract
         Schema::dropIfExists('jb_jobs_tags');
         Schema::dropIfExists('jb_jobs_tags_translations');
 
+        Schema::dropIfExists('jb_credit_consumption');
         Schema::dropIfExists('jb_invoice_items');
         Schema::dropIfExists('jb_invoices');
 
@@ -85,9 +86,14 @@ class Plugin extends PluginOperationAbstract
             'job_board_add_space_between_price_and_currency',
             'job_board_company_address_for_invoicing',
             'job_board_company_email_for_invoicing',
+            'job_board_company_gst_for_invoicing',
             'job_board_company_logo_for_invoicing',
             'job_board_company_name_for_invoicing',
             'job_board_company_phone_for_invoicing',
+            'job_board_bank_account_number',
+            'job_board_bank_account_name',
+            'job_board_bank_ifsc',
+            'job_board_bank_name',
             'job_board_decimal_separator',
             'job_board_enable_auto_detect_visitor_currency',
             'job_board_enable_credits_system',

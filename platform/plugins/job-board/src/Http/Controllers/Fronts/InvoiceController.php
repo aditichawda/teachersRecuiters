@@ -11,6 +11,7 @@ use Botble\JobBoard\Tables\Fronts\InvoiceTable;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class InvoiceController extends BaseController
 {
@@ -56,16 +57,26 @@ class InvoiceController extends BaseController
         $invoice->loadMissing(['payment', 'items']);
         abort_unless($this->canViewInvoice($invoice), 404);
 
-        // Release session lock so PDF generation does not block rest of the site
         session()->save();
-
         set_time_limit(120);
 
-        if ($request->input('type') === 'print') {
-            return $invoiceHelper->streamInvoice($invoice);
+        try {
+            if ($request->input('type') === 'print') {
+                return $invoiceHelper->streamInvoice($invoice);
+            }
+            return $invoiceHelper->downloadInvoice($invoice);
+        } catch (\Throwable $e) {
+            Log::error('Invoice PDF generation failed', [
+                'invoice_id' => $invoice->id,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return redirect()
+                ->route('public.account.invoices.show', $invoice)
+                ->with('error_msg', __('Failed to generate PDF. Please try again or contact support.') . ' (' . $e->getMessage() . ')');
         }
-
-        return $invoiceHelper->downloadInvoice($invoice);
     }
 
     protected function canViewInvoice(Invoice $invoice): bool

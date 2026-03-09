@@ -9,7 +9,7 @@ Theme::registerRoutes(function (): void {
     Route::prefix('payment/razorpay')->name('payments.razorpay.')
         ->withoutMiddleware([VerifyCsrfToken::class])
         ->group(function (): void {
-            Route::post('callback/{token}', [RazorpayController::class, 'callback'])->name('callback');
+            Route::match(['get', 'post'], 'callback/{token}', [RazorpayController::class, 'callback'])->name('callback');
 
             Route::post('webhook', [RazorpayController::class, 'webhook'])
                 ->name('webhook');

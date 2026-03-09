@@ -299,6 +299,15 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'uses' => 'postAvatar',
                     ]);
 
+                    Route::get('billing-details', [
+                        'as' => 'billing-details',
+                        'uses' => 'getBillingDetails',
+                    ]);
+                    Route::post('billing-details', [
+                        'as' => 'billing-details.update',
+                        'uses' => 'updateBillingDetails',
+                    ]);
+
                     Route::delete('avatar', [
                         'as' => 'avatar.destroy',
                         'uses' => 'deleteAvatar',
@@ -496,6 +505,18 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 Route::get('wallet', [
                     'as' => 'wallet',
                     'uses' => 'WalletController@index',
+                ]);
+                Route::post('wallet/purchase-job-post-slot', [
+                    'as' => 'wallet.purchase_job_post_slot',
+                    'uses' => 'WalletController@purchaseJobPostSlot',
+                ]);
+                Route::post('wallet/purchase-profile-view-slot', [
+                    'as' => 'wallet.purchase_profile_view_slot',
+                    'uses' => 'WalletController@purchaseProfileViewSlot',
+                ]);
+                Route::post('wallet/purchase-feature', [
+                    'as' => 'wallet.purchase_feature',
+                    'uses' => 'WalletController@purchaseFeature',
                 ]);
             });
         });

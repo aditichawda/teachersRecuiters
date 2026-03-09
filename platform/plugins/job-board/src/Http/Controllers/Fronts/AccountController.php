@@ -604,4 +604,63 @@ class AccountController extends BaseController
             ->httpResponse()
             ->setData(compact('url'));
     }
+
+    /**
+     * Get billing details for modal (JSON).
+     * Data is stored in table: jb_accounts (same for both Employer and Job Seeker).
+     * Columns: full_name, address, phone, state_name, billing_gst_number.
+     */
+    public function getBillingDetails()
+    {
+        $account = auth('account')->user();
+        $name = $account->full_name ?: trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) ?: $account->name;
+        $mobile = $account->phone ? (($account->phone_country_code ?? '') . $account->phone) : '';
+
+        return $this->httpResponse()->setData([
+            'name' => $name ?? '',
+            'address' => $account->address ?? '',
+            'mobile' => $mobile,
+            'state' => $account->state_name ?? '',
+            'gst_number' => $account->billing_gst_number ?? '',
+        ]);
+    }
+
+    /**
+     * Update billing details from modal form.
+     * Saves to table: jb_accounts. Columns: full_name, address, phone, state_name, billing_gst_number.
+     * Used by both Employer wallet and Job Seeker wallet.
+     */
+    public function updateBillingDetails(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'mobile' => ['nullable', 'string', 'max:30'],
+            'state' => ['nullable', 'string', 'max:100'],
+            'gst_number' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $account = auth('account')->user();
+
+        $update = [];
+        if (array_key_exists('name', $validated)) {
+            $update['full_name'] = $validated['name'];
+        }
+        if (array_key_exists('address', $validated)) {
+            $update['address'] = $validated['address'];
+        }
+        if (array_key_exists('mobile', $validated)) {
+            $update['phone'] = $validated['mobile'];
+        }
+        if (array_key_exists('state', $validated)) {
+            $update['state_name'] = $validated['state'];
+        }
+        if (array_key_exists('gst_number', $validated)) {
+            $update['billing_gst_number'] = $validated['gst_number'];
+        }
+
+        $account->update($update);
+
+        return $this->httpResponse()->setMessage(trans('core/base::notices.update_success_message'));
+    }
 }

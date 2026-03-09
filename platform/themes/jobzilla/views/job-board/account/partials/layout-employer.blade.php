@@ -16,6 +16,15 @@
             $companySlugKey = null;
         }
     }
+    if ($company && !$companySlugKey && \Botble\Slug\Facades\SlugHelper::isSupportedModel(\Botble\JobBoard\Models\Company::class) && !empty($company->name)) {
+        try {
+            \Botble\Slug\Facades\SlugHelper::createSlug($company);
+            $company->load('slugable');
+            $companySlugKey = $company->slugable?->key ?? null;
+        } catch (\Throwable $e) {
+            $companySlugKey = null;
+        }
+    }
     $employerPublicProfileUrl = $companySlugKey ? route('public.company', $companySlugKey) : null;
     
     // Profile completion with per-field tracking
@@ -243,6 +252,22 @@
     font-size: 16px;
 }
 
+.emp-sidebar-nav li a.emp-nav-locked {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: #fff !important;
+}
+.emp-sidebar-nav li a.emp-nav-locked:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    color: #fff !important;
+}
+.emp-sidebar-nav li a .emp-nav-lock-icon {
+    width: 26px; height: 26px; min-width: 26px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.25); border-radius: 6px;
+    margin-right: 4px;
+}
+.emp-sidebar-nav li a .emp-nav-lock-icon i { font-size: 13px; }
+
 .emp-main-content {
     padding: 0 0 40px 0px;
 }
@@ -393,13 +418,40 @@
                     <!-- Navigation -->
                     @php
                         $currentUrl = url()->current();
+                        $packageContext = null;
+                        $canPost = false;
+                        try {
+                            $packageContext = \Botble\JobBoard\Supports\PackageContext::forAccount($account);
+                            $hasPurchasedPackage = false;
+                            if (JobBoardHelper::isEnabledCreditsSystem() && $account->isEmployer()) {
+                                $hasPurchasedPackage = \Botble\JobBoard\Models\Transaction::query()
+                                    ->where('account_id', $account->getKey())
+                                    ->where(function ($q): void {
+                                        $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                                    })
+                                    ->whereNotNull('payment_id')
+                                    ->whereNotNull('package_id')
+                                    ->exists();
+                            }
+                            $canPost = !JobBoardHelper::isEnabledCreditsSystem() || ($hasPurchasedPackage && $packageContext && $packageContext->canPostJob($account));
+                        } catch (\Throwable $e) {
+                            $canPost = false;
+                        }
+                        $jobPostCreditsRequired = 0;
+                        if ($account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
+                            try {
+                                $jobPostCreditsRequired = (int) \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING, 600);
+                            } catch (\Throwable $e) {
+                                $jobPostCreditsRequired = 600;
+                            }
+                        }
                     @endphp
                     <ul class="emp-sidebar-nav">
                         <li><a href="{{ route('public.account.dashboard') }}" @class(['active' => $currentUrl == route('public.account.dashboard')])><i class="fa fa-home"></i> {{ __('Dashboard') }}</a></li>
-                        <li><a href="{{ route('public.account.jobs.create') }}" @class(['active' => $currentUrl == route('public.account.jobs.create')])><i class="fa fa-plus-circle"></i> {{ __('Post Job') }}</a></li>
+                        <li><a href="{{ $canPost ? route('public.account.jobs.create') : route('public.account.wallet') }}" @class(['active' => $canPost && $currentUrl == route('public.account.jobs.create'), 'emp-nav-locked' => !$canPost, 'emp-limit-over-trigger' => !$canPost && $jobPostCreditsRequired > 0]) data-limit-over="job_post" data-credits-required="{{ $jobPostCreditsRequired }}" data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" @if(!$canPost) title="{{ trans('plugins/job-board::messages.insufficient_credits') }}" @endif>@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-plus-circle"></i>@endif {{ __('Post Job') }}</a></li>
                         <li><a href="{{ route('public.account.employer.settings.edit') }}" @class(['active' => $currentUrl == route('public.account.employer.settings.edit')])><i class="fa fa-building"></i> {{ __('Settings') }}</a></li>
                         <li><a href="{{ route('public.account.jobs.index') }}" @class(['active' => str_contains($currentUrl, '/jobs') && !str_contains($currentUrl, '/create')])><i class="fa fa-briefcase"></i> {{ __('Jobs') }}</a></li>
-                        <li><a href="{{ route('public.account.admission.edit') }}" @class(['active' => str_contains($currentUrl, 'admission')])><i class="fa fa-graduation-cap"></i> {{ __('Admission') }}</a></li>
+                        <li><a href="{{ $canPost ? route('public.account.admission.edit') : route('public.account.wallet') }}" @class(['active' => $canPost && str_contains($currentUrl, 'admission'), 'emp-nav-locked' => !$canPost]) @if(!$canPost) title="{{ trans('plugins/job-board::messages.insufficient_credits') }}" @endif>@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-graduation-cap"></i>@endif {{ __('Admission') }}</a></li>
                         <li><a href="{{ route('public.account.companies.index') }}" @class(['active' => str_contains($currentUrl, 'companies')])><i class="fa fa-university"></i> {{ __('Institution') }}</a></li>
                         @if(JobBoardHelper::isEnabledReview())
                         <li><a href="{{ route('public.account.reviews.index') }}" @class(['active' => str_contains($currentUrl, 'reviews')])><i class="fa fa-star"></i> {{ __('Reviews') }}</a></li>
@@ -411,7 +463,7 @@
                         @endif
                         <li><a href="{{ route('public.account.invoices.index') }}" @class(['active' => str_contains($currentUrl, 'invoices')])><i class="fa fa-file-invoice"></i> {{ __('Invoices') }}</a></li>
                         <li><a href="{{ route('public.account.security') }}" @class(['active' => $currentUrl == route('public.account.security')])><i class="fa fa-lock"></i> {{ __('Security') }}</a></li>
-                        <li><a href="{{ route('public.account.logout') }}" id="logout-link-emp" class="emp-logout-link"><i class="fa fa-sign-out-alt"></i> {{ __('Logout') }}</a></li>
+                        <li><a href="{{ route('public.account.logout') }}" id="logout-link-emp" class="emp-logout-link" onclick="event.preventDefault(); if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form-emp'); if (f) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> {{ __('Logout') }}</a></li>
                     </ul>
                 </div>
             </div>
@@ -526,6 +578,70 @@
         @endif
     </div>
 </div>
+
+@if($account->isEmployer() && $jobPostCreditsRequired > 0)
+<!-- Limit over popup: message + Use credits for 1 Job Post (no auto-deduct) -->
+<div id="empLimitOverModal" class="emp-pm-overlay" style="display:none;">
+    <div class="emp-pm-modal" style="max-width:420px;">
+        <button type="button" class="emp-pm-close" onclick="document.getElementById('empLimitOverModal').style.display='none'">&times;</button>
+        <h5 style="font-size:18px;font-weight:700;color:#333;margin-bottom:12px;">
+            <i class="fa fa-info-circle" style="color:#0073d1;margin-right:8px;"></i>
+            {{ trans('plugins/job-board::dashboard.limit_over_job_post_title') }}
+        </h5>
+        <p style="font-size:14px;color:#555;line-height:1.5;margin-bottom:20px;">
+            {{ trans('plugins/job-board::dashboard.limit_over_job_post_message', ['credits' => $jobPostCreditsRequired]) }}
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;">
+            <a href="{{ route('public.account.wallet') }}" id="empLimitOverWalletBtn" style="padding:10px 18px;border:1.5px solid #0073d1;border-radius:8px;background:#fff;color:#0073d1;font-size:14px;font-weight:600;text-decoration:none;">{{ trans('plugins/job-board::dashboard.limit_over_go_to_wallet_btn') }}</a>
+            <button type="button" id="empLimitOverUseCreditsBtn" style="padding:10px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,#0073d1,#005bb5);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">
+                {{ trans('plugins/job-board::dashboard.limit_over_use_credits_btn', ['credits' => $jobPostCreditsRequired]) }}
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    var trigger = document.querySelector('a.emp-limit-over-trigger[data-limit-over="job_post"]');
+    var modal = document.getElementById('empLimitOverModal');
+    var useCreditsBtn = document.getElementById('empLimitOverUseCreditsBtn');
+    if (!trigger || !modal || !useCreditsBtn) return;
+    trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        modal.style.display = 'flex';
+    });
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+    useCreditsBtn.addEventListener('click', function() {
+        var url = trigger.getAttribute('data-purchase-url');
+        var jobCreateUrl = trigger.getAttribute('data-job-create-url');
+        var csrf = document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        if (!url || !csrf) { alert('Something went wrong.'); return; }
+        useCreditsBtn.disabled = true;
+        useCreditsBtn.textContent = '...';
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success && jobCreateUrl) {
+                modal.style.display = 'none';
+                window.location.href = jobCreateUrl;
+            } else {
+                alert(data.message || '{{ trans('plugins/job-board::messages.insufficient_credits') }}');
+            }
+        })
+        .catch(function() { alert('Something went wrong.'); })
+        .finally(function() {
+            useCreditsBtn.disabled = false;
+            useCreditsBtn.textContent = '{{ trans('plugins/job-board::dashboard.limit_over_use_credits_btn', ['credits' => $jobPostCreditsRequired]) }}';
+        });
+    });
+})();
+</script>
+@endif
 
 <script>
 document.getElementById('empProfileModal').addEventListener('click', function(e) {

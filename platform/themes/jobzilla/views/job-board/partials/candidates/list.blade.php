@@ -1,5 +1,6 @@
 @php
     $candidates->loadMissing(['country', 'state', 'city', 'favoriteSkills', 'slugable', 'educations', 'experiences']);
+    $canViewCandidates = $canViewCandidates ?? true;
 @endphp
 
 @foreach ($candidates as $candidate)
@@ -176,11 +177,13 @@
         }
     @endphp
     
-    <div class="cand-card-list" style="position: relative; display: flex; align-items: flex-start; gap: 16px; padding: 16px; padding-left: 20px; border: 1px solid #e5e7eb; border-left: 4px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px; background: #fff; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#0073d1'; this.style.borderLeftColor='#0073d1';" onmouseout="this.style.borderColor='#e5e7eb'; this.style.borderLeftColor='#e5e7eb';">
+    <div class="cand-card-list {{ !$canViewCandidates ? 'candidate-card-blur-wrap' : '' }}" data-can-view="{{ $canViewCandidates ? '1' : '0' }}" style="position: relative; display: flex; align-items: flex-start; gap: 16px; padding: 16px; padding-left: 20px; border: 1px solid #e5e7eb; border-left: 4px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px; background: #fff; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#0073d1'; this.style.borderLeftColor='#0073d1';" onmouseout="this.style.borderColor='#e5e7eb'; this.style.borderLeftColor='#e5e7eb';">
         @if ($candidate->is_featured)
             <span class="cl-featured" style="position: absolute; top: 12px; right: 12px; background: #dc2626; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; z-index: 2; text-transform: uppercase; letter-spacing: 0.5px;">{{ __('Featured') }}</span>
         @endif
-        
+        @if(!$canViewCandidates)
+        <div class="candidate-card-blur-content" style="display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 0;">
+        @endif
         {{-- Candidate Photo --}}
         <div class="cl-avatar" style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
             <img src="{{ $candidate->avatar_url }}" alt="{{ $candidate->name }}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; object-position: center; border: 2px solid #e5e7eb; display: block;">
@@ -189,7 +192,7 @@
         {{-- Main Info Section --}}
         <div class="cl-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
             {{-- Name --}}
-            <a href="{{ $candidate->url }}" class="cl-name" style="font-size: 16px; font-weight: 600; color: #0073d1; text-decoration: none; display: block; margin-bottom: 4px;">{{ $candidate->name }}</a>
+            <a href="{{ $canViewCandidates ? $candidate->url : '#' }}" class="cl-name {{ !$canViewCandidates ? 'cl-name-locked' : '' }}" @if(!$canViewCandidates) data-bs-toggle="modal" data-bs-target="#candidateLockModal" onclick="event.preventDefault();" @endif style="font-size: 16px; font-weight: 600; color: #0073d1; text-decoration: none; display: block; margin-bottom: 4px;">{{ $candidate->name }}</a>
             
             {{-- Details List (Only Fields with Data) --}}
             <div class="cl-details-list" style="display: flex; flex-direction: column; gap: 6px; flex-wrap: wrap; max-height: 140px;">
@@ -258,11 +261,21 @@
                 @endif
             </div>
         </div>
+        @if(!$canViewCandidates)
+        </div>
+        <div class="candidate-card-blur-overlay" data-bs-toggle="modal" data-bs-target="#candidateLockModal" role="button" tabindex="0">
+            <p class="overlay-text">{{ trans('plugins/job-board::messages.buy_package_to_view_profiles') }}</p>
+        </div>
+        @endif
         
         {{-- View Profile Button --}}
         @if (! JobBoardHelper::isDisabledPublicProfile() && $candidate->url)
             <div class="cl-right" style="flex-shrink: 0; display: flex; align-items: flex-end; align-self: flex-end; margin-left: auto;">
-                <a href="{{ $candidate->url }}" class="cl-view-btn" style="background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%); color: #fff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.3s; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 115, 209, 0.25);">{{ __('View Profile') }} →</a>
+                @if($canViewCandidates)
+                    <a href="{{ $candidate->url }}" class="cl-view-btn" style="background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%); color: #fff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.3s; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 115, 209, 0.25);">{{ __('View Profile') }} →</a>
+                @else
+                    <a href="#" class="cl-view-btn cl-view-btn-locked" data-bs-toggle="modal" data-bs-target="#candidateLockModal" style="background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%); color: #fff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.3s; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 115, 209, 0.25);">{{ __('View Profile') }} →</a>
+                @endif
             </div>
         @endif
     </div>

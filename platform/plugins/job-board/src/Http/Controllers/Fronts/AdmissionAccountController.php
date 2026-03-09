@@ -5,8 +5,12 @@ namespace Botble\JobBoard\Http\Controllers\Fronts;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Models\AdmissionEnquiry;
+use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\CompanyAdmission;
+use Botble\JobBoard\Models\CreditConsumption;
+use Botble\JobBoard\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
@@ -24,6 +28,11 @@ class AdmissionAccountController extends BaseController
         $account = auth('account')->user();
         if (! $account->isEmployer()) {
             return redirect()->route('public.account.dashboard');
+        }
+
+        if (JobBoardHelper::isEnabledCreditsSystem() && ! $this->hasAdmissionEnquiryAccess($account)) {
+            return redirect()->route('public.account.wallet')
+                ->with('error_msg', trans('plugins/job-board::messages.insufficient_credits'));
         }
 
         $company = $account->companies()->first();
@@ -75,6 +84,11 @@ class AdmissionAccountController extends BaseController
             return redirect()->route('public.account.dashboard');
         }
 
+        if (JobBoardHelper::isEnabledCreditsSystem() && ! $this->hasAdmissionEnquiryAccess($account)) {
+            return redirect()->route('public.account.wallet')
+                ->with('error_msg', trans('plugins/job-board::messages.insufficient_credits'));
+        }
+
         $company = $account->companies()->first();
         if (! $company) {
             return redirect()->back()->with('error_msg', __('Invalid request.'));
@@ -119,6 +133,11 @@ class AdmissionAccountController extends BaseController
             return redirect()->route('public.account.dashboard');
         }
 
+        if (JobBoardHelper::isEnabledCreditsSystem() && ! $this->hasAdmissionEnquiryAccess($account)) {
+            return redirect()->route('public.account.wallet')
+                ->with('error_msg', trans('plugins/job-board::messages.insufficient_credits'));
+        }
+
         $companyIds = $this->getEmployerCompanyIds($account);
         if ($companyIds->isEmpty()) {
             return redirect()->route('public.account.dashboard');
@@ -150,5 +169,41 @@ class AdmissionAccountController extends BaseController
         }
 
         return $ids;
+    }
+
+    /**
+     * Admission access when credits system enabled: package valid and employer has used credits for Admission Enquiry Form (valid till package expiry).
+     */
+    private function hasAdmissionEnquiryAccess(Account $account): bool
+    {
+        $lastPurchase = Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->where(function ($q): void {
+                $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+            })
+            ->whereNotNull('payment_id')
+            ->whereNotNull('package_id')
+            ->with('package')
+            ->latest()
+            ->first();
+
+        if (! $lastPurchase || ! $lastPurchase->package || ! $lastPurchase->package->validity_days) {
+            return false;
+        }
+
+        $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+        if (Carbon::now()->gt($packageExpiryAt)) {
+            return false;
+        }
+
+        if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
+            return false;
+        }
+
+        return Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->where('type', Transaction::TYPE_DEBIT)
+            ->where('feature_key', CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
+            ->exists();
     }
 }
