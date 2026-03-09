@@ -101,6 +101,26 @@ return [
         'flag' => 'packages.destroy',
         'parent_flag' => 'packages.index',
     ],
+    [
+        'name' => 'Credit Consumption',
+        'flag' => 'credit-consumption.index',
+        'parent_flag' => 'plugins.job-board',
+    ],
+    [
+        'name' => 'Create',
+        'flag' => 'credit-consumption.create',
+        'parent_flag' => 'credit-consumption.index',
+    ],
+    [
+        'name' => 'Edit',
+        'flag' => 'credit-consumption.edit',
+        'parent_flag' => 'credit-consumption.index',
+    ],
+    [
+        'name' => 'Delete',
+        'flag' => 'credit-consumption.destroy',
+        'parent_flag' => 'credit-consumption.index',
+    ],
 
     [
         'name' => 'companies',

@@ -75,6 +75,8 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'type',
         'registration_type',
         'credits',
+        'job_post_credits_balance',
+        'profile_view_credits_balance',
         'profile_views',
         'unique_id',
         
@@ -117,6 +119,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'city_id',
         'country_name',
         'state_name',
+        'billing_gst_number',
         'city_name',
         'location_type',
         'ready_for_relocation',

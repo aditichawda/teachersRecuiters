@@ -44,7 +44,7 @@
         <x-core::card.header>
             <div class="w-100 justify-content-between d-flex flex-wrap align-items-center gap-1">
                 <div class="d-flex flex-wrap flex-md-nowrap align-items-center gap-1">
-                    @if ($table->hasBulkActions())
+                    <!-- @if ($table->hasBulkActions())
                         <x-core::dropdown
                             type="button"
                             :label="trans('core/table::table.bulk_actions')"
@@ -54,7 +54,7 @@
                                 {!! $action !!}
                             @endforeach
                         </x-core::dropdown>
-                    @endif
+                    @endif -->
 
                     @if ($table->hasFilters())
                         <x-core::button

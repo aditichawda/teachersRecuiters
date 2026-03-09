@@ -27,7 +27,10 @@ use Botble\JobBoard\Models\JobSkill;
 use Botble\JobBoard\Support\ScreeningQuestionPlaceholder;
 use Botble\JobBoard\Models\JobType;
 use Botble\JobBoard\Models\Tag;
+use Botble\JobBoard\Models\CreditConsumption;
+use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Repositories\Interfaces\JobInterface;
+use Botble\JobBoard\Supports\PackageContext;
 use Botble\Language\Facades\Language;
 use Botble\Location\Facades\Location;
 use Botble\Media\Facades\RvMedia;
@@ -41,6 +44,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
@@ -1331,7 +1335,55 @@ class PublicController extends BaseController
             abort(403, __('Only employers can view candidate profiles'));
         }
 
+        // Candidate profile: package gives N views (1 count per unique candidate); same employer same candidate = no extra count; over limit = allow with 1 credit
+        $profileLocked = false;
+        $alreadyViewedThisCandidate = false;
+        if ($account->isEmployer() && Schema::hasTable('jb_account_candidate_views')) {
+            $alreadyViewedThisCandidate = DB::table('jb_account_candidate_views')
+                ->where('account_id', $account->getKey())
+                ->where('candidate_id', $candidate->getKey())
+                ->exists();
+        }
+        if ($account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
+            $packageContext = PackageContext::forAccount($account);
+            $profileLocked = ! $packageContext->canViewProfile($account, $alreadyViewedThisCandidate);
+        }
+
         $candidate->setRelation('slugable', $slug);
+
+        // Record view when allowed (unique per candidate). If over package limit: use pre-paid profile view balance first, else deduct credits (25).
+        if (! $profileLocked && $account->isEmployer() && Schema::hasTable('jb_account_candidate_views')) {
+            $packageContext = PackageContext::forAccount($account);
+            $usesCredit = JobBoardHelper::isEnabledCreditsSystem() && ! $packageContext->profileViewUsesPackageSlot($alreadyViewedThisCandidate);
+            if ($usesCredit) {
+                $usedBalance = false;
+                if (Schema::hasColumn('jb_accounts', 'profile_view_credits_balance')) {
+                    $balance = (int) ($account->getAttribute('profile_view_credits_balance') ?? 0);
+                    if ($balance >= 1) {
+                        $account->profile_view_credits_balance = $balance - 1;
+                        $account->save();
+                        $usedBalance = true;
+                    }
+                }
+                if (! $usedBalance) {
+                    $profileViewCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_CANDIDATE_PROFILE_VIEW, 25);
+                    if ($account->credits >= $profileViewCredits) {
+                        CreditConsumption::deductForFeature(
+                            $account,
+                            CreditConsumption::FEATURE_CANDIDATE_PROFILE_VIEW,
+                            $profileViewCredits,
+                            trans('plugins/job-board::messages.credits_used_profile_view', ['candidate' => $candidate->name])
+                        );
+                    }
+                }
+            }
+            DB::table('jb_account_candidate_views')->insertOrIgnore([
+                'account_id' => $account->getKey(),
+                'candidate_id' => $candidate->getKey(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         SeoHelper::setTitle($candidate->name)->setDescription($candidate->description);
 
@@ -1372,7 +1424,7 @@ class PublicController extends BaseController
 
         return Theme::scope(
             'job-board.candidate',
-            compact('candidate', 'experiences', 'educations', 'account', 'canReview'),
+            compact('candidate', 'experiences', 'educations', 'account', 'canReview', 'profileLocked'),
             'plugins/job-board::themes.candidate'
         )->render();
     }

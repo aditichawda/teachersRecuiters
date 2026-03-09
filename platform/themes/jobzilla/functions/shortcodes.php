@@ -17,6 +17,7 @@ use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobType;
+use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Repositories\Interfaces\AccountInterface;
 use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
 use Botble\JobBoard\Repositories\Interfaces\CompanyInterface;
@@ -1484,7 +1485,22 @@ app()->booted(function (): void {
             $style = $shortcode->style;
             $layout = 'list'; // Always use list view
 
-            return Theme::partial('shortcodes.candidates.index', compact('shortcode', 'candidates', 'layout'));
+            // For blur + popup: employer must have bought a package to view candidate cards without lock
+            $canViewCandidates = true;
+            if (JobBoardHelper::isEnabledCreditsSystem()) {
+                $lastPurchase = Transaction::query()
+                    ->where('account_id', $account->getKey())
+                    ->where(function ($q): void {
+                        $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                    })
+                    ->whereNotNull('payment_id')
+                    ->whereNotNull('package_id')
+                    ->latest()
+                    ->exists();
+                $canViewCandidates = $lastPurchase;
+            }
+
+            return Theme::partial('shortcodes.candidates.index', compact('shortcode', 'candidates', 'layout', 'canViewCandidates'));
         });
 
         shortcode()->setAdminConfig('job-board-candidates', function ($attributes) {

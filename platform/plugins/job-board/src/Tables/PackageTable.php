@@ -10,6 +10,7 @@ use Botble\Table\BulkActions\DeleteBulkAction;
 use Botble\Table\BulkChanges\CreatedAtBulkChange;
 use Botble\Table\BulkChanges\NameBulkChange;
 use Botble\Table\BulkChanges\StatusBulkChange;
+use Botble\Table\Columns\Column;
 use Botble\Table\Columns\CreatedAtColumn;
 use Botble\Table\Columns\IdColumn;
 use Botble\Table\Columns\NameColumn;
@@ -38,6 +39,9 @@ class PackageTable extends TableAbstract
             ->select([
                 'id',
                 'name',
+                'package_type',
+                'number_of_listings',
+                'credits_included',
                 'created_at',
                 'status',
             ]);
@@ -50,6 +54,11 @@ class PackageTable extends TableAbstract
         return [
             IdColumn::make(),
             NameColumn::make()->route('packages.edit'),
+            Column::make('package_type')
+                ->title(trans('plugins/job-board::package.package_type'))
+                ->formatUsing(fn ($value) => $value === 'job-seeker' ? trans('plugins/job-board::package.package_type_job_seeker') : trans('plugins/job-board::package.package_type_employer')),
+            Column::make('number_of_listings')->title(trans('plugins/job-board::package.number_of_listings'))->width(100),
+            Column::make('credits_included')->title(trans('plugins/job-board::package.credits_included'))->width(100),
             StatusColumn::make(),
             CreatedAtColumn::make(),
         ];

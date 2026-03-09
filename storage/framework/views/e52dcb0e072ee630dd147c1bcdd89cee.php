@@ -774,9 +774,9 @@ document.addEventListener('DOMContentLoaded', function() {
         z-index: 10040 !important;
         background-color: rgba(0, 0, 0, 0.5) !important;
     }
-    .modal-backdrop.show {
+    /* .modal-backdrop.show {
         z-index: 10040 !important;
-    }
+    } */
     #applyNow .modal-dialog {
         z-index: 10050 !important;
         margin: 1.75rem auto;

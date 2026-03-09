@@ -290,11 +290,13 @@ class RazorpayController extends BaseController
         BaseHttpResponse $response,
         string $token,
         string $message
-    ): BaseHttpResponse {
-        return $response
-            ->setNextUrl(PaymentHelper::getCancelURL($token) . '&error_message=' . urlencode($message))
-            ->withInput()
-            ->setMessage($message);
+    ): \Illuminate\Http\Response {
+        $baseCancelUrl = PaymentHelper::getCancelURL($token);
+        $cancelUrl = $baseCancelUrl . (str_contains($baseCancelUrl, '?') ? '&' : '?') . 'error_message=' . urlencode($message);
+        return response()->view('plugins/razorpay::redirect', [
+            'redirectUrl' => $cancelUrl,
+            'message' => $message,
+        ], 200, ['Refresh' => '0;url=' . $cancelUrl]);
     }
 
     protected function processVerifiedPayment(
@@ -653,7 +655,7 @@ class RazorpayController extends BaseController
         string $token,
         Request $request,
         BaseHttpResponse $response
-    ): BaseHttpResponse {
+    ): \Symfony\Component\HttpFoundation\Response {
         PaymentHelper::log(
             RAZORPAY_PAYMENT_METHOD_NAME,
             ['callback_request' => $request->all()],
@@ -681,14 +683,18 @@ class RazorpayController extends BaseController
                 ['token' => $token]
             );
 
-            return $response
-                ->setNextUrl(PaymentHelper::getCancelURL($token))
-                ->withInput()
-                ->setMessage(trans('plugins/razorpay::razorpay.payment_failed'));
+            $cancelUrl = PaymentHelper::getCancelURL($token);
+            return response()->view('plugins/razorpay::redirect', [
+                'redirectUrl' => $cancelUrl,
+                'message' => trans('plugins/razorpay::razorpay.payment_failed'),
+            ], 200, ['Refresh' => '0;url=' . $cancelUrl]);
         }
 
         $razorpayOrderId = $request->input('razorpay_order_id');
         $signature = $request->input('razorpay_signature');
+
+        $redirectUrlSuccess = PaymentHelper::getRedirectURL($token) . '?charge_id=' . $chargeId;
+        $redirectUrlCancel = PaymentHelper::getCancelURL($token);
 
         try {
             if ($razorpayOrderId && $signature) {
@@ -738,12 +744,25 @@ class RazorpayController extends BaseController
             $fallbackResult = $this->attemptFallbackPaymentProcessing($chargeId);
 
             if ($fallbackResult) {
-                return $response
-                    ->setNextUrl(PaymentHelper::getRedirectURL($token) . '?charge_id=' . $chargeId)
-                    ->setMessage(trans('plugins/payment::payment.checkout_success'));
+                $redirectUrl = PaymentHelper::getRedirectURL($token) . '?charge_id=' . $chargeId;
+                return response()->view('plugins/razorpay::redirect', [
+                    'redirectUrl' => $redirectUrl,
+                    'message' => trans('plugins/payment::payment.checkout_success'),
+                ], 200, ['Refresh' => '0;url=' . $redirectUrl]);
             }
 
             return $this->handleErrorResponse($response, $token, trans('plugins/razorpay::razorpay.payment_failed'));
+        } catch (\Throwable $e) {
+            BaseHelper::logError($e);
+            PaymentHelper::log(
+                RAZORPAY_PAYMENT_METHOD_NAME,
+                ['error' => 'Callback processing exception'],
+                ['exception' => $e->getMessage(), 'charge_id' => $chargeId, 'token' => $token]
+            );
+            return response()->view('plugins/razorpay::redirect', [
+                'redirectUrl' => $redirectUrlSuccess,
+                'message' => trans('plugins/payment::payment.checkout_success'),
+            ], 200, ['Refresh' => '0;url=' . $redirectUrlSuccess]);
         }
 
         PaymentHelper::log(
@@ -756,49 +775,62 @@ class RazorpayController extends BaseController
             $orderId = [(int) $token];
         }
 
-        $customerInfo = $this->getCustomerInfoFromOrder($orderId);
+        try {
+            $customerInfo = $this->getCustomerInfoFromOrder($orderId);
 
-        $this->saveOrUpdatePayment(
-            $chargeId,
-            $orderId,
-            $amount,
-            $currency,
-            $status,
-            $customerInfo['customer_id'] ?? null,
-            $customerInfo['customer_type'] ?? null
-        );
+            $this->saveOrUpdatePayment(
+                $chargeId,
+                $orderId,
+                $amount,
+                $currency,
+                $status,
+                $customerInfo['customer_id'] ?? null,
+                $customerInfo['customer_type'] ?? null
+            );
 
-        if ($status == PaymentStatusEnum::COMPLETED) {
-            $this->finalizeOrders($orderId, $chargeId);
+            if ($status == PaymentStatusEnum::COMPLETED) {
+                $this->finalizeOrders($orderId, $chargeId);
+            }
+
+            $this->linkPaymentWithOrder($chargeId, $orderId, $status);
+
+            $customerId = $customerInfo['customer_id'] ?? null;
+            $customerType = $customerInfo['customer_type'] ?? null;
+            if ((! $customerId || ! $customerType) && auth('account')->check()) {
+                $customerId = auth('account')->id();
+                $customerType = \Botble\JobBoard\Models\Account::class;
+            }
+
+            if (defined('PAYMENT_ACTION_PAYMENT_PROCESSED')) {
+                do_action(PAYMENT_ACTION_PAYMENT_PROCESSED, [
+                'amount' => $amount,
+                'currency' => $currency,
+                'charge_id' => $chargeId,
+                'payment_channel' => RAZORPAY_PAYMENT_METHOD_NAME,
+                'status' => $status,
+                'order_id' => (array) $orderId,
+                'customer_id' => $customerId,
+                'customer_type' => $customerType,
+                'discount_amount' => Session::get('coupon_discount_amount', 0),
+                'coupon_code' => Session::get('applied_coupon_code'),
+            ]);
+            }
+        } catch (\Throwable $e) {
+            BaseHelper::logError($e);
+            PaymentHelper::log(
+                RAZORPAY_PAYMENT_METHOD_NAME,
+                ['error' => 'Callback save/order processing failed'],
+                ['exception' => $e->getMessage(), 'charge_id' => $chargeId]
+            );
         }
 
-        $this->linkPaymentWithOrder($chargeId, $orderId, $status);
-
-        $customerId = $customerInfo['customer_id'] ?? null;
-        $customerType = $customerInfo['customer_type'] ?? null;
-        if ((! $customerId || ! $customerType) && auth('account')->check()) {
-            $customerId = auth('account')->id();
-            $customerType = \Botble\JobBoard\Models\Account::class;
-        }
-
-        if (defined('PAYMENT_ACTION_PAYMENT_PROCESSED')) {
-            do_action(PAYMENT_ACTION_PAYMENT_PROCESSED, [
-            'amount' => $amount,
-            'currency' => $currency,
-            'charge_id' => $chargeId,
-            'payment_channel' => RAZORPAY_PAYMENT_METHOD_NAME,
-            'status' => $status,
-            'order_id' => (array) $orderId,
-            'customer_id' => $customerId,
-            'customer_type' => $customerType,
-            'discount_amount' => Session::get('coupon_discount_amount', 0),
-            'coupon_code' => Session::get('applied_coupon_code'),
+        // Always return HTML redirect so browser leaves Razorpay and goes to success URL (GET and POST).
+        return response()->view('plugins/razorpay::redirect', [
+            'redirectUrl' => $redirectUrlSuccess,
+            'message' => trans('plugins/payment::payment.checkout_success'),
+        ], 200, [
+            'Refresh' => '0;url=' . $redirectUrlSuccess,
         ]);
-        }
-
-        return $response
-            ->setNextUrl(PaymentHelper::getRedirectURL($token) . '?charge_id=' . $chargeId)
-            ->setMessage(trans('plugins/payment::payment.checkout_success'));
     }
 
     public function webhook(Request $request)

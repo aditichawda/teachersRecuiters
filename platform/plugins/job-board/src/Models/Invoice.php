@@ -21,6 +21,7 @@ class Invoice extends BaseModel
         'company_name',
         'company_logo',
         'tax_id',
+        'customer_gst_number',
         'customer_email',
         'customer_phone',
         'customer_address',

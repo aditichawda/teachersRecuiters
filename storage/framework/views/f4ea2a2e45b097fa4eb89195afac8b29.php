@@ -4,6 +4,7 @@
     Theme::set('withPageHeader', false);
     Theme::layout('default');
     $formatLabel = function($v) { return ucwords(str_replace('_', ' ', (string)$v)); };
+    $profileLocked = $profileLocked ?? false;
 ?>
 
 <?php echo Theme::partial('candidate-card-styles'); ?>
@@ -522,6 +523,49 @@
     .cdt-tabs-nav { flex-wrap: wrap; }
     .cdt-tab-btn { flex: 1; min-width: 120px; }
 }
+/* Locked profile: blur overlay on content */
+.cdt-profile-locked-wrap {
+    position: relative;
+}
+.cdt-profile-locked-wrap .cdt-profile-blur-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    padding: 24px;
+}
+.cdt-profile-blur-overlay .cdt-unlock-box {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 32px 40px;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .12);
+}
+.cdt-profile-blur-overlay .cdt-unlock-box .cdt-unlock-icon {
+    font-size: 48px;
+    color: #0066cc;
+    margin-bottom: 16px;
+}
+.cdt-profile-blur-overlay .cdt-unlock-box h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+}
+.cdt-profile-blur-overlay .cdt-unlock-box p {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
 </style>
 
 
@@ -549,10 +593,13 @@
             </div>
             <div class="cdt-hero-info">
                 <h1><?php echo e($candidate->name ?? 'Candidate'); ?></h1>
-                <?php if($candidate->description ?? null): ?>
+                <?php if(!$profileLocked && ($candidate->description ?? null)): ?>
                     <p class="cdt-hero-desc"><?php echo BaseHelper::clean($candidate->description); ?></p>
                 <?php endif; ?>
-                <?php if(JobBoardHelper::canViewCandidateInformation()): ?>
+                <?php if($profileLocked): ?>
+                    <p class="cdt-hero-desc text-muted"><?php echo e(trans('plugins/job-board::messages.candidate_profile_locked')); ?></p>
+                <?php endif; ?>
+                <?php if(!$profileLocked && JobBoardHelper::canViewCandidateInformation()): ?>
                     <div class="cdt-hero-actions">
                         <?php if($candidate->phone ?? null): ?>
                             <a href="tel:<?php echo e($candidate->phone); ?>" class="cdt-btn-primary"><i class="feather-phone"></i> <?php echo e(__('Hire Me Now')); ?></a>
@@ -567,6 +614,7 @@
     </div>
 </section>
 
+<?php if(!$profileLocked): ?>
 <?php
                     $posType = $candidate->position_type ?? null;
                     $positionTypeStr = is_array($posType) ? implode(', ', $posType) : (string)$posType;
@@ -846,6 +894,32 @@
         <?php endif; ?>
     </div>
 </div>
+<?php else: ?>
+
+<div class="cdt-main">
+    <div class="container">
+        <a href="javascript:history.back()" class="cdt-back-btn">← <?php echo e(__('Back')); ?></a>
+        <div class="cdt-profile-locked-wrap" style="position: relative;">
+            
+            <div style="filter: blur(14px); opacity: 0.5; pointer-events: none; user-select: none;">
+                <div class="cdt-card"><div class="cdt-section-title" style="border: none;">—</div><p class="cdt-empty-msg">—</p><p class="cdt-empty-msg">—</p><p class="cdt-empty-msg">—</p></div>
+                <div class="cdt-card"><div class="cdt-section-title" style="border: none;">—</div><p class="cdt-empty-msg">—</p><p class="cdt-empty-msg">—</p></div>
+                <div class="cdt-card"><div class="cdt-section-title" style="border: none;">—</div><p class="cdt-empty-msg">—</p></div>
+            </div>
+            <div class="cdt-profile-blur-overlay">
+                <div class="cdt-unlock-box">
+                    <div class="cdt-unlock-icon"><i class="ti ti-lock"></i></div>
+                    <h4><?php echo e(trans('plugins/job-board::messages.candidate_profile_locked')); ?></h4>
+                    <p><?php echo e(trans('plugins/job-board::messages.candidate_profile_view_limit_reached')); ?></p>
+                    <?php if(auth('account')->check()): ?>
+                        <a href="<?php echo e(route('public.account.wallet')); ?>" class="cdt-btn-primary"><i class="ti ti-wallet"></i> <?php echo e(trans('plugins/job-board::messages.candidate_profile_upgrade_cta')); ?></a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <script>
 (function() {

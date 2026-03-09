@@ -215,6 +215,10 @@ AdminHelper::registerRoutes(function (): void {
             Route::resource('', 'PackageController')->parameters(['' => 'package']);
         });
 
+        Route::group(['prefix' => 'credit-consumption', 'as' => 'credit-consumption.'], function (): void {
+            Route::resource('', 'CreditConsumptionController')->parameters(['' => 'creditConsumption']);
+        });
+
         Route::group(['prefix' => 'companies', 'as' => 'companies.'], function (): void {
             Route::resource('', 'CompanyController')->parameters(['' => 'company']);
 

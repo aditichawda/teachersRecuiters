@@ -947,7 +947,7 @@
                                 'containerId' => 'candidates-loader-overlay',
                                 'show' => false
                             ])
-                            @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'), ['layout' => 'list'])
+                            @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'), ['layout' => 'list', 'canViewCandidates' => $canViewCandidates ?? true])
                         </div>
                     </div>
                 </div>

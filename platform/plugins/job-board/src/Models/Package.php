@@ -25,6 +25,11 @@ class Package extends BaseModel
         'is_default',
         'features',
         'status',
+        'package_type',
+        'validity_days',
+        'credits_included',
+        'profile_views_allowed',
+        'worth',
     ];
 
     protected $casts = [
@@ -90,10 +95,20 @@ class Package extends BaseModel
     protected function formattedFeatures(): Attribute
     {
         return Attribute::get(
-            fn () => collect(is_array($this->features) ? $this->features : json_decode($this->features, true))
-                ->map(fn ($feature) => collect($feature)->pluck('value', 'key'))
-                ->pluck('text')
-                ->toArray()
+            function () {
+                $features = is_array($this->features) ? $this->features : (array) json_decode($this->features ?: '[]', true);
+                return collect($features)
+                    ->map(function ($feature) {
+                        if (! is_array($feature)) {
+                            return is_string($feature) ? $feature : null;
+                        }
+                        $keyValue = collect($feature)->pluck('value', 'key');
+                        return $keyValue->get('text') ?? $keyValue->first();
+                    })
+                    ->filter()
+                    ->values()
+                    ->toArray();
+            }
         );
     }
 }

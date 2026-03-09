@@ -10,8 +10,10 @@ use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Http\Resources\AccountResource;
 use Botble\JobBoard\Http\Resources\PackageResource;
 use Botble\JobBoard\Http\Resources\TransactionResource;
+use Botble\JobBoard\Enums\InvoiceStatusEnum;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\AccountActivityLog;
+use Botble\JobBoard\Models\Invoice;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\Package;
@@ -21,6 +23,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Botble\JobBoard\Services\CouponService;
 use Botble\Language\Facades\Language;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
+use Botble\Payment\Enums\PaymentMethodEnum;
 use Botble\Payment\Enums\PaymentStatusEnum;
 use Botble\Payment\Models\Payment;
 use Botble\PayPal\Services\Gateways\PayPalPaymentService;
@@ -128,9 +131,10 @@ class DashboardController extends BaseController
         Assets::usingVueJS();
 
         $account->load(['packages']);
-
+        $packageType = $account->isEmployer() ? 'employer' : 'job-seeker';
         $packages = Package::query()
             ->wherePublished()
+            ->where('package_type', $packageType)
             ->latest('order')
             ->withCount([
                 'accounts' => function ($query) use ($account): void {
@@ -170,8 +174,10 @@ class DashboardController extends BaseController
             ->with(['packages'])
             ->findOrFail(auth('account')->id());
 
+        $packageType = $account->isEmployer() ? 'employer' : 'job-seeker';
         $packages = Package::query()
             ->wherePublished()
+            ->where('package_type', $packageType)
             ->get();
 
         if (is_plugin_active('language') && is_plugin_active('language-advanced')) {
@@ -219,7 +225,13 @@ class DashboardController extends BaseController
 
         if ((float) $package->price) {
             session(['subscribed_packaged_id' => $package->id]);
-            $checkoutUrl = url('account/packages/' . $package->id . '/subscribe');
+            $checkoutUrl = route('public.account.package.subscribe.checkout', $package->id);
+
+            if ($request->expectsJson()) {
+                return $this->httpResponse()
+                    ->setNextUrl($checkoutUrl)
+                    ->setMessage(trans('plugins/job-board::package.subscribe_package', ['name' => $package->name]));
+            }
 
             return redirect()->to($checkoutUrl);
         }
@@ -280,7 +292,8 @@ class DashboardController extends BaseController
         }
 
         if (($payment && $payment->status == PaymentStatusEnum::COMPLETED) || $force) {
-            $account->credits += $package->number_of_listings;
+            $creditsToAdd = $package->credits_included ?? $package->number_of_listings;
+            $account->credits += $creditsToAdd;
             $account->save();
 
             $account->packages()->attach($package);
@@ -308,7 +321,7 @@ class DashboardController extends BaseController
             'account_type' => $accountType,
             'user_details' => $userDetails,
             'institution_name' => $institutionName,
-            'credits' => $package->number_of_listings,
+            'credits' => $creditsToAdd ?? ($package->credits_included ?? $package->number_of_listings),
             'payment_id' => $payment?->id,
             'package_id' => $package->getKey(),
             'package_name' => $package->name,
@@ -385,6 +398,7 @@ class DashboardController extends BaseController
         $package = $this->getPackageById($id);
 
         Session::put('cart_total', $package->price);
+        Session::put('subscribed_packaged_id', $package->id);
 
         SeoHelper::setTitle(trans('plugins/job-board::package.subscribe_package', ['name' => $package->name]));
 
@@ -399,7 +413,11 @@ class DashboardController extends BaseController
 
         $account = auth('account')->user();
 
-        return view(JobBoardHelper::viewPath('dashboard.checkout'), compact('package', 'account'));
+        $walletUrl = $account->isJobSeeker()
+            ? route('public.account.jobseeker.wallet')
+            : route('public.account.wallet');
+
+        return view(JobBoardHelper::viewPath('dashboard.checkout'), compact('package', 'account', 'walletUrl'));
     }
 
     public function getPackageSubscribeCallback(int $packageId, Request $request)
@@ -454,24 +472,30 @@ class DashboardController extends BaseController
                 ->setMessage($payPalService->getErrorMessage());
         }
 
-        $this->savePayment($package, $request->input('charge_id'));
+        $chargeId = $request->input('charge_id');
+        if ($chargeId) {
+            $payment = Payment::query()->where('charge_id', $chargeId)->first();
+            // Mark COMPLETED if still PENDING (COD, Razorpay, or any gateway that redirected here after success).
+            if ($payment && $payment->status != PaymentStatusEnum::COMPLETED) {
+                $payment->status = PaymentStatusEnum::COMPLETED;
+                $payment->save();
+                Invoice::query()
+                    ->where('reference_id', $package->getKey())
+                    ->where('reference_type', Package::class)
+                    ->update(['status' => InvoiceStatusEnum::COMPLETED]);
+            }
+        }
+        $this->savePayment($package, $chargeId);
 
         $walletUrl = auth('account')->user()->isJobSeeker()
             ? route('public.account.jobseeker.wallet')
             : route('public.account.wallet');
 
         if (! $request->has('success') || $request->input('success')) {
-            return $this
-                ->httpResponse()
-                ->setNextUrl($walletUrl)
-                ->setMessage(session()->get('success_msg') ?: trans('plugins/job-board::package.add_credit_success'));
+            return redirect()->to($walletUrl);
         }
 
-        return $this
-            ->httpResponse()
-            ->setError()
-            ->setNextUrl($walletUrl)
-            ->setMessage(trans('plugins/job-board::messages.payment_failed'));
+        return redirect()->to($walletUrl);
     }
 
     public function ajaxGetTransactions()

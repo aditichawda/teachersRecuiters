@@ -63,18 +63,9 @@ class ApplicantTable extends TableAbstract
             $jobs = Job::query()
                 ->whereIn('id', $jobIds)
                 ->orderBy('name')
-                ->get(['id', 'name']);
-            $counts = JobApplication::query()
-                ->whereHas('job.company.accounts', fn (Builder $q) => $q->where('account_id', $account->getKey()))
-                ->whereIn('job_id', $jobIds)
-                ->selectRaw('job_id, count(*) as total')
-                ->groupBy('job_id')
-                ->pluck('total', 'job_id');
-            foreach ($jobs as $job) {
-                $count = $counts->get($job->id, 0);
-                $label = $job->name . ' (ID: ' . $job->id . ')' . ($count > 0 ? ' - ' . $count . ' ' . trans('plugins/job-board::job-application.tables.applicants', ['count' => $count]) : '');
-                $jobChoices[$job->id] = $label;
-            }
+                ->pluck('name', 'id')
+                ->toArray();
+            $jobChoices = $jobChoices + $jobs;
         }
         return [
             'job_id' => [
