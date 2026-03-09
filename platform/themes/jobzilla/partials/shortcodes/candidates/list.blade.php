@@ -453,7 +453,7 @@
                 </div>
 
                 <div class="twm-candidates-list-wrap candidates-listing">
-                    @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'), ['layout' => $layout])
+                    @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'), ['layout' => $layout, 'canViewCandidates' => $canViewCandidates ?? true])
                 </div>
             </div>
         </div>

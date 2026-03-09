@@ -17,11 +17,11 @@
             <x-core::card.title>
                 {{ $job->name }}
             </x-core::card.title>
-            @if($hasLongDescription)
+            <!-- @if($hasLongDescription)
                 <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#jobDescriptionModal">
                     {{ __('View full description') }}
                 </button>
-            @endif
+            @endif -->
         </x-core::card.header>
         <x-core::card.body>
             <div class="row g-3">

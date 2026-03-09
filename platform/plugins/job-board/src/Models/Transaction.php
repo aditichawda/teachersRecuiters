@@ -20,6 +20,8 @@ class Transaction extends BaseModel
         'user_id',
         'account_id',
         'account_type',
+        'feature_key',
+        'meta',
         'user_details',
         'institution_name',
         'payment_id',
@@ -33,6 +35,7 @@ class Transaction extends BaseModel
     protected $casts = [
         'description' => SafeContent::class,
         'user_details' => 'array',
+        'meta' => 'array',
     ];
 
     public function account(): BelongsTo

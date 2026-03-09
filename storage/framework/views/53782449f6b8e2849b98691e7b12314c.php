@@ -128,9 +128,9 @@
     box-shadow: 0 8px 25px rgba(0,115,209,.08);
     transform: translateY(-2px);
 }
-.cand-card-list:hover::before {
+/* .cand-card-list:hover::before {
     background: #0073d1;
-}
+} */
 .cand-card-list .cl-avatar {
     width: 56px;
     height: 56px;

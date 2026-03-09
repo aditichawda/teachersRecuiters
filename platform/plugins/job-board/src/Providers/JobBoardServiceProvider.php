@@ -404,6 +404,17 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => route('packages.index'),
                     'permissions' => ['packages.index'],
                 ])
+                ->when(JobBoardHelper::isEnabledCreditsSystem(), static function (DashboardMenuSupport $dashboardMenu) {
+                    return $dashboardMenu->registerItem([
+                        'id' => 'cms-plugins-job-board-credit-consumption',
+                        'priority' => 4.5,
+                        'parent_id' => 'cms-plugins-job-board-main',
+                        'name' => 'plugins/job-board::credit-consumption.name',
+                        'icon' => 'ti ti-coin',
+                        'url' => route('credit-consumption.index'),
+                        'permissions' => ['credit-consumption.index'],
+                    ]);
+                })
                 ->registerItem([
                     'id' => 'cms-plugins-job-board-company',
                     'priority' => 5,

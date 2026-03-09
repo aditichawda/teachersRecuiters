@@ -29,14 +29,17 @@ use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\JobExperience;
 use Botble\JobBoard\Models\JobScreeningQuestion;
 use Botble\JobBoard\Models\ScreeningQuestion;
+use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Models\JobShift;
 use Botble\JobBoard\Models\JobSkill;
+use Illuminate\Support\Facades\Schema;
 use Botble\JobBoard\Models\JobType;
 use Botble\JobBoard\Models\Tag;
 use Botble\JobBoard\Repositories\Interfaces\AnalyticsInterface;
 use Botble\JobBoard\Services\JobDescriptionAiService;
 use Botble\JobBoard\Services\StoreTagService;
+use Botble\JobBoard\Supports\PackageContext;
 use Botble\JobBoard\Tables\Fronts\JobTable;
 use Botble\Media\Facades\RvMedia;
 use Botble\Optimize\Facades\OptimizerHelper;
@@ -46,7 +49,6 @@ use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 
 class AccountJobController extends BaseController
 {
@@ -90,6 +92,14 @@ class AccountJobController extends BaseController
                 ], 503);
             }
 
+            $account = auth('account')->user();
+            if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem() && ! $this->hasJobPostingAssistanceAccess($account)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Purchase Job Posting Assistance from Wallet to use AI description. Valid till your package expiry.'),
+                ], 403);
+            }
+
             $result = $aiService->generateFromTitle($title, '', $institutionTitle);
 
             if ($result['error'] !== null) {
@@ -126,9 +136,14 @@ class AccountJobController extends BaseController
          */
         $account = auth('account')->user();
 
-        // Allow rendering the job post form even if the account cannot post (no credits).
-        // The actual store() method will still prevent saving if posting is not allowed.
-        $canPost = $account->canPost();
+        // Lock job post: no package ever purchased OR (package period invalid and no credits) OR no slot and no credits
+        $packageContext = PackageContext::forAccount($account);
+        $hasPurchasedPackage = $this->hasPurchasedPackage($account);
+        $canPost = $hasPurchasedPackage && $packageContext->canPostJob($account);
+        if (JobBoardHelper::isEnabledCreditsSystem() && (! $hasPurchasedPackage || ! $packageContext->canPostJob($account))) {
+            return redirect()->route('public.account.wallet')
+                ->with('error_msg', trans('plugins/job-board::messages.use_credits_for_job_post'));
+        }
 
         if (JobBoardHelper::employerManageCompanyInfo() && ! $account->companies()->exists()) {
             // Auto-create company from registration data so "Are you hiring" dropdown shows school
@@ -260,11 +275,33 @@ class AccountJobController extends BaseController
          */
         $account = auth('account')->user();
 
-        // Previously posting was blocked here when the account had no credits.
-        // To allow saving jobs even when credits == 0, skip the early return.
-        // Keep the $canPost flag for downstream logic/UI if needed.
-        $canPost = $account->canPost();
+        $packageContext = PackageContext::forAccount($account);
+        $jobPostCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_JOB_POSTING, 600);
+        if (JobBoardHelper::isEnabledCreditsSystem()) {
+            $hasPurchasedPackage = $this->hasPurchasedPackage($account);
+            if (! $hasPurchasedPackage || ! $packageContext->canPostJob($account)) {
+                if ($request->expectsJson()) {
+                    return $this->httpResponse()
+                        ->setError()
+                        ->setMessage(trans('plugins/job-board::messages.insufficient_credits'))
+                        ->setNextUrl(route('public.account.wallet'));
+                }
+                return redirect()->route('public.account.wallet')
+                    ->with('error_msg', trans('plugins/job-board::messages.insufficient_credits'));
+            }
+            if (! $packageContext->jobPostUsesPackageSlot() && $account->credits < $jobPostCreditsRequired) {
+                if ($request->expectsJson()) {
+                    return $this->httpResponse()
+                        ->setError()
+                        ->setMessage(trans('plugins/job-board::messages.insufficient_credits'))
+                        ->setNextUrl(route('public.account.wallet'));
+                }
+                return redirect()->route('public.account.wallet')
+                    ->with('error_msg', trans('plugins/job-board::messages.insufficient_credits'));
+            }
+        }
 
+        $canPost = $packageContext->canPostJob($account);
         $this->processRequestData($request);
 
         $request->except([
@@ -286,6 +323,7 @@ class AccountJobController extends BaseController
             }
         }
 
+       
         $request->merge([
             'expire_date' => Carbon::now()->addDays(JobBoardHelper::jobExpiredDays()),
             'author_id' => $account->getAuthIdentifier(),
@@ -305,21 +343,6 @@ class AccountJobController extends BaseController
         }
         if (! $request->has('is_remote')) {
             $request->merge(['is_remote' => 0]);
-        }
-        // Handle enable_whatsapp_notifications checkbox
-        // If checkbox is checked, value will be "1", if unchecked, it won't be in request
-        // Default to 0 if not present, but if additional phones are added, auto-enable
-        if (! $request->has('enable_whatsapp_notifications')) {
-            // If additional phones are provided, auto-enable WhatsApp notifications
-            if ($request->has('apply_internal_phones') && !empty(array_filter($request->input('apply_internal_phones', [])))) {
-                $request->merge(['enable_whatsapp_notifications' => 1]);
-                \Log::info('[JOB_POST] Auto-enabling WhatsApp notifications because additional phones are provided');
-            } else {
-                $request->merge(['enable_whatsapp_notifications' => 0]);
-            }
-        } else {
-            // Checkbox was checked, ensure value is 1
-            $request->merge(['enable_whatsapp_notifications' => 1]);
         }
 
         // Ensure job can be stored: set defaults for optional fields if empty
@@ -385,7 +408,7 @@ class AccountJobController extends BaseController
         $job->jobTypes()->sync($request->input('jobTypes', []));
         $job->categories()->sync($request->input('categories', []));
         
-        // Job alert notifications ENABLED - sending email and WhatsApp to matching candidates
+       // Job alert notifications ENABLED - sending email and WhatsApp to matching candidates
         // Trigger event after all relationships are synced
         // Trigger if job is published (even if moderation is pending - approval might be disabled)
         if ($job->status == JobStatusEnum::PUBLISHED) {
@@ -439,15 +462,14 @@ class AccountJobController extends BaseController
             'reference_url' => route('public.account.jobs.edit', $job->id),
         ]);
 
-        if (JobBoardHelper::isEnabledCreditsSystem() && $account->credits > 0) {
-            $account->credits--;
-            $account->save();
-            Transaction::query()->create([
-                'account_id' => $account->getKey(),
-                'credits' => 1,
-                'type' => Transaction::TYPE_DEBIT,
-                'description' => trans('plugins/job-board::messages.credits_used_job_post', ['job' => $job->name]),
-            ]);
+        // Use 1 pre-paid job post slot when not using package slot (user bought slot via wallet popup; no auto-deduct here)
+        $packageContext = PackageContext::forAccount($account);
+        if (JobBoardHelper::isEnabledCreditsSystem() && ! $packageContext->jobPostUsesPackageSlot() && Schema::hasColumn('jb_accounts', 'job_post_credits_balance')) {
+            $balance = (int) ($account->getAttribute('job_post_credits_balance') ?? 0);
+            if ($balance >= 1) {
+                $account->job_post_credits_balance = $balance - 1;
+                $account->save();
+            }
         }
 
         // Check if job is published (use the model instance, not query again)
@@ -530,7 +552,8 @@ class AccountJobController extends BaseController
 
         // Use same form as create (theme) for consistency - same fields, same names
         $account = auth('account')->user();
-        $canPost = $account->canPost();
+        $hasPurchasedPackage = $this->hasPurchasedPackage($account);
+        $canPost = $hasPurchasedPackage && $account->canPost();
         $companies = $account->companies->pluck('name', 'id')->all();
         $companyInstitutionTypes = $account->companies->pluck('institution_type', 'id')->all();
 
@@ -709,36 +732,52 @@ class AccountJobController extends BaseController
             'never_expired',
             'expire_date',
         ]);
+ // Remove fields if columns don't exist in database yet (same as store method)
+ if ($request->has('apply_internal_phones')) {
+    if (!Schema::hasColumn('jb_jobs', 'apply_internal_phones')) {
+        $request->request->remove('apply_internal_phones');
+    }
+}
+if ($request->has('enable_whatsapp_notifications')) {
+    if (!Schema::hasColumn('jb_jobs', 'enable_whatsapp_notifications')) {
+        $request->request->remove('enable_whatsapp_notifications');
+    }
+}
 
-        // Remove fields if columns don't exist in database yet (same as store method)
-        if ($request->has('apply_internal_phones')) {
-            if (!Schema::hasColumn('jb_jobs', 'apply_internal_phones')) {
-                $request->request->remove('apply_internal_phones');
-            }
-        }
-        if ($request->has('enable_whatsapp_notifications')) {
-            if (!Schema::hasColumn('jb_jobs', 'enable_whatsapp_notifications')) {
-                $request->request->remove('enable_whatsapp_notifications');
-            }
-        }
 
         if (! $request->has('employer_colleagues')) {
             $request->merge(['employer_colleagues' => []]);
         }
+// Remove fields if columns don't exist in database yet (same as store method)
+if ($request->has('apply_internal_phones')) {
+    if (!Schema::hasColumn('jb_jobs', 'apply_internal_phones')) {
+        $request->request->remove('apply_internal_phones');
+    }
+}
+if ($request->has('enable_whatsapp_notifications')) {
+    if (!Schema::hasColumn('jb_jobs', 'enable_whatsapp_notifications')) {
+        $request->request->remove('enable_whatsapp_notifications');
+    }
+}
 
-        // Handle enable_whatsapp_notifications checkbox (same logic as store)
-        if (! $request->has('enable_whatsapp_notifications')) {
-            // If additional phones are provided, auto-enable WhatsApp notifications
-            if ($request->has('apply_internal_phones') && !empty(array_filter($request->input('apply_internal_phones', [])))) {
-                $request->merge(['enable_whatsapp_notifications' => 1]);
-                \Log::info('[JOB_UPDATE] Auto-enabling WhatsApp notifications because additional phones are provided');
-            } else {
-                $request->merge(['enable_whatsapp_notifications' => 0]);
-            }
-        } else {
-            // Checkbox was checked, ensure value is 1
-            $request->merge(['enable_whatsapp_notifications' => 1]);
-        }
+if (! $request->has('employer_colleagues')) {
+    $request->merge(['employer_colleagues' => []]);
+}
+
+// Handle enable_whatsapp_notifications checkbox (same logic as store)
+if (! $request->has('enable_whatsapp_notifications')) {
+    // If additional phones are provided, auto-enable WhatsApp notifications
+    if ($request->has('apply_internal_phones') && !empty(array_filter($request->input('apply_internal_phones', [])))) {
+        $request->merge(['enable_whatsapp_notifications' => 1]);
+        \Log::info('[JOB_UPDATE] Auto-enabling WhatsApp notifications because additional phones are provided');
+    } else {
+        $request->merge(['enable_whatsapp_notifications' => 0]);
+    }
+} else {
+    // Checkbox was checked, ensure value is 1
+    $request->merge(['enable_whatsapp_notifications' => 1]);
+}
+
 
         if ($job->status != JobStatusEnum::PUBLISHED && $request->input('status') == JobStatusEnum::PUBLISHED) {
             $job->loadMissing('author');
@@ -819,50 +858,51 @@ class AccountJobController extends BaseController
         if ($request->input('apply_type') !== 'internal') {
             $request->merge(['apply_internal_emails' => null]);
             $request->merge(['apply_internal_phones' => null]);
+
         } else {
             $emails = array_values(array_filter(array_map('trim', (array) $request->input('apply_internal_emails', []))));
             $request->merge(['apply_internal_emails' => array_slice($emails, 0, 3) ?: null]);
-            
-            // Process apply_internal_phones - format with country code and store
-            $phones = array_filter(array_map('trim', (array) $request->input('apply_internal_phones', [])));
-            $formattedPhones = [];
-            
-            foreach ($phones as $phone) {
-                if (empty($phone)) {
-                    continue;
-                }
-                
-                // Format phone with country code (same logic as registration)
-                // If phone already has +, clean it
-                if (strpos($phone, '+') === 0) {
-                    // Phone already has country code, just clean spaces
-                    $formattedPhone = '+' . preg_replace('/[^0-9]/', '', $phone);
-                } elseif (preg_match('/^91/', preg_replace('/[^0-9]/', '', $phone))) {
-                    // Phone starts with 91 (country code), add +
-                    $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
-                    $formattedPhone = '+' . $cleanPhone;
-                } elseif (strlen(preg_replace('/[^0-9]/', '', $phone)) == 10) {
-                    // 10 digit phone, add 91 country code
-                    $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
-                    $formattedPhone = '+91' . $cleanPhone;
-                } else {
-                    // Keep as is if format is unclear
-                    $formattedPhone = $phone;
-                }
-                
-                $formattedPhones[] = $formattedPhone;
+        // Process apply_internal_phones - format with country code and store
+        $phones = array_filter(array_map('trim', (array) $request->input('apply_internal_phones', [])));
+        $formattedPhones = [];
+        
+        foreach ($phones as $phone) {
+            if (empty($phone)) {
+                continue;
             }
             
-            // Store formatted phones (max 3)
-            $request->merge(['apply_internal_phones' => array_slice($formattedPhones, 0, 3) ?: null]);
+            // Format phone with country code (same logic as registration)
+            // If phone already has +, clean it
+            if (strpos($phone, '+') === 0) {
+                // Phone already has country code, just clean spaces
+                $formattedPhone = '+' . preg_replace('/[^0-9]/', '', $phone);
+            } elseif (preg_match('/^91/', preg_replace('/[^0-9]/', '', $phone))) {
+                // Phone starts with 91 (country code), add +
+                $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+                $formattedPhone = '+' . $cleanPhone;
+            } elseif (strlen(preg_replace('/[^0-9]/', '', $phone)) == 10) {
+                // 10 digit phone, add 91 country code
+                $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+                $formattedPhone = '+91' . $cleanPhone;
+            } else {
+                // Keep as is if format is unclear
+                $formattedPhone = $phone;
+            }
             
-            \Log::info('[JOB_POST] Processed apply_internal_phones', [
-                'original_phones' => $phones,
-                'formatted_phones' => $formattedPhones,
-                'stored_phones' => array_slice($formattedPhones, 0, 3) ?: null,
-            ]);
+            $formattedPhones[] = $formattedPhone;
         }
-
+        
+        // Store formatted phones (max 3)
+        $request->merge(['apply_internal_phones' => array_slice($formattedPhones, 0, 3) ?: null]);
+        
+        \Log::info('[JOB_POST] Processed apply_internal_phones', [
+            'original_phones' => $phones,
+            'formatted_phones' => $formattedPhones,
+            'stored_phones' => array_slice($formattedPhones, 0, 3) ?: null,
+        ]);
+    }
+        
+        
         $except = [
             'is_featured',
         ];
@@ -1137,5 +1177,56 @@ class AccountJobController extends BaseController
     public function getAllTags(): array
     {
         return Tag::query()->pluck('name')->all();
+    }
+
+    /**
+     * Employer has ever purchased a package (transaction with package_id). Used to lock Post Job when no package bought.
+     */
+    /**
+     * Job Posting Assistance (Gemini) access: package valid and employer has used credits for it (valid till package expiry).
+     */
+    private function hasJobPostingAssistanceAccess(Account $account): bool
+    {
+        $lastPurchase = Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->where(function ($q): void {
+                $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+            })
+            ->whereNotNull('payment_id')
+            ->whereNotNull('package_id')
+            ->with('package')
+            ->latest()
+            ->first();
+
+        if (! $lastPurchase || ! $lastPurchase->package || ! $lastPurchase->package->validity_days) {
+            return false;
+        }
+
+        $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+        if (Carbon::now()->gt($packageExpiryAt)) {
+            return false;
+        }
+
+        if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
+            return false;
+        }
+
+        return Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->where('type', Transaction::TYPE_DEBIT)
+            ->where('feature_key', CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE)
+            ->exists();
+    }
+
+    private function hasPurchasedPackage(Account $account): bool
+    {
+        return Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->where(function ($q): void {
+                $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+            })
+            ->whereNotNull('payment_id')
+            ->whereNotNull('package_id')
+            ->exists();
     }
 }

@@ -2,29 +2,39 @@
 
 @push('header')
 <style>
-.wallet-em-page .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 1.25rem !important; height: 200px !important; max-height: 200px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; overflow: hidden !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
+/* Employer wallet – 2nd image: simple card UI */
+.wallet-em-page .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 0.60rem 1.25rem !important; min-height: 220px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
 .wallet-em-page .wallet-js-card-blue .card-body { padding: 0 !important; border: none !important; background: transparent !important; flex: 1 1 auto; min-height: 0; }
 .wallet-em-page .wallet-js-card-blue .card-footer { border: none !important; padding: 0.75rem 0 0 !important; background: transparent !important; flex-shrink: 0; }
 .wallet-em-page .wallet-js-card-blue .wallet-js-coins-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.95; margin-bottom: 0.35rem; }
 .wallet-em-page .wallet-js-card-blue .wallet-js-coins-value { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem; }
 .wallet-em-page .wallet-js-card-blue .wallet-js-coins-row { font-size: 0.8rem; opacity: 0.95; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.2rem; }
 .wallet-em-page .wallet-js-card-blue .btn-warning { background: #f59e0b !important; color: #1a1a2e !important; border: none !important; border-radius: 8px !important; font-weight: 600 !important; }
-.wallet-em-page .wallet-js-card-orange { background: linear-gradient(135deg, #f59e0b, #fbbf24) !important; border: none !important; border-radius: 12px !important; height: 200px !important; max-height: 200px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 1.5rem !important; overflow: hidden !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
+.wallet-em-page .wallet-js-card-orange { background: linear-gradient(135deg, #f59e0b, #fbbf24) !important; border: none !important; border-radius: 12px !important; min-height: 200px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 1.5rem !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
 .wallet-em-page .wallet-js-card-orange .card-body { padding: 0 !important; border: none !important; background: transparent !important; display: flex !important; align-items: center !important; justify-content: center !important; }
 .wallet-em-page .wallet-js-card-orange .wallet-js-graphic { font-size: 4rem; color: rgba(0,0,0,0.3); }
 .wallet-em-page .wallet-js-two-cols { display: flex !important; flex-wrap: wrap !important; gap: 0.75rem !important; width: 100% !important; }
 .wallet-em-page .wallet-js-two-cols .wallet-js-col-blue,
 .wallet-em-page .wallet-js-two-cols .wallet-js-col-orange { flex: 1 1 calc(50% - 0.375rem) !important; min-width: 140px; max-width: none; }
-.wallet-em-page .wallet-js-packages-row { display: flex !important; flex-wrap: nowrap !important; }
-.wallet-em-page .wallet-js-package-col { flex: 0 0 calc(25% - 0.5625rem) !important; min-width: 160px; max-width: none; }
-@media (max-width: 1199px) {
-    .wallet-em-page .wallet-js-packages-row { flex-wrap: wrap !important; }
-    .wallet-em-page .wallet-js-package-col { flex: 0 0 calc(50% - 0.5625rem) !important; }
+.wallet-em-page .wallet-js-packages-row { display: flex !important; flex-wrap: wrap !important; align-items: stretch !important; }
+.wallet-em-page .wallet-js-packages-row > .wallet-js-package-col { flex: 1 1 0 !important; min-width: 200px; display: flex !important; }
+.wallet-em-page .wallet-js-packages-row .wallet-package-card { display: flex !important; flex-direction: column !important; flex: 1 1 100% !important; min-height: 200px !important; background: #fff !important; border-radius: 12px !important; box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important; border: 1px solid rgba(0,0,0,0.06) !important; }
+.wallet-em-page .wallet-js-packages-row .wallet-package-card .card-body { flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; padding: 1rem 1.25rem !important; }
+.wallet-em-page .wallet-js-packages-row .wallet-package-card .card-body .wallet-package-card-actions { margin-top: auto !important; padding-top: 0.75rem !important; }
+.wallet-em-page .wallet-js-packages-row .wallet-package-card .card-body h6 { font-size: 0.75rem !important; font-weight: 500 !important; color: #212529 !important; margin-bottom: 0.35rem !important; text-transform: uppercase !important; }
+.wallet-em-page .wallet-js-packages-row .wallet-package-card .card-body .wallet-em-credits-validity { font-size: 0.775rem !important; color: #495057 !important; margin-bottom: 0.5rem !important; }
+.wallet-em-page .wallet-js-packages-row .wallet-package-price { font-size: 0.75rem !important; font-weight: 500 !important; color: #1a1a2e !important; margin-bottom: 0.5rem !important; }
+.wallet-em-page .wallet-js-packages-row .wallet-package-main-desc { font-size: 0.77rem !important; color: #6c757d !important; line-height: 1.5 !important; margin-bottom: 0 !important; }
+.wallet-em-page .wallet-js-packages-row .btn { border-radius: 8px !important; font-weight: 600 !important; }
+@media (max-width: 991px) {
+    .wallet-em-page .wallet-js-packages-row > .wallet-js-package-col { flex: 0 0 calc(50% - 1rem) !important; min-width: 180px; }
 }
 @media (max-width: 575px) {
-    .wallet-em-page .wallet-js-package-col { flex: 0 0 100% !important; }
+    .wallet-em-page .wallet-js-packages-row > .wallet-js-package-col { flex: 0 0 100% !important; min-width: 0; }
+    .wallet-em-page .wallet-js-packages-row .wallet-package-card { min-height: 180px !important; }
 }
-   
+.wallet-em-page .wallet-package-card-current { border: 2px solid #198754 !important; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.2); position: relative; }
+.wallet-em-page .wallet-package-card-current .wallet-current-badge { position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: #198754; color: #fff; padding: 0.2rem 0.5rem; border-radius: 6px; }
 </style>
 @endpush
 
@@ -52,10 +62,15 @@
                             </div>
                         </x-core::card.body>
                         <x-core::card.footer class="py-2">
-                            <x-core::button tag="a" href="#choose-plan" color="warning" size="sm" class="text-dark btn-sm">
-                                <x-core::icon name="ti ti-shopping-cart" class="me-1" />
-                                {{ trans('plugins/job-board::dashboard.wallet_buy_credits') }}
-                            </x-core::button>
+                            @if(isset($packageExpiryAt) && $packageExpiryAt)
+                                <p class="small text-white mb-2 opacity-90">{{ trans('plugins/job-board::dashboard.wallet_package_expires') }}: <strong>{{ $packageExpiryAt->format('M d, Y') }}</strong></p>
+                            @endif
+                            @if(isset($jobPostsAllowed) && $jobPostsAllowed > 0)
+                                <p class="small text-white mb-1 opacity-90">{{ trans('plugins/job-board::dashboard.wallet_job_posts_used_allowed', ['used' => $jobPostsUsed ?? 0, 'allowed' => $jobPostsAllowed]) }}</p>
+                            @endif
+                            @if(isset($profileViewsAllowed) && $profileViewsAllowed > 0)
+                                <p class="small text-white mb-2 opacity-90">{{ trans('plugins/job-board::dashboard.wallet_profile_views_used_allowed', ['used' => $profileViewsUsed ?? 0, 'allowed' => $profileViewsAllowed]) }}</p>
+                            @endif
                         </x-core::card.footer>
                     </x-core::card>
                 </div>
@@ -69,23 +84,34 @@
             </div>
             <div class="row wallet-js-packages-row g-3">
                 @foreach($packages ?? [] as $package)
+                    @php $isCurrentPackage = in_array($package->id, $currentPackageIds ?? []); @endphp
                     <div class="col wallet-js-package-col">
-                        <div @class(['card h-100', 'border-warning' => $package->is_default])>
+                        <div @class(['card wallet-package-card', 'border-warning' => $package->is_default, 'wallet-package-card-current' => $isCurrentPackage])>
+                            @if($isCurrentPackage)
+                                <span class="wallet-current-badge">{{ __('Current') }}</span>
+                            @endif
                             @if($package->percent_save)
                                 <div class="card-header py-1 bg-success text-white small text-center">
                                     {{ $package->percent_save_text }}
                                 </div>
                             @endif
                             <x-core::card.body class="pb-2">
-                                <h6 class="text-uppercase small text-muted">{{ $package->name }}</h6>
-                                <p class="text-muted small mb-1">{{ format_credits_short($package->number_of_listings) }} {{ trans('plugins/job-board::dashboard.credits') }}</p>
-                                <h5 class="mb-2">{{ $package->price_text }}</h5>
+                                <h6 class="text-uppercase">{{ $package->name }}</h6>
+                                <p class="wallet-em-credits-validity">{{ format_credits_short($package->credits_included ?? $package->number_of_listings) }} {{ trans('plugins/job-board::dashboard.credits') }}@if($package->validity_days) · {{ trans('plugins/job-board::dashboard.package_validity_days', ['days' => $package->validity_days]) }}@endif</p>
+                                <p class="wallet-package-price">{{ $package->price_text }}</p>
+                                @if(trim((string) $package->description) !== '')
+                                    <p class="wallet-package-main-desc">{{ $package->description }}</p>
+                                @elseif($packageFeatures = $package->formatted_features)
+                                    <p class="wallet-package-main-desc">{{ is_array($packageFeatures) ? implode(' ', $packageFeatures) : $packageFeatures }}</p>
+                                @endif
+                                <div class="wallet-package-card-actions">
                                 <x-core::form :url="route('public.account.package.subscribe.put')" method="put">
                                     <input type="hidden" name="id" value="{{ $package->id }}">
                                     <x-core::button type="submit" class="w-100 btn-sm" color="{{ $package->is_default ? 'warning' : 'primary' }}" :disabled="$package->isPurchased()">
                                         {{ $package->isPurchased() ? trans('plugins/job-board::dashboard.purchased_label') : trans('plugins/job-board::dashboard.wallet_buy_now') }}
                                     </x-core::button>
                                 </x-core::form>
+                                </div>
                             </x-core::card.body>
                         </div>
                     </div>
@@ -94,99 +120,300 @@
         </div>
     </div>
 
-    {{-- Row 2: Purchase History | Billing Details | Key Features --}}
+    {{-- Row 2: Billing Details (3 col) | Coin Consumption (9 col) --}}
     <div class="row mb-4">
-        <div class="col-md-4 mb-4 mb-md-0">
-            <x-core::card class="h-100">
-                <x-core::card.header>
-                    <x-core::card.title class="mb-0">{{ trans('plugins/job-board::dashboard.wallet_purchase_history') }}</x-core::card.title>
-                    <x-core::card.actions>
-                        <a href="{{ route('public.account.invoices.index') }}" class="btn btn-sm btn-link">{{ trans('plugins/job-board::dashboard.wallet_view_all') }}</a>
-                    </x-core::card.actions>
-                </x-core::card.header>
-                <x-core::card.body>
-                    @if($invoices->isNotEmpty())
-                        <ul class="list-unstyled mb-0">
-                            @foreach($invoices->take(3) as $inv)
-                                <li class="border-bottom pb-2 mb-2 small">#{{ $inv->code }} - {{ $inv->created_at->format('M d, Y') }}</li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <p class="text-muted mb-0">{{ trans('plugins/job-board::dashboard.wallet_no_purchases_yet') }}</p>
-                    @endif
-                </x-core::card.body>
-            </x-core::card>
-        </div>
-        <div class="col-md-4 mb-4 mb-md-0">
+        <div class="col-lg-12 col-md-12 mb-4 mb-lg-3 mb-3" > 
             <x-core::card class="h-100">
                 <x-core::card.header>
                     <x-core::card.title class="mb-0">{{ trans('plugins/job-board::dashboard.wallet_billing_details') }}</x-core::card.title>
                 </x-core::card.header>
                 <x-core::card.body>
-                    <p class="mb-1">{{ trans('plugins/job-board::dashboard.wallet_billing_name') }}: <strong>{{ $billingName ?? $account->name }}</strong></p>
-                    <p class="mb-2 small text-muted">{{ trans('plugins/job-board::dashboard.wallet_add_billing_details') }}</p>
-                    <a href="{{ route('public.account.employer.settings.edit') }}" class="btn btn-sm btn-primary">{{ __('Add Remaining Details') }}</a>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#walletBillingModal">{{ __('Add Remaining Details') }}</button>
                     <div class="mt-2 small" id="wallet-em-remaining-details">
                         <div class="border rounded p-2 bg-light mt-2">
                             <p class="mb-1"><strong>Name:</strong> {{ $account->name ?? trim(($account->first_name ?? '') . ' ' . ($account->last_name ?? '')) ?: '—' }}</p>
                             <p class="mb-1"><strong>Address:</strong> {{ $account->address ?? '—' }}</p>
                             <p class="mb-1"><strong>Mobile:</strong> {{ $account->phone ? (($account->phone_country_code ?? '') . ' ' . $account->phone) : '—' }}</p>
-                            <p class="mb-0"><strong>State:</strong> {{ $account->state_name ?? '—' }}</p>
+                            <p class="mb-1"><strong>State:</strong> {{ $account->state_name ?? '—' }}</p>
+                            <p class="mb-0"><strong>GST No:</strong> {{ $account->billing_gst_number ?? '—' }}</p>
                         </div>
                     </div>
                 </x-core::card.body>
             </x-core::card>
         </div>
-        <div class="col-md-4">
-            <x-core::card class="h-100">
-                <x-core::card.header>
-                    <x-core::card.title class="mb-0">{{ trans('plugins/job-board::dashboard.wallet_key_features') }}</x-core::card.title>
-                </x-core::card.header>
-                <x-core::card.body class="pt-0">
-                    @php
-                        $keyFeatures = trans('plugins/job-board::dashboard.wallet_key_features_employer');
-                        $keyFeatures = is_array($keyFeatures) ? $keyFeatures : [];
-                        $siteName = $siteName ?? \Botble\Theme\Facades\Theme::getSiteTitle();
-                    @endphp
-                    <ul class="list-unstyled mb-0 small">
-                        @foreach($keyFeatures as $feature)
-                            @php $text = is_array($feature) ? ($feature['text'] ?? reset($feature)) : $feature; @endphp
-                            <li class="d-flex align-items-start mb-2">
-                                <x-core::icon name="ti ti-check" class="text-success me-2 mt-1 flex-shrink-0" />
-                                <span>{{ str_replace(':site', $siteName, $text) }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                </x-core::card.body>
-            </x-core::card>
-        </div>
-    </div>
-
-    {{-- Coins Consumption (employer) --}}
-    <div class="row mb-4">
-        <div class="col-lg-6">
+        <div class="col-lg-12 col-md-12">
             <x-core::card class="h-100">
                 <x-core::card.header>
                     <x-core::card.title class="mb-0">{{ trans('plugins/job-board::dashboard.wallet_coins_consumption') }}</x-core::card.title>
                 </x-core::card.header>
                 <x-core::card.body>
                     @php
-                        $consumption = trans('plugins/job-board::dashboard.wallet_consumption_employer');
-                        $consumption = is_array($consumption) ? $consumption : [];
                         $siteName = $siteName ?? \Botble\Theme\Facades\Theme::getSiteTitle();
+                        if (!empty($creditConsumption)) {
+                            $consumptionList = $creditConsumption;
+                        } else {
+                            $consumption = $account->isEmployer()
+                                ? trans('plugins/job-board::dashboard.wallet_consumption_employer')
+                                : trans('plugins/job-board::dashboard.wallet_consumption_jobseeker');
+                            $consumptionList = is_array($consumption) ? $consumption : [];
+                        }
                     @endphp
                     <ul class="list-unstyled mb-0">
-                        @foreach($consumption as $label => $rate)
-                            <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                <span>{{ str_replace(':site', $siteName, $label) }}</span>
-                                <span class="text-muted small">{{ $rate }}</span>
-                            </li>
-                        @endforeach
+                        @if(!empty($creditConsumption))
+                            @foreach($consumptionList as $key => $item)
+                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                    <span>{{ is_array($item) ? ($item['label'] ?? $key) : $key }}</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-muted small">{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }}</span>
+                                        @if($account->isEmployer() && is_array($item) && !empty($item['credits']))
+                                            @php $featureActiveWithPackage = in_array($key, $activePackageFeatureKeys ?? []); @endphp
+                                            @if($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING && isset($jobPostCreditsRequired) && $jobPostCreditsRequired > 0)
+                                                <button type="button" class="btn btn-xs btn-outline-warning" data-bs-toggle="modal" data-bs-target="#walletJobPostSlotModal" title="{{ trans('plugins/job-board::dashboard.wallet_use_credits_for_job_post') }}">
+                                                    {{ __('Use credits') }}
+                                                </button>
+                                            @elseif($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_CANDIDATE_PROFILE_VIEW && isset($profileViewCreditsRequired) && $profileViewCreditsRequired > 0)
+                                                @if(isset($profileViewCreditsBalance))
+                                                    <span class="text-muted small me-1">{{ trans('plugins/job-board::dashboard.wallet_profile_view_slot_balance', ['count' => $profileViewCreditsBalance]) }}</span>
+                                                @endif
+                                                <button type="button" class="btn btn-xs btn-outline-info" data-bs-toggle="modal" data-bs-target="#walletProfileViewSlotModal" title="{{ trans('plugins/job-board::dashboard.wallet_use_credits_for_profile_view') }}">
+                                                    {{ trans('plugins/job-board::dashboard.wallet_use_credits_for_profile_view') }}
+                                                </button>
+                                            @elseif($key !== \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING)
+                                                @if($featureActiveWithPackage && isset($packageExpiryAt) && $packageExpiryAt)
+                                                    <span class="badge bg-success" title="{{ trans('plugins/job-board::dashboard.wallet_valid_till_package', ['date' => $packageExpiryAt->format('M d, Y')]) }}">{{ __('Valid till') }} {{ $packageExpiryAt->format('M d, Y') }}</span>
+                                                    <button type="button" class="btn btn-xs btn-outline-secondary wallet-feature-use-credits-btn" disabled title="{{ __('Valid with package until expiry') }}">
+                                                        {{ __('Use credits') }}
+                                                    </button>
+                                                @else
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-xs btn-outline-primary wallet-feature-use-credits-btn"
+                                                        data-feature-key="{{ $key }}"
+                                                        data-feature-label="{{ $item['label'] ?? $key }}"
+                                                        data-credits="{{ (int) ($item['credits'] ?? 0) }}"
+                                                    >
+                                                        {{ __('Use credits') }}
+                                                    </button>
+                                                @endif
+                                            @endif
+                                        @endif
+                                    </div>
+                                </li>
+                            @endforeach
+                        @else
+                            @foreach($consumptionList as $label => $rate)
+                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                    <span>{{ str_replace(':site', $siteName, $label) }}</span>
+                                    <span class="text-muted small">{{ $rate }}</span>
+                                </li>
+                            @endforeach
+                        @endif
                     </ul>
+                    <!-- @if($account->isEmployer() && isset($jobPostCreditsRequired) && $jobPostCreditsRequired > 0)
+                        <div class="mt-3 pt-3 border-top">
+                            @if(isset($jobPostCreditsBalance))
+                                <p class="small text-muted mb-2">{{ trans('plugins/job-board::dashboard.wallet_job_post_slot_balance', ['count' => $jobPostCreditsBalance]) }}</p>
+                            @endif
+                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#walletJobPostSlotModal">
+                                <x-core::icon name="ti ti-plus" class="me-1" />
+                                {{ trans('plugins/job-board::dashboard.wallet_use_credits_for_job_post') }}
+                            </button>
+                        </div>
+                    @endif -->
                 </x-core::card.body>
             </x-core::card>
         </div>
     </div>
+
+    {{-- Modal: Use credits for a feature (generic) --}}
+    @if($account->isEmployer())
+        <div class="modal fade" id="walletFeaturePurchaseModal" tabindex="-1" aria-labelledby="walletFeaturePurchaseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="walletFeaturePurchaseModalLabel">{{ __('Use credits') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0" id="walletFeaturePurchaseModalMsg"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="button" class="btn btn-primary" id="walletFeaturePurchaseConfirmBtn">{{ __('OK') }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal: Use credits for 1 Job Post --}}
+    @if($account->isEmployer() && isset($jobPostCreditsRequired) && $jobPostCreditsRequired > 0)
+    <div class="modal fade" id="walletJobPostSlotModal" tabindex="-1" aria-labelledby="walletJobPostSlotModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletJobPostSlotModalLabel">{{ trans('plugins/job-board::dashboard.wallet_use_credits_for_job_post') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">{{ trans('plugins/job-board::dashboard.wallet_job_post_confirm_message', ['credits' => $jobPostCreditsRequired]) }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="walletJobPostSlotConfirmBtn">{{ __('OK') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($account->isEmployer() && isset($profileViewCreditsRequired) && $profileViewCreditsRequired > 0)
+    <div class="modal fade" id="walletProfileViewSlotModal" tabindex="-1" aria-labelledby="walletProfileViewSlotModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletProfileViewSlotModalLabel">{{ trans('plugins/job-board::dashboard.wallet_use_credits_for_profile_view') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">{{ trans('plugins/job-board::dashboard.wallet_profile_view_confirm_message', ['credits' => $profileViewCreditsRequired]) }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="walletProfileViewSlotConfirmBtn">{{ __('OK') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @push('footer')
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Generic feature purchase modal
+        var featureModalEl = document.getElementById('walletFeaturePurchaseModal');
+        var featureConfirmBtn = document.getElementById('walletFeaturePurchaseConfirmBtn');
+        var featureMsg = document.getElementById('walletFeaturePurchaseModalMsg');
+        var activeFeatureKey = null;
+        var activeCredits = 0;
+        var activeLabel = '';
+
+        document.querySelectorAll('.wallet-feature-use-credits-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                activeFeatureKey = btn.getAttribute('data-feature-key') || '';
+                activeLabel = btn.getAttribute('data-feature-label') || activeFeatureKey;
+                activeCredits = parseInt(btn.getAttribute('data-credits') || '0', 10) || 0;
+                if (featureMsg) {
+                    featureMsg.textContent = 'Use ' + activeCredits + ' credits for "' + activeLabel + '"?';
+                }
+                if (featureModalEl && window.bootstrap) {
+                    (new bootstrap.Modal(featureModalEl)).show();
+                }
+            });
+        });
+
+        if (featureConfirmBtn) {
+            featureConfirmBtn.addEventListener('click', function() {
+                if (!activeFeatureKey) return;
+                featureConfirmBtn.disabled = true;
+                fetch('{{ route('public.account.wallet.purchase_feature') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ feature_key: activeFeatureKey })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        if (featureModalEl && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(featureModalEl);
+                            if (m) m.hide();
+                        }
+                        window.location.reload();
+                    } else {
+                        alert(data.message || '{{ trans('plugins/job-board::messages.insufficient_credits') }}');
+                    }
+                })
+                .catch(function() {
+                    alert('{{ __('Something went wrong.') }}');
+                })
+                .finally(function() { featureConfirmBtn.disabled = false; });
+            });
+        }
+
+        var btn = document.getElementById('walletJobPostSlotConfirmBtn');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+            btn.disabled = true;
+            fetch('{{ route('public.account.wallet.purchase_job_post_slot') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var modal = document.getElementById('walletJobPostSlotModal');
+                    if (modal && window.bootstrap) {
+                        var m = bootstrap.Modal.getInstance(modal);
+                        if (m) m.hide();
+                    }
+                    if (typeof window.location !== 'undefined') window.location.reload();
+                } else {
+                    alert(data.message || '{{ trans('plugins/job-board::messages.insufficient_credits') }}');
+                }
+            })
+            .catch(function() {
+                alert('{{ __('Something went wrong.') }}');
+            })
+            .finally(function() { btn.disabled = false; });
+        });
+
+        var profileViewBtn = document.getElementById('walletProfileViewSlotConfirmBtn');
+        if (profileViewBtn) {
+            profileViewBtn.addEventListener('click', function() {
+                profileViewBtn.disabled = true;
+                fetch('{{ route('public.account.wallet.purchase_profile_view_slot') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        var modal = document.getElementById('walletProfileViewSlotModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || '{{ trans('plugins/job-board::messages.insufficient_credits') }}');
+                    }
+                })
+                .catch(function() {
+                    alert('{{ __('Something went wrong.') }}');
+                })
+                .finally(function() { profileViewBtn.disabled = false; });
+            });
+        }
+    });
+    </script>
+    @endpush
 
     <div class="wallet-consumption-invoice-section">
     {{-- Consumption Report --}}
@@ -208,22 +435,34 @@
                                 <th>{{ trans('plugins/job-board::dashboard.wallet_date_of_transaction') }}</th>
                                 <th class="wallet-th-type">{{ trans('plugins/job-board::dashboard.wallet_type_of_transaction') }}</th>
                                 <th>{{ __('Package') }}</th>
+                                <th>{{ trans('plugins/job-board::dashboard.wallet_valid_till') }}</th>
                                 <th class="text-end">{{ trans('plugins/job-board::dashboard.wallet_amount_coins') }}</th>
-                                <th class="text-end">{{ trans('plugins/job-board::dashboard.wallet_current_balance') }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @php $runningBalance = $account->credits; $sn = 0; @endphp
+                            @php
+                                $runningBalance = $account->credits;
+                                $sn = 0;
+                                $packageValidFeatures = [\Botble\JobBoard\Models\CreditConsumption::FEATURE_FEATURED_JOB, \Botble\JobBoard\Models\CreditConsumption::FEATURE_FEATURED_PROFILE_EMPLOYER, \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY, \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE];
+                            @endphp
                             @foreach($transactions as $txn)
                                 @php
                                     $sn++;
                                     $runningBalance += $txn->isCredit() ? $txn->credits : -$txn->credits;
+                                    $showValidTill = !$txn->isCredit() && isset($packageExpiryAt) && $packageExpiryAt && in_array($txn->feature_key ?? '', $packageValidFeatures);
                                 @endphp
                                 <tr>
                                     <td>{{ $sn }}</td>
                                     <td class="text-nowrap">{{ $txn->created_at->format('M d, Y H:i') }}</td>
                                     <td class="wallet-txn-description">{!! BaseHelper::clean($txn->getDescription()) !!}</td>
                                     <td>{{ $txn->package_name ?? '—' }}</td>
+                                    <td class="text-nowrap small">
+                                        @if($showValidTill)
+                                            <span class="text-success">{{ $packageExpiryAt->format('M d, Y') }}</span>
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
                                     <td class="text-end">
                                         @if($txn->isCredit())
                                             <span class="text-success fw-medium">+{{ format_credits_short($txn->credits) }}</span>
@@ -231,7 +470,6 @@
                                             <span class="text-danger fw-medium">-{{ format_credits_short($txn->credits) }}</span>
                                         @endif
                                     </td>
-                                    <td class="text-end">{{ format_credits_short($runningBalance) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -326,4 +564,136 @@
     </x-core::card>
     </div>{{-- .wallet-consumption-invoice-section --}}
     </div>{{-- .wallet-em-page --}}
+
+    {{-- Billing Details Modal --}}
+    <div class="modal fade" id="walletBillingModal" tabindex="-1" aria-labelledby="walletBillingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletBillingModalLabel">{{ __('Billing Details') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletBillingForm">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="billing_name">{{ __('Name') }}</label>
+                            <input type="text" class="form-control" id="billing_name" name="name" placeholder="{{ __('Name') }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="billing_address">{{ __('Address') }}</label>
+                            <textarea class="form-control" id="billing_address" name="address" rows="2" placeholder="{{ __('Address with City, State, Pin Code') }}"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="billing_mobile">{{ __('Mobile No') }}</label>
+                            <input type="text" class="form-control" id="billing_mobile" name="mobile" placeholder="{{ __('Mobile No') }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="billing_state">{{ __('State') }}</label>
+                            <input type="text" class="form-control" id="billing_state" name="state" placeholder="{{ __('State') }}">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label" for="billing_gst">{{ __('GST No') }}</label>
+                            <input type="text" class="form-control" id="billing_gst" name="gst_number" placeholder="{{ __('GST No (if available)') }}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary" id="walletBillingSubmit">{{ __('Save') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Package expiring / expired popup --}}
+    @if(isset($packageExpiryAt) && $packageExpiryAt && isset($packageExpiryName))
+        @php
+            $now = \Carbon\Carbon::now();
+            $isExpired = $packageExpiryAt->isPast();
+            $daysUntilExpiry = (int) $now->diffInDays($packageExpiryAt, true);
+            $expiringSoon = !$isExpired && $daysUntilExpiry <= 7;
+        @endphp
+        @if($isExpired || $expiringSoon)
+            <div class="modal fade" id="walletPackageExpiryModal" tabindex="-1" aria-labelledby="walletPackageExpiryModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header {{ $isExpired ? 'bg-danger text-white' : 'bg-warning' }}">
+                            <h5 class="modal-title" id="walletPackageExpiryModalLabel">{{ $isExpired ? __('Package Expired') : __('Package Expiring Soon') }}</h5>
+                            <button type="button" class="btn-close {{ $isExpired ? 'btn-close-white' : '' }}" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if($isExpired)
+                                <p class="mb-0">{{ trans('plugins/job-board::dashboard.wallet_package_expired', ['name' => $packageExpiryName]) }}</p>
+                            @else
+                                <p class="mb-0">{{ trans('plugins/job-board::dashboard.wallet_package_expiring_soon', ['name' => $packageExpiryName, 'date' => $packageExpiryAt->format('M d, Y')]) }}</p>
+                            @endif
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#choose-plan" class="btn btn-primary" data-bs-dismiss="modal">{{ trans('plugins/job-board::dashboard.wallet_buy_credits') }}</a>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endif
 @endsection
+
+@push('footer')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var expiryModal = document.getElementById('walletPackageExpiryModal');
+    if (expiryModal && typeof bootstrap !== 'undefined') {
+        var m = new bootstrap.Modal(expiryModal);
+        m.show();
+    }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = document.getElementById('walletBillingModal');
+    var form = document.getElementById('walletBillingForm');
+    var submitBtn = document.getElementById('walletBillingSubmit');
+    if (!modal || !form) return;
+    var billingDetailsUrl = '{{ route("public.account.billing-details") }}';
+    var billingUpdateUrl = '{{ route("public.account.billing-details.update") }}';
+
+    modal.addEventListener('show.bs.modal', function() {
+        fetch(billingDetailsUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.data) {
+                    document.getElementById('billing_name').value = data.data.name || '';
+                    document.getElementById('billing_address').value = data.data.address || '';
+                    document.getElementById('billing_mobile').value = data.data.mobile || '';
+                    document.getElementById('billing_state').value = data.data.state || '';
+                    document.getElementById('billing_gst').value = data.data.gst_number || '';
+                }
+            })
+            .catch(function() {});
+    });
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        var fd = new FormData(form);
+        fetch(billingUpdateUrl, {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || fd.get('_token') }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.error === false) {
+                window.location.reload();
+            } else {
+                submitBtn.disabled = false;
+                alert(res.message || 'Something went wrong.');
+            }
+        })
+        .catch(function() { submitBtn.disabled = false; });
+    });
+});
+</script>
+@endpush

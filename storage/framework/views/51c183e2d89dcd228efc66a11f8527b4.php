@@ -905,7 +905,7 @@
                     
                     <!-- Wallet -->
                     <?php if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()): ?>
-                    <a href="<?php echo e(url(route('public.account.jobseeker.wallet'))); ?>" class="js-wallet-badge text-decoration-none d-block" data-nav-link style="cursor: pointer; color: inherit;">
+                    <a href="<?php echo e(url(route('public.account.jobseeker.wallet'))); ?>" class="js-wallet-badge text-decoration-none d-block" data-nav-link style="cursor: pointer;">
                         <i class="fa fa-wallet"></i>
                         <span><?php echo e(__('Available Coins')); ?>:</span>
                         <span class="js-wallet-points"><?php echo e(format_credits_short($account->credits ?? 0)); ?></span>

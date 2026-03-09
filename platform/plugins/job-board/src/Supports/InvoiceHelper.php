@@ -18,6 +18,7 @@ use Botble\Payment\Models\Payment;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class InvoiceHelper
 {
@@ -88,7 +89,7 @@ class InvoiceHelper
             return false;
         }
 
-        $invoice = new Invoice([
+        $invoiceData = [
             'reference_id' => $reference->id,
             'reference_type' => $reference::class,
             'customer_name' => $account->name,
@@ -107,9 +108,18 @@ class InvoiceHelper
             'payment_id' => $payment->id,
             'status' => $isPaymentCompleted ? InvoiceStatusEnum::COMPLETED : InvoiceStatusEnum::PENDING,
             'paid_at' => $isPaymentCompleted ? Carbon::now() : null,
-        ]);
+        ];
+        if (Schema::hasColumn((new Invoice)->getTable(), 'customer_gst_number')) {
+            $invoiceData['customer_gst_number'] = $account->billing_gst_number ?? null;
+        }
+        $invoice = new Invoice($invoiceData);
 
         $invoice->save();
+
+        $itemMetadata = [];
+        if ($reference instanceof Package && ! empty($reference->validity_days)) {
+            $itemMetadata['validity'] = trans('plugins/job-board::dashboard.package_validity_days', ['days' => $reference->validity_days]);
+        }
 
         $invoice->items()->create([
             'reference_id' => $reference->id,
@@ -122,7 +132,7 @@ class InvoiceHelper
             'tax_amount' => 0,
             'discount_amount' => $discountAmount,
             'amount' => $amount,
-            'metadata' => [],
+            'metadata' => $itemMetadata,
         ]);
 
         do_action(INVOICE_PAYMENT_CREATED, $invoice);
@@ -132,7 +142,17 @@ class InvoiceHelper
 
     public function downloadInvoice(Invoice $invoice): Response
     {
-        return $this->makeInvoice($invoice)->download('invoice-' . $invoice->code . '.pdf');
+        $pdf = $this->makeInvoice($invoice);
+        $content = $pdf->output();
+        $filename = 'invoice-' . preg_replace('/[^a-zA-Z0-9\-_.]/', '-', $invoice->code) . '.pdf';
+
+        return response($content, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Length' => strlen($content),
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     public function streamInvoice(Invoice $invoice): Response
@@ -199,29 +219,61 @@ class InvoiceHelper
             $companyLogo = RvMedia::getRealPath($companyLogo);
         }
 
-        $invoice->loadMissing('payment');
+        $invoice->loadMissing(['payment', 'items']);
         $payment = $invoice->payment;
+
+        foreach ($invoice->items as $item) {
+            $meta = $item->metadata ?? [];
+            if (empty($meta['validity']) && $item->reference_type === Package::class && $item->reference_id) {
+                $pkg = Package::query()->find($item->reference_id);
+                if ($pkg && ! empty($pkg->validity_days)) {
+                    $meta['validity'] = trans('plugins/job-board::dashboard.package_validity_days', ['days' => $pkg->validity_days]);
+                    $item->metadata = $meta;
+                }
+            }
+        }
 
         $currency = $payment ? Currency::query()->where('title', strtoupper($payment->currency))->first() : null;
 
         $paymentMethod = $payment && $payment->payment_channel ? $payment->payment_channel->label() : '-';
         $paymentStatus = $payment && $payment->status ? $payment->status->label() : '-';
+        $transactionId = $payment && $payment->charge_id ? $payment->charge_id : '-';
         $paymentDescription = null;
         if ($payment && $payment->payment_channel == PaymentMethodEnum::BANK_TRANSFER && $payment->status == PaymentStatusEnum::PENDING) {
             $paymentDescription = BaseHelper::clean(get_payment_setting('description', $payment->payment_channel));
+        }
+
+        $logoFullPath = null;
+        if ($logo) {
+            $path = RvMedia::getRealPath($logo);
+            if ($path && is_string($path) && ! str_starts_with($path, 'http') && file_exists($path)) {
+                $logoFullPath = $path;
+            }
+        }
+        $companyLogoPath = null;
+        if ($companyLogo && is_string($companyLogo) && ! str_starts_with($companyLogo, 'http') && file_exists($companyLogo)) {
+            $companyLogoPath = $companyLogo;
         }
 
         return [
             'invoice' => $invoice,
             'currency' => $currency,
             'logo' => $logo,
-            'logo_full_path' => $logo ? RvMedia::getRealPath($logo) : null,
+            'logo_full_path' => $logoFullPath,
             'site_title' => theme_option('site_title'),
-            'company_logo_full_path' => $companyLogo,
+            'company_logo_full_path' => $companyLogoPath,
             'tax_id' => $invoice->tax_id,
+            'customer_gst_number' => $invoice->customer_gst_number ?? null,
+            'transaction_id' => $transactionId,
             'payment_method' => $paymentMethod,
             'payment_status' => $paymentStatus,
             'payment_description' => $paymentDescription,
+            'bank_details' => [
+                'account_number' => setting('job_board_bank_account_number', '3566282988'),
+                'account_name' => setting('job_board_bank_account_name', 'Teachers Recruiter'),
+                'ifsc' => setting('job_board_bank_ifsc', 'CBIN0281043'),
+                'bank_name' => setting('job_board_bank_name', 'Central Bank of India'),
+            ],
             'settings' => [
                 'using_custom_font_for_invoice' => setting('job_board_using_custom_font_for_invoice'),
                 'font_family' => setting('job_board_using_custom_font_for_invoice', 0) == 1
@@ -232,6 +284,7 @@ class InvoiceHelper
                 'company_address_for_invoicing' => setting('job_board_company_address_for_invoicing'),
                 'company_email_for_invoicing' => setting('job_board_company_email_for_invoicing'),
                 'company_phone_for_invoicing' => setting('job_board_company_phone_for_invoicing'),
+                'company_gst_for_invoicing' => setting('job_board_company_gst_for_invoicing'),
             ],
         ];
     }

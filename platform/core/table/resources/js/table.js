@@ -9,7 +9,7 @@
         return params
     }
 
-    let _downloadFromUrl = function (url, params) {
+    let _downloadFromUrl = function (url, params, onComplete) {
         let postUrl = url + '/export'
         let xhr = new XMLHttpRequest()
         xhr.open('POST', postUrl, true)
@@ -54,6 +54,10 @@
                     }, 100) // cleanup
                 }
             }
+            if (typeof onComplete === 'function') onComplete()
+        }
+        xhr.onerror = function () {
+            if (typeof onComplete === 'function') onComplete()
         }
         xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
         xhr.send($.param(params))
@@ -611,6 +615,21 @@
 
                         $table.find('.table-check-all').prop('checked', false).prop('indeterminate', false)
 
+                        if (data.next_url) {
+                            // Export/download URLs (e.g. export-resumes ZIP): use iframe so download always triggers (popup may be blocked)
+                            if (typeof data.next_url === 'string' && data.next_url.indexOf('export-resumes') !== -1) {
+                                const ifr = document.createElement('iframe')
+                                ifr.setAttribute('style', 'position:absolute;width:0;height:0;border:0;visibility:hidden')
+                                ifr.src = data.next_url
+                                document.body.appendChild(ifr)
+                                setTimeout(() => {
+                                    if (ifr.parentNode) ifr.parentNode.removeChild(ifr)
+                                }, 60000)
+                            } else {
+                                window.open(data.next_url, '_blank', 'noopener')
+                            }
+                        }
+
                         window.LaravelDataTables[tableId].draw()
 
                         _self.closest('.modal').modal('hide')
@@ -813,7 +832,15 @@
                 let url = dt.ajax.url() || window.location.href
                 let params = _buildParams(dt, value)
 
-                _downloadFromUrl(url, params)
+                const $exportBtn = target.closest('.dropdown').find('.buttons-export, .dropdown-toggle')
+                if ($exportBtn.length) {
+                    $exportBtn.prop('disabled', true).addClass('table-export-loading')
+                }
+                _downloadFromUrl(url, params, () => {
+                    if ($exportBtn.length) {
+                        $exportBtn.prop('disabled', false).removeClass('table-export-loading')
+                    }
+                })
             })
 
             const $columnsVisibleDropdowns = document.querySelectorAll(

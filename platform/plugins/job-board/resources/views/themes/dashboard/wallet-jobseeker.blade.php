@@ -3,12 +3,13 @@
 @extends(JobBoardHelper::viewPath('views.job-board.account.partials.layout-settings'))
 @push('header')
     <style>
-    .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 1rem !important; height: 165px !important; max-height: 165px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; overflow: hidden !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
+    /* Job seeker: blue card – same height as package cards, readable */
+    .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 0.85rem 1rem !important; height: 170px !important; max-height: 170px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; overflow: hidden !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
     .wallet-js-card-blue .card-body { padding: 0 !important; border: none !important; background: transparent !important; flex: 1 1 auto; min-height: 0; }
-    .wallet-js-card-blue .card-footer { border: none !important; padding: 0.75rem 0 0 !important; background: transparent !important; flex-shrink: 0; }
-    .wallet-js-card-blue .wallet-js-coins-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.95; margin-bottom: 0.35rem; }
-    .wallet-js-card-blue .wallet-js-coins-value { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem; }
-    .wallet-js-card-blue .wallet-js-coins-row { font-size: 0.8rem; opacity: 0.95; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.2rem; }
+    .wallet-js-card-blue .card-footer { border: none !important; padding: 0.5rem 0 0 !important; background: transparent !important; flex-shrink: 0; }
+    .wallet-js-card-blue .wallet-js-coins-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.95; margin-bottom: 0.25rem; }
+    .wallet-js-card-blue .wallet-js-coins-value { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.3rem; }
+    .wallet-js-card-blue .wallet-js-coins-row { font-size: 0.75rem; opacity: 0.95; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.15rem; }
     .wallet-js-card-blue .btn-warning { background: #f59e0b !important; color: #1a1a2e !important; border: none !important; border-radius: 8px !important; font-weight: 600 !important; }
     .wallet-js-card-orange { background: linear-gradient(135deg, #f59e0b, #fbbf24) !important; border: none !important; border-radius: 12px !important; height: 165px !important; max-height: 165px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 1.5rem !important; overflow: hidden !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
     .wallet-js-card-orange .card-body { padding: 0 !important; border: none !important; background: transparent !important; display: flex !important; align-items: center !important; justify-content: center !important; }
@@ -24,19 +25,26 @@
         .wallet-js-page .wallet-js-two-cols .wallet-js-col-blue,
         .wallet-js-page .wallet-js-two-cols .wallet-js-col-orange { flex: 1 1 calc(50% - 0.375rem) !important; }
     }
-    .wallet-js-page .wallet-js-packages-row { display: flex !important; flex-wrap: nowrap !important; gap: 0.5rem !important; margin-left: 0; margin-right: 0; }
-    .wallet-js-page .wallet-js-packages-row > .wallet-js-package-col { flex: 1 1 0 !important; min-width: 0; padding-left: 0.25rem !important; padding-right: 0.25rem !important; }
-    .wallet-js-page .wallet-js-packages-row .card { border-radius: 10px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important; border: 1px solid rgba(0,0,0,0.06) !important; transition: box-shadow 0.2s; }
-    .wallet-js-page .wallet-js-packages-row .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important; }
-    .wallet-js-page .wallet-js-packages-row .card-body { padding: 1rem !important; }
-    .wallet-js-page .wallet-js-packages-row .btn { border-radius: 8px !important; font-weight: 600 !important; padding: 0.4rem 0.75rem !important; }
-    @media (max-width: 1199px) {
-        .wallet-js-page .wallet-js-packages-row { flex-wrap: wrap !important; gap: 0.5rem !important; }
-        .wallet-js-page .wallet-js-packages-row > .wallet-js-package-col { flex: 0 0 calc(50% - 0.25rem) !important; }
+    /* Job seeker: package cards – same height as blue (170px), readable font, simple style */
+    .wallet-js-page .row.mb-4:first-of-type { margin-bottom: 0.75rem !important; }
+    .wallet-js-page .wallet-js-packages-row { display: flex !important; flex-wrap: wrap !important; align-items: stretch !important; gap: 0.5rem !important; margin-left: 0 !important; margin-right: 0 !important; margin-top: 0.5rem !important; }
+    .wallet-js-page .wallet-js-packages-row > .wallet-js-package-col { flex: 1 1 0 !important; min-width: 180px; padding-left: 0.25rem !important; padding-right: 0.25rem !important; display: flex !important; }
+    .wallet-js-page .wallet-js-packages-row .wallet-package-card { display: flex !important; flex-direction: column !important; flex: 1 1 100% !important; height: 170px !important; min-height: 170px !important; max-height: 170px !important; border-radius: 12px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; border: 1px solid rgba(0,0,0,0.08) !important; transition: box-shadow 0.2s; overflow: hidden !important; }
+    .wallet-js-page .wallet-js-packages-row .wallet-package-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important; }
+    .wallet-js-page .wallet-js-packages-row .wallet-package-card .card-body { flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; padding: 0.65rem 0.9rem !important; min-height: 0 !important; overflow: hidden !important; }
+    .wallet-js-page .wallet-js-packages-row .wallet-package-card .card-body .wallet-package-card-actions { margin-top: auto !important; padding-top: 0.5rem !important; flex-shrink: 0 !important; }
+    .wallet-js-page .wallet-js-packages-row .wallet-package-card .card-body h6 { font-size: 0.8rem !important; margin-bottom: 0.2rem !important; color: #495057 !important; font-weight: 600 !important; }
+    .wallet-js-page .wallet-js-packages-row .wallet-package-card .card-body .wallet-package-price { font-size: 1.05rem !important; font-weight: 700 !important; color: #1a1a2e !important; margin-bottom: 0.2rem !important; }
+    .wallet-js-page .wallet-js-packages-row .wallet-package-main-desc { background: rgba(0,0,0,0.04) !important; border-left: 2px solid #dee2e6 !important; padding: 0.4rem 0.5rem !important; border-radius: 0 6px 6px 0 !important; font-size: 0.78rem !important; color: #495057 !important; margin-bottom: 0.35rem !important; line-height: 1.35 !important; }
+    .wallet-js-page .wallet-js-packages-row .btn { border-radius: 8px !important; font-weight: 600 !important; font-size: 0.875rem !important; padding: 0.4rem 0.65rem !important; }
+    @media (max-width: 991px) {
+        .wallet-js-page .wallet-js-packages-row > .wallet-js-package-col { flex: 0 0 calc(50% - 0.2rem) !important; min-width: 140px; }
     }
     @media (max-width: 575px) {
         .wallet-js-page .wallet-js-packages-row > .wallet-js-package-col { flex: 0 0 100% !important; }
     }
+    .wallet-js-page .wallet-package-card-current { border: 2px solid #198754 !important; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.2); position: relative; }
+    .wallet-js-page .wallet-package-card-current .wallet-current-badge { position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: #198754; color: #fff; padding: 0.2rem 0.5rem; border-radius: 6px; }
     /* Consumption Report & Invoice Details - same UI as employer */
     .wallet-consumption-invoice-section .card { background: #fff !important; border-radius: 10px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important; border: 1px solid rgba(0,0,0,0.06) !important; overflow: hidden; }
     .wallet-consumption-invoice-section .card .card-header { background: #fff !important; border-bottom: 1px solid rgba(0,0,0,0.08) !important; padding: 1rem 1.25rem !important;display: flex !important;
@@ -129,23 +137,45 @@
             </div>
             <div class="row wallet-js-packages-row">
                 @foreach($packages ?? [] as $package)
+                    @php $isCurrentPackage = in_array($package->id, $currentPackageIds ?? []); @endphp
                     <div class="col wallet-js-package-col">
-                        <div @class(['card h-100', 'border-warning' => $package->is_default])>
+                        <div @class(['card wallet-package-card', 'border-warning' => $package->is_default, 'wallet-package-card-current' => $isCurrentPackage])>
+                            @if($isCurrentPackage)
+                                <span class="wallet-current-badge">{{ __('Current') }}</span>
+                            @endif
                             @if($package->percent_save)
                                 <div class="card-header py-1 bg-success text-white small text-center">
                                     {{ $package->percent_save_text }}
                                 </div>
                             @endif
                             <x-core::card.body class="pb-2">
-                                <h6 class="text-uppercase small text-muted">{{ $package->name }}</h6>
-                                <p class="text-muted small mb-1">{{ format_credits_short($package->number_of_listings) }} {{ trans('plugins/job-board::dashboard.credits') }}</p>
-                                <h5 class="mb-2">{{ $package->price_text }}</h5>
+                                <h6 class="text-uppercase small text-muted mb-1">{{ $package->name }}</h6>
+                                <p class="text-muted small mb-1">{{ format_credits_short($package->credits_included ?? $package->number_of_listings) }} {{ trans('plugins/job-board::dashboard.credits') }}</p>
+                                <p class="wallet-package-price mb-2">{{ $package->price_text }}</p>
+                                @if(trim((string) $package->description) !== '')
+                                    <div class="wallet-package-main-desc">{{ $package->description }}</div>
+                                @elseif($packageFeatures = $package->formatted_features)
+                                    <div class="wallet-package-main-desc">
+                                        <ul class="list-unstyled small mb-0 ps-0">
+                                            @foreach($packageFeatures as $f)
+                                                @if($f)
+                                                    <li class="d-flex align-items-start gap-1 mb-1">
+                                                        <x-core::icon name="ti ti-check" class="text-success mt-0" style="font-size: 0.75rem; flex-shrink: 0;" />
+                                                        <span>{{ $f }}</span>
+                                                    </li>
+                                                @endif
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                                <div class="wallet-package-card-actions">
                                 <x-core::form :url="route('public.account.package.subscribe.put')" method="put">
                                     <input type="hidden" name="id" value="{{ $package->id }}">
                                     <x-core::button type="submit" class="w-100 btn-sm" color="{{ $package->is_default ? 'warning' : 'primary' }}" :disabled="$package->isPurchased()">
                                         {{ $package->isPurchased() ? trans('plugins/job-board::dashboard.purchased_label') : trans('plugins/job-board::dashboard.wallet_buy_now') }}
                                     </x-core::button>
                                 </x-core::form>
+                                </div>
                             </x-core::card.body>
                         </div>
                     </div>

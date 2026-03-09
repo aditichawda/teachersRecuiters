@@ -1,5 +1,6 @@
 @php
     Theme::set('pageTitle', $candidate->name);
+    $profileLocked = $profileLocked ?? false;
 @endphp
 <!-- START CANDIDATE-DETAILS -->
 <section class="section">
@@ -20,11 +21,24 @@
                                 <p class="mt-3 small fw-medium"><span style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-inline-end: 6px; background-color: rgb(22 163 74 / 1);"></span>{{ __("I'm available for hiring") }}</p>
                             @endif
 
+                            @if(!$profileLocked)
                             <p class="text-muted mb-4">{!! BaseHelper::clean($candidate->description) !!}</p>
+                            @else
+                            <p class="text-muted mb-4">{{ trans('plugins/job-board::messages.candidate_profile_locked') }}</p>
+                            @endif
                         </div>
                     </div><!--end candidate-profile-->
 
                     <div class="candidate-profile-overview  card-body border-top p-4">
+                        @if($profileLocked)
+                        <div class="text-center py-4">
+                            <i class="ti ti-lock fs-1 text-muted"></i>
+                            <p class="mt-2 mb-3">{{ trans('plugins/job-board::messages.candidate_profile_view_limit_reached') }}</p>
+                            @if(auth('account')->check())
+                                <a href="{{ route('public.account.wallet') }}" class="btn btn-primary">{{ trans('plugins/job-board::messages.candidate_profile_upgrade_cta') }}</a>
+                            @endif
+                        </div>
+                        @else
                         <h6 class="fs-17 fw-semibold mb-3">{{ __('Profile Overview') }}</h6>
                         <ul class="list-unstyled mb-0">
                             @if($candidate->languages->isNotEmpty())
@@ -70,8 +84,9 @@
                                 @endif
                             </div>
                         @endif
+                        @endif
                     </div><!--candidate-profile-overview-->
-                    @if (JobBoardHelper::canViewCandidateInformation())
+                    @if(!$profileLocked && JobBoardHelper::canViewCandidateInformation())
                         <div class="candidate-contact-details card-body p-4 border-top">
                         <h6 class="fs-17 fw-semibold mb-3">{{ __('Contact Details') }}</h6>
                         <ul class="list-unstyled mb-0">
@@ -180,6 +195,7 @@
                         </div>
                     </div><!--end card-body-->
                 </div><!--end card-->
+                @endif
             </div>
         </div>
     </div>

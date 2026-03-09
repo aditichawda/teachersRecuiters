@@ -385,7 +385,7 @@
                                                     {!! Form::open([
                                                         'route' => 'public.account.logout',
                                                         'id' => 'logout-form']) !!}
-                                                        <button type="button" class="dropdown-item" id="logout-btn">
+                                                        <button type="button" class="dropdown-item" id="logout-btn" onclick="event.preventDefault(); if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form'); if (f) f.submit(); }">
                                                             <i class="feather-log-out"></i>
                                                             <span>{{ __('Logout') }}</span>
                                                         </button>

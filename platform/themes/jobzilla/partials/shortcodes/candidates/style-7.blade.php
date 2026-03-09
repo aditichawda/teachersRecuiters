@@ -58,7 +58,7 @@
                     </form>
                 </div>
 
-                @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'), ['layout' => $shortcode->layout ])
+                @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'), ['layout' => $shortcode->layout, 'canViewCandidates' => $canViewCandidates ?? true])
 
                 {!! Form::open(['url' => route('public.ajax.candidates'), 'method' => 'GET', 'id' => 'candidate-filter-form']) !!}
                 <input type="hidden" name="per_page" value="{{ BaseHelper::stringify(request()->query('per_page')) }}">

@@ -190,22 +190,26 @@ document.addEventListener("DOMContentLoaded", function() {
 
             if (! $this->app->runningInConsole()) {
                 add_action(INVOICE_PAYMENT_CREATED, function (Invoice $invoice): void {
-                    $customer = $invoice->payment->customer;
-                    $localDisk = Storage::disk('local');
-                    $invoiceName = sprintf('invoice-%s.pdf', $invoice->code);
-                    $localDisk->put($invoiceName, (new InvoiceHelper())->makeInvoice($invoice)->output());
+                    try {
+                        $customer = $invoice->payment->customer;
+                        $localDisk = Storage::disk('local');
+                        $invoiceName = sprintf('invoice-%s.pdf', $invoice->code);
+                        $localDisk->put($invoiceName, (new InvoiceHelper())->makeInvoice($invoice)->output());
 
-                    EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)
-                        ->setVariableValues([
-                            'account_name' => $customer->name,
-                            'invoice_code' => $invoice->code,
-                            'invoice_link' => route('public.account.invoices.show', $invoice->getKey()),
-                        ])
-                        ->sendUsingTemplate('invoice-payment-created', $customer->email, [
-                            'attachments' => [$localDisk->path($invoiceName)],
-                        ]);
+                        EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME)
+                            ->setVariableValues([
+                                'account_name' => $customer->name,
+                                'invoice_code' => $invoice->code,
+                                'invoice_link' => route('public.account.invoices.show', $invoice->getKey()),
+                            ])
+                            ->sendUsingTemplate('invoice-payment-created', $customer->email, [
+                                'attachments' => [$localDisk->path($invoiceName)],
+                            ]);
 
-                    $localDisk->delete($invoiceName);
+                        $localDisk->delete($invoiceName);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning('JobBoard invoice email failed: ' . $e->getMessage(), ['invoice_id' => $invoice->id]);
+                    }
 
                     $this->app->make(CouponService::class)->forgotCouponSession();
                 });
@@ -240,7 +244,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     return $checkoutToken;
                 }
 
-                return route('public.account.package.subscribe', $checkoutToken) . '?' . http_build_query(['error' => true, 'error_type' => 'payment']);
+                return route('public.account.package.subscribe.checkout', $checkoutToken) . '?' . http_build_query(['error' => true, 'error_type' => 'payment']);
             }, 123);
         }
 

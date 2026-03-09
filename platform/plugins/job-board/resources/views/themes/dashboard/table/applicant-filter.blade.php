@@ -74,6 +74,31 @@
 </div>
 <script>
 (function() {
+    var form = document.querySelector('.applicant-filter-simple-form');
+    if (form) {
+        form.addEventListener('click', function(e) {
+            var applyBtn = e.target.closest('.btn-apply');
+            if (!applyBtn) return;
+            e.preventDefault();
+            var url = new URL(window.location.href);
+            var fd = new FormData(form);
+            url.search = '';
+            fd.forEach(function(value, key) {
+                url.searchParams.append(key, value === null || value === undefined ? '' : value);
+            });
+            window.history.pushState({}, '', url.toString());
+            var tableIdInput = form.querySelector('input[name="filter_table_id"]');
+            var tableId = tableIdInput ? tableIdInput.value : null;
+            if (!tableId) {
+                var tableWrap = form.closest('.table-wrapper');
+                var table = tableWrap && tableWrap.querySelector('table');
+                tableId = table ? table.id : null;
+            }
+            if (tableId && window.LaravelDataTables && window.LaravelDataTables[tableId]) {
+                window.LaravelDataTables[tableId].ajax.url(url.toString()).load(null, false);
+            }
+        });
+    }
     if (window._applicantFilterClearBound) return;
     window._applicantFilterClearBound = true;
     document.addEventListener('click', function(e) {

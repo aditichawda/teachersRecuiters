@@ -75,6 +75,8 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'type',
         'registration_type',
         'credits',
+        'job_post_credits_balance',
+        'profile_view_credits_balance',
         'profile_views',
         'unique_id',
         
@@ -117,6 +119,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'city_id',
         'country_name',
         'state_name',
+        'billing_gst_number',
         'city_name',
         'location_type',
         'ready_for_relocation',
@@ -435,11 +438,6 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
     public function myReviews(): MorphMany
     {
         return $this->morphMany(Review::class, 'created_by');
-    }
-
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(UserNotification::class, 'account_id');
     }
 
     public function completedCompanyProfile(): bool

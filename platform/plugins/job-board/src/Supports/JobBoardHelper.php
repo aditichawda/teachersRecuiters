@@ -67,7 +67,7 @@ class JobBoardHelper
         return 45;
     }
 
-    public function isEnabledCreditsSystem(): bool
+    public static function isEnabledCreditsSystem(): bool
     {
         return setting('job_board_enable_credits_system', 1) == 1;
     }

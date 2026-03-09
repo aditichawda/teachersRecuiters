@@ -1,5 +1,5 @@
 @php
-    $layout = 'plugins/job-board::themes.dashboard.layouts.master';
+    $layout = $layout ?? 'plugins/job-board::themes.dashboard.layouts.master';
 @endphp
 
 @extends('core/table::table')
@@ -10,6 +10,26 @@
 
 @push('header')
 <style>
+/* Export button loading state */
+.table-export-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+.table-export-loading::after {
+    content: '';
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-left: 0.5em;
+    vertical-align: middle;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: table-export-spin 0.6s linear infinite;
+}
+@keyframes table-export-spin {
+    to { transform: rotate(360deg); }
+}
 /* Applicants table – UI & responsive, no overflow */
 .table-wrapper {
     border-radius: 8px;

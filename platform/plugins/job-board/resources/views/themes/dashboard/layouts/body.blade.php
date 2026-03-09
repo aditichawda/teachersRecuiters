@@ -18,7 +18,7 @@
         <a
             href="{{ route('public.account.logout') }}"
             title="{{ trans('plugins/job-board::dashboard.header_logout_link') }}"
-            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+            onclick="event.preventDefault(); if (confirm('{{ trans('plugins/job-board::dashboard.logout_confirm') }}')) { document.getElementById('logout-form').submit(); }"
         >
             <x-core::icon name="ti ti-logout" />
         </a>

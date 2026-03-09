@@ -299,6 +299,15 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                         'uses' => 'postAvatar',
                     ]);
 
+                    Route::get('billing-details', [
+                        'as' => 'billing-details',
+                        'uses' => 'getBillingDetails',
+                    ]);
+                    Route::post('billing-details', [
+                        'as' => 'billing-details.update',
+                        'uses' => 'updateBillingDetails',
+                    ]);
+
                     Route::delete('avatar', [
                         'as' => 'avatar.destroy',
                         'uses' => 'deleteAvatar',
@@ -369,14 +378,6 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     Route::put('{id}', 'JobAlertController@update')->name('update');
                     Route::delete('{id}', 'JobAlertController@destroy')->name('destroy');
                     Route::post('{id}/toggle', 'JobAlertController@toggle')->name('toggle');
-                });
-
-                // User Notifications
-                Route::group(['prefix' => 'notifications', 'as' => 'notifications.'], function (): void {
-                    Route::post('{id}/read', 'UserNotificationController@markAsRead')->name('read');
-                    Route::post('read-all', 'UserNotificationController@markAllAsRead')->name('read-all');
-                    Route::delete('{id}', 'UserNotificationController@delete')->name('delete');
-                    Route::delete('all', 'UserNotificationController@deleteAll')->name('delete-all');
                 });
 
                 // Job seeker wallet only (separate from employer wallet)
@@ -462,18 +463,6 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 Route::resource('', 'AccountJobController')->parameters(['' => 'job'])->only(['index', 'store', 'show', 'destroy']);
             });
 
-            // Candidates page for employers
-            Route::group([
-                'middleware' => ['account:' . AccountTypeEnum::EMPLOYER],
-            ], function (): void {
-                Route::controller('DashboardController')->group(function (): void {
-                    Route::get('candidates', [
-                        'as' => 'candidates',
-                        'uses' => 'candidates',
-                    ]);
-                });
-            });
-
             Route::group([
                 'prefix' => 'packages',
                 'middleware' => [
@@ -518,6 +507,18 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 Route::get('wallet', [
                     'as' => 'wallet',
                     'uses' => 'WalletController@index',
+                ]);
+                Route::post('wallet/purchase-job-post-slot', [
+                    'as' => 'wallet.purchase_job_post_slot',
+                    'uses' => 'WalletController@purchaseJobPostSlot',
+                ]);
+                Route::post('wallet/purchase-profile-view-slot', [
+                    'as' => 'wallet.purchase_profile_view_slot',
+                    'uses' => 'WalletController@purchaseProfileViewSlot',
+                ]);
+                Route::post('wallet/purchase-feature', [
+                    'as' => 'wallet.purchase_feature',
+                    'uses' => 'WalletController@purchaseFeature',
                 ]);
             });
         });

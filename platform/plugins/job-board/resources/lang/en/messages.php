@@ -126,6 +126,7 @@ return [
     'job_not_found_or_access_denied' => 'Job not found or access denied',
     'access_denied_employers_create' => 'Access denied. Only employers can create jobs.',
     'insufficient_credits' => 'Insufficient credits to post a job.',
+    'use_credits_for_job_post' => 'Package job posts are used. Go to Wallet → Coin consumption and use credits to get 1 job post.',
     'must_add_company_first' => 'You must add at least 1 company first.',
 
     // Review messages
@@ -145,6 +146,10 @@ return [
 
     // Candidate
     'candidate_not_found' => 'Candidate not found',
+    'candidate_profile_view_limit_reached' => 'You have used your package profile views. Use credits from Wallet for more profile views or upgrade your package.',
+    'candidate_profile_locked' => 'This profile is locked. Use credits from Wallet for 1 profile view or upgrade your package to view full details.',
+    'candidate_profile_upgrade_cta' => 'Go to Wallet (use credits or upgrade)',
+    'buy_package_to_view_profiles' => 'Buy a package to view candidate profiles',
 
     // Analytics and date filters
     'last_hour' => 'Last hour',
@@ -267,7 +272,12 @@ return [
     'purchased_credits' => 'You have purchased :credits credit(s)',
     'credits_used' => ':credits credit(s) used',
     'credits_used_job_post' => '1 credit used for job post: :job',
+    'credits_used_job_post_slot' => ':credits credits used for 1 job post slot (Wallet)',
+    'job_post_slot_purchased' => '1 job post slot added. You can now create 1 job.',
     'credits_used_job_renew' => '1 credit used for job renewal: :job',
+    'credits_used_profile_view' => '1 credit used for candidate profile view: :candidate',
+    'credits_used_profile_view_slot' => ':credits credits used for 1 profile view slot (Wallet)',
+    'profile_view_slot_purchased' => '1 profile view slot added. You can view 1 more candidate profile when package limit is used.',
     'via_payment' => ' via :payment',
 
     // External job application

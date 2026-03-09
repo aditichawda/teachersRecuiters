@@ -95,6 +95,62 @@ class PackageForm extends FormAbstract
             ->add('rowClose2', 'html', [
                 'html' => '</div>',
             ])
+            ->add('package_type', 'customSelect', [
+                'label' => trans('plugins/job-board::package.package_type'),
+                'choices' => [
+                    'employer' => trans('plugins/job-board::package.package_type_employer'),
+                    'job-seeker' => trans('plugins/job-board::package.package_type_job_seeker'),
+                ],
+                'wrapper' => [
+                    'class' => 'form-group col-md-12',
+                ],
+            ])
+            ->add('rowOpen3', 'html', [
+                'html' => '<div class="row">',
+            ])
+            ->add('validity_days', 'number', [
+                'label' => trans('plugins/job-board::package.validity_days'),
+                'wrapper' => [
+                    'class' => 'form-group col-md-4',
+                ],
+                'attr' => [
+                    'placeholder' => 'e.g. 90',
+                    'min' => 0,
+                ],
+            ])
+            ->add('credits_included', 'number', [
+                'label' => trans('plugins/job-board::package.credits_included'),
+                'wrapper' => [
+                    'class' => 'form-group col-md-4',
+                ],
+                'attr' => [
+                    'placeholder' => 'e.g. 2500',
+                    'min' => 0,
+                ],
+            ])
+            ->add('profile_views_allowed', 'number', [
+                'label' => trans('plugins/job-board::package.profile_views_allowed'),
+                'wrapper' => [
+                    'class' => 'form-group col-md-4',
+                ],
+                'attr' => [
+                    'placeholder' => 'e.g. 100',
+                    'min' => 0,
+                ],
+            ])
+            ->add('worth', 'text', [
+                'label' => trans('plugins/job-board::package.worth'),
+                'wrapper' => [
+                    'class' => 'form-group col-md-12',
+                ],
+                'attr' => [
+                    'class' => 'form-control input-mask-number',
+                    'placeholder' => 'Display value e.g. 11000',
+                ],
+            ])
+            ->add('rowClose3', 'html', [
+                'html' => '</div>',
+            ])
             ->add('is_default', OnOffField::class, IsDefaultFieldOption::make())
             ->add('features', RepeaterField::class, [
                 'label' => trans('plugins/job-board::package.features'),

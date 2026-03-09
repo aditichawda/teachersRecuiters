@@ -1,7 +1,10 @@
 <?php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
+    use Botble\JobBoard\Models\Company;
+    use Botble\JobBoard\Models\Transaction;
     use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
+    use Botble\Slug\Facades\SlugHelper;
     
     $account = auth('account')->user();
     $company = $account->companies()->with('slugable')->first();
@@ -10,8 +13,17 @@
         $companySlugKey = $company->slugable?->key ?? null;
         if (!$companySlugKey) {
             try {
-                $slugModel = \Botble\Slug\Facades\SlugHelper::getSlug(null, \Botble\Slug\Facades\SlugHelper::getPrefix(\Botble\JobBoard\Models\Company::class), \Botble\JobBoard\Models\Company::class, $company->id);
+                $slugModel = SlugHelper::getSlug(null, SlugHelper::getPrefix(Company::class), Company::class, $company->id);
                 $companySlugKey = $slugModel?->key ?? null;
+            } catch (\Throwable $e) {
+                $companySlugKey = null;
+            }
+        }
+        if (!$companySlugKey && SlugHelper::isSupportedModel(Company::class) && !empty($company->name)) {
+            try {
+                SlugHelper::createSlug($company);
+                $company->load('slugable');
+                $companySlugKey = $company->slugable?->key ?? null;
             } catch (\Throwable $e) {
                 $companySlugKey = null;
             }
@@ -38,7 +50,37 @@
     
     $currentUrl = url()->current();
     $menuItems = DashboardMenu::getAll('account');
-    
+
+    // Post Job: lock when no package ever purchased (credits system enabled). Allow when package slot or credits (PackageContext).
+    $hasPurchasedPackage = false;
+    $packageContext = null;
+    $canPost = false;
+    try {
+        $packageContext = $account ? \Botble\JobBoard\Supports\PackageContext::forAccount($account) : null;
+        if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
+            $hasPurchasedPackage = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where(function ($q): void {
+                    $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                })
+                ->whereNotNull('payment_id')
+                ->whereNotNull('package_id')
+                ->exists();
+        }
+        $canPost = $account && (!$account->isEmployer() || !JobBoardHelper::isEnabledCreditsSystem() || ($hasPurchasedPackage && $packageContext && $packageContext->canPostJob($account)));
+    } catch (\Throwable $e) {
+        // If PackageContext/credits check fails, lock Post Job and avoid 500 so page still loads
+        $canPost = false;
+    }
+    $jobPostCreditsRequired = 0;
+    if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
+        try {
+            $jobPostCreditsRequired = (int) \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING, 600);
+        } catch (\Throwable $e) {
+            $jobPostCreditsRequired = 600;
+        }
+    }
+
     // Get featured categories with job counts
     $featuredCategories = collect();
     try {
@@ -756,7 +798,7 @@
                     <a href="<?php echo e(route('public.account.dashboard')); ?>"><i class="fa fa-home"></i> Dashboard</a>
                     <a href="<?php echo e(route('public.account.employer.settings.edit')); ?>"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
-                    <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                    <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -849,15 +891,27 @@
                         <span class="enl-comp-text" onclick="document.getElementById('enlProfileModal').style.display='flex'"><?php echo e($empCompletion); ?>% Complete</span>
                     </div>
                     
-                    <!-- Post Job Button -->
-                    <a href="<?php echo e(route('public.account.jobs.create')); ?>" class="enl-postjob">
-                        <i class="fa fa-plus-circle"></i> Post Job
+                    <!-- Post Job Button (locked: show limit-over popup with "Use credits for 1 Job Post"; no auto-deduct) -->
+                    <?php $postJobLocked = !($canPost ?? true); ?>
+                    <a href="<?php echo e($postJobLocked ? route('public.account.wallet') : route('public.account.jobs.create')); ?>" class="enl-postjob <?php echo e($postJobLocked ? 'enl-postjob-locked' : ''); ?> <?php if($postJobLocked && $account->isEmployer() && $jobPostCreditsRequired > 0): ?> enl-limit-over-trigger <?php endif; ?>" data-limit-over="job_post" data-credits-required="<?php echo e($jobPostCreditsRequired); ?>" data-wallet-url="<?php echo e(route('public.account.wallet')); ?>" data-job-create-url="<?php echo e(route('public.account.jobs.create')); ?>" data-purchase-url="<?php echo e(route('public.account.wallet.purchase_job_post_slot')); ?>" title="<?php echo e($postJobLocked ? trans('plugins/job-board::messages.insufficient_credits') : ''); ?>">
+                        <?php if($postJobLocked): ?>
+                            <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
+                            <span><?php echo e(__('Post Job')); ?></span>
+                        <?php else: ?>
+                            <i class="fa fa-plus-circle"></i> <?php echo e(__('Post Job')); ?>
+
+                        <?php endif; ?>
                     </a>
 
-                    <!-- Admission Button (employer only) -->
-                    <a href="<?php echo e(route('public.account.admission.edit')); ?>" class="enl-postjob" style="background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;">
-                        <i class="fa fa-graduation-cap"></i> <?php echo e(__('Admission')); ?>
+                    <!-- Admission Button (employer only, same lock as Post Job: credits/package required) -->
+                    <a href="<?php echo e($postJobLocked ? route('public.account.wallet') : route('public.account.admission.edit')); ?>" class="enl-postjob <?php echo e($postJobLocked ? 'enl-postjob-locked' : ''); ?>" style="<?php echo e($postJobLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;'); ?>" title="<?php echo e($postJobLocked ? trans('plugins/job-board::messages.insufficient_credits') : ''); ?>">
+                        <?php if($postJobLocked): ?>
+                            <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
+                            <span><?php echo e(__('Admission')); ?></span>
+                        <?php else: ?>
+                            <i class="fa fa-graduation-cap"></i> <?php echo e(__('Admission')); ?>
 
+                        <?php endif; ?>
                     </a>
                     
                     <!-- Navigation -->
@@ -865,7 +919,7 @@
                         <?php $__currentLoopData = $menuItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php if(! $item['name']) continue; ?>
                             <?php
-                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages', 'cms-account-invoices'];
+                                $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages'];
                                 if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
                                     continue;
                                 }
@@ -1019,6 +1073,68 @@
         </form>
     </div>
 </div>
+
+<?php if($account && $account->isEmployer() && $jobPostCreditsRequired > 0): ?>
+<!-- Limit over popup: message + Use credits for 1 Job Post (no auto-deduct) -->
+<div id="enlLimitOverModal" class="enl-pm-overlay" style="display:none;">
+    <div class="enl-pm-modal" style="max-width:420px;">
+        <button type="button" class="enl-pm-close" onclick="document.getElementById('enlLimitOverModal').style.display='none'">&times;</button>
+        <h5 style="font-size:18px;font-weight:700;color:#333;margin-bottom:12px;">
+            <i class="fa fa-info-circle" style="color:#0073d1;margin-right:8px;"></i>
+            <?php echo e(trans('plugins/job-board::dashboard.limit_over_job_post_title')); ?>
+
+        </h5>
+        <p style="font-size:14px;color:#555;line-height:1.5;margin-bottom:20px;">
+            <?php echo e(trans('plugins/job-board::dashboard.limit_over_job_post_message', ['credits' => $jobPostCreditsRequired])); ?>
+
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;">
+            <a href="<?php echo e(route('public.account.wallet')); ?>" id="enlLimitOverWalletBtn" style="padding:10px 18px;border:1.5px solid #0073d1;border-radius:8px;background:#fff;color:#0073d1;font-size:14px;font-weight:600;text-decoration:none;"><?php echo e(trans('plugins/job-board::dashboard.limit_over_go_to_wallet_btn')); ?></a>
+            <button type="button" id="enlLimitOverUseCreditsBtn" style="padding:10px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,#0073d1,#005bb5);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">
+                <?php echo e(trans('plugins/job-board::dashboard.limit_over_use_credits_btn', ['credits' => $jobPostCreditsRequired])); ?>
+
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    var trigger = document.querySelector('a.enl-limit-over-trigger[data-limit-over="job_post"]');
+    var modal = document.getElementById('enlLimitOverModal');
+    var useCreditsBtn = document.getElementById('enlLimitOverUseCreditsBtn');
+    var walletBtn = document.getElementById('enlLimitOverWalletBtn');
+    if (!trigger || !modal || !useCreditsBtn) return;
+    trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        modal.style.display = 'flex';
+    });
+    useCreditsBtn.addEventListener('click', function() {
+        var url = trigger.getAttribute('data-purchase-url');
+        var jobCreateUrl = trigger.getAttribute('data-job-create-url');
+        var csrf = document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        if (!url || !csrf) { alert('Something went wrong.'); return; }
+        useCreditsBtn.disabled = true;
+        useCreditsBtn.textContent = '...';
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success && jobCreateUrl) {
+                modal.style.display = 'none';
+                window.location.href = jobCreateUrl;
+            } else {
+                alert(data.message || '<?php echo e(trans('plugins/job-board::messages.insufficient_credits')); ?>');
+            }
+        })
+        .catch(function() { alert('Something went wrong.'); })
+        .finally(function() { useCreditsBtn.disabled = false; useCreditsBtn.textContent = '<?php echo e(trans('plugins/job-board::dashboard.limit_over_use_credits_btn', ['credits' => $jobPostCreditsRequired])); ?>'; });
+    });
+})();
+</script>
+<?php endif; ?>
 
 <script>
 var enlSelectedFile = null;
@@ -1261,10 +1377,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Attach to document to catch all clicks
     document.addEventListener('click', function(e) {
-        // Find the closest link
+        // Never intercept invoice download/print - they must do full navigation to get PDF
+        const anyLink = e.target.closest('a');
+        if (anyLink) {
+            const h = anyLink.getAttribute('href') || '';
+            if (h.indexOf('generate-invoice') !== -1 || anyLink.hasAttribute('download')) {
+                return;
+            }
+        }
+
+        // Find the closest link (sidebar only)
         const link = e.target.closest('.enl-nav a');
         if (!link) return;
-        
+
         const href = link.getAttribute('href');
         
         // Skip if it's an external link, logout, or special action
@@ -1388,7 +1513,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     mainContent.style.pointerEvents = 'auto';
                 }
             });
-        }
         }
     });
     
