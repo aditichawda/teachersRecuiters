@@ -4,6 +4,22 @@
 
 <div class="row">
     @foreach ($candidates as $candidate)
+        @php
+            // Auto-create slug if missing but candidate is eligible
+            if (! JobBoardHelper::isDisabledPublicProfile() && $candidate->isJobSeeker() && $candidate->is_public_profile) {
+                if (! $candidate->relationLoaded('slugable')) {
+                    $candidate->load('slugable');
+                }
+                if (! $candidate->slugable && $candidate->email_verified_at && $candidate->confirmed_at) {
+                    try {
+                        \Botble\Slug\Facades\SlugHelper::createSlug($candidate);
+                        $candidate->load('slugable');
+                    } catch (\Throwable $e) {
+                        // Ignore errors
+                    }
+                }
+            }
+        @endphp
         <div class="col-md-6 mb-4">
             <div class="cand-card-list" style="display: flex; align-items: flex-start; gap: 15px; padding: 18px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; height: 100%;">
                 @if ($candidate->is_featured)

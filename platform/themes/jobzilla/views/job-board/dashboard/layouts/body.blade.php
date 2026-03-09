@@ -1504,35 +1504,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Wait for dialog system to be available
-        function tryShowDialog(attempts) {
-            attempts = attempts || 0;
-            
-            if (typeof window.showDialogConfirm === 'function') {
-                // Use custom dialog
-                window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
-                    if (confirmed) {
-                        logoutForm.submit();
-                    }
-                }).catch(function(error) {
-                    console.error('Dialog error:', error);
-                    // Fallback to native confirm
-                    if (confirm('Do you want to logout?')) {
-                        logoutForm.submit();
-                    }
-                });
-            } else if (attempts < 50) {
-                // Retry after 100ms
-                setTimeout(function() {
-                    tryShowDialog(attempts + 1);
-                }, 100);
-            } else {
-                if (confirm('Do you want to logout?')) {
-                    logoutForm.submit();
-                }
-            }
+        // Use native alert for now (except employer dashboard)
+        if (confirm('Do you want to logout?')) {
+            logoutForm.submit();
         }
-        tryShowDialog();
     }
     
     function initLogoutHandler() {

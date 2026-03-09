@@ -5,6 +5,21 @@
 
 @foreach ($candidates as $candidate)
     @php
+        // Auto-create slug if missing but candidate is eligible
+        if (! JobBoardHelper::isDisabledPublicProfile() && $candidate->isJobSeeker() && $candidate->is_public_profile) {
+            if (! $candidate->relationLoaded('slugable')) {
+                $candidate->load('slugable');
+            }
+            if (! $candidate->slugable && $candidate->email_verified_at && $candidate->confirmed_at) {
+                try {
+                    \Botble\Slug\Facades\SlugHelper::createSlug($candidate);
+                    $candidate->load('slugable');
+                } catch (\Throwable $e) {
+                    // Ignore errors
+                }
+            }
+        }
+        
         // Helper function for formatting
         $formatLabel = function($v) { return ucwords(str_replace('_', ' ', (string)$v)); };
         

@@ -43,14 +43,16 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
         ]);
 
         try {
-            // Ensure author and company relationships are loaded
-            if (!$this->jobModel->relationLoaded('author')) {
-                $this->jobModel->load('author');
-                Log::debug('[EMAIL_NOTIFICATION] Loaded job author relationship');
-            }
-            if (!$this->jobModel->relationLoaded('company')) {
-                $this->jobModel->load('company');
-                Log::debug('[EMAIL_NOTIFICATION] Loaded company relationship');
+            // Reload job model with all required relationships for fresh data
+            $this->jobModel->refresh();
+            
+            // Ensure all required relationships are loaded
+            $relationshipsToLoad = ['author', 'company', 'city', 'state', 'country'];
+            foreach ($relationshipsToLoad as $relation) {
+                if (!$this->jobModel->relationLoaded($relation)) {
+                    $this->jobModel->load($relation);
+                    Log::debug('[EMAIL_NOTIFICATION] Loaded job relationship', ['relation' => $relation]);
+                }
             }
 
             // Get employer emails - from job creator, company, and additional emails
@@ -673,10 +675,16 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
     protected function sendWhatsAppNotifications(string $jobSeekerName, string $jobSeekerEmail, string $jobSeekerPhone, string $jobTitle): void
     {
         try {
-            // Ensure company relationship is loaded
-            if (!$this->jobModel->relationLoaded('company')) {
-                $this->jobModel->load('company');
+            // Ensure all required relationships are loaded for dynamic data
+            $relationshipsToLoad = ['company', 'city', 'state', 'country', 'author'];
+            foreach ($relationshipsToLoad as $relation) {
+                if (!$this->jobModel->relationLoaded($relation)) {
+                    $this->jobModel->load($relation);
+                }
             }
+            
+            // Refresh job model to ensure latest data
+            $this->jobModel->refresh();
 
             // Get employer phone numbers
             $employerPhones = [];
@@ -873,73 +881,260 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
     }
 
     /**
-     * Build WhatsApp message content for job application notification
+     * Build WhatsApp message parameters for job application notification
      * 
-     * CURRENT: Using OTP template structure - returns compact job application summary
-     * Format: Single line message with hint that this is for job application
-     * This will be sent in both body and button components (OTP template structure)
+     * CURRENT: Using new_application_msg_to_school template
+     * Template requires 5 body parameters + 1 button parameter:
+     * Body: 1. Company Name, 2. Job Title, 3. Candidate Name, 4. Location, 5. Phone
+     * Button: 1. Candidate Name (lowercase)
      * 
-     * COMMENTED BELOW: job_application_alert template code (ready to use when template is approved in MSG Club dashboard)
-     * Uncomment the commented code and comment the current code when template is approved
+     * Returns array with 'body' and 'button' keys containing parameter arrays
      */
-    protected function buildWhatsAppMessage(string $jobSeekerName, string $jobSeekerEmail, string $jobSeekerPhone, string $jobTitle): string
+    protected function buildWhatsAppMessage(string $jobSeekerName, string $jobSeekerEmail, string $jobSeekerPhone, string $jobTitle): array
     {
-        // ============================================
-        // CURRENT CODE: OTP Template (Working)
-        // ============================================
-        // Build a very short message optimized for OTP template
-        // OTP templates typically expect short values (like 6-digit OTP)
-        // We'll create a compact message that fits OTP template format
+        // Ensure all relationships are loaded for dynamic data - RELOAD to get fresh data
+        $relationshipsToLoad = ['company', 'city', 'state', 'country'];
+        foreach ($relationshipsToLoad as $relation) {
+            if (!$this->jobModel->relationLoaded($relation)) {
+                $this->jobModel->load($relation);
+            }
+        }
         
-        // Create a simple numeric code from application ID and job ID
-        // This makes it look like an OTP code but represents job application
+        // Reload job model to ensure we have latest data
+        $this->jobModel->refresh();
+        
+        // ============================================
+        // DYNAMIC COMPANY NAME - Get from Database
+        // ============================================
+        $companyName = 'School/Institution'; // Default fallback
+        
+        // Method 1: Use company relationship (most reliable)
+        if ($this->jobModel->company && $this->jobModel->company->id && !empty($this->jobModel->company->name)) {
+            $companyName = trim($this->jobModel->company->name);
+            Log::debug('[WHATSAPP_NOTIFICATION] Company name from relationship', [
+                'company_id' => $this->jobModel->company->id,
+                'company_name' => $companyName,
+            ]);
+        }
+        // Method 2: Use company_name accessor (getCompanyNameAttribute)
+        elseif (method_exists($this->jobModel, 'getCompanyNameAttribute') || property_exists($this->jobModel, 'company_name')) {
+            try {
+                $companyNameAttr = $this->jobModel->company_name;
+                if (!empty($companyNameAttr) && strlen(trim($companyNameAttr)) > 1) {
+                    $companyName = trim($companyNameAttr);
+                    Log::debug('[WHATSAPP_NOTIFICATION] Company name from accessor', [
+                        'company_name' => $companyName,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::debug('[WHATSAPP_NOTIFICATION] Company name accessor error', ['error' => $e->getMessage()]);
+            }
+        }
+        
+        // Final validation
+        if (empty($companyName) || strlen($companyName) < 2) {
+            $companyName = 'School/Institution';
+            Log::warning('[WHATSAPP_NOTIFICATION] Using fallback company name', [
+                'job_id' => $this->jobModel->id,
+                'company_id' => $this->jobModel->company_id,
+                'company_loaded' => $this->jobModel->relationLoaded('company') ? 'yes' : 'no',
+                'company_exists' => $this->jobModel->company ? 'yes' : 'no',
+            ]);
+        }
+        
+        // ============================================
+        // DYNAMIC LOCATION - Get from Database
+        // ============================================
+        $location = 'India'; // Default fallback
+        
+        // Method 1: City from relationship (preferred)
+        if ($this->jobModel->city && $this->jobModel->city->id && !empty($this->jobModel->city->name)) {
+            $location = trim($this->jobModel->city->name);
+            Log::debug('[WHATSAPP_NOTIFICATION] Location from city relationship', [
+                'city_id' => $this->jobModel->city->id,
+                'location' => $location,
+            ]);
+        }
+        // Method 2: City name attribute
+        elseif (!empty($this->jobModel->city_name) && strlen(trim($this->jobModel->city_name)) > 1) {
+            $location = trim($this->jobModel->city_name);
+            Log::debug('[WHATSAPP_NOTIFICATION] Location from city_name attribute', [
+                'location' => $location,
+            ]);
+        }
+        // Method 3: State from relationship
+        elseif ($this->jobModel->state && $this->jobModel->state->id && !empty($this->jobModel->state->name)) {
+            $location = trim($this->jobModel->state->name);
+            Log::debug('[WHATSAPP_NOTIFICATION] Location from state relationship', [
+                'state_id' => $this->jobModel->state->id,
+                'location' => $location,
+            ]);
+        }
+        // Method 4: State name attribute
+        elseif (!empty($this->jobModel->state_name) && strlen(trim($this->jobModel->state_name)) > 1) {
+            $location = trim($this->jobModel->state_name);
+            Log::debug('[WHATSAPP_NOTIFICATION] Location from state_name attribute', [
+                'location' => $location,
+            ]);
+        }
+        // Method 5: Location field
+        elseif (!empty($this->jobModel->location) && strlen(trim($this->jobModel->location)) > 1) {
+            $location = trim($this->jobModel->location);
+            Log::debug('[WHATSAPP_NOTIFICATION] Location from location field', [
+                'location' => $location,
+            ]);
+        }
+        
+        // Final validation
+        if (empty($location) || strlen($location) < 2) {
+            $location = 'India';
+            Log::warning('[WHATSAPP_NOTIFICATION] Using fallback location', [
+                'job_id' => $this->jobModel->id,
+                'city_id' => $this->jobModel->city_id,
+                'state_id' => $this->jobModel->state_id,
+                'city_loaded' => $this->jobModel->relationLoaded('city') ? 'yes' : 'no',
+                'state_loaded' => $this->jobModel->relationLoaded('state') ? 'yes' : 'no',
+                'city_exists' => $this->jobModel->city ? 'yes' : 'no',
+                'state_exists' => $this->jobModel->state ? 'yes' : 'no',
+            ]);
+        }
+        
+        // Format phone number (remove any non-numeric characters, keep only digits)
+        $phoneDisplay = preg_replace('/[^0-9]/', '', $jobSeekerPhone);
+        if (empty($phoneDisplay) || $phoneDisplay === 'N/A') {
+            $phoneDisplay = 'Not provided';
+        }
+        
+        // Get job seeker profile URL for button
+        $jobSeekerProfileUrl = '';
+        try {
+            // Load account relationship if not loaded
+            if (!$this->application->relationLoaded('account')) {
+                $this->application->load('account');
+            }
+            
+            if ($this->application->account && $this->application->account->id) {
+                // Get profile URL - try account->url first (if available)
+                if (method_exists($this->application->account, 'getUrlAttribute') || property_exists($this->application->account, 'url')) {
+                    $jobSeekerProfileUrl = $this->application->account->url ?? '';
+                }
+                
+                // If URL not available, generate from route
+                if (empty($jobSeekerProfileUrl)) {
+                    try {
+                        // Try to get slug from slugable relationship
+                        if (!$this->application->account->relationLoaded('slugable')) {
+                            $this->application->account->load('slugable');
+                        }
+                        
+                        if ($this->application->account->slugable && $this->application->account->slugable->key) {
+                            $jobSeekerProfileUrl = route('public.candidate', ['slug' => $this->application->account->slugable->key]);
+                        } else {
+                            // Fallback: use account ID (if route supports it)
+                            $jobSeekerProfileUrl = route('public.candidate', ['slug' => $this->application->account->id]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('[WHATSAPP_NOTIFICATION] Could not generate profile URL', [
+                            'account_id' => $this->application->account->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('[WHATSAPP_NOTIFICATION] Error getting job seeker profile URL', [
+                'application_id' => $this->application->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+        
+        // If profile URL is still empty, use phone number as fallback
+        $buttonParameter = !empty($jobSeekerProfileUrl) ? $jobSeekerProfileUrl : $phoneDisplay;
+        
+        // Log the values being used for debugging
+        Log::debug('[WHATSAPP_NOTIFICATION] Building message parameters', [
+            'company_name' => $companyName,
+            'job_title' => $jobTitle,
+            'candidate_name' => $jobSeekerName,
+            'location' => $location,
+            'phone' => $phoneDisplay,
+            'profile_url' => $jobSeekerProfileUrl,
+            'button_parameter' => $buttonParameter,
+        ]);
+        
+        // Return parameters array for new_application_msg_to_school template
+        // EXACT as Postman screenshot:
+        // Body: 1. Company Name, 2. Job Title, 3. Candidate Name, 4. Location, 5. Phone
+        // Button: 1. Profile URL (to view applicant profile) or Phone Number as fallback
+        return [
+            'body' => [
+                $companyName,        // Parameter 1: Company/School Name (e.g., "Alpha School")
+                $jobTitle,           // Parameter 2: Job Title (e.g., "Hindi Teacher")
+                $jobSeekerName,      // Parameter 3: Candidate Name (e.g., "Deepak")
+                $location,           // Parameter 4: Location (e.g., "Indore")
+                $phoneDisplay,       // Parameter 5: Phone Number (e.g., "9109459959")
+            ],
+            'button' => [
+                $buttonParameter,    // Parameter 1: Profile URL (e.g., "https://example.com/candidates/john-doe") or Phone Number as fallback
+            ],
+        ];
+        
+        // ============================================
+        // COMMENTED CODE: OTP Template (Previous implementation)
+        // ============================================
+        /*
+        // Build a very short message optimized for OTP template
         $applicationId = $this->application->id ?? 0;
         $jobId = $this->jobModel->id ?? 0;
-        
-        // Create a 6-digit code: last 3 digits of job ID + last 3 digits of application ID
         $code = str_pad($jobId % 1000, 3, '0', STR_PAD_LEFT) . str_pad($applicationId % 1000, 3, '0', STR_PAD_LEFT);
-        
-        // Add hint prefix to make it clear this is for job application
-        // Format: "JOB{code}" - Example: "JOB123456"
         $message = "JOB" . $code;
-        
         return $message;
+        */
         
         // ============================================
         // COMMENTED CODE: job_application_alert Template (Ready to use when approved)
         // ============================================
-        // Uncomment below code and comment above code when job_application_alert template is approved in MSG Club dashboard
         /*
         // Build a readable message format
         $phoneDisplay = ($jobSeekerPhone && $jobSeekerPhone !== 'N/A') ? $jobSeekerPhone : 'Not provided';
-        
-        // Format: Pipe-separated for template with multiple parameters
-        // Template parameters: {{1}} = Job Title, {{2}} = Candidate Name, {{3}} = Email, {{4}} = Phone
-        // If your template uses a single parameter, it will receive: "Job Title|Name|Email|Phone"
         return $jobTitle . '|' . $jobSeekerName . '|' . $jobSeekerEmail . '|' . $phoneDisplay;
         */
     }
 
     /**
      * Send WhatsApp message using MSG Club API (Template-based)
-     * Uses same approach as OTP notification for consistency and speed
+     * Uses same approach as OTP notification in LoginController for reliability
+     * Template: new_application_msg_to_school with 5 body parameters + 1 button parameter
      */
-    protected function sendWhatsAppMessage(string $phone, string $message): bool
+    protected function sendWhatsAppMessage(string $phone, array $messageParams): bool
     {
-        // Get WhatsApp API configuration - use config/services.php (client's structure)
-        $apiUrl = config('services.msgclub.url', env('MSGCLUB_WHATSAPP_URL', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate'));
-        $authKey = config('services.msgclub.key', env('MSGCLUB_AUTH_KEY', env('WHATSAPP_API_KEY', '4625770ffb62853af287cedec7f50b0')));
+        // Get WhatsApp API configuration - SAME as OTP notification
+        $apiUrl = setting('whatsapp_api_url', env('WHATSAPP_API_URL', config('services.msgclub.url', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate')));
+        $authKey = setting('whatsapp_api_key', env('WHATSAPP_API_KEY', config('services.msgclub.key', '4625770ffb62853af287cedec7f50b0')));
         $senderId = setting('whatsapp_sender_id', env('WHATSAPP_SENDER_ID', '919039632383'));
+
+        if (!$apiUrl || !$authKey) {
+            Log::error('[WHATSAPP_NOTIFICATION] WhatsApp API configuration missing');
+            return false;
+        }
+
+        // Template name: new_application_msg_to_school (client provided, working in Postman)
+        $templateName = 'new_application_msg_to_school';
         
-        // ============================================
-        // CURRENT CODE: OTP Template (Working)
-        // ============================================
-        // Use OTP template (otp_signup_login) - which is working and tested
-        $templateName = setting('whatsapp_otp_template', env('WHATSAPP_OTP_TEMPLATE', 'otp_signup_login'));
+        // Allow override via env/setting if needed
+        $envTemplate = env('WHATSAPP_JOB_APPLICATION_TEMPLATE');
+        $settingTemplate = setting('whatsapp_job_application_template');
         
-        Log::debug('[WHATSAPP_NOTIFICATION] Using OTP template for job application notification', [
+        if ($envTemplate && $envTemplate !== 'job_application_alert') {
+            $templateName = $envTemplate;
+        } elseif ($settingTemplate && $settingTemplate !== 'job_application_alert') {
+            $templateName = $settingTemplate;
+        }
+        
+        Log::debug('[WHATSAPP_NOTIFICATION] Using template (same approach as OTP)', [
             'template_name' => $templateName,
-            'note' => 'Using working OTP template with job application details',
+            'body_params_count' => count($messageParams['body'] ?? []),
+            'button_params_count' => count($messageParams['button'] ?? []),
         ]);
         
         // ============================================
@@ -996,80 +1191,76 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
             return false;
         }
 
-        // Clean phone number (remove any non-numeric characters) - same as OTP
+        // Clean phone number (remove any non-numeric characters) - EXACT SAME as OTP
         $phone = preg_replace('/[^0-9]/', '', $phone);
         
         // Store original phone for logging
         $phoneWithCountryCode = $phone;
         $phoneWithoutCountryCode = $phone;
         
-        // Extract 10-digit phone number - same logic as OTP notification
-        // Important: API requires exactly 10 digits without country code
-        // Logic:
-        // - 12 digits starting with 91 → 91 is country code, remove it (10 digits remain)
-        // - 10 digits → use as-is (even if starts with 91, it's a valid 10-digit number)
-        // - 11 digits → extract last 10 digits
+        // Extract 10-digit phone number - EXACT SAME LOGIC as OTP notification in LoginController
+        // If phone has country code (starts with 91 and is 12 digits), extract 10 digits
+        // According to API documentation, mobileNumbers and 'to' should be 10 digits without country code
         if (strlen($phone) == 12 && substr($phone, 0, 2) == '91') {
-            // 12 digits starting with 91 - 91 is country code, remove it
-            $phoneWithoutCountryCode = substr($phone, 2); // Remove country code (first 2 digits)
-            Log::debug('[WHATSAPP_NOTIFICATION] Extracted phone without country code (12 digits)', [
+            $phoneWithoutCountryCode = substr($phone, 2); // Remove country code
+            Log::info('[WHATSAPP_NOTIFICATION] Extracted phone without country code (same as OTP)', [
                 'with_country_code' => $phone,
                 'without_country_code' => $phoneWithoutCountryCode,
-                'note' => '91 is country code, removed to get 10 digits',
             ]);
         } elseif (strlen($phone) == 10) {
-            // Already 10 digits - use as-is (even if starts with 91, it's a valid 10-digit number)
-            // Example: 9103493029 is a valid 10-digit number (91 is part of the number, not country code)
+            // Already 10 digits, no country code
             $phoneWithoutCountryCode = $phone;
-            Log::debug('[WHATSAPP_NOTIFICATION] Phone is already 10 digits - using as-is', [
+            Log::info('[WHATSAPP_NOTIFICATION] Phone is already 10 digits (same as OTP)', [
                 'phone' => $phone,
-                'note' => '10-digit number used as-is (even if starts with 91, it is valid)',
-            ]);
-        } elseif (strlen($phone) == 11) {
-            // 11 digits - extract last 10 digits
-            $phoneWithoutCountryCode = substr($phone, -10);
-            Log::debug('[WHATSAPP_NOTIFICATION] Phone has 11 digits, using last 10 digits', [
-                'original' => $phone,
-                'extracted' => $phoneWithoutCountryCode,
             ]);
         } elseif (strlen($phone) < 10) {
-            Log::error('[WHATSAPP_NOTIFICATION] Phone number too short', [
+            Log::error('[WHATSAPP_NOTIFICATION] Phone number too short (same validation as OTP)', [
                 'phone' => $phone,
                 'length' => strlen($phone),
             ]);
             return false;
         } else {
-            // If phone is longer than 12 digits, try to extract last 10 digits
+            // If phone is longer than 12 digits or doesn't start with 91, try to extract last 10 digits
             $phoneWithoutCountryCode = substr($phone, -10);
-            Log::warning('[WHATSAPP_NOTIFICATION] Phone number format unexpected, using last 10 digits', [
+            Log::warning('[WHATSAPP_NOTIFICATION] Phone number format unexpected, using last 10 digits (same as OTP)', [
                 'original' => $phone,
                 'extracted' => $phoneWithoutCountryCode,
-                'original_length' => strlen($phone),
             ]);
         }
         
-        // Final validation: Ensure we have exactly 10 digits
-        if (strlen($phoneWithoutCountryCode) != 10) {
-            Log::error('[WHATSAPP_NOTIFICATION] Phone number extraction failed - not 10 digits', [
-                'original' => $phoneWithCountryCode,
-                'extracted' => $phoneWithoutCountryCode,
-                'extracted_length' => strlen($phoneWithoutCountryCode),
-            ]);
-            return false;
-        }
-        
-        // Use 10-digit phone number (without country code) for API
+        // Use 10-digit phone number (without country code) for API - SAME as OTP
         $phone = $phoneWithoutCountryCode;
 
-        try {
-            // ============================================
-            // CURRENT CODE: OTP Template Structure (Working)
-            // ============================================
-            // Use OTP template structure (body + button components)
-            // Message contains job application details with hint
-            // Same structure as LoginController::sendWhatsAppMessage for OTP
-            
-            // Payload structure exactly as OTP template (body + button components)
+        // ============================================
+        // CURRENT CODE: new_application_msg_to_school Template Structure
+        // ============================================
+        // Template requires 5 body parameters + 1 button parameter:
+        // Body: 1. Company Name, 2. Job Title, 3. Candidate Name, 4. Location, 5. Phone
+        // Button: 1. Candidate Name (lowercase)
+        
+        // Extract parameters from messageParams array
+        $bodyParams = $messageParams['body'] ?? [];
+        $buttonParams = $messageParams['button'] ?? [];
+        
+        // Build body parameters array
+        $bodyParameters = [];
+        foreach ($bodyParams as $param) {
+            $bodyParameters[] = [
+                'type' => 'text',
+                'text' => (string)$param
+            ];
+        }
+        
+        // Build button parameters array
+        $buttonParameters = [];
+        foreach ($buttonParams as $param) {
+            $buttonParameters[] = [
+                'type' => 'text',
+                'text' => (string)$param
+            ];
+        }
+        
+        // Payload structure EXACTLY as Postman (working example) - SAME STRUCTURE as OTP
             $requestBody = [
                 'mobileNumbers' => $phone,
                 'senderId' => $senderId,
@@ -1086,180 +1277,71 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
                             [
                                 'type' => 'body',
                                 'index' => 0,
-                                'parameters' => [
-                                    [
-                                        'type' => 'text',
-                                        'text' => $message // Job application code (format: JOB{6-digit code})
-                                    ]
-                                ]
-                            ],
-                            [
-                                'type' => 'button',
-                                'sub_type' => 'url',
-                                'index' => 0,
-                                'parameters' => [
-                                    [
-                                        'type' => 'text',
-                                        'text' => $message // Same code in button component (OTP template structure)
-                                    ]
-                                ]
-                            ]
+                            'parameters' => $bodyParameters
+                        ],
+                        [
+                            'type' => 'button',
+                            'sub_type' => 'url',
+                            'index' => 0,
+                            'parameters' => $buttonParameters
+                        ]
                             ]
                         ]
                     ],
                     'qrImageUrl' => false,
                     'qrLinkUrl' => false,
                     'to' => $phone
-            ];
-            
-            // ============================================
-            // COMMENTED CODE: job_application_alert Template Structure (Ready to use when approved)
-            // ============================================
-            // Uncomment below code and comment above code when job_application_alert template is approved in MSG Club dashboard
-            /*
-            // Prepare request body according to client's structure (exact format from WhatsappService)
-            // Split message into parts for template parameters
-            // Format: "Job Title|Candidate Name|Email|Phone"
-            $messageParts = explode('|', $message);
-            
-            // Build parameters array - client's format: {{1}} = Job Title, {{2}} = Candidate Name, {{3}} = Email, {{4}} = Phone
-            $parameters = [];
-            if (count($messageParts) >= 4) {
-                // Multiple parameters - add each part in order
-                $parameters = [
-                    ['type' => 'text', 'text' => trim($messageParts[0])], // {{1}} Job Title
-                    ['type' => 'text', 'text' => trim($messageParts[1])], // {{2}} Candidate Name
-                    ['type' => 'text', 'text' => trim($messageParts[2])], // {{3}} Email
-                    ['type' => 'text', 'text' => trim($messageParts[3])], // {{4}} Phone
-                ];
-            } else {
-                // Fallback: if message format is different, use first part
-                $parameters = [
-                    ['type' => 'text', 'text' => trim($message)]
-                ];
-            }
-            
-            // Payload structure exactly as client's WhatsappService (qrImageUrl and qrLinkUrl at top level)
-            $requestBody = [
-                'mobileNumbers' => $phone,
-                'senderId' => $senderId,
-                'component' => [
-                    'messaging_product' => 'whatsapp',
-                    'recipient_type' => 'individual',
-                    'type' => 'template',
-                    'template' => [
-                        'name' => $templateName,
-                        'language' => [
-                            'code' => 'en'
-                        ],
-                        'components' => [
-                            [
-                                'type' => 'body',
-                                'index' => 0,
-                                'parameters' => $parameters
-                            ]
-                        ]
-                    ]
-                ],
-                'qrImageUrl' => false,
-                'qrLinkUrl' => false,
-                'to' => $phone
-            ];
-            */
+        ];
+        
+        // Log full payload for debugging (EXACT as Postman) - SAME as OTP
+        Log::info('[WHATSAPP_NOTIFICATION] Sending WhatsApp notification (EXACT OTP structure)', [
+            'template_name' => $templateName,
+            'phone' => $phone,
+            'api_url' => $apiUrl,
+            'sender_id' => $senderId,
+            'body_params_count' => count($bodyParams),
+            'button_params_count' => count($buttonParams),
+            'body_params' => $bodyParams,
+            'button_params' => $buttonParams,
+            'full_payload' => $requestBody,
+        ]);
 
-            Log::debug('[WHATSAPP_NOTIFICATION] Sending request', [
-                'phone' => $phone,
-                'template' => $templateName,
-                'api_url' => $apiUrl,
-                'payload' => $requestBody,
-            ]);
-
-            // Make API call with AUTH_KEY as query parameter - client's format
-            // Increased timeout and retry mechanism for better reliability
-            try {
+        // Make API call - EXACT SAME as OTP notification in LoginController
+        // Added timeout and retry mechanism for better reliability
+        try {
             $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-                ])
-                ->timeout(500) // Increased timeout to 90 seconds
-                ->retry(3, 2000, function ($exception, $request) {
-                    // Retry on timeout or connection errors
-                    return $exception instanceof \Illuminate\Http\Client\ConnectionException 
-                        || $exception instanceof \GuzzleHttp\Exception\ConnectException
-                        || $exception instanceof \GuzzleHttp\Exception\RequestException;
-                })
-                ->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
-            } catch (\Illuminate\Http\Client\ConnectionException $e) {
-                // Handle connection timeout specifically
-                Log::error('[WHATSAPP_NOTIFICATION] Connection timeout after retries', [
-                    'phone' => $phone,
-                    'error' => $e->getMessage(),
-                    'timeout' => 90,
-                ]);
-                return false;
-            } catch (\Exception $e) {
-                // Handle other exceptions
-                Log::error('[WHATSAPP_NOTIFICATION] API request exception', [
-                    'phone' => $phone,
-                    'error' => $e->getMessage(),
-                ]);
-                return false;
-            }
+            ])
+            ->timeout(90) // Increased timeout to 90 seconds (same as other WhatsApp calls)
+            ->retry(3, 2000, function ($exception, $request) {
+                // Retry on timeout or connection errors (same as OTP and other WhatsApp calls)
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException
+                    || $exception instanceof \GuzzleHttp\Exception\ConnectException
+                    || $exception instanceof \GuzzleHttp\Exception\RequestException;
+            })
+            ->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
 
-            // Check if request was successful
+            // Check if request was successful - SAME as OTP
+            if ($response->successful()) {
                 $responseData = $response->json();
                 
-            Log::info('[WHATSAPP_NOTIFICATION] API Response received', [
-                'phone' => $phone,
-                'status_code' => $response->status(),
-                'response' => $responseData,
-                'response_body' => $response->body(),
-            ]);
-            
-            if ($response->successful()) {
-                // Check response code (3001 seems to be success based on OTP implementation)
-                // Also check for other success indicators
-                $isSuccess = false;
-                
-                if (isset($responseData['responseCode'])) {
-                    $isSuccess = ($responseData['responseCode'] == '3001' || $responseData['responseCode'] == 3001);
-                } elseif (isset($responseData['status']) && $responseData['status'] == 'success') {
-                    $isSuccess = true;
-                } elseif (isset($responseData['success']) && $responseData['success'] === true) {
-                    $isSuccess = true;
-                } elseif ($response->status() == 200 && empty($responseData['error'])) {
-                    $isSuccess = true;
-                }
-                
-                if ($isSuccess) {
-                    Log::info('[WHATSAPP_NOTIFICATION] ✓ WhatsApp notification sent successfully', [
+                // Check response code (3001 seems to be success based on OTP and Postman)
+                if (isset($responseData['responseCode']) && $responseData['responseCode'] == '3001') {
+                    Log::info('[WHATSAPP_NOTIFICATION] ✓ WhatsApp notification sent successfully (same as OTP)', [
                         'phone' => $phone,
-                        'response' => $responseData
+                        'response' => $responseData,
+                        'template' => $templateName,
+                        'message_id' => $responseData['response'] ?? null,
                     ]);
                     return true;
                 } else {
-                    // Check if template doesn't exist error
-                    $responseMessage = $responseData['response'] ?? $responseData['message'] ?? '';
-                    $isTemplateError = (
-                        ($responseData['responseCode'] ?? '') == '3017' ||
-                        stripos($responseMessage, 'template') !== false && stripos($responseMessage, 'exist') !== false
-                    );
-                    
-                    if ($isTemplateError) {
-                        Log::error('[WHATSAPP_NOTIFICATION] ✗ Template does not exist in WhatsApp panel', [
+                    Log::warning('[WHATSAPP_NOTIFICATION] ✗ WhatsApp API returned non-success response', [
                         'phone' => $phone,
-                            'template_name' => $templateName,
-                            'response' => $responseData,
-                            'response_code' => $responseData['responseCode'] ?? 'not_set',
-                            'message' => 'Please check template name in WhatsApp panel and update .env file with correct template name',
-                        ]);
-                    } else {
-                        Log::warning('[WHATSAPP_NOTIFICATION] ✗ WhatsApp API returned non-success response', [
-                            'phone' => $phone,
-                            'template_name' => $templateName,
-                            'response' => $responseData,
-                            'response_code' => $responseData['responseCode'] ?? 'not_set',
-                        ]);
-                    }
+                        'response' => $responseData,
+                        'response_code' => $responseData['responseCode'] ?? 'unknown',
+                        'template' => $templateName,
+                    ]);
                     return false;
                 }
             } else {
@@ -1267,14 +1349,16 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
                     'phone' => $phone,
                     'status' => $response->status(),
                     'body' => $response->body(),
-                    'response' => $responseData
+                    'template' => $templateName,
                 ]);
                 return false;
             }
         } catch (\Exception $e) {
-            Log::error('[WHATSAPP_NOTIFICATION] WhatsApp API Error: ' . $e->getMessage(), [
+            Log::error('[WHATSAPP_NOTIFICATION] ✗ WhatsApp API Error (same handling as OTP)', [
                 'phone' => $phone,
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'template' => $templateName,
             ]);
             return false;
         }
