@@ -2,7 +2,7 @@
     /** @var Botble\Table\Abstracts\TableAbstract $table */
 ?>
 
-<?php if (! $__env->hasRenderedOnce('f60cd2c3-e6ff-4096-8cd2-1196554d83fa')): $__env->markAsRenderedOnce('f60cd2c3-e6ff-4096-8cd2-1196554d83fa'); ?>
+<?php if (! $__env->hasRenderedOnce('90cd7d21-f7b3-4975-8d1d-4fa679f81775')): $__env->markAsRenderedOnce('90cd7d21-f7b3-4975-8d1d-4fa679f81775'); ?>
     <?php if($randomHash = setting('datatables_random_hash')): ?>
         <script>
             window.DATATABLES_RANDOM_HASH = "<?php echo e($randomHash); ?>";
@@ -113,7 +113,7 @@
 <?php $component->withAttributes([]); ?>
             <div class="w-100 justify-content-between d-flex flex-wrap align-items-center gap-1">
                 <div class="d-flex flex-wrap flex-md-nowrap align-items-center gap-1">
-                    <?php if($table->hasBulkActions()): ?>
+                    <!-- <?php if($table->hasBulkActions()): ?>
                         <?php if (isset($component)) { $__componentOriginalf8303636a16ac3e808e27fabe59149a5 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalf8303636a16ac3e808e27fabe59149a5 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::dropdown.index','data' => ['type' => 'button','label' => trans('core/table::table.bulk_actions'),'wrapperClass' => 'd-inline-block']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -138,7 +138,7 @@
 <?php $component = $__componentOriginalf8303636a16ac3e808e27fabe59149a5; ?>
 <?php unset($__componentOriginalf8303636a16ac3e808e27fabe59149a5); ?>
 <?php endif; ?>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <?php if($table->hasFilters()): ?>
                         <?php if (isset($component)) { $__componentOriginal922f7d3260a518f4cf606eecf9669dcb = $component; } ?>
