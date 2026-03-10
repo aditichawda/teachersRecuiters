@@ -21,6 +21,7 @@ use Botble\JobBoard\Http\Requests\AccountJobRequest;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\AccountActivityLog;
 use Botble\JobBoard\Models\Company;
+use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Currency;
 use Botble\JobBoard\Models\CustomFieldValue;
 use Botble\JobBoard\Models\DegreeLevel;
@@ -29,7 +30,6 @@ use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\JobExperience;
 use Botble\JobBoard\Models\JobScreeningQuestion;
 use Botble\JobBoard\Models\ScreeningQuestion;
-use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Models\JobShift;
 use Botble\JobBoard\Models\JobSkill;
@@ -323,7 +323,36 @@ class AccountJobController extends BaseController
             }
         }
 
-       
+        // New Application Alert by WhatsApp: only allow if employer has enough credits (per-alert deduction happens when sending)
+        if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
+            $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+            if ($account->credits < $wpCredits) {
+                $request->merge(['enable_whatsapp_notifications' => 0]);
+            }
+        }
+
+        // Additional Email (one-time): require entitlement or one-time deduct; else don't save additional emails
+        $applyEmails = array_filter((array) $request->input('apply_internal_emails', []));
+        if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmails)) {
+            if (! CreditConsumption::hasEntitlement($account, CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL)) {
+                $emailCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100);
+                if ($account->credits < $emailCredits) {
+                    $request->merge(['apply_internal_emails' => []]);
+                } else {
+                    $ok = CreditConsumption::deductForFeature(
+                        $account,
+                        CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL,
+                        $emailCredits,
+                        'Additional Email for Application Alerts (one time)',
+                        ['job_create' => true]
+                    );
+                    if (! $ok) {
+                        $request->merge(['apply_internal_emails' => []]);
+                    }
+                }
+            }
+        }
+
         $request->merge([
             'expire_date' => Carbon::now()->addDays(JobBoardHelper::jobExpiredDays()),
             'author_id' => $account->getAuthIdentifier(),
@@ -378,6 +407,16 @@ class AccountJobController extends BaseController
         }
 
         $job->save();
+
+        if ($this->hasFeaturedJobEntitlement($account)) {
+            $job->is_featured = 1;
+            $job->saveQuietly();
+            // Employer ne Featured Job buy kiya hai to is account ki saari jobs featured karo
+            Job::query()
+                ->where('author_id', $account->getKey())
+                ->where('author_type', Account::class)
+                ->update(['is_featured' => 1]);
+        }
 
         if (SlugHelper::isSupportedModel(Job::class)) {
             try {
@@ -778,6 +817,36 @@ if (! $request->has('enable_whatsapp_notifications')) {
     $request->merge(['enable_whatsapp_notifications' => 1]);
 }
 
+// WhatsApp alert: only allow if employer has enough credits (per-alert deduction when sending)
+$accountForUpdate = auth('account')->user();
+if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
+    $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+    if ($accountForUpdate->credits < $wpCredits) {
+        $request->merge(['enable_whatsapp_notifications' => 0]);
+    }
+}
+
+// Additional Email (one-time): require entitlement or one-time deduct
+$applyEmailsUpdate = array_filter((array) $request->input('apply_internal_emails', []));
+if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
+    if (! CreditConsumption::hasEntitlement($accountForUpdate, CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL)) {
+        $emailCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100);
+        if ($accountForUpdate->credits < $emailCredits) {
+            $request->merge(['apply_internal_emails' => []]);
+        } else {
+            $ok = CreditConsumption::deductForFeature(
+                $accountForUpdate,
+                CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL,
+                $emailCredits,
+                'Additional Email for Application Alerts (one time)',
+                ['job_update' => true]
+            );
+            if (! $ok) {
+                $request->merge(['apply_internal_emails' => []]);
+            }
+        }
+    }
+}
 
         if ($job->status != JobStatusEnum::PUBLISHED && $request->input('status') == JobStatusEnum::PUBLISHED) {
             $job->loadMissing('author');
@@ -786,6 +855,16 @@ if (! $request->has('enable_whatsapp_notifications')) {
 
         $job->fill($request->input());
         $job->save();
+
+        if ($this->hasFeaturedJobEntitlement($account = auth('account')->user())) {
+            $job->is_featured = 1;
+            $job->saveQuietly();
+            // Employer ne Featured Job buy kiya hai to is account ki saari jobs featured karo
+            Job::query()
+                ->where('author_id', $account->getKey())
+                ->where('author_type', Account::class)
+                ->update(['is_featured' => 1]);
+        }
 
         $customFields = CustomFieldValue::formatCustomFields($request->input('custom_fields') ?? []);
 
@@ -1228,5 +1307,55 @@ if (! $request->has('enable_whatsapp_notifications')) {
             ->whereNotNull('payment_id')
             ->whereNotNull('package_id')
             ->exists();
+    }
+
+    /**
+     * Employer has used credits for Featured Job and entitlement is still valid (package not expired, or used within 365 days).
+     */
+    private function hasFeaturedJobEntitlement(Account $account): bool
+    {
+        try {
+            if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
+                return false;
+            }
+
+            $debit = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where('type', Transaction::TYPE_DEBIT)
+                ->where('feature_key', CreditConsumption::FEATURE_FEATURED_JOB)
+                ->latest()
+                ->first();
+
+            if (! $debit || ! $debit->created_at) {
+                return false;
+            }
+
+            $lastPurchase = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where(function ($q): void {
+                    $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                })
+                ->whereNotNull('payment_id')
+                ->whereNotNull('package_id')
+                ->with('package')
+                ->latest()
+                ->first();
+
+            if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                if (Carbon::now()->lte($packageExpiryAt)) {
+                    return true;
+                }
+            }
+
+            $debitDate = $debit->created_at instanceof \DateTimeInterface
+                ? Carbon::parse($debit->created_at)
+                : Carbon::parse((string) $debit->created_at);
+
+            return $debitDate->gte(Carbon::now()->subDays(365));
+        } catch (\Throwable $e) {
+            Log::warning('JobBoard: hasFeaturedJobEntitlement failed', ['account_id' => $account->getKey(), 'error' => $e->getMessage()]);
+            return false;
+        }
     }
 }

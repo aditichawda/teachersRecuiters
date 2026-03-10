@@ -1,2 +1,0 @@
-<h2 <?php echo e($attributes->merge(['class' => 'offcanvas-title'])); ?>><?php echo e($slot); ?></h2>
-<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/core/base/resources/views/components/offcanvas/title.blade.php ENDPATH**/ ?>

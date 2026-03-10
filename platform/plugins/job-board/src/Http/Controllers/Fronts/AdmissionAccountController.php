@@ -172,10 +172,26 @@ class AdmissionAccountController extends BaseController
     }
 
     /**
-     * Admission access when credits system enabled: package valid and employer has used credits for Admission Enquiry Form (valid till package expiry).
+     * Admission access when credits system enabled: employer has used credits for Admission Enquiry Form.
+     * Valid while package is not expired, OR if no package then for 365 days from the debit transaction.
      */
     private function hasAdmissionEnquiryAccess(Account $account): bool
     {
+        if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
+            return false;
+        }
+
+        $debit = Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->where('type', Transaction::TYPE_DEBIT)
+            ->where('feature_key', CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
+            ->latest()
+            ->first();
+
+        if (! $debit) {
+            return false;
+        }
+
         $lastPurchase = Transaction::query()
             ->where('account_id', $account->getKey())
             ->where(function ($q): void {
@@ -187,23 +203,13 @@ class AdmissionAccountController extends BaseController
             ->latest()
             ->first();
 
-        if (! $lastPurchase || ! $lastPurchase->package || ! $lastPurchase->package->validity_days) {
-            return false;
+        if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days) {
+            $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+            if (Carbon::now()->lte($packageExpiryAt)) {
+                return true;
+            }
         }
 
-        $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
-        if (Carbon::now()->gt($packageExpiryAt)) {
-            return false;
-        }
-
-        if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
-            return false;
-        }
-
-        return Transaction::query()
-            ->where('account_id', $account->getKey())
-            ->where('type', Transaction::TYPE_DEBIT)
-            ->where('feature_key', CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
-            ->exists();
+        return $debit->created_at->gte(Carbon::now()->subDays(365));
     }
 }

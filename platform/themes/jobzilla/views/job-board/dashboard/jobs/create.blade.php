@@ -630,12 +630,20 @@
         </div>
 
         <div class="jp-group" id="internal-emails-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
-            @php $registeredEmail = $account->email ?? auth('account')->user()->email ?? ''; @endphp
+            @php
+                $registeredEmail = $account->email ?? auth('account')->user()->email ?? '';
+                $creditsEnabled = \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem();
+                $additionalEmailCredits = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100) : 0;
+                $whatsappCreditsPerAlert = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10) : 0;
+            @endphp
             <div class="jp-registered-email-info" style="margin-bottom:16px; padding:12px 14px; background:#f0f7ff; border-radius:8px; border:1px solid #cce5ff;">
                 <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i>{{ __('Your registered email') }}</label>
                 <p class="mb-0" style="font-size:14px; color:#333;"><strong>{{ $registeredEmail }}</strong> — {{ __('Applications will always be sent to this email.') }}</p>
             </div>
             <label class="jp-label">{{ __('Additional emails to receive applications') }} <span class="hint">({{ __('optional, up to 3') }})</span></label>
+            @if($creditsEnabled && $additionalEmailCredits > 0)
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
+            @endif
             <div id="internal-emails-list">
                 @php
                     $internalEmails = old('apply_internal_emails', optional($job)->apply_internal_emails ?? []);
@@ -656,6 +664,9 @@
 
         <div class="jp-group" id="internal-phones-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
             <label class="jp-label">{{ __('Additional phone numbers to receive applications') }} <span class="hint">({{ __('optional, up to 3') }})</span></label>
+            @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
+            @endif
             <div id="internal-phones-list">
                 @php
                     $internalPhones = old('apply_internal_phones', optional($job)->apply_internal_phones ?? []);
@@ -690,6 +701,11 @@
                 <small class="form-text text-muted d-block" style="margin-top: 5px; margin-left: 25px;">
                     {{ __('You will receive WhatsApp notifications on your phone numbers when a candidate applies for this job') }}
                 </small>
+                @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
+                <small class="form-text d-block" style="margin-top: 6px; margin-left: 25px; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
+                    {{ trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert]) }}
+                </small>
+                @endif
             </div>
         </div>
         @endif

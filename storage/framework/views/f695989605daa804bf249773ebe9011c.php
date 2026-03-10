@@ -290,7 +290,7 @@
 
     
     <div class="row mb-4">
-        <div class="col-lg-12 col-md-12 mb-4 mb-lg-0 mb-4" > 
+        <div class="col-lg-12 col-md-12 mb-4 mb-lg-3 mb-3" > 
             <?php if (isset($component)) { $__componentOriginalc107e2f90dff5eb05519f33918d2c807 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalc107e2f90dff5eb05519f33918d2c807 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::card.index','data' => ['class' => 'h-100']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>

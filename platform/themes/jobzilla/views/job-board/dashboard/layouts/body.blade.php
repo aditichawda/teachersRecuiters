@@ -7,7 +7,7 @@
     use Botble\Slug\Facades\SlugHelper;
     
     $account = auth('account')->user();
-    $company = $account->companies()->with('slugable')->first();
+    $company = $account ? $account->companies()->with('slugable')->first() : null;
     $employerPublicProfileUrl = null;
     if ($account->isEmployer() && $company) {
         $companySlugKey = $company->slugable?->key ?? null;
@@ -31,19 +31,19 @@
         $employerPublicProfileUrl = $companySlugKey ? route('public.company', $companySlugKey) : route('public.account.companies.index');
     }
     
-    // Profile completion
+    // Profile completion (use null-safe: $company can be null when employer has no company yet)
     $profileFields = [
-        ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company->name)],
-        ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company->email)],
-        ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company->phone)],
-        ['field' => 'logo', 'label' => 'Institution Logo', 'filled' => !empty($company->logo)],
-        ['field' => 'description', 'label' => 'About Us', 'filled' => !empty($company->description)],
-        ['field' => 'address', 'label' => 'Address', 'filled' => !empty($company->address)],
-        ['field' => 'institution_type', 'label' => 'Institution Type', 'filled' => !empty($company->institution_type)],
-        ['field' => 'year_founded', 'label' => 'Established Year', 'filled' => !empty($company->year_founded)],
-        ['field' => 'campus_type', 'label' => 'Campus Type', 'filled' => !empty($company->campus_type)],
-        ['field' => 'standard_level', 'label' => 'Standard Level', 'filled' => !empty($company->standard_level)],
-        ['field' => 'staff_facilities', 'label' => 'Staff Facilities', 'filled' => !empty($company->staff_facilities)],
+        ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company?->name)],
+        ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company?->email)],
+        ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company?->phone)],
+        ['field' => 'logo', 'label' => 'Institution Logo', 'filled' => !empty($company?->logo)],
+        ['field' => 'description', 'label' => 'About Us', 'filled' => !empty($company?->description)],
+        ['field' => 'address', 'label' => 'Address', 'filled' => !empty($company?->address)],
+        ['field' => 'institution_type', 'label' => 'Institution Type', 'filled' => !empty($company?->institution_type)],
+        ['field' => 'year_founded', 'label' => 'Established Year', 'filled' => !empty($company?->year_founded)],
+        ['field' => 'campus_type', 'label' => 'Campus Type', 'filled' => !empty($company?->campus_type)],
+        ['field' => 'standard_level', 'label' => 'Standard Level', 'filled' => !empty($company?->standard_level)],
+        ['field' => 'staff_facilities', 'label' => 'Staff Facilities', 'filled' => !empty($company?->staff_facilities)],
     ];
     $filledCount = collect($profileFields)->where('filled', true)->count();
     $empCompletion = count($profileFields) > 0 ? round(($filledCount / count($profileFields)) * 100) : 0;
@@ -78,6 +78,51 @@
             $jobPostCreditsRequired = (int) \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING, 600);
         } catch (\Throwable $e) {
             $jobPostCreditsRequired = 600;
+        }
+    }
+
+    // Admission: separate from Post Job. Lock only when admission enquiry access is missing.
+    $canAccessAdmission = true;
+    $admissionLocked = false;
+    if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
+                $canAccessAdmission = false;
+            } else {
+                $admissionDebit = Transaction::query()
+                    ->where('account_id', $account->getKey())
+                    ->where('type', Transaction::TYPE_DEBIT)
+                    ->where('feature_key', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
+                    ->latest()
+                    ->first();
+                if (!$admissionDebit || !$admissionDebit->created_at) {
+                    $canAccessAdmission = false;
+                } else {
+                    $lastPurchase = Transaction::query()
+                        ->where('account_id', $account->getKey())
+                        ->where(function ($q): void {
+                            $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                        })
+                        ->whereNotNull('payment_id')
+                        ->whereNotNull('package_id')
+                        ->with('package')
+                        ->latest()
+                        ->first();
+                    if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                        $packageExpiryAt = \Carbon\Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                        $canAccessAdmission = \Carbon\Carbon::now()->lte($packageExpiryAt);
+                    } else {
+                        $debitDate = $admissionDebit->created_at instanceof \DateTimeInterface
+                            ? \Carbon\Carbon::parse($admissionDebit->created_at)
+                            : \Carbon\Carbon::parse((string) $admissionDebit->created_at);
+                        $canAccessAdmission = $debitDate->gte(\Carbon\Carbon::now()->subDays(365));
+                    }
+                }
+            }
+            $admissionLocked = !$canAccessAdmission;
+        } catch (\Throwable $e) {
+            $canAccessAdmission = false;
+            $admissionLocked = true;
         }
     }
 
@@ -901,9 +946,9 @@
                         @endif
                     </a>
 
-                    <!-- Admission Button (employer only, same lock as Post Job: credits/package required) -->
-                    <a href="{{ $postJobLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $postJobLocked ? 'enl-postjob-locked' : '' }}" style="{{ $postJobLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $postJobLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
-                        @if($postJobLocked)
+                    <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
+                    <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
+                        @if($admissionLocked)
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
                             <span>{{ __('Admission') }}</span>
                         @else

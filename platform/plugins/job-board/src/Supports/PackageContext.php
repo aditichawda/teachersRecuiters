@@ -61,7 +61,7 @@ class PackageContext
 
     public static function forAccount(Account $account): self
     {
-        if (! $account->isEmployer() || ! JobBoardHelper::isEnabledCreditsSystem()) {
+        if (! $account->isEmployer() || ! app(JobBoardHelper::class)->isEnabledCreditsSystem()) {
             return new self();
         }
 

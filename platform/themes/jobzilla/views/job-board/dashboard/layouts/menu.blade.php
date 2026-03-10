@@ -22,6 +22,47 @@
     } catch (\Throwable $e) {
         $canPost = false;
     }
+    // Admission: separate from Post Job; lock only when admission enquiry access is missing
+    $canAccessAdmission = true;
+    if ($account && $account->isEmployer() && \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()) {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
+                $canAccessAdmission = false;
+            } else {
+                $admissionDebit = \Botble\JobBoard\Models\Transaction::query()
+                    ->where('account_id', $account->getKey())
+                    ->where('type', \Botble\JobBoard\Models\Transaction::TYPE_DEBIT)
+                    ->where('feature_key', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
+                    ->latest()
+                    ->first();
+                if (!$admissionDebit || !$admissionDebit->created_at) {
+                    $canAccessAdmission = false;
+                } else {
+                    $lastPurchase = \Botble\JobBoard\Models\Transaction::query()
+                        ->where('account_id', $account->getKey())
+                        ->where(function ($q): void {
+                            $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                        })
+                        ->whereNotNull('payment_id')
+                        ->whereNotNull('package_id')
+                        ->with('package')
+                        ->latest()
+                        ->first();
+                    if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                        $packageExpiryAt = \Carbon\Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                        $canAccessAdmission = \Carbon\Carbon::now()->lte($packageExpiryAt);
+                    } else {
+                        $debitDate = $admissionDebit->created_at instanceof \DateTimeInterface
+                            ? \Carbon\Carbon::parse($admissionDebit->created_at)
+                            : \Carbon\Carbon::parse((string) $admissionDebit->created_at);
+                        $canAccessAdmission = $debitDate->gte(\Carbon\Carbon::now()->subDays(365));
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            $canAccessAdmission = false;
+        }
+    }
 @endphp
 
 <style>
@@ -71,9 +112,9 @@
     @endif
 </a>
 @if(optional(auth('account')->user())->isEmployer())
-{{-- Admission Button (same lock as Post Job when no package/credits) --}}
-<a href="{{ $canPost ? route('public.account.admission.edit') : route('public.account.wallet') }}" class="ps-postjob-btn {{ $canPost ? '' : 'ps-postjob-locked' }}" style="{{ $canPost ? 'background: linear-gradient(135deg, #059669, #047857);' : '' }} margin-top: 8px;" title="{{ $canPost ? '' : trans('plugins/job-board::messages.insufficient_credits') }}">
-    @if($canPost)
+{{-- Admission Button (lock only when admission enquiry access missing; independent of Post Job) --}}
+<a href="{{ $canAccessAdmission ? route('public.account.admission.edit') : route('public.account.wallet') }}" class="ps-postjob-btn {{ $canAccessAdmission ? '' : 'ps-postjob-locked' }}" style="{{ $canAccessAdmission ? 'background: linear-gradient(135deg, #059669, #047857);' : '' }} margin-top: 8px;" title="{{ $canAccessAdmission ? '' : trans('plugins/job-board::messages.insufficient_credits') }}">
+    @if($canAccessAdmission)
         <i class="fa fa-graduation-cap"></i> {{ __('Admission') }}
     @else
         <span class="ps-lock-wrap"><i class="fa fa-lock"></i></span> {{ __('Admission') }}
