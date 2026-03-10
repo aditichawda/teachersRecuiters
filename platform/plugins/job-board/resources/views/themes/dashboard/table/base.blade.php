@@ -5,6 +5,15 @@
 @extends('core/table::table')
 
 @section('content')
+    @if(route()->getName() === 'public.account.companies.index' && \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
+        @php
+            $additionalProfileCredits = \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADDITIONAL_EMPLOYER_PROFILE, 500);
+        @endphp
+        <div class="alert alert-info mb-3" role="alert" style="border-radius: 8px;">
+            <i class="fa fa-info-circle me-2"></i>
+            {{ trans('plugins/job-board::dashboard.hint_additional_institution_credits', ['credits' => $additionalProfileCredits]) }}
+        </div>
+    @endif
     @parent
 @stop
 

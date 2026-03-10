@@ -52,9 +52,9 @@
     margin: 0 -15px;
 }
 
-[class*="col-"] {
+/* [class*="col-"] {
     padding: 0 15px;
-}
+} */
 
 @media (max-width: 767px) {
     [class*="col-"] {

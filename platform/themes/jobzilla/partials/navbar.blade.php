@@ -1018,7 +1018,7 @@
 }
 
 .section-full.p-t120.p-b90 {
-    padding-top: 60px !important;
+    padding-top: 100px !important;
     padding-bottom: 50px !important;
 }
 
