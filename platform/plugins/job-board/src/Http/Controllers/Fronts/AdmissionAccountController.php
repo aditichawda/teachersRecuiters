@@ -173,17 +173,11 @@ class AdmissionAccountController extends BaseController
     }
 
     /**
-     * Admission access when credits system enabled:
-     * (1) Package me "Admission Form on Profile" hai aur package valid hai → access.
-     * (2) Nahi to credits se unlock (debit) – valid while package not expired, else 365 days from debit.
+     * Admission access when credits system enabled: employer has used credits for Admission Enquiry Form.
+     * Valid while package is not expired, OR if no package then for 365 days from the debit transaction.
      */
     private function hasAdmissionEnquiryAccess(Account $account): bool
     {
-        $packageContext = PackageContext::forAccount($account);
-        if ($packageContext->package && $packageContext->hasAdmissionFormOnProfile() && $packageContext->periodEnd && Carbon::now()->lte($packageContext->periodEnd)) {
-            return true;
-        }
-
         if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
             return false;
         }
@@ -215,8 +209,14 @@ class AdmissionAccountController extends BaseController
             if (Carbon::now()->lte($packageExpiryAt)) {
                 return true;
             }
+        if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days) {
+            $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+            if (Carbon::now()->lte($packageExpiryAt)) {
+                return true;
+            }
         }
 
+        return $debit->created_at->gte(Carbon::now()->subDays(365));
         return $debit->created_at->gte(Carbon::now()->subDays(365));
     }
 }

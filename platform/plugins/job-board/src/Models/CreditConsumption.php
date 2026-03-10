@@ -5,6 +5,7 @@ namespace Botble\JobBoard\Models;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Models\BaseModel;
 use Carbon\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 
 class CreditConsumption extends BaseModel
@@ -28,7 +29,6 @@ class CreditConsumption extends BaseModel
     /** Job-seeker feature keys (for jb_credit_consumption, account_type = job-seeker) */
     public const FEATURE_JOB_APPLY = 'job_apply';
     public const FEATURE_FEATURED_CANDIDATE_PROFILE = 'featured_candidate_profile';
-    public const FEATURE_BASIC_CV = 'basic_cv';
     public const FEATURE_ADVANCED_CV = 'advanced_cv';
     public const FEATURE_JOB_ALERT_WP_JOBSEEKER = 'job_alert_wp_jobseeker';
 
@@ -139,11 +139,8 @@ class CreditConsumption extends BaseModel
     }
 
     /**
-     * Check if account has valid entitlement for a feature.
-     *
-     * Rules:
-     * - featured_candidate_profile (job seeker): valid for 30 days from last debit (coins purchase)
-     * - others: permanent/unlimited (any debit with feature_key grants entitlement)
+     * Check if account has valid entitlement for a feature (debit exists + package valid or used within 365 days).
+     * Used for one-time features like APPLICATION_ALERT_EMAIL, ADMISSION_ENQUIRY, etc.
      */
     public static function hasEntitlement(Account $account, string $featureKey): bool
     {
@@ -159,21 +156,33 @@ class CreditConsumption extends BaseModel
                 ->latest()
                 ->first();
 
-            if (! $debit) {
+            if (! $debit || ! $debit->created_at) {
                 return false;
             }
 
-            // For featured candidate profile (job seeker), limit entitlement to 30 days from last purchase
-            if ($featureKey === self::FEATURE_FEATURED_CANDIDATE_PROFILE && $debit->created_at) {
-                $debitDate = $debit->created_at instanceof \DateTimeInterface
-                    ? Carbon::parse($debit->created_at)
-                    : Carbon::parse((string) $debit->created_at);
+            $lastPurchase = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where(function ($q): void {
+                    $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                })
+                ->whereNotNull('payment_id')
+                ->whereNotNull('package_id')
+                ->with('package')
+                ->latest()
+                ->first();
 
-                return $debitDate->gte(Carbon::now()->subDays(30));
+            if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                if (Carbon::now()->lte($packageExpiryAt)) {
+                    return true;
+                }
             }
 
-            // All other features: any debit means entitlement (no expiry)
-            return true;
+            $debitDate = $debit->created_at instanceof \DateTimeInterface
+                ? Carbon::parse($debit->created_at)
+                : Carbon::parse((string) $debit->created_at);
+
+            return $debitDate->gte(Carbon::now()->subDays(365));
         } catch (\Throwable $e) {
             return false;
         }

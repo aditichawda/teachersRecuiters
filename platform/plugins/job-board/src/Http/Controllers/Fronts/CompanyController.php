@@ -22,9 +22,14 @@ use Botble\Slug\Facades\SlugHelper;
 use Botble\Slug\Services\SlugService;
 use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
+use Carbon\Carbon;
 use Closure;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Botble\JobBoard\Models\CreditConsumption;
+use Botble\JobBoard\Models\Transaction;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Botble\JobBoard\Models\CreditConsumption;
@@ -104,11 +109,10 @@ class CompanyController extends BaseController
          */
         $account = auth('account')->user();
 
-        // Additional Employer Profile (per new profile): first company free, from second onwards deduct credits (unless already deducted via popup)
-        $creditsAlreadyDeducted = (bool) $request->input('credits_already_deducted');
+        // Additional Employer Profile (per new profile): first company free, from second onwards deduct credits
         if (JobBoardHelper::employerCreateMultiplecompanies() && JobBoardHelper::isEnabledCreditsSystem()) {
             $existingCount = $account->companies()->count();
-            if ($existingCount >= 1 && ! $creditsAlreadyDeducted) {
+            if ($existingCount >= 1) {
                 $profileCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_ADDITIONAL_EMPLOYER_PROFILE, 500);
                 if ($account->credits < $profileCredits) {
                     return $this->httpResponse()
@@ -157,6 +161,11 @@ class CompanyController extends BaseController
         }
 
         event(new CreatedContentEvent(COMPANY_MODULE_SCREEN_NAME, $request, $company));
+
+        if ($this->hasFeaturedProfileEntitlement($account)) {
+            $company->is_featured = 1;
+            $company->saveQuietly();
+        }
 
         if ($this->hasFeaturedProfileEntitlement($account)) {
             $company->is_featured = 1;
@@ -275,6 +284,11 @@ class CompanyController extends BaseController
             $company->saveQuietly();
         }
 
+        if ($this->hasFeaturedProfileEntitlement($account)) {
+            $company->is_featured = 1;
+            $company->saveQuietly();
+        }
+
         event(new UpdatedContentEvent(COMPANY_MODULE_SCREEN_NAME, $request, $company));
 
         AccountActivityLog::query()->create([
@@ -318,6 +332,56 @@ class CompanyController extends BaseController
                 ->httpResponse()
                 ->setError()
                 ->setMessage($exception->getMessage());
+        }
+    }
+
+    /**
+     * Employer has used credits for Featured Profile and entitlement is still valid (package not expired, or used within 365 days).
+     */
+    private function hasFeaturedProfileEntitlement(Account $account): bool
+    {
+        try {
+            if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
+                return false;
+            }
+
+            $debit = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where('type', Transaction::TYPE_DEBIT)
+                ->where('feature_key', CreditConsumption::FEATURE_FEATURED_PROFILE_EMPLOYER)
+                ->latest()
+                ->first();
+
+            if (! $debit || ! $debit->created_at) {
+                return false;
+            }
+
+            $lastPurchase = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where(function ($q): void {
+                    $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                })
+                ->whereNotNull('payment_id')
+                ->whereNotNull('package_id')
+                ->with('package')
+                ->latest()
+                ->first();
+
+            if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                if (Carbon::now()->lte($packageExpiryAt)) {
+                    return true;
+                }
+            }
+
+            $debitDate = $debit->created_at instanceof \DateTimeInterface
+                ? Carbon::parse($debit->created_at)
+                : Carbon::parse((string) $debit->created_at);
+
+            return $debitDate->gte(Carbon::now()->subDays(365));
+        } catch (\Throwable $e) {
+            Log::warning('JobBoard: hasFeaturedProfileEntitlement failed', ['account_id' => $account->getKey(), 'error' => $e->getMessage()]);
+            return false;
         }
     }
 

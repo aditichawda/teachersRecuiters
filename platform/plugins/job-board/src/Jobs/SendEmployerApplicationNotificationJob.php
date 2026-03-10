@@ -3,11 +3,8 @@
 namespace Botble\JobBoard\Jobs;
 
 use Botble\JobBoard\Facades\JobBoardHelper;
-use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
-use Botble\JobBoard\Models\Account;
-use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\CreditConsumption;
 use Botble\Media\Facades\RvMedia;
@@ -152,7 +149,7 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
                 'cover_letter_url' => $coverLetterUrl,
                 'screening_answers_html' => $screeningAnswersHtml,
                 'company_name' => $this->jobModel->company->name ?? 'N/A',
-                'application_url' => route('public.account.applicants.edit', ['applicant' => $this->application->id]),
+                'application_url' => route('public.account.applicants.edit', $this->application->id),
                 'job_url' => $this->jobModel->url,
             ];
             
@@ -178,22 +175,14 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
             $emailsSent = 0;
             $emailsFailed = 0;
             
-            foreach ($employerEmails as $index => $email) {
+            foreach ($employerEmails as $email) {
                 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     Log::warning('[EMAIL_NOTIFICATION] Skipping invalid email', ['email' => $email]);
                     continue;
                 }
 
-                // Check if this is an additional email (not author email)
-                $isAdditionalEmail = !empty($additionalEmailsData) && in_array($email, $additionalEmailsData);
-                $isAuthorEmail = ($email === ($this->jobModel->author->email ?? null));
-                
                 Log::info('[EMAIL_NOTIFICATION] Sending email to employer', [
                     'email' => $email,
-                    'email_index' => $index + 1,
-                    'total_emails' => count($employerEmails),
-                    'is_additional_email' => $isAdditionalEmail,
-                    'is_author_email' => $isAuthorEmail,
                     'subject' => $emailSubject,
                 ]);
 
@@ -276,17 +265,8 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
                     });
                     
                     $emailsSent++;
-                    
-                    // Check if this is an additional email (not author email)
-                    $isAdditionalEmail = !empty($additionalEmailsData) && in_array($email, $additionalEmailsData);
-                    $isAuthorEmail = ($email === ($this->jobModel->author->email ?? null));
-                    
                     Log::info('[EMAIL_NOTIFICATION] Email sent successfully', [
                         'email' => $email,
-                        'email_index' => $index + 1,
-                        'total_emails' => count($employerEmails),
-                        'is_additional_email' => $isAdditionalEmail,
-                        'is_author_email' => $isAuthorEmail,
                         'application_id' => $this->application->id,
                         'subject' => $emailSubject,
                         'content_length' => strlen($emailContent),
@@ -324,53 +304,26 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
             $hasAdditionalPhones = false;
             $additionalPhonesData = null;
             
-            // Method 1: Try to get from model attribute (with cast)
-            $modelPhoneCheckValue = $this->jobModel->apply_internal_phones;
-            if (!empty($modelPhoneCheckValue) && is_array($modelPhoneCheckValue)) {
-                $additionalPhonesData = $modelPhoneCheckValue;
-            }
-            
-            // Method 2: Try raw attribute (before cast)
-            if (empty($additionalPhonesData) && isset($this->jobModel->getAttributes()['apply_internal_phones'])) {
+            // Try multiple ways to get apply_internal_phones
+            if ($this->jobModel->apply_internal_phones) {
+                $additionalPhonesData = $this->jobModel->apply_internal_phones;
+            } elseif (isset($this->jobModel->getAttributes()['apply_internal_phones'])) {
+                // Try raw attribute
                 $rawValue = $this->jobModel->getAttributes()['apply_internal_phones'];
-                if ($rawValue !== null) {
                 if (is_string($rawValue)) {
-                        $decoded = json_decode($rawValue, true);
-                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded) && !empty($decoded)) {
-                            $additionalPhonesData = $decoded;
-                        }
-                    } elseif (is_array($rawValue) && !empty($rawValue)) {
+                    $additionalPhonesData = json_decode($rawValue, true);
+                } else {
                     $additionalPhonesData = $rawValue;
-                    }
-                }
-            }
-            
-            // Method 3: Fallback - Direct database query
-            if (empty($additionalPhonesData)) {
-                try {
-                    $jobData = \Illuminate\Support\Facades\DB::table('jb_jobs')
-                        ->where('id', $this->jobModel->id)
-                        ->select('apply_internal_phones')
-                        ->first();
-                    
-                    if ($jobData && $jobData->apply_internal_phones !== null) {
-                        if (is_string($jobData->apply_internal_phones)) {
-                            $decoded = json_decode($jobData->apply_internal_phones, true);
-                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded) && !empty($decoded)) {
-                                $additionalPhonesData = $decoded;
-                            }
-                        } elseif (is_array($jobData->apply_internal_phones) && !empty($jobData->apply_internal_phones)) {
-                            $additionalPhonesData = $jobData->apply_internal_phones;
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Silent fail for this check
                 }
             }
             
             // Check if we have valid phone numbers
-            if (!empty($additionalPhonesData) && is_array($additionalPhonesData)) {
+            if ($additionalPhonesData) {
+                if (is_array($additionalPhonesData)) {
                     $hasAdditionalPhones = !empty(array_filter($additionalPhonesData));
+                } elseif (is_string($additionalPhonesData) && !empty(trim($additionalPhonesData))) {
+                    $hasAdditionalPhones = true;
+                }
             }
             
             Log::debug('[WHATSAPP_NOTIFICATION] Checking additional phones', [
@@ -424,14 +377,31 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
             ]);
             
             if ($whatsappEnabled) {
-                // WhatsApp: send only if employer has entitlement (deducted when adding phone; valid till package active)
+                // Per-alert credit deduction: only send WhatsApp if employer has credits (New Application Alert by WhatsApp)
                 $shouldSendWhatsApp = true;
                 if (JobBoardHelper::isEnabledCreditsSystem() && $this->jobModel->author instanceof Account) {
                     $account = $this->jobModel->author;
                     $account->refresh();
-                    if (! CreditConsumption::hasEntitlement($account, CreditConsumption::FEATURE_APPLICATION_ALERT_WP)) {
+                    $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+                    if ($account->credits < $wpCredits) {
                         $shouldSendWhatsApp = false;
-                        Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - no entitlement (valid till package active)', ['job_id' => $this->jobModel->id]);
+                        Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - insufficient credits (per-alert)', [
+                            'job_id' => $this->jobModel->id,
+                            'account_credits' => $account->credits,
+                            'required' => $wpCredits,
+                        ]);
+                    } else {
+                        $ok = CreditConsumption::deductForFeature(
+                            $account,
+                            CreditConsumption::FEATURE_APPLICATION_ALERT_WP,
+                            $wpCredits,
+                            'New Application Alert by WhatsApp (per alert)',
+                            ['job_id' => $this->jobModel->id, 'application_id' => $this->application->id]
+                        );
+                        if (! $ok) {
+                            $shouldSendWhatsApp = false;
+                            Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - deduct failed', ['job_id' => $this->jobModel->id]);
+                        }
                     }
                 }
                 if ($shouldSendWhatsApp) {
@@ -826,122 +796,37 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
 
             // Get phones from apply_internal_phones (additional phone numbers added during job posting)
             // These are the numbers shown in screenshot 3 - must receive notifications
-            // Send to all additional phones without entitlement check
-            $additionalPhonesForWhatsApp = null;
-            
-            // Method 1: Try raw attribute FIRST (before cast) - This is more reliable
-            if (isset($this->jobModel->getAttributes()['apply_internal_phones'])) {
-                $rawValue = $this->jobModel->getAttributes()['apply_internal_phones'];
-                Log::debug('[WHATSAPP_NOTIFICATION] Checking raw attribute FIRST for additional phones', [
-                    'raw_value' => $rawValue,
-                    'raw_value_type' => gettype($rawValue),
-                    'is_string' => is_string($rawValue),
-                    'is_array' => is_array($rawValue),
-                    'is_null' => is_null($rawValue),
-                ]);
-                
-                if ($rawValue !== null && $rawValue !== '') {
-                if (is_string($rawValue)) {
-                        $decoded = json_decode($rawValue, true);
-                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded) && !empty($decoded)) {
-                            $additionalPhonesForWhatsApp = $decoded;
-                            Log::info('[WHATSAPP_NOTIFICATION] ✓ Retrieved additional phones from raw attribute (JSON string)', [
-                                'count' => count($additionalPhonesForWhatsApp),
-                                'phones' => $additionalPhonesForWhatsApp,
-                            ]);
-                        }
-                    } elseif (is_array($rawValue) && !empty($rawValue)) {
-                    $additionalPhonesForWhatsApp = $rawValue;
-                        Log::info('[WHATSAPP_NOTIFICATION] ✓ Retrieved additional phones from raw attribute (array)', [
-                            'count' => count($additionalPhonesForWhatsApp),
-                            'phones' => $additionalPhonesForWhatsApp,
-                        ]);
-                    }
-                }
-            }
-            
-            // Method 2: Try to get from model attribute (with cast) - Fallback
-            if (empty($additionalPhonesForWhatsApp)) {
-                $modelPhoneValue = $this->jobModel->apply_internal_phones;
-                if (!empty($modelPhoneValue) && is_array($modelPhoneValue)) {
-                    $additionalPhonesForWhatsApp = $modelPhoneValue;
-                    Log::info('[WHATSAPP_NOTIFICATION] ✓ Retrieved additional phones from model attribute (cast)', [
-                        'count' => count($additionalPhonesForWhatsApp),
-                        'phones' => $additionalPhonesForWhatsApp,
-                    ]);
-                }
-            }
-            
-            // Method 3: Fallback - Direct database query
-            if (empty($additionalPhonesForWhatsApp)) {
-                try {
-                    $jobData = \Illuminate\Support\Facades\DB::table('jb_jobs')
-                        ->where('id', $this->jobModel->id)
-                        ->select('apply_internal_phones')
-                        ->first();
-                    
-                    if ($jobData && $jobData->apply_internal_phones !== null) {
-                        if (is_string($jobData->apply_internal_phones)) {
-                            $decoded = json_decode($jobData->apply_internal_phones, true);
-                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded) && !empty($decoded)) {
-                                $additionalPhonesForWhatsApp = $decoded;
-                                Log::debug('[WHATSAPP_NOTIFICATION] Retrieved additional phones from direct DB query (JSON string)', [
-                                    'count' => count($additionalPhonesForWhatsApp),
-                                    'phones' => $additionalPhonesForWhatsApp,
-                                ]);
-                            }
-                        } elseif (is_array($jobData->apply_internal_phones) && !empty($jobData->apply_internal_phones)) {
-                            $additionalPhonesForWhatsApp = $jobData->apply_internal_phones;
-                            Log::debug('[WHATSAPP_NOTIFICATION] Retrieved additional phones from direct DB query (array)', [
-                                'count' => count($additionalPhonesForWhatsApp),
-                                'phones' => $additionalPhonesForWhatsApp,
-                            ]);
-                        }
-                    }
-                } catch (\Exception $e) {
-                    Log::warning('[WHATSAPP_NOTIFICATION] Failed to get additional phones from DB', ['error' => $e->getMessage()]);
-                }
-            }
-            
-            // Process additional phones
-            if (!empty($additionalPhonesForWhatsApp) && is_array($additionalPhonesForWhatsApp)) {
-                    foreach ($additionalPhonesForWhatsApp as $phone) {
-                    if ($phone && is_string($phone) && !empty(trim($phone))) {
+            if ($this->jobModel->apply_internal_phones && is_array($this->jobModel->apply_internal_phones)) {
+                foreach ($this->jobModel->apply_internal_phones as $phone) {
+                    if ($phone) {
                         $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
-                            // Extract 10 digits (same logic as OTP notification)
-                            // Important: API requires exactly 10 digits without country code
-                            if (strlen($cleanPhone) == 12 && substr($cleanPhone, 0, 2) == '91') {
-                                $cleanPhone = substr($cleanPhone, 2); // Remove country code (first 2 digits)
-                            } elseif (strlen($cleanPhone) == 11) {
-                                // 11 digits - extract last 10 digits
-                                $cleanPhone = substr($cleanPhone, -10);
-                            } elseif (strlen($cleanPhone) > 12) {
-                                // More than 12 digits - extract last 10 digits
-                                $cleanPhone = substr($cleanPhone, -10);
-                            }
-                            // If already 10 digits, keep as is
-                            
-                            if (strlen($cleanPhone) == 10) {
+                        // Extract 10 digits (same logic as OTP notification)
+                        // Important: API requires exactly 10 digits without country code
+                        if (strlen($cleanPhone) == 12 && substr($cleanPhone, 0, 2) == '91') {
+                            $cleanPhone = substr($cleanPhone, 2); // Remove country code (first 2 digits)
+                        } elseif (strlen($cleanPhone) == 11) {
+                            // 11 digits - extract last 10 digits
+                            $cleanPhone = substr($cleanPhone, -10);
+                        } elseif (strlen($cleanPhone) > 12) {
+                            // More than 12 digits - extract last 10 digits
+                            $cleanPhone = substr($cleanPhone, -10);
+                        }
+                        // If already 10 digits, keep as is
+                        
+                        if (strlen($cleanPhone) == 10) {
                             $employerPhones[] = $cleanPhone;
-                            Log::info('[WHATSAPP_NOTIFICATION] ✓ Added additional phone from apply_internal_phones', [
-                                    'original_phone' => $phone,
-                                    'cleaned_phone' => $cleanPhone
-                                ]);
-                            } else {
-                                Log::warning('[WHATSAPP_NOTIFICATION] Skipped invalid phone from apply_internal_phones', [
-                                    'phone' => $phone,
-                                'cleaned_phone' => $cleanPhone,
-                                    'cleaned_length' => strlen($cleanPhone)
-                                ]);
-                            }
+                            Log::debug('[WHATSAPP_NOTIFICATION] Added additional phone from apply_internal_phones', [
+                                'original_phone' => $phone,
+                                'cleaned_phone' => $cleanPhone
+                            ]);
+                        } else {
+                            Log::warning('[WHATSAPP_NOTIFICATION] Skipped invalid phone from apply_internal_phones', [
+                                'phone' => $phone,
+                                'cleaned_length' => strlen($cleanPhone)
+                            ]);
                         }
                     }
-            } else {
-                Log::info('[WHATSAPP_NOTIFICATION] No additional phones found in apply_internal_phones', [
-                    'job_id' => $this->jobModel->id,
-                    'model_value' => $modelPhoneValue,
-                    'raw_attribute_exists' => isset($this->jobModel->getAttributes()['apply_internal_phones']),
-                ]);
+                }
             }
 
             // Remove duplicates

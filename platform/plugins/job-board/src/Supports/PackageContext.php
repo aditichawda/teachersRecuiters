@@ -64,16 +64,8 @@ class PackageContext
 
     public static function forAccount(Account $account): self
     {
-        $id = (int) $account->getKey();
-        if (isset(self::$forAccountCache[$id])) {
-            return self::$forAccountCache[$id];
-        }
-
         if (! $account->isEmployer() || ! app(JobBoardHelper::class)->isEnabledCreditsSystem()) {
-            $result = new self();
-            self::$forAccountCache[$id] = $result;
-
-            return $result;
+            return new self();
         }
 
         $lastPurchase = Transaction::query()

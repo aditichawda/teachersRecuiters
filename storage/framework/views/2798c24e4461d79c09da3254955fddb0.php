@@ -1,15 +1,15 @@
-@php
+<?php
     $layout = 'plugins/job-board::themes.dashboard.layouts.master';
     $isEdit = isset($job) && $job && $job->exists;
     $formAction = $isEdit ? route('public.account.jobs.update', $job->id) : route('public.account.jobs.store');
     $submitLabel = $isEdit ? __('Update Job') : __('Post Job');
     $pageTitle = $isEdit ? __('Edit Job') : __('Post a New Job');
     Theme::set('pageTitle', $pageTitle);
-@endphp
+?>
 
-@extends($layout)
 
-@section('content')
+
+<?php $__env->startSection('content'); ?>
 <style>
     .jp-card {
         background: #fff;
@@ -207,44 +207,44 @@
 
 <!-- Page Header -->
 <div class="jp-page-header">
-    <h2><i class="fa {{ $isEdit ? 'fa-edit' : 'fa-plus-circle' }}" style="color: #0073d1; margin-right: 8px;"></i>{{ $pageTitle }}</h2>
-    <a href="{{ route('public.account.jobs.index') }}"><i class="fa fa-list me-1"></i>{{ __('View All Jobs') }}</a>
+    <h2><i class="fa <?php echo e($isEdit ? 'fa-edit' : 'fa-plus-circle'); ?>" style="color: #0073d1; margin-right: 8px;"></i><?php echo e($pageTitle); ?></h2>
+    <a href="<?php echo e(route('public.account.jobs.index')); ?>"><i class="fa fa-list me-1"></i><?php echo e(__('View All Jobs')); ?></a>
 </div>
 
-@if($errors->any())
+<?php if($errors->any()): ?>
     <div class="alert alert-danger mb-4" style="border-radius: 10px;">
-        <strong><i class="fa fa-exclamation-triangle me-2"></i>{{ __('Please fix the following errors:') }}</strong>
+        <strong><i class="fa fa-exclamation-triangle me-2"></i><?php echo e(__('Please fix the following errors:')); ?></strong>
         <ul class="mb-0 mt-2">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
+            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <li><?php echo e($error); ?></li>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </ul>
     </div>
-@endif
+<?php endif; ?>
 
-<form id="jobPostForm" method="POST" action="{{ $formAction }}" enctype="multipart/form-data">
-    @csrf
-    @if($isEdit)@method('PUT')@endif
+<form id="jobPostForm" method="POST" action="<?php echo e($formAction); ?>" enctype="multipart/form-data">
+    <?php echo csrf_field(); ?>
+    <?php if($isEdit): ?><?php echo method_field('PUT'); ?><?php endif; ?>
 
-    {{-- ====== SECTION 1: Company & Job Title ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="1">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-building"></i> Company & Job Details</div>
         </div>
         <div class="jp-card-body" style="padding-top: 20px;">
-        {{-- Company & Institution Type - one row, col-6 col-6 --}}
+        
         <div class="jp-row">
             <div class="jp-col-6">
                 <div class="jp-group">
                     <label class="jp-label">Are you hiring for which school / institution? <span class="required">*</span></label>
                     <select name="company_id" id="company_id" class="jp-select" required>
                         <option value="">-- Select Company --</option>
-                        @foreach ($companies as $id => $name)
-                            <option value="{{ $id }}" data-institution-type="{{ $companyInstitutionTypes[$id] ?? '' }}" {{ old('company_id', optional($job)->company_id ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $companies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>" data-institution-type="<?php echo e($companyInstitutionTypes[$id] ?? ''); ?>" <?php echo e(old('company_id', optional($job)->company_id ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                     <small class="text-muted">Select company if already created.</small>
-                    <a href="{{ route('public.account.companies.create') }}" class="jp-create-link d-block mt-1">
+                    <a href="<?php echo e(route('public.account.companies.create')); ?>" class="jp-create-link d-block mt-1">
                         <i class="fa fa-plus"></i> Click here to create company / school
                     </a>
                     <div class="jp-error" id="err-company">Please select a company.</div>
@@ -260,13 +260,13 @@
             </div>
         </div>
 
-        {{-- Job Title & Required Skills - one row, col-6 col-6 --}}
+        
         <div class="jp-row">
             <div class="jp-col-6">
                 <div class="jp-group">
                     <label class="jp-label">Job Title <span class="required">*</span> <span class="hint">(Start typing to search)</span></label>
                     <div class="jp-suggest-wrap">
-                        <input type="text" name="name" id="job_title" class="jp-input" placeholder="e.g. Primary English Teacher" value="{{ old('name', optional($job)->name ?? '') }}" required autocomplete="off">
+                        <input type="text" name="name" id="job_title" class="jp-input" placeholder="e.g. Primary English Teacher" value="<?php echo e(old('name', optional($job)->name ?? '')); ?>" required autocomplete="off">
                         <div class="jp-suggest-list" id="job-title-suggestions"></div>
                     </div>
                     <div class="jp-error" id="err-title">Job title is required.</div>
@@ -285,7 +285,7 @@
             </div>
         </div>
 
-        {{-- Detailed Job Description --}}
+        
         <div class="jp-group">
             <label class="jp-label">
                 Detailed Job Description <span class="required">*</span>
@@ -296,22 +296,22 @@
                     <i class="fa fa-eraser"></i> Clear
                 </button>
             </label>
-            <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required>{{ old('content', optional($job)->content ?? '') }}</textarea>
+            <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required><?php echo e(old('content', optional($job)->content ?? '')); ?></textarea>
             <div class="jp-error" id="err-description">Job description is required.</div>
             <div class="jp-ai-error" id="ai-generate-error" role="alert" aria-live="polite"></div>
         </div>
 
-        {{-- Job Type Category --}}
+        
         <div class="jp-group">
             <label class="jp-label">Job Type <span class="required">*</span></label>
             <div class="jp-option-cards">
-                @php $jtCat = old('job_type_category', optional($job)->job_type_category ?? 'teaching'); @endphp
-                <label class="jp-option-card {{ $jtCat === 'teaching' ? 'selected' : '' }}" onclick="selectOption(this, 'job_type_category')">
-                    <input type="radio" name="job_type_category" value="teaching" {{ $jtCat === 'teaching' ? 'checked' : '' }} required>
+                <?php $jtCat = old('job_type_category', optional($job)->job_type_category ?? 'teaching'); ?>
+                <label class="jp-option-card <?php echo e($jtCat === 'teaching' ? 'selected' : ''); ?>" onclick="selectOption(this, 'job_type_category')">
+                    <input type="radio" name="job_type_category" value="teaching" <?php echo e($jtCat === 'teaching' ? 'checked' : ''); ?> required>
                     <i class="fa fa-chalkboard-teacher"></i> Teaching
                 </label>
-                <label class="jp-option-card {{ $jtCat === 'non-teaching' ? 'selected' : '' }}" onclick="selectOption(this, 'job_type_category')">
-                    <input type="radio" name="job_type_category" value="non-teaching" {{ $jtCat === 'non-teaching' ? 'checked' : '' }}>
+                <label class="jp-option-card <?php echo e($jtCat === 'non-teaching' ? 'selected' : ''); ?>" onclick="selectOption(this, 'job_type_category')">
+                    <input type="radio" name="job_type_category" value="non-teaching" <?php echo e($jtCat === 'non-teaching' ? 'checked' : ''); ?>>
                     <i class="fa fa-briefcase"></i> Non-Teaching
                 </label>
             </div>
@@ -320,69 +320,69 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 2: Salary ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="2">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-rupee-sign"></i> Salary Details</div>
         </div>
         <div class="jp-card-body" style="padding-top: 20px;">
-        @php
+        <?php
             $srVal = optional($job)->salary_range;
             $sr = old('salary_range', $srVal && is_object($srVal) ? $srVal->getValue() : ($srVal ?: 'monthly'));
             $salaryMode = (optional($job)->salary_to ?? 0) ? 'range' : 'fixed';
-        @endphp
-        {{-- Salary Period & Salary Type - one row, col-6 col-6 --}}
+        ?>
+        
         <div class="jp-row">
             <div class="jp-col-9">
                 <div class="jp-group">
                     <label class="jp-label">Salary Period <span class="required">*</span></label>
                     <div class="jp-salary-type-tabs" id="salary-period-tabs">
-                        @foreach ($salaryRanges as $key => $label)
-                            <div class="jp-salary-tab {{ $key === ($sr ?? 'monthly') ? 'active' : '' }}" data-value="{{ $key }}" onclick="selectSalaryPeriod(this)">{{ $label }}</div>
-                        @endforeach
-                        <div class="jp-salary-tab {{ ($sr ?? '') === 'negotiable' ? 'active' : '' }}" data-value="negotiable" onclick="selectSalaryPeriod(this)">Negotiable</div>
+                        <?php $__currentLoopData = $salaryRanges; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <div class="jp-salary-tab <?php echo e($key === ($sr ?? 'monthly') ? 'active' : ''); ?>" data-value="<?php echo e($key); ?>" onclick="selectSalaryPeriod(this)"><?php echo e($label); ?></div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        <div class="jp-salary-tab <?php echo e(($sr ?? '') === 'negotiable' ? 'active' : ''); ?>" data-value="negotiable" onclick="selectSalaryPeriod(this)">Negotiable</div>
                     </div>
-                    <input type="hidden" name="salary_range" id="salary_range" value="{{ $sr ?? 'monthly' }}">
+                    <input type="hidden" name="salary_range" id="salary_range" value="<?php echo e($sr ?? 'monthly'); ?>">
                 </div>
             </div>
             <div class="jp-col-3">
                 <div class="jp-group">
                     <label class="jp-label">Salary Type</label>
                     <div class="jp-option-cards">
-                        <label class="jp-option-card {{ $salaryMode === 'range' ? 'selected' : '' }}" onclick="selectSalaryMode(this, 'range')">
-                            <input type="radio" name="salary_mode" value="range" {{ $salaryMode === 'range' ? 'checked' : '' }}> Range
+                        <label class="jp-option-card <?php echo e($salaryMode === 'range' ? 'selected' : ''); ?>" onclick="selectSalaryMode(this, 'range')">
+                            <input type="radio" name="salary_mode" value="range" <?php echo e($salaryMode === 'range' ? 'checked' : ''); ?>> Range
                         </label>
-                        <label class="jp-option-card {{ $salaryMode === 'fixed' ? 'selected' : '' }}" onclick="selectSalaryMode(this, 'fixed')">
-                            <input type="radio" name="salary_mode" value="fixed" {{ $salaryMode === 'fixed' ? 'checked' : '' }}> Fixed
+                        <label class="jp-option-card <?php echo e($salaryMode === 'fixed' ? 'selected' : ''); ?>" onclick="selectSalaryMode(this, 'fixed')">
+                            <input type="radio" name="salary_mode" value="fixed" <?php echo e($salaryMode === 'fixed' ? 'checked' : ''); ?>> Fixed
                         </label>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="salary-amount-section" style="display: {{ ($sr ?? '') === 'negotiable' ? 'none' : 'block' }};">
+        <div id="salary-amount-section" style="display: <?php echo e(($sr ?? '') === 'negotiable' ? 'none' : 'block'); ?>;">
             <div class="jp-row">
                 <div class="jp-col-6">
                     <div class="jp-group">
                         <label class="jp-label">Salary From ₹</label>
-                        <input type="number" name="salary_from" id="salary_from" class="jp-input" placeholder="e.g. 25000" value="{{ old('salary_from', optional($job)->salary_from ?? '') }}">
+                        <input type="number" name="salary_from" id="salary_from" class="jp-input" placeholder="e.g. 25000" value="<?php echo e(old('salary_from', optional($job)->salary_from ?? '')); ?>">
                     </div>
                 </div>
-                <div class="jp-col-6" id="salary-to-wrap" style="display: {{ $salaryMode === 'fixed' ? 'none' : 'block' }};">
+                <div class="jp-col-6" id="salary-to-wrap" style="display: <?php echo e($salaryMode === 'fixed' ? 'none' : 'block'); ?>;">
                     <div class="jp-group">
                         <label class="jp-label">Salary To ₹</label>
-                        <input type="number" name="salary_to" id="salary_to" class="jp-input" placeholder="e.g. 50000" value="{{ old('salary_to', optional($job)->salary_to ?? '') }}">
+                        <input type="number" name="salary_to" id="salary_to" class="jp-input" placeholder="e.g. 50000" value="<?php echo e(old('salary_to', optional($job)->salary_to ?? '')); ?>">
                     </div>
                 </div>
             </div>
-            @php
+            <?php
                 $inrCurrencyId = collect($currencies)->search(fn($t) => stripos($t, 'INR') !== false || stripos($t, '₹') !== false || stripos($t, 'Rupee') !== false);
                 if ($inrCurrencyId === false) { $inrCurrencyId = get_application_currency_id() ?? array_key_first($currencies); }
-            @endphp
-            <input type="hidden" name="currency_id" value="{{ $inrCurrencyId }}">
+            ?>
+            <input type="hidden" name="currency_id" value="<?php echo e($inrCurrencyId); ?>">
             <div class="jp-group">
                 <div class="jp-check-wrap">
-                    <input type="checkbox" name="hide_salary" id="hide_salary" value="1" {{ old('hide_salary', optional($job)->hide_salary ?? 0) ? 'checked' : '' }}>
+                    <input type="checkbox" name="hide_salary" id="hide_salary" value="1" <?php echo e(old('hide_salary', optional($job)->hide_salary ?? 0) ? 'checked' : ''); ?>>
                     <label for="hide_salary" style="cursor:pointer; font-size:14px;">Hide Salary on Job Posting</label>
                 </div>
             </div>
@@ -391,7 +391,7 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 3: Requirements ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="3">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-certificate"></i> Requirements</div>
@@ -403,9 +403,9 @@
                     <label class="jp-label">Required Qualification Level <span class="required">*</span></label>
                     <select name="degree_level_id" id="degree_level_id" class="jp-select" required>
                         <option value="">-- Select --</option>
-                        @foreach ($degreeLevels as $id => $name)
-                            <option value="{{ $id }}" {{ old('degree_level_id', optional($job)->degree_level_id ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $degreeLevels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>" <?php echo e(old('degree_level_id', optional($job)->degree_level_id ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
@@ -414,15 +414,15 @@
                     <label class="jp-label">Experience Required <span class="required">*</span></label>
                     <select name="job_experience_id" id="job_experience_id" class="jp-select" required>
                         <option value="">-- Select --</option>
-                        @foreach ($jobExperiences as $id => $name)
-                            <option value="{{ $id }}" {{ old('job_experience_id', optional($job)->job_experience_id ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $jobExperiences; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>" <?php echo e(old('job_experience_id', optional($job)->job_experience_id ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
         </div>
 
-        {{-- Certifications & Language - one row, col-6 col-6 --}}
+        
         <div class="jp-row">
             <div class="jp-col-6">
                 <div class="jp-group">
@@ -432,8 +432,8 @@
                         <div class="jp-suggest-list" id="cert-suggestions"></div>
                     </div>
                     <div class="jp-tags-wrap" id="selected-certs"></div>
-                    @php $reqCerts = old('required_certifications', optional($job)->required_certifications ?? '[]'); $reqCertsStr = is_array($reqCerts) ? json_encode($reqCerts) : ($reqCerts ?: '[]'); @endphp
-                    <input type="hidden" name="required_certifications" id="required_certifications" value="{{ $reqCertsStr }}">
+                    <?php $reqCerts = old('required_certifications', optional($job)->required_certifications ?? '[]'); $reqCertsStr = is_array($reqCerts) ? json_encode($reqCerts) : ($reqCerts ?: '[]'); ?>
+                    <input type="hidden" name="required_certifications" id="required_certifications" value="<?php echo e($reqCertsStr); ?>">
                 </div>
             </div>
             <div class="jp-col-6">
@@ -444,15 +444,15 @@
                         <div class="jp-suggest-list" id="lang-suggestions"></div>
                     </div>
                     <div class="jp-tags-wrap" id="selected-langs"></div>
-                    @php $langProf = old('language_proficiency', optional($job)->language_proficiency ?? '[]'); $langProfStr = is_array($langProf) ? json_encode($langProf) : ($langProf ?: '[]'); @endphp
-                    <input type="hidden" name="language_proficiency" id="language_proficiency" value="{{ $langProfStr }}">
+                    <?php $langProf = old('language_proficiency', optional($job)->language_proficiency ?? '[]'); $langProfStr = is_array($langProf) ? json_encode($langProf) : ($langProf ?: '[]'); ?>
+                    <input type="hidden" name="language_proficiency" id="language_proficiency" value="<?php echo e($langProfStr); ?>">
                 </div>
             </div>
         </div>
         </div>
     </div>
 
-    {{-- ====== SECTION 4: Job Preferences ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="4">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-sliders-h"></i> Job Preferences</div>
@@ -462,16 +462,16 @@
             <div class="jp-col-4">
                 <div class="jp-group">
                     <label class="jp-label">Number of Positions <span class="hint">(max. 10)</span></label>
-                    <input type="number" name="number_of_positions" class="jp-input" value="{{ old('number_of_positions', optional($job)->number_of_positions ?? 1) }}" min="1" max="10">
+                    <input type="number" name="number_of_positions" class="jp-input" value="<?php echo e(old('number_of_positions', optional($job)->number_of_positions ?? 1)); ?>" min="1" max="10">
                 </div>
             </div>
             <div class="jp-col-4">
                 <div class="jp-group">
                     <label class="jp-label">Gender Preference</label>
                     <select name="gender_preference" class="jp-select">
-                        <option value="" {{ old('gender_preference', optional($job)->gender_preference ?? '') == '' ? 'selected' : '' }}>Any</option>
-                        <option value="male" {{ old('gender_preference', optional($job)->gender_preference ?? '') == 'male' ? 'selected' : '' }}>Male</option>
-                        <option value="female" {{ old('gender_preference', optional($job)->gender_preference ?? '') == 'female' ? 'selected' : '' }}>Female</option>
+                        <option value="" <?php echo e(old('gender_preference', optional($job)->gender_preference ?? '') == '' ? 'selected' : ''); ?>>Any</option>
+                        <option value="male" <?php echo e(old('gender_preference', optional($job)->gender_preference ?? '') == 'male' ? 'selected' : ''); ?>>Male</option>
+                        <option value="female" <?php echo e(old('gender_preference', optional($job)->gender_preference ?? '') == 'female' ? 'selected' : ''); ?>>Female</option>
                     </select>
                 </div>
             </div>
@@ -479,10 +479,10 @@
                 <div class="jp-group">
                     <label class="jp-label">Marital Status Preference</label>
                     <select name="marital_status_preference" class="jp-select">
-                        <option value="" {{ old('marital_status_preference', optional($job)->marital_status_preference ?? '') == '' ? 'selected' : '' }}>Any</option>
-                        <option value="married" {{ old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'married' ? 'selected' : '' }}>Married</option>
-                        <option value="single" {{ old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'single' ? 'selected' : '' }}>Single</option>
-                        <option value="other" {{ old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'other' ? 'selected' : '' }}>Other</option>
+                        <option value="" <?php echo e(old('marital_status_preference', optional($job)->marital_status_preference ?? '') == '' ? 'selected' : ''); ?>>Any</option>
+                        <option value="married" <?php echo e(old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'married' ? 'selected' : ''); ?>>Married</option>
+                        <option value="single" <?php echo e(old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'single' ? 'selected' : ''); ?>>Single</option>
+                        <option value="other" <?php echo e(old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'other' ? 'selected' : ''); ?>>Other</option>
                     </select>
                 </div>
             </div>
@@ -494,28 +494,28 @@
                     <label class="jp-label">Job Shift</label>
                     <select name="job_shift_id" class="jp-select">
                         <option value="">-- Select --</option>
-                        @foreach ($jobShifts as $id => $name)
-                            <option value="{{ $id }}" {{ old('job_shift_id', optional($job)->job_shift_id ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $jobShifts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>" <?php echo e(old('job_shift_id', optional($job)->job_shift_id ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
             <div class="jp-col-4">
                 <div class="jp-group">
                     <label class="jp-label">Employment Type</label>
-                    @php $firstJobType = (isset($job) && $job && $job->jobTypes->isNotEmpty()) ? $job->jobTypes->first()->id : null; @endphp
+                    <?php $firstJobType = (isset($job) && $job && $job->jobTypes->isNotEmpty()) ? $job->jobTypes->first()->id : null; ?>
                     <select name="jobTypes[]" id="employment_type" class="jp-select">
                         <option value="">-- Select --</option>
-                        @foreach ($jobTypes as $id => $name)
-                            <option value="{{ $id }}" {{ old('jobTypes.0', $firstJobType ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $jobTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>" <?php echo e(old('jobTypes.0', $firstJobType ?? '') == $id ? 'selected' : ''); ?>><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
             <div class="jp-col-4">
                 <div class="jp-group" style="padding-top: 28px;">
                     <div class="jp-check-wrap">
-                        <input type="checkbox" name="is_remote" id="is_remote" value="1" {{ old('is_remote', optional($job)->is_remote ?? 0) ? 'checked' : '' }}>
+                        <input type="checkbox" name="is_remote" id="is_remote" value="1" <?php echo e(old('is_remote', optional($job)->is_remote ?? 0) ? 'checked' : ''); ?>>
                         <label for="is_remote" style="cursor:pointer; font-size:14px;">This is a Remote / WFH / Online job</label>
                     </div>
                 </div>
@@ -524,7 +524,7 @@
         </div>
     </div>
 
-    {{-- ====== SECTION 5: Application Location ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="5">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-map-marker-alt"></i> Application & Location</div>
@@ -532,21 +532,21 @@
         <div class="jp-card-body" style="padding-top: 20px;">
         <div class="jp-group">
             <label class="jp-label">Application accepted from which location <span class="required">*</span></label>
-            @php $appLocType = old('application_location_type', optional($job)->application_location_type ?? 'nearby'); @endphp
+            <?php $appLocType = old('application_location_type', optional($job)->application_location_type ?? 'nearby'); ?>
             <div class="jp-option-cards">
-                <label class="jp-option-card {{ $appLocType === 'nearby' ? 'selected' : '' }}" onclick="selectOption(this, 'application_location_type')">
-                    <input type="radio" name="application_location_type" value="nearby" {{ $appLocType === 'nearby' ? 'checked' : '' }}>
+                <label class="jp-option-card <?php echo e($appLocType === 'nearby' ? 'selected' : ''); ?>" onclick="selectOption(this, 'application_location_type')">
+                    <input type="radio" name="application_location_type" value="nearby" <?php echo e($appLocType === 'nearby' ? 'checked' : ''); ?>>
                     <i class="fa fa-map-pin"></i> Nearby areas only
                 </label>
-                <label class="jp-option-card {{ $appLocType === 'specific' ? 'selected' : '' }}" onclick="selectOption(this, 'application_location_type')">
-                    <input type="radio" name="application_location_type" value="specific" {{ $appLocType === 'specific' ? 'checked' : '' }}>
+                <label class="jp-option-card <?php echo e($appLocType === 'specific' ? 'selected' : ''); ?>" onclick="selectOption(this, 'application_location_type')">
+                    <input type="radio" name="application_location_type" value="specific" <?php echo e($appLocType === 'specific' ? 'checked' : ''); ?>>
                     <i class="fa fa-list"></i> Specific Locations (up to 3)
                 </label>
             </div>
         </div>
 
-        {{-- Specific Locations --}}
-        <div class="jp-group" id="specific-locations-wrap" style="display: {{ $appLocType === 'specific' ? 'block' : 'none' }};">
+        
+        <div class="jp-group" id="specific-locations-wrap" style="display: <?php echo e($appLocType === 'specific' ? 'block' : 'none'); ?>;">
             <label class="jp-label">Choose Locations <span class="hint">(up to 3)</span></label>
             <div class="jp-row">
                 <div class="jp-col-4">
@@ -571,15 +571,15 @@
             <input type="hidden" name="application_locations" id="application_locations" value="">
         </div>
 
-        {{-- Job Location --}}
+        
         <div class="jp-group">
             <label class="jp-label">Job Location / Address <span class="hint">(Auto-defined from company, editable)</span></label>
             <div class="jp-row">
                 <div class="jp-col-6">
-                    <input type="text" name="address" id="job_address" class="jp-input" placeholder="Address" value="{{ old('address', optional($job)->address ?? '') }}">
+                    <input type="text" name="address" id="job_address" class="jp-input" placeholder="Address" value="<?php echo e(old('address', optional($job)->address ?? '')); ?>">
                 </div>
                 <div class="jp-col-6">
-                    <input type="text" name="zip_code" id="job_zip_code" class="jp-input" placeholder="Pin Code" value="{{ old('zip_code', optional($job)->zip_code ?? '') }}">
+                    <input type="text" name="zip_code" id="job_zip_code" class="jp-input" placeholder="Pin Code" value="<?php echo e(old('zip_code', optional($job)->zip_code ?? '')); ?>">
                 </div>
             </div>
             <div class="jp-row mt-2">
@@ -588,22 +588,22 @@
                         <input type="text" id="job_city_search" class="jp-input" placeholder="Search city..." autocomplete="off">
                         <div class="jp-suggest-list" id="job-city-suggestions"></div>
                     </div>
-                    <input type="hidden" name="city_id" id="job_city_id" value="{{ old('city_id', optional($job)->city_id ?? '') }}">
+                    <input type="hidden" name="city_id" id="job_city_id" value="<?php echo e(old('city_id', optional($job)->city_id ?? '')); ?>">
                 </div>
                 <div class="jp-col-4">
                     <input type="text" id="job_state" class="jp-input" placeholder="State" readonly style="background:#f5f5f5;">
-                    <input type="hidden" name="state_id" id="job_state_id" value="{{ old('state_id', optional($job)->state_id ?? '') }}">
+                    <input type="hidden" name="state_id" id="job_state_id" value="<?php echo e(old('state_id', optional($job)->state_id ?? '')); ?>">
                 </div>
                 <div class="jp-col-4">
                     <input type="text" id="job_country" class="jp-input" placeholder="Country" readonly style="background:#f5f5f5;">
-                    <input type="hidden" name="country_id" id="job_country_id" value="{{ old('country_id', optional($job)->country_id ?? '') }}">
+                    <input type="hidden" name="country_id" id="job_country_id" value="<?php echo e(old('country_id', optional($job)->country_id ?? '')); ?>">
                 </div>
             </div>
         </div>
         </div>
     </div>
 
-    {{-- ====== SECTION 6: Application Settings ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="6">
         <div class="jp-card-header">
             <div class="jp-card-title"><i class="fa fa-paper-plane"></i>Receive Application By</div>
@@ -611,121 +611,126 @@
         <div class="jp-card-body" style="padding-top: 20px;">
         <div class="jp-group">
             <label class="jp-label">Application received by <span class="required">*</span></label>
-            @php $applyType = old('apply_type', optional($job)->apply_type ?? 'internal'); @endphp
+            <?php $applyType = old('apply_type', optional($job)->apply_type ?? 'internal'); ?>
             <div class="jp-option-cards">
-                <label class="jp-option-card {{ $applyType === 'internal' ? 'selected' : '' }}" onclick="selectOption(this, 'apply_type')">
-                    <input type="radio" name="apply_type" value="internal" {{ $applyType === 'internal' ? 'checked' : '' }}>
+                <label class="jp-option-card <?php echo e($applyType === 'internal' ? 'selected' : ''); ?>" onclick="selectOption(this, 'apply_type')">
+                    <input type="radio" name="apply_type" value="internal" <?php echo e($applyType === 'internal' ? 'checked' : ''); ?>>
                     <i class="fa fa-inbox"></i>  Registered Email
                 </label>
-                <label class="jp-option-card {{ $applyType === 'external' ? 'selected' : '' }}" onclick="selectOption(this, 'apply_type')">
-                    <input type="radio" name="apply_type" value="external" {{ $applyType === 'external' ? 'checked' : '' }}>
+                <label class="jp-option-card <?php echo e($applyType === 'external' ? 'selected' : ''); ?>" onclick="selectOption(this, 'apply_type')">
+                    <input type="radio" name="apply_type" value="external" <?php echo e($applyType === 'external' ? 'checked' : ''); ?>>
                     <i class="fa fa-external-link-alt"></i> External Link
                 </label>
             </div>
         </div>
 
-        <div class="jp-group" id="external-url-wrap" style="display: {{ $applyType === 'external' ? 'block' : 'none' }};">
+        <div class="jp-group" id="external-url-wrap" style="display: <?php echo e($applyType === 'external' ? 'block' : 'none'); ?>;">
             <label class="jp-label">External Apply URL</label>
-            <input type="url" name="apply_url" id="apply_url" class="jp-input" placeholder="https://example.com/apply" value="{{ old('apply_url', optional($job)->apply_url ?? '') }}">
+            <input type="url" name="apply_url" id="apply_url" class="jp-input" placeholder="https://example.com/apply" value="<?php echo e(old('apply_url', optional($job)->apply_url ?? '')); ?>">
         </div>
 
-        <div class="jp-group" id="internal-emails-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
-            @php
+        <div class="jp-group" id="internal-emails-wrap" style="display: <?php echo e($applyType === 'internal' ? 'block' : 'none'); ?>;">
+            <?php
                 $registeredEmail = $account->email ?? auth('account')->user()->email ?? '';
                 $creditsEnabled = \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem();
                 $additionalEmailCredits = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100) : 0;
                 $whatsappCreditsPerAlert = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10) : 0;
-            @endphp
+            ?>
             <div class="jp-registered-email-info" style="margin-bottom:16px; padding:12px 14px; background:#f0f7ff; border-radius:8px; border:1px solid #cce5ff;">
-                <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i>{{ __('Your registered email') }}</label>
-                <p class="mb-0" style="font-size:14px; color:#333;"><strong>{{ $registeredEmail }}</strong> — {{ __('Applications will always be sent to this email.') }}</p>
+                <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i><?php echo e(__('Your registered email')); ?></label>
+                <p class="mb-0" style="font-size:14px; color:#333;"><strong><?php echo e($registeredEmail); ?></strong> — <?php echo e(__('Applications will always be sent to this email.')); ?></p>
             </div>
-            <label class="jp-label">{{ __('Additional emails to receive applications') }} <span class="hint">({{ __('optional, up to 3') }})</span></label>
-            @if($creditsEnabled && $additionalEmailCredits > 0)
-            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
-            @endif
+            <label class="jp-label"><?php echo e(__('Additional emails to receive applications')); ?> <span class="hint">(<?php echo e(__('optional, up to 3')); ?>)</span></label>
+            <?php if($creditsEnabled && $additionalEmailCredits > 0): ?>
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;"><?php echo e(trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits])); ?></small>
+            <?php endif; ?>
             <div id="internal-emails-list">
-                @php
-                    $internalEmails = $isEdit ? old('apply_internal_emails', $job->apply_internal_emails ?? []) : (old('apply_internal_emails') ?? []);
+                <?php
+                    $internalEmails = old('apply_internal_emails', optional($job)->apply_internal_emails ?? []);
                     if (!is_array($internalEmails)) $internalEmails = $internalEmails ? [$internalEmails] : [];
                     $internalEmails = array_slice($internalEmails, 0, 3);
-                @endphp
-                @foreach($internalEmails as $idx => $email)
+                ?>
+                <?php $__currentLoopData = $internalEmails; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $email): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="jp-internal-email-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
-                    <input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" value="{{ is_string($email) ? $email : '' }}" style="flex:1;">
+                    <input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" value="<?php echo e(is_string($email) ? $email : ''); ?>" style="flex:1;">
                     <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
             <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-email-btn" style="border-radius:8px;">
-                <i class="fa fa-plus"></i> {{ __('Add email') }}
+                <i class="fa fa-plus"></i> <?php echo e(__('Add email')); ?>
+
             </button>
         </div>
 
-        <div class="jp-group" id="internal-phones-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
-            <label class="jp-label">{{ __('Additional phone numbers to receive applications') }} <span class="hint">({{ __('optional, up to 3') }})</span></label>
-            @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
-            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
-            @endif
+        <div class="jp-group" id="internal-phones-wrap" style="display: <?php echo e($applyType === 'internal' ? 'block' : 'none'); ?>;">
+            <label class="jp-label"><?php echo e(__('Additional phone numbers to receive applications')); ?> <span class="hint">(<?php echo e(__('optional, up to 3')); ?>)</span></label>
+            <?php if($creditsEnabled && $whatsappCreditsPerAlert > 0): ?>
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;"><?php echo e(trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert])); ?></small>
+            <?php endif; ?>
             <div id="internal-phones-list">
-                @php
-                    $internalPhones = $isEdit ? old('apply_internal_phones', $job->apply_internal_phones ?? []) : (old('apply_internal_phones') ?? []);
+                <?php
+                    $internalPhones = old('apply_internal_phones', optional($job)->apply_internal_phones ?? []);
                     if (!is_array($internalPhones)) $internalPhones = $internalPhones ? [$internalPhones] : [];
                     $internalPhones = array_slice($internalPhones, 0, 3);
-                @endphp
-                @foreach($internalPhones as $idx => $phone)
+                ?>
+                <?php $__currentLoopData = $internalPhones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $phone): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="jp-internal-phone-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
-                    <input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" value="{{ is_string($phone) ? $phone : '' }}" style="flex:1;">
+                    <input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" value="<?php echo e(is_string($phone) ? $phone : ''); ?>" style="flex:1;">
                     <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
             <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-phone-btn" style="border-radius:8px;">
-                <i class="fa fa-plus"></i> {{ __('Add phone') }}
+                <i class="fa fa-plus"></i> <?php echo e(__('Add phone')); ?>
+
             </button>
         </div>
 
-        {{-- WhatsApp Notification Option --}}
-        @php
+        
+        <?php
             $whatsappColumnExists = \Illuminate\Support\Facades\Schema::hasColumn('jb_jobs', 'enable_whatsapp_notifications');
-        @endphp
-        @if($whatsappColumnExists)
-        <div class="jp-group" id="whatsapp-notification-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
+        ?>
+        <?php if($whatsappColumnExists): ?>
+        <div class="jp-group" id="whatsapp-notification-wrap" style="display: <?php echo e($applyType === 'internal' ? 'block' : 'none'); ?>;">
             <div class="form-check" style="margin-top: 15px;">
                 <input type="checkbox" name="enable_whatsapp_notifications" value="1" class="form-check-input" id="enable_whatsapp_notifications" 
-                    {{ old('enable_whatsapp_notifications', optional($job)->enable_whatsapp_notifications ?? false) ? 'checked' : '' }}>
+                    <?php echo e(old('enable_whatsapp_notifications', optional($job)->enable_whatsapp_notifications ?? false) ? 'checked' : ''); ?>>
                 <label class="form-check-label jp-label" for="enable_whatsapp_notifications" style="cursor: pointer;">
                     <i class="fa fa-whatsapp" style="color: #25D366; margin-right: 5px;"></i>
-                    {{ __('Send WhatsApp notifications when candidates apply') }}
+                    <?php echo e(__('Send WhatsApp notifications when candidates apply')); ?>
+
                 </label>
                 <small class="form-text text-muted d-block" style="margin-top: 5px; margin-left: 25px;">
-                    {{ __('You will receive WhatsApp notifications on your phone numbers when a candidate applies for this job') }}
+                    <?php echo e(__('You will receive WhatsApp notifications on your phone numbers when a candidate applies for this job')); ?>
+
                 </small>
-                @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
+                <?php if($creditsEnabled && $whatsappCreditsPerAlert > 0): ?>
                 <small class="form-text d-block" style="margin-top: 6px; margin-left: 25px; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
-                    {{ trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert]) }}
+                    <?php echo e(trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert])); ?>
+
                 </small>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
-        @endif
+        <?php endif; ?>
 
         <div class="jp-row">
             <div class="jp-col-6">
                 <div class="jp-group">
                     <label class="jp-label">Application Deadline</label>
-                    @php $closingDate = optional($job)->application_closing_date; $closingStr = $closingDate ? (is_object($closingDate) ? $closingDate->format('Y-m-d') : $closingDate) : ''; @endphp
-                    <input type="date" name="application_closing_date" class="jp-input" min="{{ date('Y-m-d') }}" value="{{ old('application_closing_date', $closingStr) }}">
+                    <?php $closingDate = optional($job)->application_closing_date; $closingStr = $closingDate ? (is_object($closingDate) ? $closingDate->format('Y-m-d') : $closingDate) : ''; ?>
+                    <input type="date" name="application_closing_date" class="jp-input" min="<?php echo e(date('Y-m-d')); ?>" value="<?php echo e(old('application_closing_date', $closingStr)); ?>">
                 </div>
             </div>
             <div class="jp-col-6">
                 <div class="jp-group">
                     <label class="jp-label">Job Status</label>
-                    @php $st = optional($job)->status; $jobStatus = old('status', $st && is_object($st) ? $st->getValue() : ($st ?: 'published')); @endphp
+                    <?php $st = optional($job)->status; $jobStatus = old('status', $st && is_object($st) ? $st->getValue() : ($st ?: 'published')); ?>
                     <select name="status" class="jp-select">
-                        <option value="published" {{ $jobStatus === 'published' ? 'selected' : '' }}>Published</option>
-                        <option value="draft" {{ $jobStatus === 'draft' ? 'selected' : '' }}>Draft</option>
-                        <option value="pending" {{ $jobStatus === 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="published" <?php echo e($jobStatus === 'published' ? 'selected' : ''); ?>>Published</option>
+                        <option value="draft" <?php echo e($jobStatus === 'draft' ? 'selected' : ''); ?>>Draft</option>
+                        <option value="pending" <?php echo e($jobStatus === 'pending' ? 'selected' : ''); ?>>Pending</option>
                     </select>
                 </div>
             </div>
@@ -733,21 +738,21 @@
 
         <div class="jp-group">
             <div class="jp-check-wrap">
-                <input type="checkbox" name="hide_company" id="hide_company" value="1" {{ old('hide_company', optional($job)->hide_company ?? 0) ? 'checked' : '' }}>
+                <input type="checkbox" name="hide_company" id="hide_company" value="1" <?php echo e(old('hide_company', optional($job)->hide_company ?? 0) ? 'checked' : ''); ?>>
                 <label for="hide_company" style="cursor:pointer; font-size:14px;"><i class="fa fa-eye-slash" style="margin-right:4px;"></i> Hide my company details (Post as anonymously)</label>
             </div>
         </div>
         </div>
     </div>
 
-    {{-- ====== SECTION 7: Screening Questions (Advanced) ====== --}}
+    
     <div class="jp-card jp-card-collapsible" data-section="7">
         <div class="jp-card-header">
-            <div class="jp-card-title"><i class="fa fa-clipboard-list"></i> {{ __('Job Screening Questions') }} <span class="hint" style="font-weight:400;font-size:13px;">({{ __('Select, edit Q&A, and mark correct answer. Wrong answer restricts candidate from applying.') }})</span></div>
+            <div class="jp-card-title"><i class="fa fa-clipboard-list"></i> <?php echo e(__('Job Screening Questions')); ?> <span class="hint" style="font-weight:400;font-size:13px;">(<?php echo e(__('Select, edit Q&A, and mark correct answer. Wrong answer restricts candidate from applying.')); ?>)</span></div>
         </div>
         <div class="jp-card-body" style="padding-top: 20px;">
         <div id="screening-questions-container" class="sq-list">
-            @php
+            <?php
                 $jobSqs = optional($job)->screeningQuestions ?? collect();
                 $selectedSqIds = old('screening_question_ids', $jobSqs->pluck('id')->all());
                 $requiredSqIds = old('screening_question_required', $jobSqs->filter(fn($q) => $q->pivot->is_required ?? false)->pluck('id')->all());
@@ -760,154 +765,123 @@
                         'correct_answer' => old('screening_question_correct.'.$q->id, $pivot->correct_answer ?? ''),
                     ];
                 }
-            @endphp
-            @forelse($screeningQuestions ?? [] as $sq)
-                @php
+            ?>
+            <?php $__empty_1 = true; $__currentLoopData = $screeningQuestions ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php
                     $override = $sqOverrides[$sq->id] ?? ['question'=>'','options'=>'','correct_answer'=>''];
                     $opts = $sq->options_array;
                     $optsStr = is_array($opts) ? implode("\n", $opts) : (string)($opts ?? '');
                     $optsForCorrect = !empty($override['options']) ? array_filter(array_map('trim', preg_split('/[\r\n]+/', (string)$override['options']))) : (is_array($opts) ? $opts : []);
-                @endphp
-                <div class="sq-item" data-id="{{ $sq->id }}" data-template-question="{{ e($sq->question) }}" data-template-options="{{ e($optsStr) }}" data-type="{{ $sq->question_type }}">
+                ?>
+                <div class="sq-item" data-id="<?php echo e($sq->id); ?>" data-template-question="<?php echo e(e($sq->question)); ?>" data-template-options="<?php echo e(e($optsStr)); ?>" data-type="<?php echo e($sq->question_type); ?>">
                     <div class="sq-item-main">
-                        <input type="checkbox" name="screening_question_ids[]" value="{{ $sq->id }}" id="sq_cb_{{ $sq->id }}" class="form-check-input sq-select-cb" {{ in_array($sq->id, $selectedSqIds) ? 'checked' : '' }}>
+                        <input type="checkbox" name="screening_question_ids[]" value="<?php echo e($sq->id); ?>" id="sq_cb_<?php echo e($sq->id); ?>" class="form-check-input sq-select-cb" <?php echo e(in_array($sq->id, $selectedSqIds) ? 'checked' : ''); ?>>
                         <div class="sq-item-content">
-                            <label for="sq_cb_{{ $sq->id }}" class="sq-question-text">{{ $override['question'] ?: $sq->question }}</label>
-                            <span class="sq-type-badge">{{ $sq->question_type }}</span>
+                            <label for="sq_cb_<?php echo e($sq->id); ?>" class="sq-question-text"><?php echo e($override['question'] ?: $sq->question); ?></label>
+                            <span class="sq-type-badge"><?php echo e($sq->question_type); ?></span>
                         </div>
                     </div>
                     <div class="sq-item-actions">
-                        <button type="button" class="btn btn-sm btn-outline-secondary sq-toggle-edit" title="{{ __('Edit Q&A') }}"><i class="fa fa-edit"></i></button>
-                        <button type="button" class="btn btn-sm btn-outline-primary sq-auto-fill" title="{{ __('1-Click: Fill from job form') }}"><i class="fa fa-magic"></i> 1-Click</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary sq-toggle-edit" title="<?php echo e(__('Edit Q&A')); ?>"><i class="fa fa-edit"></i></button>
+                        <button type="button" class="btn btn-sm btn-outline-primary sq-auto-fill" title="<?php echo e(__('1-Click: Fill from job form')); ?>"><i class="fa fa-magic"></i> 1-Click</button>
                         <span class="sq-required-wrap">
-                            <input type="checkbox" name="screening_question_required[]" value="{{ $sq->id }}" id="sq_req_{{ $sq->id }}" class="form-check-input sq-required-cb" {{ in_array($sq->id, $requiredSqIds) ? 'checked' : '' }} {{ in_array($sq->id, $selectedSqIds) ? '' : 'disabled' }}>
-                            <label for="sq_req_{{ $sq->id }}" class="sq-required-label">{{ __('Required') }}</label>
+                            <input type="checkbox" name="screening_question_required[]" value="<?php echo e($sq->id); ?>" id="sq_req_<?php echo e($sq->id); ?>" class="form-check-input sq-required-cb" <?php echo e(in_array($sq->id, $requiredSqIds) ? 'checked' : ''); ?> <?php echo e(in_array($sq->id, $selectedSqIds) ? '' : 'disabled'); ?>>
+                            <label for="sq_req_<?php echo e($sq->id); ?>" class="sq-required-label"><?php echo e(__('Required')); ?></label>
                         </span>
                     </div>
                     <div class="sq-item-expand" style="display:none;width:100%;margin-top:12px; padding:16px; background:#f9f9f9; border-radius:8px; border:1px solid #eee;">
                         <div class="mb-2">
-                            <label class="form-label small">{{ __('Question (editable)') }}</label>
-                            <textarea name="screening_question_question[{{ $sq->id }}]" class="form-control sq-edit-question" rows="2" placeholder="{{ $sq->question }}">{{ $override['question'] }}</textarea>
+                            <label class="form-label small"><?php echo e(__('Question (editable)')); ?></label>
+                            <textarea name="screening_question_question[<?php echo e($sq->id); ?>]" class="form-control sq-edit-question" rows="2" placeholder="<?php echo e($sq->question); ?>"><?php echo e($override['question']); ?></textarea>
                         </div>
-                        @if(in_array($sq->question_type, ['dropdown','checkbox']))
+                        <?php if(in_array($sq->question_type, ['dropdown','checkbox'])): ?>
                         <div class="mb-2">
-                            <label class="form-label small">{{ __('Options (one per line)') }}</label>
-                            <textarea name="screening_question_options[{{ $sq->id }}]" class="form-control sq-edit-options" rows="3" placeholder="{{ $optsStr }}">{{ is_array($override['options']) ? implode("\n", $override['options']) : $override['options'] }}</textarea>
+                            <label class="form-label small"><?php echo e(__('Options (one per line)')); ?></label>
+                            <textarea name="screening_question_options[<?php echo e($sq->id); ?>]" class="form-control sq-edit-options" rows="3" placeholder="<?php echo e($optsStr); ?>"><?php echo e(is_array($override['options']) ? implode("\n", $override['options']) : $override['options']); ?></textarea>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label small">{{ __('Correct answer (restricts wrong)') }} <span class="text-muted">({{ __('Candidate must select this to apply') }})</span></label>
-                            <select name="screening_question_correct[{{ $sq->id }}]" class="form-select sq-edit-correct">
-                                <option value="">{{ __('No restriction') }}</option>
-                                @foreach($optsForCorrect as $opt)
-                                <option value="{{ $opt }}" {{ ($override['correct_answer'] ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
+                            <label class="form-label small"><?php echo e(__('Correct answer (restricts wrong)')); ?> <span class="text-muted">(<?php echo e(__('Candidate must select this to apply')); ?>)</span></label>
+                            <select name="screening_question_correct[<?php echo e($sq->id); ?>]" class="form-select sq-edit-correct">
+                                <option value=""><?php echo e(__('No restriction')); ?></option>
+                                <?php $__currentLoopData = $optsForCorrect; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $opt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($opt); ?>" <?php echo e(($override['correct_answer'] ?? '') === $opt ? 'selected' : ''); ?>><?php echo e($opt); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
-            @empty
-            <p class="sq-empty-msg">{{ __('No screening questions available. Admin can add them in Job Board → Job Attributes → Screening Questions.') }}</p>
-            @endforelse
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+            <p class="sq-empty-msg"><?php echo e(__('No screening questions available. Admin can add them in Job Board → Job Attributes → Screening Questions.')); ?></p>
+            <?php endif; ?>
         </div>
 
-        {{-- Job-specific screening questions (employer adds per job, not stored in admin) --}}
+        
         <div class="mt-4 pt-4 border-top">
-            <h4 class="mb-3 fw-semibold"><i class="fa fa-plus-circle"></i> {{ __('Your screening questions for this job') }}</h4>
-            <p class="text-muted small mb-3">{{ __('Add questions only for this job. Candidates will answer these when applying.') }}</p>
+            <h4 class="mb-3 fw-semibold"><i class="fa fa-plus-circle"></i> <?php echo e(__('Your screening questions for this job')); ?></h4>
+            <p class="text-muted small mb-3"><?php echo e(__('Add questions only for this job. Candidates will answer these when applying.')); ?></p>
             <div id="job-screening-questions-list">
-                @php
+                <?php
                     $jobScreeningQuestions = old('job_screening_questions', $editJobData['job_screening_questions'] ?? []);
                     if (!is_array($jobScreeningQuestions)) $jobScreeningQuestions = [];
-                @endphp
-                @foreach($jobScreeningQuestions as $idx => $jsq)
-                <div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="{{ $idx }}">
-                    <input type="hidden" name="job_screening_questions[{{ $idx }}][id]" value="{{ $jsq['id'] ?? '' }}">
+                ?>
+                <?php $__currentLoopData = $jobScreeningQuestions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $jsq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="<?php echo e($idx); ?>">
+                    <input type="hidden" name="job_screening_questions[<?php echo e($idx); ?>][id]" value="<?php echo e($jsq['id'] ?? ''); ?>">
                     <div class="row g-2 mb-2">
                         <div class="col-12">
-                            <label class="form-label small mb-0">{{ __('Question') }}</label>
-                            <textarea name="job_screening_questions[{{ $idx }}][question]" class="form-control form-control-sm" rows="2" placeholder="{{ __('e.g. Do you have B.Ed?') }}">{{ $jsq['question'] ?? '' }}</textarea>
+                            <label class="form-label small mb-0"><?php echo e(__('Question')); ?></label>
+                            <textarea name="job_screening_questions[<?php echo e($idx); ?>][question]" class="form-control form-control-sm" rows="2" placeholder="<?php echo e(__('e.g. Do you have B.Ed?')); ?>"><?php echo e($jsq['question'] ?? ''); ?></textarea>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small mb-0">{{ __('Type') }}</label>
-                            <select name="job_screening_questions[{{ $idx }}][question_type]" class="form-select form-select-sm jsq-type">
-                                <option value="text" {{ ($jsq['question_type'] ?? 'text') === 'text' ? 'selected' : '' }}>Text</option>
-                                <option value="textarea" {{ ($jsq['question_type'] ?? '') === 'textarea' ? 'selected' : '' }}>Textarea</option>
-                                <option value="dropdown" {{ ($jsq['question_type'] ?? '') === 'dropdown' ? 'selected' : '' }}>Dropdown</option>
-                                <option value="checkbox" {{ ($jsq['question_type'] ?? '') === 'checkbox' ? 'selected' : '' }}>Checkbox</option>
+                            <label class="form-label small mb-0"><?php echo e(__('Type')); ?></label>
+                            <select name="job_screening_questions[<?php echo e($idx); ?>][question_type]" class="form-select form-select-sm jsq-type">
+                                <option value="text" <?php echo e(($jsq['question_type'] ?? 'text') === 'text' ? 'selected' : ''); ?>>Text</option>
+                                <option value="textarea" <?php echo e(($jsq['question_type'] ?? '') === 'textarea' ? 'selected' : ''); ?>>Textarea</option>
+                                <option value="dropdown" <?php echo e(($jsq['question_type'] ?? '') === 'dropdown' ? 'selected' : ''); ?>>Dropdown</option>
+                                <option value="checkbox" <?php echo e(($jsq['question_type'] ?? '') === 'checkbox' ? 'selected' : ''); ?>>Checkbox</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small mb-0">
-                                <input type="checkbox" name="job_screening_questions[{{ $idx }}][is_required]" value="1" {{ !empty($jsq['is_required']) ? 'checked' : '' }}> {{ __('Required') }}
+                                <input type="checkbox" name="job_screening_questions[<?php echo e($idx); ?>][is_required]" value="1" <?php echo e(!empty($jsq['is_required']) ? 'checked' : ''); ?>> <?php echo e(__('Required')); ?>
+
                             </label>
                         </div>
                         <div class="col-md-4 text-end">
-                            <button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="{{ __('Remove') }}"><i class="fa fa-times"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="<?php echo e(__('Remove')); ?>"><i class="fa fa-times"></i></button>
                         </div>
                     </div>
-                    <div class="jsq-options-wrap mb-2" style="display:{{ in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none' }};">
-                        <label class="form-label small mb-0">{{ __('Options (one per line)') }}</label>
-                        <textarea name="job_screening_questions[{{ $idx }}][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No">{{ is_array($jsq['options'] ?? null) ? implode("\n", $jsq['options']) : ($jsq['options'] ?? '') }}</textarea>
+                    <div class="jsq-options-wrap mb-2" style="display:<?php echo e(in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none'); ?>;">
+                        <label class="form-label small mb-0"><?php echo e(__('Options (one per line)')); ?></label>
+                        <textarea name="job_screening_questions[<?php echo e($idx); ?>][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No"><?php echo e(is_array($jsq['options'] ?? null) ? implode("\n", $jsq['options']) : ($jsq['options'] ?? '')); ?></textarea>
                     </div>
-                    <div class="jsq-correct-wrap" style="display:{{ in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none' }};">
-                        <label class="form-label small mb-0">{{ __('Correct answer (candidate must select this to apply)') }}</label>
-                        <input type="text" name="job_screening_questions[{{ $idx }}][correct_answer]" class="form-control form-control-sm" placeholder="{{ __('Optional') }}" value="{{ $jsq['correct_answer'] ?? '' }}">
+                    <div class="jsq-correct-wrap" style="display:<?php echo e(in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none'); ?>;">
+                        <label class="form-label small mb-0"><?php echo e(__('Correct answer (candidate must select this to apply)')); ?></label>
+                        <input type="text" name="job_screening_questions[<?php echo e($idx); ?>][correct_answer]" class="form-control form-control-sm" placeholder="<?php echo e(__('Optional')); ?>" value="<?php echo e($jsq['correct_answer'] ?? ''); ?>">
                     </div>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
-            <button type="button" class="btn btn-outline-primary btn-sm" id="jsq-add-btn"><i class="fa fa-plus"></i> {{ __('Add question') }}</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="jsq-add-btn"><i class="fa fa-plus"></i> <?php echo e(__('Add question')); ?></button>
         </div>
         </div>
     </div>
 
-    {{-- ====== SUBMIT ====== --}}
+    
     <div class="jp-card" style="text-align: center;">
         <button type="submit" class="jp-submit-btn" id="submitJobBtn">
-            <i class="fa fa-check"></i> {{ $submitLabel }}
+            <i class="fa fa-check"></i> <?php echo e($submitLabel); ?>
+
         </button>
-        <a href="{{ route('public.account.jobs.index') }}" class="btn btn-outline-secondary ms-3" style="border-radius:8px; padding:12px 30px;">
+        <a href="<?php echo e(route('public.account.jobs.index')); ?>" class="btn btn-outline-secondary ms-3" style="border-radius:8px; padding:12px 30px;">
             Cancel
         </a>
     </div>
 </form>
 
-{{-- Buy credits popup --}}
-<div id="buy-credits-popup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; margin:20px; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
-        <p id="buy-credits-popup-msg" class="mb-4" style="font-size:15px; color:#333;">Insufficient credits. Please buy credits to use this feature.</p>
-        <div class="d-flex gap-2 justify-content-end">
-            <button type="button" class="btn btn-secondary" id="buy-credits-popup-close">Cancel</button>
-            <a href="{{ $walletUrl ?? route('public.account.wallet') }}" class="btn btn-primary" id="buy-credits-popup-wallet">Buy credits</a>
-        </div>
-    </div>
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var walletUrl = '{{ $walletUrl ?? route("public.account.wallet") }}';
-    var creditsEnabled = {{ ($creditsEnabled ?? false) ? 'true' : 'false' }};
-    var accountCredits = {{ (int) ($accountCredits ?? (isset($account) ? (int)($account->credits ?? 0) : 0)) }};
-    var emailCreditsRequired = {{ (int) ($emailCreditsRequired ?? 100) }};
-    var wpCreditsRequired = {{ (int) ($wpCreditsRequired ?? 10) }};
-    if (window.jobCreateCredits && window.jobCreateCredits.enabled) {
-        creditsEnabled = true;
-        accountCredits = window.jobCreateCredits.accountCredits || 0;
-        emailCreditsRequired = window.jobCreateCredits.additionalEmailCredits || 100;
-        wpCreditsRequired = window.jobCreateCredits.whatsappCreditsPerAlert || 10;
-    }
-    function showBuyCreditsPopup(msg) {
-        var el = document.getElementById('buy-credits-popup');
-        var msgEl = document.getElementById('buy-credits-popup-msg');
-        if (el && msgEl) { msgEl.textContent = msg || 'Insufficient credits. Please buy credits from Wallet.'; el.style.display = 'flex'; }
-    }
-    function hideBuyCreditsPopup() {
-        var el = document.getElementById('buy-credits-popup');
-        if (el) el.style.display = 'none';
-    }
-    document.getElementById('buy-credits-popup-close')?.addEventListener('click', hideBuyCreditsPopup);
-    document.getElementById('buy-credits-popup')?.addEventListener('click', function(e) { if (e.target === this) hideBuyCreditsPopup(); });
 
     // ===== JOB TITLES DATABASE =====
     const jobTitles = [
@@ -938,20 +912,20 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
 
     // ===== LANGUAGES (from jb_languages table) =====
-    const languages = @json($languagesList ?? []);
+    const languages = <?php echo json_encode($languagesList ?? [], 15, 512) ?>;
 
     // ===== SKILLS (from DB) =====
-    const allSkills = @json($skills);
+    const allSkills = <?php echo json_encode($skills, 15, 512) ?>;
 
     // ===== COMPANY DATA =====
-    const companyData = @json($companyDetails);
-    const companies = @json($companies ?? []);
-    const degreeLevels = @json($degreeLevels ?? []);
-    const jobExperiences = @json($jobExperiences ?? []);
+    const companyData = <?php echo json_encode($companyDetails, 15, 512) ?>;
+    const companies = <?php echo json_encode($companies ?? [], 15, 512) ?>;
+    const degreeLevels = <?php echo json_encode($degreeLevels ?? [], 15, 512) ?>;
+    const jobExperiences = <?php echo json_encode($jobExperiences ?? [], 15, 512) ?>;
 
     // ===== EDIT MODE: pre-fill from job =====
-    var isEditMode = {{ $isEdit ? 'true' : 'false' }};
-    var editJobData = @json($editJobData ?? null);
+    var isEditMode = <?php echo e($isEdit ? 'true' : 'false'); ?>;
+    var editJobData = <?php echo json_encode($editJobData ?? null, 15, 512) ?>;
 
     // ===== AUTO-SUGGEST HELPER =====
     function setupAutoSuggest(inputEl, listEl, items, onSelect, isObject, clearInputOnSelect) {
@@ -1250,46 +1224,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits (valid till package) =====
+    // ===== INTERNAL EMAILS (up to 3) - Add email button =====
     var addEmailBtn = document.getElementById('add-internal-email-btn');
     var internalEmailsList = document.getElementById('internal-emails-list');
     if (addEmailBtn && internalEmailsList) {
-        addEmailBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+        addEmailBtn.addEventListener('click', function() {
             var rows = internalEmailsList.querySelectorAll('.jp-internal-email-row');
             if (rows.length >= 3) return;
-            if (creditsEnabled && accountCredits < emailCreditsRequired) {
-                showBuyCreditsPopup('Insufficient credits. Need 100 credits (one-time) for additional email. Please buy credits from Wallet.');
-                return;
-            }
-            var btn = this;
-            var deductUrl = '{{ route("public.account.jobs.deduct-additional-email") }}';
-            if (!deductUrl) { showBuyCreditsPopup('Action not available.'); return; }
-            btn.disabled = true;
-            var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            fetch(deductUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({})
-            })
-            .then(function(r) { return r.json().catch(function() { return { success: false, message: 'Invalid response' }; }); })
-            .then(function(data) {
-                if (data && data.success === true) {
-                    var row = document.createElement('div');
-                    row.className = 'jp-internal-email-row';
-                    row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
-                    row.innerHTML = '<input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" style="flex:1;">' +
-                        '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
-                    internalEmailsList.appendChild(row);
-                    row.querySelector('.jp-remove-internal-email').addEventListener('click', function() { row.remove(); });
-                } else {
-                    showBuyCreditsPopup(data && data.message ? data.message : 'Insufficient credits. Please buy credits from Wallet.');
-                }
-            })
-            .catch(function() { showBuyCreditsPopup('Request failed. Please try again or buy credits from Wallet.'); })
-            .finally(function() { btn.disabled = false; });
+            var row = document.createElement('div');
+            row.className = 'jp-internal-email-row';
+            row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
+            row.innerHTML = '<input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" style="flex:1;">' +
+                '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
+            internalEmailsList.appendChild(row);
+            row.querySelector('.jp-remove-internal-email').addEventListener('click', function() { row.remove(); });
         });
         internalEmailsList.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.jp-remove-internal-email');
@@ -1297,64 +1245,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
+    // ===== INTERNAL PHONES (up to 3) - Add phone button =====
     var addPhoneBtn = document.getElementById('add-internal-phone-btn');
     var internalPhonesList = document.getElementById('internal-phones-list');
     if (addPhoneBtn && internalPhonesList) {
-        addPhoneBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+        addPhoneBtn.addEventListener('click', function() {
             var rows = internalPhonesList.querySelectorAll('.jp-internal-phone-row');
             if (rows.length >= 3) return;
-            if (accountCredits < wpCreditsRequired) {
-                showBuyCreditsPopup('Insufficient credits. Need 10 credits per number for WhatsApp alerts. Please buy credits from Wallet.');
-                return;
-            }
-            var btn = this;
-            var deductUrl = '{{ route("public.account.jobs.deduct-whatsapp-number") }}';
-            if (!deductUrl) { showBuyCreditsPopup('Action not available.'); return; }
-            btn.disabled = true;
-            var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            fetch(deductUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({})
-            })
-            .then(function(r) { return r.json().catch(function() { return { success: false, message: 'Invalid response' }; }); })
-            .then(function(data) {
-                if (data && data.success === true) {
-                    var row = document.createElement('div');
-                    row.className = 'jp-internal-phone-row';
-                    row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
-                    row.innerHTML = '<input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" style="flex:1;">' +
-                        '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
-                    internalPhonesList.appendChild(row);
-                    row.querySelector('.jp-remove-internal-phone').addEventListener('click', function() { row.remove(); });
-                } else {
-                    showBuyCreditsPopup(data && data.message ? data.message : 'Insufficient credits. Please buy credits from Wallet.');
-                }
-            })
-            .catch(function() { showBuyCreditsPopup('Request failed. Please try again or buy credits from Wallet.'); })
-            .finally(function() { btn.disabled = false; });
+            var row = document.createElement('div');
+            row.className = 'jp-internal-phone-row';
+            row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
+            row.innerHTML = '<input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" style="flex:1;">' +
+                '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
+            internalPhonesList.appendChild(row);
+            row.querySelector('.jp-remove-internal-phone').addEventListener('click', function() { row.remove(); });
         });
         internalPhonesList.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.jp-remove-internal-phone');
             if (removeBtn) removeBtn.closest('.jp-internal-phone-row').remove();
-        });
-    }
-
-    // ===== WhatsApp checkbox: prevent enable if insufficient credits + popup =====
-    var whatsappCb = document.getElementById('enable_whatsapp_notifications');
-    if (whatsappCb && window.jobCreateCredits && window.jobCreateCredits.enabled) {
-        whatsappCb.addEventListener('click', function(e) {
-            if (this.checked) return;
-            var c = window.jobCreateCredits;
-            if (c.accountCredits < c.whatsappCreditsPerAlert) {
-                e.preventDefault();
-                this.checked = false;
-                alert(c.msgWhatsAppCheckbox || ('You need at least ' + c.whatsappCreditsPerAlert + ' credits. Current balance: ' + c.accountCredits));
-            }
         });
     }
 
@@ -1369,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (val.length < 2) { cityList2.classList.remove('show'); return; }
 
         cityTimeout = setTimeout(function() {
-            fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+            fetch('<?php echo e(route("ajax.search-cities")); ?>?keyword=' + encodeURIComponent(val))
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     cityList2.innerHTML = '';
@@ -1409,7 +1317,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (val.length < 2) { suggest.classList.remove('show'); return; }
 
             timer = setTimeout(function() {
-                fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+                fetch('<?php echo e(route("ajax.search-cities")); ?>?keyword=' + encodeURIComponent(val))
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         suggest.innerHTML = '';
@@ -1498,7 +1406,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.disabled = true;
         btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
 
-        var url = '{{ route("public.account.jobs.generate-description") }}';
+        var url = '<?php echo e(route("public.account.jobs.generate-description")); ?>';
         var token = (document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content')) || '';
 
         fetch(url, {
@@ -1569,17 +1477,17 @@ document.addEventListener('DOMContentLoaded', function() {
             var html = '<div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="' + idx + '">' +
                 '<input type="hidden" name="job_screening_questions[' + idx + '][id]" value="">' +
                 '<div class="row g-2 mb-2">' +
-                '<div class="col-12"><label class="form-label small mb-0">{{ __("Question") }}</label>' +
-                '<textarea name="job_screening_questions[' + idx + '][question]" class="form-control form-control-sm" rows="2" placeholder="{{ __("e.g. Do you have B.Ed?") }}"></textarea></div>' +
-                '<div class="col-md-4"><label class="form-label small mb-0">{{ __("Type") }}</label>' +
+                '<div class="col-12"><label class="form-label small mb-0"><?php echo e(__("Question")); ?></label>' +
+                '<textarea name="job_screening_questions[' + idx + '][question]" class="form-control form-control-sm" rows="2" placeholder="<?php echo e(__("e.g. Do you have B.Ed?")); ?>"></textarea></div>' +
+                '<div class="col-md-4"><label class="form-label small mb-0"><?php echo e(__("Type")); ?></label>' +
                 '<select name="job_screening_questions[' + idx + '][question_type]" class="form-select form-select-sm jsq-type">' +
                 '<option value="text" selected>Text</option><option value="textarea">Textarea</option><option value="dropdown">Dropdown</option><option value="checkbox">Checkbox</option></select></div>' +
-                '<div class="col-md-4"><label class="form-label small mb-0"><input type="checkbox" name="job_screening_questions[' + idx + '][is_required]" value="1"> {{ __("Required") }}</label></div>' +
-                '<div class="col-md-4 text-end"><button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="{{ __("Remove") }}"><i class="fa fa-times"></i></button></div></div>' +
-                '<div class="jsq-options-wrap mb-2" style="display:none;"><label class="form-label small mb-0">{{ __("Options (one per line)") }}</label>' +
+                '<div class="col-md-4"><label class="form-label small mb-0"><input type="checkbox" name="job_screening_questions[' + idx + '][is_required]" value="1"> <?php echo e(__("Required")); ?></label></div>' +
+                '<div class="col-md-4 text-end"><button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="<?php echo e(__("Remove")); ?>"><i class="fa fa-times"></i></button></div></div>' +
+                '<div class="jsq-options-wrap mb-2" style="display:none;"><label class="form-label small mb-0"><?php echo e(__("Options (one per line)")); ?></label>' +
                 '<textarea name="job_screening_questions[' + idx + '][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No"></textarea></div>' +
-                '<div class="jsq-correct-wrap" style="display:none;"><label class="form-label small mb-0">{{ __("Correct answer (candidate must select this to apply)") }}</label>' +
-                '<input type="text" name="job_screening_questions[' + idx + '][correct_answer]" class="form-control form-control-sm" placeholder="{{ __("Optional") }}"></div></div>';
+                '<div class="jsq-correct-wrap" style="display:none;"><label class="form-label small mb-0"><?php echo e(__("Correct answer (candidate must select this to apply)")); ?></label>' +
+                '<input type="text" name="job_screening_questions[' + idx + '][correct_answer]" class="form-control form-control-sm" placeholder="<?php echo e(__("Optional")); ?>"></div></div>';
             jsqList.insertAdjacentHTML('beforeend', html);
             var newRow = jsqList.querySelector('.jsq-row[data-index="' + idx + '"]');
             if (newRow) {
@@ -1647,10 +1555,12 @@ document.addEventListener('DOMContentLoaded', function() {
             var btn = document.getElementById('submitJobBtn');
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = '{{ $isEdit ? __("Updating...") : __("Posting...") }}';
+                btn.innerHTML = '<?php echo e($isEdit ? __("Updating...") : __("Posting...")); ?>';
             }
         }
     });
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make($layout, array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/dashboard/jobs/create.blade.php ENDPATH**/ ?>

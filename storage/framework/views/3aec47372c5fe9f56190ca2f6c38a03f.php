@@ -1,4 +1,4 @@
-@php
+<?php
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Facades\JobBoardHelper;
     use Botble\JobBoard\Models\Company;
@@ -177,7 +177,7 @@
     } catch (\Exception $e) {
         $institutionTypes = collect();
     }
-@endphp
+?>
 
 <style>
 /* ===== DASHBOARD HEADER ===== */
@@ -788,11 +788,12 @@
     <div class="enl-header-inner">
         <!-- Logo -->
         <div class="enl-header-logo">
-        @if (Theme::getLogo())
-                <a href="{{ BaseHelper::getHomepageUrl() }}">
-                                    {!! Theme::getLogoImage([], 'logo_light', 44) !!}
+        <?php if(Theme::getLogo()): ?>
+                <a href="<?php echo e(BaseHelper::getHomepageUrl()); ?>">
+                                    <?php echo Theme::getLogoImage([], 'logo_light', 44); ?>
+
                             </a>
-                @endif
+                <?php endif; ?>
         </div>
 
         <!-- Right -->
@@ -801,28 +802,28 @@
             <ul class="enl-header-nav" style="margin: 0; padding: 0;">
             <!-- Home Icon - Visible for Employers -->
             <li class="nav-item">
-                <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="{{ BaseHelper::getHomepageUrl() }}" title="{{ __('Home') }}">
+                <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="<?php echo e(BaseHelper::getHomepageUrl()); ?>" title="<?php echo e(__('Home')); ?>">
                     <i class="feather-home" style="font-size: 20px !important;"></i>
                             </a>
                         </li>
             
             <!-- FAQ -->
                         <li class="nav-item">
-                <a class="nav-link" style="color: black;" href="{{ route('public.faq') }}">
-                    <span>{{ __('FAQ') }}</span>
+                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.faq')); ?>">
+                    <span><?php echo e(__('FAQ')); ?></span>
                             </a>
                         </li>
 
             <!-- Plans -->
             <li class="nav-item">
-                <a class="nav-link" style="color: black;" href="{{ route('public.premium-service') }}">
-                    <span>{{ __('Plans') }}</span>
+                <a class="nav-link" style="color: black;" href="<?php echo e(route('public.premium-service')); ?>">
+                    <span><?php echo e(__('Plans')); ?></span>
                                                             </a>
                         </li>
 
             <!-- Notifications -->
                                      <li class="nav-item">
-                <a class="nav-link" style="color: black; font-size: 20px !important;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                <a class="nav-link" style="color: black; font-size: 20px !important;" href="<?php echo e(route('public.notifications')); ?>" title="<?php echo e(__('Notifications')); ?>">
                     <i class="feather-bell" style="font-size: 20px !important;"></i>
                             </a>
                         </li>
@@ -830,26 +831,26 @@
 
             <div class="enl-header-user">
                 <button class="enl-header-user-btn" onclick="document.getElementById('enlUserDropdown').classList.toggle('show')">
-                    @if($company && $company->logo)
-                        <img src="{{ RvMedia::getImageUrl($company->logo) }}" alt="{{ $account->name }}">
-                    @else
-                        <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}">
-                    @endif
-                    <span>{{ $account->first_name ?? $account->name }}</span>
+                    <?php if($company && $company->logo): ?>
+                        <img src="<?php echo e(RvMedia::getImageUrl($company->logo)); ?>" alt="<?php echo e($account->name); ?>">
+                    <?php else: ?>
+                        <img src="<?php echo e($account->avatar_url); ?>" alt="<?php echo e($account->name); ?>">
+                    <?php endif; ?>
+                    <span><?php echo e($account->first_name ?? $account->name); ?></span>
                     <i class="fa fa-chevron-down enl-chevron"></i>
                 </button>
                 <div class="enl-header-dropdown" id="enlUserDropdown">
-                    <a href="{{ route('public.account.dashboard') }}"><i class="fa fa-home"></i> Dashboard</a>
-                    <a href="{{ route('public.account.employer.settings.edit') }}"><i class="fa fa-cog"></i> Account Settings</a>
+                    <a href="<?php echo e(route('public.account.dashboard')); ?>"><i class="fa fa-home"></i> Dashboard</a>
+                    <a href="<?php echo e(route('public.account.employer.settings.edit')); ?>"><i class="fa fa-cog"></i> Account Settings</a>
                     <hr>
-                    <a href="{{ route('public.account.logout') }}" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                    <a href="<?php echo e(route('public.account.logout')); ?>" id="logout-link-enl" onclick="event.preventDefault(); if (typeof window.showEnlLogoutModal === 'function') { window.showEnlLogoutModal(); } else { if (confirm('Are you sure you want to logout?')) { var f = document.getElementById('logout-form-enl'); if (f) f.submit(); } } return false;"><i class="fa fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<form id="logout-form-enl" style="display:none;" action="{{ route('public.account.logout') }}" method="POST">@csrf</form>
+<form id="logout-form-enl" style="display:none;" action="<?php echo e(route('public.account.logout')); ?>" method="POST"><?php echo csrf_field(); ?></form>
 
 <!-- Logout confirmation modal - reference UI (icon blue circle, Logout left / Cancel right) -->
 <div id="enl-logout-modal-overlay" class="enl-logout-overlay">
@@ -900,87 +901,110 @@
                 <div class="enl-sidebar">
                     <div class="text-center">
                         <div class="enl-avatar-wrap" style="cursor:pointer;" onclick="document.getElementById('enlAvatarModal').style.display='flex'">
-                            @if($company && $company->logo)
-                                <img src="{{ RvMedia::getImageUrl($company->logo) }}" alt="{{ $company->name ?? $account->name }}" class="enl-avatar">
-                            @else
-                                <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}" class="enl-avatar">
-                            @endif
+                            <?php if($company && $company->logo): ?>
+                                <img src="<?php echo e(RvMedia::getImageUrl($company->logo)); ?>" alt="<?php echo e($company->name ?? $account->name); ?>" class="enl-avatar">
+                            <?php else: ?>
+                                <img src="<?php echo e($account->avatar_url); ?>" alt="<?php echo e($account->name); ?>" class="enl-avatar">
+                            <?php endif; ?>
                             <span class="enl-avatar-cam" title="Change Photo">
                                 <i class="fa fa-camera"></i>
                             </span>
                         </div>
-                        <h5 class="enl-name">Hello, {{ $company->name ?? $account->name }}</h5>
-                        <p class="enl-date">Joined {{ $account->created_at->format('M d, Y') }}</p>
-                        <p class="enl-updated">Last Updated: {{ $account->updated_at->format('M d, Y') }}</p>
-                        @if($account->isEmployer())
-                        <a href="{{ $employerPublicProfileUrl ?? route('public.account.companies.index') }}" class="enl-view-btn" style="display:inline-block;text-decoration:none;" {{ ($employerPublicProfileUrl && $employerPublicProfileUrl !== route('public.account.companies.index')) ? 'target="_blank" rel="noopener"' : '' }}>
+                        <h5 class="enl-name">Hello, <?php echo e($company->name ?? $account->name); ?></h5>
+                        <p class="enl-date">Joined <?php echo e($account->created_at->format('M d, Y')); ?></p>
+                        <p class="enl-updated">Last Updated: <?php echo e($account->updated_at->format('M d, Y')); ?></p>
+                        <?php if($account->isEmployer()): ?>
+                        <a href="<?php echo e($employerPublicProfileUrl ?? route('public.account.companies.index')); ?>" class="enl-view-btn" style="display:inline-block;text-decoration:none;" <?php echo e(($employerPublicProfileUrl && $employerPublicProfileUrl !== route('public.account.companies.index')) ? 'target="_blank" rel="noopener"' : ''); ?>>
                             <i class="fa fa-eye"></i> View Profile
                         </a>
-                        @endif
+                        <?php endif; ?>
                     </div>
                     
                     <!-- Credits (click opens profile completion modal) -->
                     <div class="enl-credits" onclick="document.getElementById('enlProfileModal').style.display='flex'" style="cursor:pointer;">
                         <i class="fa fa-coins"></i>
                         <span>Credits:</span>
-                        <span class="enl-credits-val">{{ $account->credits ?? 0 }}</span>
+                        <span class="enl-credits-val"><?php echo e($account->credits ?? 0); ?></span>
                     </div>
 
                     <!-- Profile Completion -->
                     <div class="enl-completion">
                         <h6>Profile Completion</h6>
                         <div class="enl-comp-bar">
-                            <div class="enl-comp-fill" style="width: {{ $empCompletion }}%"></div>
+                            <div class="enl-comp-fill" style="width: <?php echo e($empCompletion); ?>%"></div>
                         </div>
-                        <span class="enl-comp-text" onclick="document.getElementById('enlProfileModal').style.display='flex'">{{ $empCompletion }}% Complete</span>
+                        <span class="enl-comp-text" onclick="document.getElementById('enlProfileModal').style.display='flex'"><?php echo e($empCompletion); ?>% Complete</span>
                     </div>
                     
                     <!-- Post Job Button (locked: show limit-over popup with "Use credits for 1 Job Post"; no auto-deduct) -->
-                    @php $postJobLocked = !($canPost ?? true); @endphp
-                    <a href="{{ $postJobLocked ? route('public.account.wallet') : route('public.account.jobs.create') }}" class="enl-postjob {{ $postJobLocked ? 'enl-postjob-locked' : '' }} @if($postJobLocked && $account->isEmployer() && $jobPostCreditsRequired > 0) enl-limit-over-trigger @endif" data-limit-over="job_post" data-credits-required="{{ $jobPostCreditsRequired }}" data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" title="{{ $postJobLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
-                        @if($postJobLocked)
+                    <?php $postJobLocked = !($canPost ?? true); ?>
+                    <a href="<?php echo e($postJobLocked ? route('public.account.wallet') : route('public.account.jobs.create')); ?>" class="enl-postjob <?php echo e($postJobLocked ? 'enl-postjob-locked' : ''); ?> <?php if($postJobLocked && $account->isEmployer() && $jobPostCreditsRequired > 0): ?> enl-limit-over-trigger <?php endif; ?>" data-limit-over="job_post" data-credits-required="<?php echo e($jobPostCreditsRequired); ?>" data-wallet-url="<?php echo e(route('public.account.wallet')); ?>" data-job-create-url="<?php echo e(route('public.account.jobs.create')); ?>" data-purchase-url="<?php echo e(route('public.account.wallet.purchase_job_post_slot')); ?>" title="<?php echo e($postJobLocked ? trans('plugins/job-board::messages.insufficient_credits') : ''); ?>">
+                        <?php if($postJobLocked): ?>
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
-                            <span>{{ __('Post Job') }}</span>
-                        @else
-                            <i class="fa fa-plus-circle"></i> {{ __('Post Job') }}
-                        @endif
+                            <span><?php echo e(__('Post Job')); ?></span>
+                        <?php else: ?>
+                            <i class="fa fa-plus-circle"></i> <?php echo e(__('Post Job')); ?>
+
+                        <?php endif; ?>
                     </a>
 
                     <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
-                    <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
-                        @if($admissionLocked)
+                    <a href="<?php echo e($admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit')); ?>" class="enl-postjob <?php echo e($admissionLocked ? 'enl-postjob-locked' : ''); ?>" style="<?php echo e($admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;'); ?>" title="<?php echo e($admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : ''); ?>">
+                        <?php if($admissionLocked): ?>
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
-                            <span>{{ __('Admission') }}</span>
-                        @else
-                            <i class="fa fa-graduation-cap"></i> {{ __('Admission') }}
-                        @endif
+                            <span><?php echo e(__('Admission')); ?></span>
+                        <?php else: ?>
+                            <i class="fa fa-graduation-cap"></i> <?php echo e(__('Admission')); ?>
+
+                        <?php endif; ?>
                     </a>
                     
                     <!-- Navigation -->
                     <ul class="enl-nav">
-                        @foreach ($menuItems as $item)
-                            @continue(! $item['name'])
-                            @php
+                        <?php $__currentLoopData = $menuItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if(! $item['name']) continue; ?>
+                            <?php
                                 $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages'];
                                 if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
                                     continue;
                                 }
-                            @endphp
+                            ?>
                             <li>
-                                <a href="{{ $item['url'] }}" @class(['active' => $item['active']])>
-                                    @if(str_contains($item['icon'] ?? '', 'ti '))
-                                        <x-core::icon :name="$item['icon']" />
-                                    @else
-                                        <i class="{{ $item['icon'] ?? 'fa fa-circle' }}"></i>
-                                    @endif
-                                    @if(($item['id'] ?? '') === 'cms-account-change-password' || $item['url'] === route('public.account.security'))
-                                        {{ trans('plugins/job-board::dashboard.menu.change_password') }}
-                                    @else
-                                        {{ trans($item['name']) }}
-                                    @endif
+                                <a href="<?php echo e($item['url']); ?>" class="<?php echo \Illuminate\Support\Arr::toCssClasses(['active' => $item['active']]); ?>">
+                                    <?php if(str_contains($item['icon'] ?? '', 'ti ')): ?>
+                                        <?php if (isset($component)) { $__componentOriginal73995948b3bd877b76251b40caf28170 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal73995948b3bd877b76251b40caf28170 = $attributes; } ?>
+<?php $component = Botble\Icon\View\Components\Icon::resolve(['name' => $item['icon']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::icon'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Botble\Icon\View\Components\Icon::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $attributes = $__attributesOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__attributesOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $component = $__componentOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__componentOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+                                    <?php else: ?>
+                                        <i class="<?php echo e($item['icon'] ?? 'fa fa-circle'); ?>"></i>
+                                    <?php endif; ?>
+                                    <?php if(($item['id'] ?? '') === 'cms-account-change-password' || $item['url'] === route('public.account.security')): ?>
+                                        <?php echo e(trans('plugins/job-board::dashboard.menu.change_password')); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e(trans($item['name'])); ?>
+
+                                    <?php endif; ?>
                                 </a>
                             </li>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </ul>
                 </div>
             </div>
@@ -988,7 +1012,7 @@
             <!-- Main Content -->
             <div class="enl-main-col">
                 <div class="enl-main">
-                    @yield('content')
+                    <?php echo $__env->yieldContent('content'); ?>
                 </div>
             </div>
         </div>
@@ -1003,41 +1027,43 @@
         <div class="enl-pm-badge">
             <i class="fa fa-coins"></i>
             <span>Credits:</span>
-            <span class="enl-pm-badge-val">{{ $account->credits ?? 0 }}</span>
+            <span class="enl-pm-badge-val"><?php echo e($account->credits ?? 0); ?></span>
         </div>
 
         <div class="enl-pm-comp">
             <h6 class="enl-pm-comp-title">Profile Completion</h6>
             <div class="enl-pm-bar">
-                <div class="enl-pm-bar-fill" style="width: {{ $empCompletion }}%"></div>
+                <div class="enl-pm-bar-fill" style="width: <?php echo e($empCompletion); ?>%"></div>
             </div>
-            <span class="enl-pm-comp-text">{{ $empCompletion }}% Complete</span>
+            <span class="enl-pm-comp-text"><?php echo e($empCompletion); ?>% Complete</span>
         </div>
 
         <div>
-            @foreach($profileFields as $pf)
+            <?php $__currentLoopData = $profileFields; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pf): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="enl-pm-field">
                     <span class="enl-pm-field-name">
-                        <i class="fa {{ $pf['filled'] ? 'fa-check-circle' : 'fa-times-circle' }}" style="color: {{ $pf['filled'] ? '#28a745' : '#dc3545' }}; margin-right: 8px;"></i>
-                        {{ $pf['label'] }}
+                        <i class="fa <?php echo e($pf['filled'] ? 'fa-check-circle' : 'fa-times-circle'); ?>" style="color: <?php echo e($pf['filled'] ? '#28a745' : '#dc3545'); ?>; margin-right: 8px;"></i>
+                        <?php echo e($pf['label']); ?>
+
                     </span>
-                    <span class="enl-pm-field-status {{ $pf['filled'] ? 'done' : 'pending' }}">
-                        {{ $pf['filled'] ? 'Done' : 'Pending' }}
+                    <span class="enl-pm-field-status <?php echo e($pf['filled'] ? 'done' : 'pending'); ?>">
+                        <?php echo e($pf['filled'] ? 'Done' : 'Pending'); ?>
+
                     </span>
                 </div>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
 
-        @if($empCompletion < 100)
-            <a href="{{ route('public.account.settings') }}" class="enl-pm-complete-btn">
+        <?php if($empCompletion < 100): ?>
+            <a href="<?php echo e(route('public.account.settings')); ?>" class="enl-pm-complete-btn">
                 <i class="fa fa-building"></i> Complete Your Profile
             </a>
-        @else
+        <?php else: ?>
             <div class="enl-pm-congrats">
                 <i class="fa fa-trophy" style="color: #f59e0b; font-size: 20px;"></i>
                 <span>Congratulations! Your profile is 100% complete.</span>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
 </div>
 
@@ -1052,16 +1078,16 @@
 
         <!-- Current Photo -->
         <div style="text-align:center;margin-bottom:20px;">
-            @if($company && $company->logo)
-                <img src="{{ RvMedia::getImageUrl($company->logo) }}" alt="" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;">
-            @else
-                <img src="{{ $account->avatar_url }}" alt="" id="enlCurrentAvatar" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;">
-            @endif
+            <?php if($company && $company->logo): ?>
+                <img src="<?php echo e(RvMedia::getImageUrl($company->logo)); ?>" alt="" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;">
+            <?php else: ?>
+                <img src="<?php echo e($account->avatar_url); ?>" alt="" id="enlCurrentAvatar" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;">
+            <?php endif; ?>
         </div>
 
         <!-- Upload Form -->
         <form id="enlAvatarForm" method="POST" enctype="multipart/form-data">
-            @csrf
+            <?php echo csrf_field(); ?>
             <input type="hidden" name="avatar_src" value="">
             <input type="hidden" name="avatar_data" id="enlAvatarData" value="">
             
@@ -1093,22 +1119,25 @@
     </div>
 </div>
 
-@if($account && $account->isEmployer() && $jobPostCreditsRequired > 0)
+<?php if($account && $account->isEmployer() && $jobPostCreditsRequired > 0): ?>
 <!-- Limit over popup: message + Use credits for 1 Job Post (no auto-deduct) -->
 <div id="enlLimitOverModal" class="enl-pm-overlay" style="display:none;">
     <div class="enl-pm-modal" style="max-width:420px;">
         <button type="button" class="enl-pm-close" onclick="document.getElementById('enlLimitOverModal').style.display='none'">&times;</button>
         <h5 style="font-size:18px;font-weight:700;color:#333;margin-bottom:12px;">
             <i class="fa fa-info-circle" style="color:#0073d1;margin-right:8px;"></i>
-            {{ trans('plugins/job-board::dashboard.limit_over_job_post_title') }}
+            <?php echo e(trans('plugins/job-board::dashboard.limit_over_job_post_title')); ?>
+
         </h5>
         <p style="font-size:14px;color:#555;line-height:1.5;margin-bottom:20px;">
-            {{ trans('plugins/job-board::dashboard.limit_over_job_post_message', ['credits' => $jobPostCreditsRequired]) }}
+            <?php echo e(trans('plugins/job-board::dashboard.limit_over_job_post_message', ['credits' => $jobPostCreditsRequired])); ?>
+
         </p>
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;">
-            <a href="{{ route('public.account.wallet') }}" id="enlLimitOverWalletBtn" style="padding:10px 18px;border:1.5px solid #0073d1;border-radius:8px;background:#fff;color:#0073d1;font-size:14px;font-weight:600;text-decoration:none;">{{ trans('plugins/job-board::dashboard.limit_over_go_to_wallet_btn') }}</a>
+            <a href="<?php echo e(route('public.account.wallet')); ?>" id="enlLimitOverWalletBtn" style="padding:10px 18px;border:1.5px solid #0073d1;border-radius:8px;background:#fff;color:#0073d1;font-size:14px;font-weight:600;text-decoration:none;"><?php echo e(trans('plugins/job-board::dashboard.limit_over_go_to_wallet_btn')); ?></a>
             <button type="button" id="enlLimitOverUseCreditsBtn" style="padding:10px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,#0073d1,#005bb5);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">
-                {{ trans('plugins/job-board::dashboard.limit_over_use_credits_btn', ['credits' => $jobPostCreditsRequired]) }}
+                <?php echo e(trans('plugins/job-board::dashboard.limit_over_use_credits_btn', ['credits' => $jobPostCreditsRequired])); ?>
+
             </button>
         </div>
     </div>
@@ -1142,15 +1171,15 @@
                 modal.style.display = 'none';
                 window.location.href = jobCreateUrl;
             } else {
-                alert(data.message || '{{ trans('plugins/job-board::messages.insufficient_credits') }}');
+                alert(data.message || '<?php echo e(trans('plugins/job-board::messages.insufficient_credits')); ?>');
             }
         })
         .catch(function() { alert('Something went wrong.'); })
-        .finally(function() { useCreditsBtn.disabled = false; useCreditsBtn.textContent = '{{ trans('plugins/job-board::dashboard.limit_over_use_credits_btn', ['credits' => $jobPostCreditsRequired]) }}'; });
+        .finally(function() { useCreditsBtn.disabled = false; useCreditsBtn.textContent = '<?php echo e(trans('plugins/job-board::dashboard.limit_over_use_credits_btn', ['credits' => $jobPostCreditsRequired])); ?>'; });
     });
 })();
 </script>
-@endif
+<?php endif; ?>
 
 <script>
 var enlSelectedFile = null;
@@ -1204,13 +1233,13 @@ function enlUploadAvatar() {
     formData.append('avatar_file', fileInput.files[0]);
     formData.append('avatar_data', document.getElementById('enlAvatarData').value);
     formData.append('avatar_src', '');
-    formData.append('_token', '{{ csrf_token() }}');
+    formData.append('_token', '<?php echo e(csrf_token()); ?>');
 
-    fetch('{{ route("public.account.avatar") }}', {
+    fetch('<?php echo e(route("public.account.avatar")); ?>', {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
             'Accept': 'application/json'
         }
     })
@@ -1584,3 +1613,4 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('load', function() { setTimeout(initLogoutHandler, 100); });
 })();
 </script>
+<?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/dashboard/layouts/body.blade.php ENDPATH**/ ?>

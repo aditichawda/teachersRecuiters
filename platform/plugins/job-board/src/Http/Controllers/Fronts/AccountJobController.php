@@ -22,6 +22,7 @@ use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\AccountActivityLog;
 use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\CreditConsumption;
+use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Currency;
 use Botble\JobBoard\Models\CustomFieldValue;
 use Botble\JobBoard\Models\DegreeLevel;
@@ -406,9 +407,10 @@ class AccountJobController extends BaseController
             }
         }
 
-        // WhatsApp: allow if employer has entitlement (they deducted when adding phone; valid till package)
+        // New Application Alert by WhatsApp: only allow if employer has enough credits (per-alert deduction happens when sending)
         if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
-            if (! CreditConsumption::hasEntitlement($account, CreditConsumption::FEATURE_APPLICATION_ALERT_WP)) {
+            $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+            if ($account->credits < $wpCredits) {
                 $request->merge(['enable_whatsapp_notifications' => 0]);
             }
         }
@@ -489,6 +491,16 @@ class AccountJobController extends BaseController
         }
 
         $job->save();
+
+        if ($this->hasFeaturedJobEntitlement($account)) {
+            $job->is_featured = 1;
+            $job->saveQuietly();
+            // Employer ne Featured Job buy kiya hai to is account ki saari jobs featured karo
+            Job::query()
+                ->where('author_id', $account->getKey())
+                ->where('author_type', Account::class)
+                ->update(['is_featured' => 1]);
+        }
 
         if ($this->hasFeaturedJobEntitlement($account)) {
             $job->is_featured = 1;
@@ -915,10 +927,11 @@ if (! $request->has('enable_whatsapp_notifications')) {
     $request->merge(['enable_whatsapp_notifications' => 1]);
 }
 
-// WhatsApp: allow if employer has entitlement (they deducted when adding phone; valid till package)
+// WhatsApp alert: only allow if employer has enough credits (per-alert deduction when sending)
 $accountForUpdate = auth('account')->user();
 if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
-    if (! CreditConsumption::hasEntitlement($accountForUpdate, CreditConsumption::FEATURE_APPLICATION_ALERT_WP)) {
+    $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+    if ($accountForUpdate->credits < $wpCredits) {
         $request->merge(['enable_whatsapp_notifications' => 0]);
     }
 }
@@ -952,6 +965,16 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
 
         $job->fill($request->input());
         $job->save();
+
+        if ($this->hasFeaturedJobEntitlement($account = auth('account')->user())) {
+            $job->is_featured = 1;
+            $job->saveQuietly();
+            // Employer ne Featured Job buy kiya hai to is account ki saari jobs featured karo
+            Job::query()
+                ->where('author_id', $account->getKey())
+                ->where('author_type', Account::class)
+                ->update(['is_featured' => 1]);
+        }
 
         if ($this->hasFeaturedJobEntitlement($account = auth('account')->user())) {
             $job->is_featured = 1;
@@ -1375,16 +1398,76 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
         return Tag::query()->pluck('name')->all();
     }
 
-    private function hasPurchasedPackage(Account $account): bool
+    /**
+     * Employer has ever purchased a package (transaction with package_id). Used to lock Post Job when no package bought.
+     */
+    /**
+     * Job Posting Assistance (Gemini) access: package valid and employer has used credits for it (valid till package expiry).
+     */
+    private function hasJobPostingAssistanceAccess(Account $account): bool
     {
-        return Transaction::query()
+        $lastPurchase = Transaction::query()
             ->where('account_id', $account->getKey())
             ->where(function ($q): void {
                 $q->whereNull('type')->orWhere('type', '!=', 'deduct');
             })
             ->whereNotNull('payment_id')
             ->whereNotNull('package_id')
-            ->exists();
+            ->with('package')
+            ->latest()
+            ->first();
+
+        if (! $lastPurchase || ! $lastPurchase->package || ! $lastPurchase->package->validity_days) {
+            return false;
+        }
+
+        $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+        if (Carbon::now()->gt($packageExpiryAt)) {
+            return false;
+        }
+
+        if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
+            return false;
+        }
+
+            $debit = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where('type', Transaction::TYPE_DEBIT)
+                ->where('feature_key', CreditConsumption::FEATURE_FEATURED_JOB)
+                ->latest()
+                ->first();
+
+            if (! $debit || ! $debit->created_at) {
+                return false;
+            }
+
+            $lastPurchase = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where(function ($q): void {
+                    $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                })
+                ->whereNotNull('payment_id')
+                ->whereNotNull('package_id')
+                ->with('package')
+                ->latest()
+                ->first();
+
+            if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                if (Carbon::now()->lte($packageExpiryAt)) {
+                    return true;
+                }
+            }
+
+            $debitDate = $debit->created_at instanceof \DateTimeInterface
+                ? Carbon::parse($debit->created_at)
+                : Carbon::parse((string) $debit->created_at);
+
+            return $debitDate->gte(Carbon::now()->subDays(365));
+        } catch (\Throwable $e) {
+            Log::warning('JobBoard: hasFeaturedJobEntitlement failed', ['account_id' => $account->getKey(), 'error' => $e->getMessage()]);
+            return false;
+        }
     }
 
     /**

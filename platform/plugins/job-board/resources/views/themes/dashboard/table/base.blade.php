@@ -7,41 +7,12 @@
 @section('content')
     @if(route()->getName() === 'public.account.companies.index' && \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
         @php
-            $account = auth('account')->user();
             $additionalProfileCredits = \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADDITIONAL_EMPLOYER_PROFILE, 500);
-            $companyCount = $account && method_exists($account, 'companies') ? $account->companies()->count() : 0;
-            $institutionLocked = $companyCount >= 1 && (int) ($account->credits ?? 0) < $additionalProfileCredits;
         @endphp
-        @if($institutionLocked)
-            <div class="alert alert-warning mb-3 d-flex align-items-center flex-wrap" role="alert" style="border-radius: 8px;">
-                <i class="fa fa-lock me-2"></i>
-                <span class="me-2">{{ __('Adding another institution is locked. You need :credits credits per new institution.', ['credits' => $additionalProfileCredits]) }}</span>
-                <a href="{{ route('public.account.wallet') }}" class="btn btn-sm btn-primary">{{ __('Get credits / Wallet') }}</a>
-            </div>
-        @else
-            <div class="alert alert-info mb-3" role="alert" style="border-radius: 8px;">
-                <i class="fa fa-info-circle me-2"></i>
-                {{ trans('plugins/job-board::dashboard.hint_additional_institution_credits', ['credits' => $additionalProfileCredits]) }}
-            </div>
-        @endif
-        @if($institutionLocked)
-            @push('footer')
-            <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var createUrl = {{ json_encode(route('public.account.companies.create')) }};
-                var createLink = document.querySelector('a[href="' + createUrl + '"]') || document.querySelector('a[href*="companies/create"]');
-                if (createLink) {
-                    createLink.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        var msg = {{ json_encode(__('Insufficient credits. You need :credits credits to add another institution. Redirecting to Wallet.', ['credits' => $additionalProfileCredits])) }};
-                        alert(msg);
-                        window.location.href = {{ json_encode(route('public.account.wallet')) }};
-                    });
-                }
-            });
-            </script>
-            @endpush
-        @endif
+        <div class="alert alert-info mb-3" role="alert" style="border-radius: 8px;">
+            <i class="fa fa-info-circle me-2"></i>
+            {{ trans('plugins/job-board::dashboard.hint_additional_institution_credits', ['credits' => $additionalProfileCredits]) }}
+        </div>
     @endif
     @parent
 @stop
