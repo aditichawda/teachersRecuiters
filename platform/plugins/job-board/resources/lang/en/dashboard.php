@@ -290,4 +290,9 @@ return [
     'instagram_url' => 'Instagram URL',
     'profile_completed' => 'Profile Completed',
     'profile_completed_message' => 'Please add detailed information to your profile. This will help you develop your career more quickly.',
+
+    'hint_additional_email_credits' => 'One-time :credits credits. Alerts to these emails valid while your package is active.',
+    'hint_whatsapp_phones_credits' => 'Used for WhatsApp alerts. WhatsApp uses :credits credits per application.',
+    'hint_whatsapp_checkbox_credits' => 'Uses :credits credits per application alert. Enable only if you have sufficient credits.',
+    'hint_additional_institution_credits' => 'First institution is free. Adding another institution (2nd onwards) uses :credits credits per new profile.',
 ];

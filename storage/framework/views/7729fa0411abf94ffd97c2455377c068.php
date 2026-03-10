@@ -849,26 +849,12 @@ function handleLogoutClick(event) {
         check();
     }
     
-    // Show logout dialog
-    waitForDialogSystem(function(useFallback) {
-        if (useFallback) {
-            // Use native confirm
-            if (confirm('Do you want to logout?')) {
-                allowSubmit = true;
-                logoutForm.removeEventListener('submit', submitHandler, true);
-                logoutForm.submit();
-            }
-        } else {
-            // Use custom dialog
-            window.showDialogConfirm('Are you sure you want to logout?', 'Logout').then(function(confirmed) {
-                if (confirmed) {
-                    allowSubmit = true;
-                    logoutForm.removeEventListener('submit', submitHandler, true);
-                    logoutForm.submit();
-                }
-            });
-        }
-    });
+    // Use native alert for now (except employer dashboard)
+    if (confirm('Do you want to logout?')) {
+        allowSubmit = true;
+        logoutForm.removeEventListener('submit', submitHandler, true);
+        logoutForm.submit();
+    }
     
     return false;
 }

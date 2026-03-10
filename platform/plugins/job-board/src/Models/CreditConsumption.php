@@ -4,6 +4,7 @@ namespace Botble\JobBoard\Models;
 
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Models\BaseModel;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 
 class CreditConsumption extends BaseModel
@@ -23,6 +24,12 @@ class CreditConsumption extends BaseModel
     public const FEATURE_WALKIN_DRIVE_AD = 'walkin_drive_ad';
     public const FEATURE_DEDICATED_RECRUITER = 'dedicated_recruiter';
     public const FEATURE_SOCIAL_PROMOTION = 'social_promotion';
+
+    /** Job-seeker feature keys (for jb_credit_consumption, account_type = job-seeker) */
+    public const FEATURE_JOB_APPLY = 'job_apply';
+    public const FEATURE_FEATURED_CANDIDATE_PROFILE = 'featured_candidate_profile';
+    public const FEATURE_ADVANCED_CV = 'advanced_cv';
+    public const FEATURE_JOB_ALERT_WP_JOBSEEKER = 'job_alert_wp_jobseeker';
 
     protected $table = 'jb_credit_consumption';
 
@@ -99,5 +106,55 @@ class CreditConsumption extends BaseModel
         Transaction::query()->create($data);
 
         return true;
+    }
+
+    /**
+     * Check if account has valid entitlement for a feature (debit exists + package valid or used within 365 days).
+     * Used for one-time features like APPLICATION_ALERT_EMAIL, ADMISSION_ENQUIRY, etc.
+     */
+    public static function hasEntitlement(Account $account, string $featureKey): bool
+    {
+        try {
+            if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
+                return false;
+            }
+
+            $debit = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where('type', Transaction::TYPE_DEBIT)
+                ->where('feature_key', $featureKey)
+                ->latest()
+                ->first();
+
+            if (! $debit || ! $debit->created_at) {
+                return false;
+            }
+
+            $lastPurchase = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where(function ($q): void {
+                    $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                })
+                ->whereNotNull('payment_id')
+                ->whereNotNull('package_id')
+                ->with('package')
+                ->latest()
+                ->first();
+
+            if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                if (Carbon::now()->lte($packageExpiryAt)) {
+                    return true;
+                }
+            }
+
+            $debitDate = $debit->created_at instanceof \DateTimeInterface
+                ? Carbon::parse($debit->created_at)
+                : Carbon::parse((string) $debit->created_at);
+
+            return $debitDate->gte(Carbon::now()->subDays(365));
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 }

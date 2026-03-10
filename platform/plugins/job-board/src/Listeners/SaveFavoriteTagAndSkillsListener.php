@@ -41,15 +41,26 @@ class SaveFavoriteTagAndSkillsListener
             if ($request->has('favorite_skills')) {
                 $skills = $account->favoriteSkills->pluck('name')->all();
 
-                $skillsInput = collect(explode(',', (string) $request->input('favorite_skills')))->all();
+                $skillsInput = collect(explode(',', (string) $request->input('favorite_skills')))->filter()->all();
 
                 if (count($skills) != count($skillsInput) || count(array_diff($skills, $skillsInput)) > 0) {
                     $account->favoriteSkills()->detach();
 
-                    if (JobSkill::query()
-                        ->whereIn('id', $skillsInput)
-                        ->exists()) {
+                    if (JobSkill::query()->whereIn('id', $skillsInput)->exists()) {
                         $account->favoriteSkills()->sync($skillsInput);
+
+                        // Also store skills directly on jb_accounts.skills (JSON) for quick access
+                        $skillNames = JobSkill::query()
+                            ->whereIn('id', $skillsInput)
+                            ->orderBy('name')
+                            ->pluck('name')
+                            ->all();
+
+                        $account->skills = $skillNames;
+                        $account->save();
+                    } else {
+                        $account->skills = [];
+                        $account->save();
                     }
                 }
             }

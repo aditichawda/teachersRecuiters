@@ -174,7 +174,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 12px;
+    /* gap: 12px; */
 }
 .job-card-modern .jcm-salary {
     font-size: 15px;

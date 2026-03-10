@@ -196,15 +196,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-<<<<<<< HEAD
-    gap: 8px;
-}
-.job-card-modern .jcm-salary {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0073d1;
-=======
-    gap: 12px;
+    /* gap: 12px; */
 }
 .job-card-modern .jcm-salary {
     font-size: 15px;

@@ -1296,11 +1296,18 @@ Recruiters often read this section before downloading resumes.
                     <button type="button" class="add-more-btn mt-2" onclick="addLanguage()" id="add-language-btn">+ {{ __('Add Language') }}</button>
                 </div>
 
-                <!-- 22. Skills -->
-                @if ($account->isJobSeeker() && (count($jobSkills ?? []) || count($selectedJobSkills ?? [])))
+                <!-- 22. User Skills (stored in jb_account_favorite_skills; master list in jb_job_skills) -->
+                @if ($account->isJobSeeker())
                 <div class="col-12 mb-3">
-                    <label class="form-label">{{ __('Key Skills & Competencies') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add your core teaching or professional skills relevant to your role.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <input type="text" class="tags form-control list-tagify" style="padding:0px;" id="favorite_skills" name="favorite_skills" value="{{ implode(',', $selectedJobSkills ?? []) }}" data-keep-invalid-tags="false" data-list="{{ $jobSkills ?? '' }}" data-user-input="false" placeholder="{{ __('Select from the list') }}"/>
+                    <label class="form-label">{{ __('Key Skills & Competencies') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add your core teaching or professional skills relevant to your role. Stored with your profile and used for job matching.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    @php
+                        $jobSkillsList = $jobSkills ?? collect();
+                        $tagifyList = $jobSkillsList->map(fn($s) => ['id' => (string) $s->id, 'name' => $s->name ?? ''])->values()->toArray();
+                    @endphp
+                    <input type="text" class="tags form-control list-tagify" style="padding:0px;" id="favorite_skills" name="favorite_skills" value="{{ implode(',', array_map('strval', $selectedJobSkills ?? [])) }}" data-keep-invalid-tags="false" data-list="{{ json_encode($tagifyList) }}" data-user-input="false" placeholder="{{ count($tagifyList) ? __('Select from the list') : __('No skills in list yet; admin can add skills in Job Skills.') }}"/>
+                    @if (count($tagifyList) == 0)
+                        <p class="form-text small text-muted mt-1">{{ __('Skills list is managed by admin. You can add your skills once the list is available.') }}</p>
+                    @endif
                 </div>
                 @endif
             </div>

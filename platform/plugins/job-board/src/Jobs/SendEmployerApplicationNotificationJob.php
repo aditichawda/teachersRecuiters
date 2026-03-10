@@ -2,8 +2,11 @@
 
 namespace Botble\JobBoard\Jobs;
 
+use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
+use Botble\JobBoard\Models\Account;
+use Botble\JobBoard\Models\CreditConsumption;
 use Botble\Media\Facades\RvMedia;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -75,8 +78,10 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
                 ]);
             }
 
-            // Get additional emails from apply_internal_emails (additional emails added during job posting)
-            if ($this->jobModel->apply_internal_emails && is_array($this->jobModel->apply_internal_emails)) {
+            // Get additional emails from apply_internal_emails only if employer has Additional Email entitlement (one-time, valid while package)
+            $authorAccount = $this->jobModel->author instanceof Account ? $this->jobModel->author : null;
+            $hasAdditionalEmailEntitlement = ! JobBoardHelper::isEnabledCreditsSystem() || ($authorAccount && CreditConsumption::hasEntitlement($authorAccount, CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL));
+            if ($hasAdditionalEmailEntitlement && $this->jobModel->apply_internal_emails && is_array($this->jobModel->apply_internal_emails)) {
                 foreach ($this->jobModel->apply_internal_emails as $email) {
                     if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
                         $employerEmails[] = $email;
@@ -372,11 +377,40 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
             ]);
             
             if ($whatsappEnabled) {
-                Log::info('[WHATSAPP_NOTIFICATION] ✓ WhatsApp notifications enabled - sending notifications', [
-                    'job_id' => $this->jobModel->id,
-                    'application_id' => $this->application->id,
-                ]);
-                $this->sendWhatsAppNotifications($jobSeekerName, $jobSeekerEmail, $jobSeekerPhone, $this->jobModel->name);
+                // Per-alert credit deduction: only send WhatsApp if employer has credits (New Application Alert by WhatsApp)
+                $shouldSendWhatsApp = true;
+                if (JobBoardHelper::isEnabledCreditsSystem() && $this->jobModel->author instanceof Account) {
+                    $account = $this->jobModel->author;
+                    $account->refresh();
+                    $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+                    if ($account->credits < $wpCredits) {
+                        $shouldSendWhatsApp = false;
+                        Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - insufficient credits (per-alert)', [
+                            'job_id' => $this->jobModel->id,
+                            'account_credits' => $account->credits,
+                            'required' => $wpCredits,
+                        ]);
+                    } else {
+                        $ok = CreditConsumption::deductForFeature(
+                            $account,
+                            CreditConsumption::FEATURE_APPLICATION_ALERT_WP,
+                            $wpCredits,
+                            'New Application Alert by WhatsApp (per alert)',
+                            ['job_id' => $this->jobModel->id, 'application_id' => $this->application->id]
+                        );
+                        if (! $ok) {
+                            $shouldSendWhatsApp = false;
+                            Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - deduct failed', ['job_id' => $this->jobModel->id]);
+                        }
+                    }
+                }
+                if ($shouldSendWhatsApp) {
+                    Log::info('[WHATSAPP_NOTIFICATION] ✓ WhatsApp notifications enabled - sending notifications', [
+                        'job_id' => $this->jobModel->id,
+                        'application_id' => $this->application->id,
+                    ]);
+                    $this->sendWhatsAppNotifications($jobSeekerName, $jobSeekerEmail, $jobSeekerPhone, $this->jobModel->name);
+                }
             } else {
                 Log::warning('[WHATSAPP_NOTIFICATION] ✗ WhatsApp notifications disabled - no phone numbers available', [
                     'job_id' => $this->jobModel->id,
