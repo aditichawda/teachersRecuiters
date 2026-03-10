@@ -409,9 +409,16 @@ class AccountJobController extends BaseController
             }
         }
 
+<<<<<<< HEAD
         // WhatsApp: allow if employer has entitlement (they deducted when adding phone; valid till package)
         if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
             if (! CreditConsumption::hasEntitlement($account, CreditConsumption::FEATURE_APPLICATION_ALERT_WP)) {
+=======
+        // New Application Alert by WhatsApp: only allow if employer has enough credits (per-alert deduction happens when sending)
+        if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
+            $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+            if ($account->credits < $wpCredits) {
+>>>>>>> 37fac6c5 (10 march)
                 $request->merge(['enable_whatsapp_notifications' => 0]);
             }
         }
@@ -438,6 +445,7 @@ class AccountJobController extends BaseController
             }
         }
 
+<<<<<<< HEAD
         $jobValidityDays = null;
         if ($account->isEmployer() && class_exists(\Botble\JobBoard\Supports\PackageContext::class)) {
             $ctx = \Botble\JobBoard\Supports\PackageContext::forAccount($account);
@@ -449,6 +457,8 @@ class AccountJobController extends BaseController
             }
         }
 
+=======
+>>>>>>> 37fac6c5 (10 march)
         $request->merge([
             'expire_date' => Carbon::now()->addDays($jobValidityDays ?? JobBoardHelper::jobExpiredDays($account)),
             'author_id' => $account->getAuthIdentifier(),
@@ -955,10 +965,18 @@ if (! $request->has('enable_whatsapp_notifications')) {
     $request->merge(['enable_whatsapp_notifications' => 1]);
 }
 
+<<<<<<< HEAD
 // WhatsApp: allow if employer has entitlement (they deducted when adding phone; valid till package)
 $accountForUpdate = auth('account')->user();
 if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
     if (! CreditConsumption::hasEntitlement($accountForUpdate, CreditConsumption::FEATURE_APPLICATION_ALERT_WP)) {
+=======
+// WhatsApp alert: only allow if employer has enough credits (per-alert deduction when sending)
+$accountForUpdate = auth('account')->user();
+if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
+    $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+    if ($accountForUpdate->credits < $wpCredits) {
+>>>>>>> 37fac6c5 (10 march)
         $request->merge(['enable_whatsapp_notifications' => 0]);
     }
 }

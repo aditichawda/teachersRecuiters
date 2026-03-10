@@ -3,13 +3,19 @@
 namespace Botble\JobBoard\Jobs;
 
 use Botble\JobBoard\Facades\JobBoardHelper;
+<<<<<<< HEAD
 use Botble\JobBoard\Facades\JobBoardHelper;
+=======
+>>>>>>> 37fac6c5 (10 march)
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\CreditConsumption;
+<<<<<<< HEAD
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\CreditConsumption;
+=======
+>>>>>>> 37fac6c5 (10 march)
 use Botble\Media\Facades\RvMedia;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -81,6 +87,7 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
                 ]);
             }
 
+<<<<<<< HEAD
             // Get additional emails from apply_internal_emails - send to all additional emails without entitlement check
             // This ensures notifications go to all additional emails provided during job posting
             $additionalEmailsData = null;
@@ -122,6 +129,16 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
                             'count' => count($additionalEmailsData),
                             'emails' => $additionalEmailsData,
                         ]);
+=======
+            // Get additional emails from apply_internal_emails only if employer has Additional Email entitlement (one-time, valid while package)
+            $authorAccount = $this->jobModel->author instanceof Account ? $this->jobModel->author : null;
+            $hasAdditionalEmailEntitlement = ! JobBoardHelper::isEnabledCreditsSystem() || ($authorAccount && CreditConsumption::hasEntitlement($authorAccount, CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL));
+            if ($hasAdditionalEmailEntitlement && $this->jobModel->apply_internal_emails && is_array($this->jobModel->apply_internal_emails)) {
+                foreach ($this->jobModel->apply_internal_emails as $email) {
+                    if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $employerEmails[] = $email;
+                        Log::debug('[EMAIL_NOTIFICATION] Added additional email from apply_internal_emails', ['email' => $email]);
+>>>>>>> 37fac6c5 (10 march)
                     }
                 }
             }
@@ -549,6 +566,7 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
             ]);
             
             if ($whatsappEnabled) {
+<<<<<<< HEAD
                 // WhatsApp: send only if employer has entitlement (deducted when adding phone; valid till package active)
                 $shouldSendWhatsApp = true;
                 
@@ -589,12 +607,45 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
                     ]);
                 }
                 
+=======
+                // Per-alert credit deduction: only send WhatsApp if employer has credits (New Application Alert by WhatsApp)
+                $shouldSendWhatsApp = true;
+                if (JobBoardHelper::isEnabledCreditsSystem() && $this->jobModel->author instanceof Account) {
+                    $account = $this->jobModel->author;
+                    $account->refresh();
+                    $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+                    if ($account->credits < $wpCredits) {
+                        $shouldSendWhatsApp = false;
+                        Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - insufficient credits (per-alert)', [
+                            'job_id' => $this->jobModel->id,
+                            'account_credits' => $account->credits,
+                            'required' => $wpCredits,
+                        ]);
+                    } else {
+                        $ok = CreditConsumption::deductForFeature(
+                            $account,
+                            CreditConsumption::FEATURE_APPLICATION_ALERT_WP,
+                            $wpCredits,
+                            'New Application Alert by WhatsApp (per alert)',
+                            ['job_id' => $this->jobModel->id, 'application_id' => $this->application->id]
+                        );
+                        if (! $ok) {
+                            $shouldSendWhatsApp = false;
+                            Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - deduct failed', ['job_id' => $this->jobModel->id]);
+                        }
+                    }
+                }
+>>>>>>> 37fac6c5 (10 march)
                 if ($shouldSendWhatsApp) {
                     Log::info('[WHATSAPP_NOTIFICATION] ✓ WhatsApp notifications enabled - sending notifications', [
                         'job_id' => $this->jobModel->id,
                         'application_id' => $this->application->id,
                     ]);
+<<<<<<< HEAD
                 $this->sendWhatsAppNotifications($jobSeekerName, $jobSeekerEmail, $jobSeekerPhone, $this->jobModel->name);
+=======
+                    $this->sendWhatsAppNotifications($jobSeekerName, $jobSeekerEmail, $jobSeekerPhone, $this->jobModel->name);
+>>>>>>> 37fac6c5 (10 march)
                 }
             } else {
                 Log::warning('[WHATSAPP_NOTIFICATION] ✗ WhatsApp notifications disabled - no phone numbers available', [

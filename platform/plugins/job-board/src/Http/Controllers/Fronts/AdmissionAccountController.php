@@ -173,6 +173,7 @@ class AdmissionAccountController extends BaseController
     }
 
     /**
+<<<<<<< HEAD
      * Admission access when credits system enabled:
      * (1) Package me "Admission Form on Profile" hai aur package valid hai → access.
      * (2) Nahi to credits se unlock (debit) – valid while package not expired, else 365 days from debit.
@@ -184,6 +185,13 @@ class AdmissionAccountController extends BaseController
             return true;
         }
 
+=======
+     * Admission access when credits system enabled: employer has used credits for Admission Enquiry Form.
+     * Valid while package is not expired, OR if no package then for 365 days from the debit transaction.
+     */
+    private function hasAdmissionEnquiryAccess(Account $account): bool
+    {
+>>>>>>> 37fac6c5 (10 march)
         if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
             return false;
         }

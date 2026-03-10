@@ -7,11 +7,14 @@
     use Botble\Slug\Facades\SlugHelper;
     
     $account = auth('account')->user();
+<<<<<<< HEAD
     // Ensure full model with registration_type so consultancy conditions work (show/hide, redirects)
     if ($account && $account->getKey()) {
         $account = \Botble\JobBoard\Models\Account::find($account->getKey()) ?? $account;
     }
     $company = $account ? $account->companies()->with('slugable')->first() : null;
+=======
+>>>>>>> 37fac6c5 (10 march)
     $company = $account ? $account->companies()->with('slugable')->first() : null;
     $employerPublicProfileUrl = null;
     if ($account->isEmployer() && $company) {
@@ -87,6 +90,7 @@
         }
     }
 
+<<<<<<< HEAD
 
 
 // Admission: unlock if (1) package has "Admission Form on Profile" and is valid, OR (2) credits used (debit) and validity.
@@ -137,6 +141,52 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
         $admissionLocked = true;
     }
 }
+=======
+    // Admission: separate from Post Job. Lock only when admission enquiry access is missing.
+    $canAccessAdmission = true;
+    $admissionLocked = false;
+    if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
+                $canAccessAdmission = false;
+            } else {
+                $admissionDebit = Transaction::query()
+                    ->where('account_id', $account->getKey())
+                    ->where('type', Transaction::TYPE_DEBIT)
+                    ->where('feature_key', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
+                    ->latest()
+                    ->first();
+                if (!$admissionDebit || !$admissionDebit->created_at) {
+                    $canAccessAdmission = false;
+                } else {
+                    $lastPurchase = Transaction::query()
+                        ->where('account_id', $account->getKey())
+                        ->where(function ($q): void {
+                            $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                        })
+                        ->whereNotNull('payment_id')
+                        ->whereNotNull('package_id')
+                        ->with('package')
+                        ->latest()
+                        ->first();
+                    if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                        $packageExpiryAt = \Carbon\Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                        $canAccessAdmission = \Carbon\Carbon::now()->lte($packageExpiryAt);
+                    } else {
+                        $debitDate = $admissionDebit->created_at instanceof \DateTimeInterface
+                            ? \Carbon\Carbon::parse($admissionDebit->created_at)
+                            : \Carbon\Carbon::parse((string) $admissionDebit->created_at);
+                        $canAccessAdmission = $debitDate->gte(\Carbon\Carbon::now()->subDays(365));
+                    }
+                }
+            }
+            $admissionLocked = !$canAccessAdmission;
+        } catch (\Throwable $e) {
+            $canAccessAdmission = false;
+            $admissionLocked = true;
+        }
+    }
+>>>>>>> 37fac6c5 (10 march)
 
     // Get featured categories with job counts
     $featuredCategories = collect();
@@ -1175,9 +1225,16 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
                             <i class="fa fa-plus-circle"></i> {{ __('Post Job') }}
                         @endif
                     </a>
+<<<<<<< HEAD
                     @else
                     <a href="#" class="enl-postjob enl-postjob-choice-trigger {{ $postJobLocked ? 'enl-postjob-locked' : '' }}" data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" data-can-post="{{ $canPost ? '1' : '0' }}" title="{{ __('Choose how to post job') }}">
                         @if($postJobLocked)
+=======
+
+                    <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
+                    <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
+                        @if($admissionLocked)
+>>>>>>> 37fac6c5 (10 march)
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
                             <span>{{ __('Post Job') }}</span>
                         @else

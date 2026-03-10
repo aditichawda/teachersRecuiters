@@ -104,11 +104,18 @@ class CompanyController extends BaseController
          */
         $account = auth('account')->user();
 
+<<<<<<< HEAD
         // Additional Employer Profile (per new profile): first company free, from second onwards deduct credits (unless already deducted via popup)
         $creditsAlreadyDeducted = (bool) $request->input('credits_already_deducted');
         if (JobBoardHelper::employerCreateMultiplecompanies() && JobBoardHelper::isEnabledCreditsSystem()) {
             $existingCount = $account->companies()->count();
             if ($existingCount >= 1 && ! $creditsAlreadyDeducted) {
+=======
+        // Additional Employer Profile (per new profile): first company free, from second onwards deduct credits
+        if (JobBoardHelper::employerCreateMultiplecompanies() && JobBoardHelper::isEnabledCreditsSystem()) {
+            $existingCount = $account->companies()->count();
+            if ($existingCount >= 1) {
+>>>>>>> 37fac6c5 (10 march)
                 $profileCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_ADDITIONAL_EMPLOYER_PROFILE, 500);
                 if ($account->credits < $profileCredits) {
                     return $this->httpResponse()
