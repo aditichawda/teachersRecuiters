@@ -35,6 +35,21 @@ class JobzillaController extends PublicController
                 'message' => null,
             ]);
         }
+        // Force JSON response
+        $request->headers->set('Accept', 'application/json');
+        
+        // Support both 'k' and 'keyword' parameters
+        $keyword = BaseHelper::stringify($request->input('k')) ?: BaseHelper::stringify($request->input('keyword'));
+
+        // Handle default_country parameter for initial load
+        if ($request->has('default_country') && empty($keyword)) {
+            // Return empty for now, or you can return popular cities
+            return response()->json([
+                'error' => false,
+                'data' => [],
+                'message' => null,
+            ]);
+        }
 
         // Only search if keyword is provided and has at least 2 characters
         if (empty($keyword) || strlen($keyword) < 2) {
@@ -43,24 +58,22 @@ class JobzillaController extends PublicController
                 'data' => [],
                 'message' => null,
             ]);
+            return response()->json([
+                'error' => false,
+                'data' => [],
+                'message' => null,
+            ]);
         }
 
         try {
-            // Use direct City model lookup so we don't require country_id/state_id to be present
-            // and avoid over-filtering by published countries when importing large datasets.
-            $cities = \Botble\Location\Models\City::query()
-                ->with('state')
-                ->where('name', 'LIKE', '%' . $keyword . '%')
-                ->orderBy('name')
-                ->limit(20)
-                ->get();
-
+            $cities = $cityRepository->filters($keyword, 20, ['state']);
+            
             // Log for debugging
             \Log::info('[CITY_SEARCH] Search performed', [
                 'keyword' => $keyword,
                 'cities_count' => $cities->count(),
             ]);
-
+            
             return response()->json([
                 'error' => false,
                 'data' => CityResource::collection($cities)->resolve(),
@@ -72,7 +85,7 @@ class JobzillaController extends PublicController
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-
+            
             return response()->json([
                 'error' => false,
                 'data' => [],
@@ -83,6 +96,10 @@ class JobzillaController extends PublicController
 
     public function ajaxGetJobRoles(Request $request, CategoryInterface $categoryRepository, BaseHttpResponse $response)
     {
+        // Accept fetch API requests (not just ajax/wantsJson)
+        // Force JSON response
+        $request->headers->set('Accept', 'application/json');
+        
         // Accept fetch API requests (not just ajax/wantsJson)
         // Force JSON response
         $request->headers->set('Accept', 'application/json');
@@ -111,6 +128,12 @@ class JobzillaController extends PublicController
             ];
         });
 
+        // Return JSON directly for fetch API compatibility
+        return response()->json([
+            'error' => false,
+            'data' => $categories->values(),
+            'message' => null,
+        ]);
         // Return JSON directly for fetch API compatibility
         return response()->json([
             'error' => false,

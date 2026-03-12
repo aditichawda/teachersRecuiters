@@ -287,12 +287,33 @@
 
     <!-- WhatsApp Floating Button -->
     <a href="https://wa.me/919876543210" target="_blank" rel="noopener" class="whatsapp-float"
-        style="position: fixed; width: 60px; height: 60px; bottom: 20px; right: 20px; background-color: #25D366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.3s;">
+        style="position: fixed; width: 60px; height: 60px; bottom: 20px; right: 20px; background-color: #25D366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3); z-index: 9998 !important; display: flex !important; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.3s; pointer-events: auto !important;">
         <i class="fab fa-whatsapp" style="color: #fff;"></i>
     </a>
     <style>
+        .whatsapp-float {
+            position: fixed !important;
+            z-index: 9998 !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            width: 60px !important;
+            height: 60px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            pointer-events: auto !important;
+        }
         .whatsapp-float:hover {
             transform: scale(1.1);
+        }
+        /* Ensure WhatsApp icon is always visible on scroll */
+        @media (max-width: 768px) {
+            .whatsapp-float {
+                bottom: 15px !important;
+                right: 15px !important;
+                width: 55px !important;
+                height: 55px !important;
+            }
         }
     </style>
 <?php endif; ?>
