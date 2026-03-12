@@ -5,7 +5,7 @@ class JobFilter {
 
     $jobsList = this.$container.find('.jobs-listing')
 
-    $loading = this.$container.find('.overlay')
+    $loading = this.$container.find('#jobs-loader-overlay')
 
     layout = this.searchParams.get('layout') || 'list'
 
@@ -399,40 +399,165 @@ class JobFilter {
     }
 
     submit() {
-        const $form = this.$container.find('#jobs-filter-form')
+        // Try to find sidebar form first, then top form
+        let $form = this.$container.find('#jobs-filter-form')
+        if (!$form.length) {
+            $form = this.$container.find('#jobs-top-filter-form')
+        }
+        
         const searchParams = this.searchParams.toString()
 
-        const {method, action} = $form.get(0);
-        const ajaxUrl = $form.data('ajax-url')
-        const url = searchParams ? `${ajaxUrl}?${searchParams}` : ajaxUrl;
-
-        window.history.pushState({}, '', `${action}?${searchParams}`)
-
-        if (!searchParams) {
-            window.history.pushState({}, '', action)
+        // Get AJAX URL - try from form data attribute, or use route
+        let ajaxUrl = $form.data('ajax-url')
+        if (!ajaxUrl) {
+            // Fallback: use the route directly (for top form which might not have data-ajax-url)
+            ajaxUrl = window.location.origin + '/ajax/jobs'
         }
+        
+        const url = searchParams ? `${ajaxUrl}?${searchParams}` : ajaxUrl;
+        
+        // Get action URL for history update
+        const action = $form.length ? $form.attr('action') : window.location.pathname
+        window.history.pushState({}, '', searchParams ? `${action}?${searchParams}` : action)
 
+        // Ensure loader is visible (might already be shown by handler, but ensure it's visible)
+        this.showLoader()
+        
+        this.scrollToTop()
+        
+        // Make AJAX request - loader will stay visible during entire request
         $.ajax({
-            method,
+            method: 'GET',
             url,
             beforeSend: () => {
-                this.$loading.show()
-                this.scrollToTop()
+                // Ensure loader is visible before request starts
+                this.showLoader()
             },
             success: (response) => {
                 const {data, message} = response
 
+                // Update jobs list
                 this.$jobsList.html(data)
                 this.$container.find('.woocommerce-result-count-left').text(message)
+                
+                // Re-add loader component if not present after HTML update
+                if (!this.$jobsList.find('#jobs-loader-overlay').length) {
+                    const loaderHtml = '<div class="blue-loader-overlay" id="jobs-loader-overlay" style="display: none;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div><p class="blue-loader-text">Loading jobs...</p></div></div>'
+                    this.$jobsList.prepend(loaderHtml)
+                }
+                this.$loading = this.$container.find('#jobs-loader-overlay')
+            },
+            error: () => {
+                // Hide loader on error
+                this.hideLoader()
             },
             complete: () => {
-                this.$loading.hide()
+                // Hide loader ONLY after everything is complete
+                // Wait a bit to ensure content is fully rendered
+                setTimeout(() => {
+                    this.hideLoader()
+                }, 300)
             }
         })
     }
 
     handleFiltersOnChange() {
+        // Helper function to collect form data and update search params
+        const collectFormData = ($form) => {
+            const formData = new FormData($form[0])
+            
+            // Clear existing params
+            this.searchParams = new URLSearchParams()
+            
+            // Add all form fields to search params
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    if (key.includes('[]')) {
+                        this.searchParams.append(key, value)
+                    } else {
+                        this.searchParams.set(key, value)
+                    }
+                }
+            }
+            
+            // Also handle selectpicker values (they might not be in FormData)
+            $form.find('select.selectpicker').each((index, select) => {
+                const $select = $(select)
+                const name = $select.attr('name')
+                const value = $select.val()
+                
+                if (name && value) {
+                    if (name.includes('[]')) {
+                        // Multiple select - remove all existing, then add selected
+                        this.searchParams.delete(name)
+                        if (Array.isArray(value)) {
+                            value.forEach(v => {
+                                if (v) this.searchParams.append(name, v)
+                            })
+                        } else if (value) {
+                            this.searchParams.append(name, value)
+                        }
+                    } else {
+                        // Single select
+                        if (value) {
+                            this.searchParams.set(name, value)
+                        } else {
+                            this.searchParams.delete(name)
+                        }
+                    }
+                } else if (name && !value) {
+                    // Clear empty selects
+                    this.searchParams.delete(name)
+                }
+            })
+        }
+
+        // Handle sidebar form submit (for Apply Filter button)
+        this.$container.on('submit', '#jobs-filter-form', (e) => {
+            e.preventDefault()
+            const $form = $(e.target)
+            
+            // Show loader IMMEDIATELY when button is clicked
+            this.showLoader()
+            
+            collectFormData($form)
+            this.submit()
+
+            if (this.searchParams.get('layout') === 'map') {
+                this.initMap()
+            } else {
+                this.$map.hide()
+            }
+        })
+
+        // Handle top filter form submit (for Find Job button)
+        this.$container.on('submit', '#jobs-top-filter-form', (e) => {
+            e.preventDefault()
+            const $form = $(e.target)
+            
+            // Show loader IMMEDIATELY when button is clicked
+            this.showLoader()
+            
+            collectFormData($form)
+            this.submit()
+
+            if (this.searchParams.get('layout') === 'map') {
+                this.initMap()
+            } else {
+                this.$map.hide()
+            }
+        })
+
+        // Handle individual field changes (for auto-submit on change)
         this.$container.on('change', (event) => {
+            // Skip if it's a selectpicker - those are handled by form submit
+            if ($(event.target).hasClass('selectpicker')) {
+                return
+            }
+            
+            // Show loader IMMEDIATELY when filter changes
+            this.showLoader()
+            
             this.updateSearchParams(event)
 
             this.submit()
@@ -444,8 +569,51 @@ class JobFilter {
             }
         })
 
+        // Handle selectpicker changes (Bootstrap Select)
+        this.$container.on('changed.bs.select', 'select.selectpicker', (event) => {
+            // Show loader IMMEDIATELY when selectpicker changes
+            this.showLoader()
+            
+            const $select = $(event.target)
+            const name = $select.attr('name')
+            const value = $select.val()
+            
+            // Update search params
+            if (name) {
+                if (name.includes('[]')) {
+                    // Multiple select - remove all existing, then add selected
+                    this.searchParams.delete(name)
+                    if (Array.isArray(value)) {
+                        value.forEach(v => {
+                            if (v) this.searchParams.append(name, v)
+                        })
+                    } else if (value) {
+                        this.searchParams.append(name, value)
+                    }
+                } else {
+                    // Single select
+                    if (value) {
+                        this.searchParams.set(name, value)
+                    } else {
+                        this.searchParams.delete(name)
+                    }
+                }
+            }
+            
+            this.submit()
+
+            if (this.searchParams.get('layout') === 'map') {
+                this.initMap()
+            } else {
+                this.$map.hide()
+            }
+        })
+
         this.$container.on('click', '.pagination li a', (e) => {
             e.preventDefault()
+
+            // Show loader IMMEDIATELY when pagination is clicked
+            this.showLoader()
 
             const url = new URL(e.target.href)
 
@@ -468,6 +636,30 @@ class JobFilter {
             })
         } else {
             this.searchParams.set(name, value)
+        }
+    }
+
+    showLoader() {
+        // Show blue loader - force show with inline style
+        // Use z-index: 100 (lower than navbar 999 and WhatsApp 9998) so it doesn't cover them
+        if (this.$loading.length) {
+            this.$loading.attr('style', 'display: flex !important; visibility: visible !important; opacity: 1 !important; z-index: 100 !important;').addClass('show')
+        } else {
+            // Create loader if it doesn't exist
+            const loaderHtml = '<div class="blue-loader-overlay" id="jobs-loader-overlay" style="display: flex !important; visibility: visible !important; opacity: 1 !important; z-index: 100 !important;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div><p class="blue-loader-text">Loading jobs...</p></div></div>'
+            this.$jobsList.prepend(loaderHtml)
+            this.$loading = this.$container.find('#jobs-loader-overlay')
+        }
+    }
+
+    hideLoader() {
+        // Hide loader smoothly
+        if (this.$loading.length) {
+            this.$loading.css({
+                'display': 'none',
+                'visibility': 'hidden',
+                'opacity': '0'
+            }).removeClass('show')
         }
     }
 

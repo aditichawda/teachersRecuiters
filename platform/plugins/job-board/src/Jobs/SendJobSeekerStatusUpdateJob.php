@@ -287,6 +287,57 @@ class SendJobSeekerStatusUpdateJob implements ShouldQueue
             // Use string comparison to avoid enum serialization issues
             $isShortlisted = $newStatusValue === 'short_list';
             $isRejected = $newStatusValue === 'rejected';
+            
+            // Send in-app notification to job seeker
+            if ($this->application->account_id) {
+                try {
+                    $account = $this->application->account;
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $schoolName = $this->jobModel->company->name ?? 'School';
+                    
+                    if ($isShortlisted) {
+                        // Profile shortlisted notification
+                        $notificationService->sendProfileShortlistedNotification(
+                            $account,
+                            $this->jobModel->name,
+                            $this->jobModel->id,
+                            $schoolName
+                        );
+                        Log::info('[NOTIFICATION] Profile shortlisted notification sent', [
+                            'application_id' => $this->application->id,
+                            'account_id' => $account->id,
+                        ]);
+                    } elseif ($isRejected) {
+                        // Application not selected notification
+                        $notificationService->sendApplicationNotSelectedNotification(
+                            $account,
+                            $this->jobModel->name,
+                            $this->jobModel->id
+                        );
+                        Log::info('[NOTIFICATION] Application not selected notification sent', [
+                            'application_id' => $this->application->id,
+                            'account_id' => $account->id,
+                        ]);
+                    } elseif ($newStatusValue === 'accepted' || $newStatusValue === 'hired') {
+                        // Job accepted notification
+                        $notificationService->sendJobAcceptedNotification(
+                            $account,
+                            $this->jobModel->name,
+                            $schoolName,
+                            $this->jobModel->name // position
+                        );
+                        Log::info('[NOTIFICATION] Job accepted notification sent', [
+                            'application_id' => $this->application->id,
+                            'account_id' => $account->id,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('[NOTIFICATION] Failed to send status update notification', [
+                        'application_id' => $this->application->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             $emailContent = $this->buildEmailContent([
                 'job_seeker_name' => $jobSeekerName,

@@ -195,49 +195,39 @@ All JavaScript fuctions Start
         let activeSuggestionIndex = -1;
 
         if (!$categoryInput.length) {
-            console.log('Category input not found');
+            console.log('[JOB_ROLES] Category input not found');
             return;
         }
 
-        // Check if categories are loaded
-        if (!window.jobCategories) {
-            console.log('Job categories not loaded yet, retrying...');
-            setTimeout(function() {
-                home_category_search();
-            }, 200);
-            return;
-        }
+        console.log('[JOB_ROLES] Initializing job roles search...', {
+            inputExists: $categoryInput.length > 0,
+            suggestionsExists: $suggestions.length > 0,
+            jobCategoriesExists: typeof window.jobCategories !== 'undefined',
+            jobCategoriesCount: window.jobCategories ? window.jobCategories.length : 0
+        });
 
-        console.log('Job roles search initialized with', window.jobCategories.length, 'roles');
-
-        // Function to show job roles
-        function showCategories(keyword) {
+        // Function to show all categories (defined before use)
+        function showAllCategories() {
+            console.log('[JOB_ROLES] showAllCategories() called');
+            console.log('[JOB_ROLES] $suggestions element:', $suggestions[0]);
+            console.log('[JOB_ROLES] $suggestions length:', $suggestions.length);
+            
             if (!window.jobCategories || window.jobCategories.length === 0) {
-                $suggestions.html('<div class="home-category-no-results">No job roles available</div>').show();
+                console.warn('[JOB_ROLES] No job categories available');
+                $suggestions.html('<div class="home-category-no-results">No job roles available</div>')
+                    .addClass('show')
+                    .css({
+                        'display': 'block !important',
+                        'visibility': 'visible !important',
+                        'opacity': '1 !important'
+                    })
+                    .show();
                 return;
             }
-
-            keyword = (keyword || '').trim().toLowerCase();
+            
             activeSuggestionIndex = -1;
-
-            let filtered;
-            if (keyword.length === 0) {
-                // Show all job roles when no keyword
-                filtered = window.jobCategories;
-            } else {
-                // Filter job roles locally
-                filtered = window.jobCategories.filter(function(cat) {
-                    return cat.name.toLowerCase().includes(keyword);
-                });
-            }
-
-            if (filtered.length === 0) {
-                $suggestions.html('<div class="home-category-no-results">No job roles found</div>').show();
-                return;
-            }
-
             let html = '';
-            filtered.forEach(function(category) {
+            window.jobCategories.forEach(function(category) {
                 html += '<div class="home-category-suggestion-item" ' +
                     'data-id="' + category.id + '" ' +
                     'data-name="' + category.name + '">' +
@@ -245,90 +235,256 @@ All JavaScript fuctions Start
                     '</div>';
             });
 
-            $suggestions.html(html).show();
+            console.log('[JOB_ROLES] Generated HTML for', window.jobCategories.length, 'items');
+            console.log('[JOB_ROLES] Setting suggestions HTML and showing...');
+            
+            $suggestions.html(html)
+                .addClass('show')
+                .removeAttr('style')
+                .attr('style', 'display: block !important; visibility: visible !important; opacity: 1 !important; position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important; z-index: 10000 !important;')
+                .show();
+            
+            // Add active class to wrapper to rotate arrow
+            $categoryInput.closest('.home-category-search-wrapper').addClass('active');
+            
+            console.log('[JOB_ROLES] Dropdown displayed with', window.jobCategories.length, 'items');
+            console.log('[JOB_ROLES] $suggestions after show:', $suggestions.is(':visible'), $suggestions.css('display'));
         }
-
-        // Show all categories on focus or click
-        $categoryInput.on('focus click', function() {
-            const currentVal = $(this).val();
-            if (!currentVal) {
-                showCategories('');
-            } else {
-                // If there's a value, show filtered results
-                showCategories(currentVal);
-            }
-        });
-
-        // Category search autocomplete
-        $categoryInput.on('input', function() {
-            const keyword = $(this).val().trim().toLowerCase();
-
-            // Clear category selection when user types
-            if (keyword.length > 0) {
-                $categoryId.val('');
-            }
-
-            if (searchTimeout) clearTimeout(searchTimeout);
-
-            searchTimeout = setTimeout(function() {
-                showCategories(keyword);
-            }, 100);
-        });
-
-        // Keyboard navigation for suggestions
-        $categoryInput.on('keydown', function(e) {
-            const $items = $suggestions.find('.home-category-suggestion-item');
-
-            if (!$suggestions.is(':visible') || $items.length === 0) return;
-
-            if (e.key === 'ArrowDown') {
+        
+        // Attach click handler to dropdown arrow
+        const $dropdownArrow = $('#home-category-dropdown-arrow');
+        if ($dropdownArrow.length) {
+            $dropdownArrow.css({
+                'pointer-events': 'auto',
+                'cursor': 'pointer'
+            }).on('click', function(e) {
+                console.log('[JOB_ROLES] ===== ARROW CLICKED =====');
+                e.stopPropagation();
                 e.preventDefault();
-                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
-                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
-                $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
-                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
-                $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                if (activeSuggestionIndex >= 0) {
-                    $items.eq(activeSuggestionIndex).trigger('click');
-                }
-            } else if (e.key === 'Escape') {
-                $suggestions.hide();
-            }
-        });
-
-        // Select job role from suggestions
-        $(document).on('click', '.home-category-suggestion-item', function() {
-            const $item = $(this);
-            const roleName = $item.data('name');
-
-            // Set job role as keyword
-            $categoryInput.val(roleName);
-            $categoryId.val(roleName);
-            $suggestions.hide();
-        });
-
-        // Close suggestions on outside click
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('.home-category-search-wrapper').length) {
-                $suggestions.hide();
-            }
-        });
-
-        // Load job role name if keyword is already set
-        const existingKeyword = $categoryId.val();
-        if (existingKeyword && window.jobCategories) {
-            const role = window.jobCategories.find(function(cat) {
-                return cat.name == existingKeyword || cat.id == existingKeyword;
+                $categoryInput.focus();
+                showAllCategories();
             });
-            if (role) {
-                $categoryInput.val(role.name);
+        }
+        
+        // Attach click handler immediately (even before categories load)
+        // Remove any existing handlers first to avoid duplicates
+        $categoryInput.off('click.categorySearch').on('click.categorySearch', function(e) {
+            console.log('[JOB_ROLES] ===== INPUT CLICKED =====');
+            console.log('[JOB_ROLES] Input element:', this);
+            console.log('[JOB_ROLES] Suggestions element:', $suggestions[0]);
+            console.log('[JOB_ROLES] Suggestions visible?', $suggestions.is(':visible'));
+            console.log('[JOB_ROLES] window.jobCategories:', window.jobCategories);
+            console.log('[JOB_ROLES] Categories count:', window.jobCategories ? window.jobCategories.length : 0);
+            
+            e.stopPropagation(); // Prevent event bubbling
+            
+            // Check if categories are loaded
+            if (!window.jobCategories || window.jobCategories.length === 0) {
+                console.log('[JOB_ROLES] Categories not loaded yet, waiting...');
+                // Wait a bit and try again
+                const checkCategories = setInterval(function() {
+                    if (window.jobCategories && window.jobCategories.length > 0) {
+                        clearInterval(checkCategories);
+                        console.log('[JOB_ROLES] Categories loaded, showing dropdown');
+                        showAllCategories();
+                    }
+                }, 100);
+                // Stop checking after 5 seconds
+                setTimeout(function() {
+                    clearInterval(checkCategories);
+                }, 5000);
+                return;
+            }
+            
+            // Always show all job roles on click
+            console.log('[JOB_ROLES] Categories available, calling showAllCategories()');
+            showAllCategories();
+        });
+        
+        // Wait for categories to be loaded (they're set in inline script)
+        function waitForCategories() {
+            if (!window.jobCategories || window.jobCategories.length === 0) {
+                console.log('[JOB_ROLES] Job categories not loaded yet, retrying...');
+                setTimeout(waitForCategories, 100);
+                return;
+            }
+            
+            console.log('[JOB_ROLES] Job roles search initialized with', window.jobCategories.length, 'roles');
+            initializeSearch();
+        }
+        
+        function initializeSearch() {
+            // Function to show job roles
+            function showCategories(keyword) {
+                console.log('[JOB_ROLES] showCategories called with keyword:', keyword);
+                
+                if (!window.jobCategories || window.jobCategories.length === 0) {
+                    console.warn('[JOB_ROLES] No job categories available');
+                    $suggestions.html('<div class="home-category-no-results">No job roles available</div>').css({
+                        'display': 'block',
+                        'visibility': 'visible',
+                        'opacity': '1'
+                    });
+                    return;
+                }
+
+                keyword = (keyword || '').trim().toLowerCase();
+                activeSuggestionIndex = -1;
+
+                let filtered;
+                if (keyword.length === 0) {
+                    // Show all job roles when no keyword
+                    filtered = window.jobCategories;
+                    console.log('[JOB_ROLES] Showing all', filtered.length, 'job roles');
+                } else {
+                    // Filter job roles locally
+                    filtered = window.jobCategories.filter(function(cat) {
+                        return cat.name.toLowerCase().includes(keyword);
+                    });
+                    console.log('[JOB_ROLES] Filtered to', filtered.length, 'job roles');
+                }
+
+                if (filtered.length === 0) {
+                    $suggestions.html('<div class="home-category-no-results">No job roles found</div>').css({
+                        'display': 'block',
+                        'visibility': 'visible',
+                        'opacity': '1'
+                    });
+                    return;
+                }
+
+                let html = '';
+                filtered.forEach(function(category) {
+                    html += '<div class="home-category-suggestion-item" ' +
+                        'data-id="' + category.id + '" ' +
+                        'data-name="' + category.name + '">' +
+                        '<div class="city-name">' + category.name + '</div>' +
+                        '</div>';
+                });
+
+                $suggestions.html(html)
+                    .addClass('show')
+                    .attr('style', 'display: block !important; visibility: visible !important; opacity: 1 !important; position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important; z-index: 10000 !important;')
+                    .show();
+                
+                // Add active class to wrapper to rotate arrow
+                $categoryInput.closest('.home-category-search-wrapper').addClass('active');
+                
+                console.log('[JOB_ROLES] Dropdown displayed with', filtered.length, 'items');
+            }
+
+            // Click handler is already attached above (line 210), this is just for focus
+            
+            // On focus, also show all categories if field is empty
+            $categoryInput.on('focus', function() {
+                console.log('[JOB_ROLES] Input focused');
+                const currentVal = $(this).val();
+                if (!currentVal) {
+                    console.log('[JOB_ROLES] Showing all categories on focus');
+                    showCategories('');
+                } else {
+                    // If there's a value, show filtered results
+                    console.log('[JOB_ROLES] Showing filtered categories for:', currentVal);
+                    showCategories(currentVal);
+                }
+            });
+
+            // Disable typing - only show dropdown on click
+            // Remove input event handler - we want dropdown to show on click only
+            $categoryInput.on('input', function(e) {
+                e.preventDefault();
+                // Don't allow typing - just show dropdown
+                return false;
+            });
+            
+            // Prevent typing in the field - it's a select dropdown
+            $categoryInput.on('keydown', function(e) {
+                // Allow backspace, delete, and arrow keys for navigation
+                if (e.key === 'Backspace' || e.key === 'Delete' || e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Escape') {
+                    return true;
+                }
+                // Prevent all other typing
+                e.preventDefault();
+                return false;
+            });
+
+            // Keyboard navigation for suggestions
+            $categoryInput.on('keydown', function(e) {
+                const $items = $suggestions.find('.home-category-suggestion-item');
+
+                if (!$suggestions.is(':visible') || $items.length === 0) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+                    $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                    $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+                    $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                    $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (activeSuggestionIndex >= 0) {
+                        $items.eq(activeSuggestionIndex).trigger('click');
+                    }
+                } else if (e.key === 'Escape') {
+                    $suggestions.hide();
+                }
+            });
+
+            // Select job role from suggestions
+            $(document).on('click', '.home-category-suggestion-item', function() {
+                const $item = $(this);
+                const roleId = $item.data('id');
+                const roleName = $item.data('name');
+
+                // Set job role name as keyword text
+                $categoryInput.val(roleName);
+                // Set job role ID in hidden field for form submission
+                $categoryId.val(roleId);
+                $suggestions.attr('style', 'display: none !important; visibility: hidden !important; opacity: 0 !important;').removeClass('show');
+                $categoryInput.closest('.home-category-search-wrapper').removeClass('active');
+            });
+
+            // Close suggestions on outside click
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.home-category-search-wrapper').length) {
+                    $suggestions.attr('style', 'display: none !important; visibility: hidden !important; opacity: 0 !important;').removeClass('show');
+                    $categoryInput.closest('.home-category-search-wrapper').removeClass('active');
+                }
+            });
+            
+            // Attach click handler to dropdown arrow
+            const $dropdownArrow = $('#home-category-dropdown-arrow');
+            if ($dropdownArrow.length) {
+                $dropdownArrow.css({
+                    'pointer-events': 'auto',
+                    'cursor': 'pointer'
+                }).on('click', function(e) {
+                    console.log('[JOB_ROLES] ===== ARROW CLICKED =====');
+                    e.stopPropagation();
+                    e.preventDefault();
+                    $categoryInput.focus();
+                    showCategories('');
+                });
+            }
+
+            // Load job role name if keyword is already set
+            const existingKeyword = $categoryId.val();
+            if (existingKeyword && window.jobCategories) {
+                const role = window.jobCategories.find(function(cat) {
+                    return cat.name == existingKeyword || cat.id == existingKeyword;
+                });
+                if (role) {
+                    $categoryInput.val(role.name);
+                }
             }
         }
+        
+        // Start waiting for categories
+        waitForCategories();
     }
 
     //  Job Categories Carousel function by = owl.carousel.js ========================== //
@@ -1764,11 +1920,21 @@ All JavaScript fuctions Start
     }
 
     // Initialize category search on document ready
+    // Only initialize if we're NOT on the jobs page (jobs page has its own handler)
     $(document).ready(function() {
-        // Wait a bit for window.jobCategories to be set from inline script
-        setTimeout(function() {
-            home_category_search();
-        }, 100);
+        // Check if we're on jobs page - if so, skip this handler completely
+        const isJobsPage = window.location.pathname.includes('/jobs') || $('#jobs-top-filter-form').length > 0 || $('#home_category_search').closest('.jobs-top-filter').length > 0;
+        
+        if (!isJobsPage) {
+            // Wait a bit for window.jobCategories to be set from inline script
+            setTimeout(function() {
+                home_category_search();
+            }, 100);
+        } else {
+            console.log('[JOB_ROLES] Skipping main.js handler - jobs page has its own handler');
+            // Also remove any handlers that might have been attached
+            $('#home_category_search').off('input focus keydown');
+        }
     });
 
 })(window.jQuery);

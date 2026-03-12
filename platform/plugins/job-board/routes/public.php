@@ -22,7 +22,14 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
         'uses' => 'PublicController@changeCurrency',
     ]);
 
-        Theme::registerRoutes(function (): void {
+    // Register job detail route BEFORE Theme::registerRoutes to ensure it matches first
+    // This prevents the catch-all route from matching /jobs/{slug} before this route
+    Route::get(SlugHelper::getPrefix(Job::class, 'jobs') . '/{slug}', [
+        'as' => 'public.job',
+        'uses' => 'PublicController@getJob',
+    ])->where('slug', '[a-z0-9-]+');
+
+    Theme::registerRoutes(function (): void {
         Route::get('ajax/jobs/screening-questions/{id}', [
             'as' => 'public.ajax.job.screening-questions',
             'uses' => 'PublicController@getJobScreeningQuestions',
@@ -50,11 +57,6 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
         Route::get('ajax/companies', [
             'as' => 'public.ajax.companies',
             'uses' => 'PublicController@getcompanies',
-        ]);
-
-        Route::get(SlugHelper::getPrefix(Job::class, 'jobs') . '/{slug}', [
-            'as' => 'public.job',
-            'uses' => 'PublicController@getJob',
         ]);
 
         Route::get(SlugHelper::getPrefix(Category::class, 'job-categories') . '/{slug}', [
@@ -99,6 +101,48 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
 
     Route::group(['prefix' => 'payments'], function (): void {
         Route::post('checkout', 'CheckoutController@postCheckout')->name('payments.checkout');
+    });
+
+    // User Notifications Routes
+    Route::group(['prefix' => 'account/notifications', 'middleware' => ['auth:account']], function (): void {
+        Route::post('read/{id}', [
+            'as' => 'public.account.notifications.read',
+            'uses' => 'UserNotificationController@read',
+        ]);
+        Route::post('mark-read/{id}', [
+            'as' => 'public.account.notifications.mark-read',
+            'uses' => 'UserNotificationController@markAsRead',
+        ]);
+        Route::post('mark-all-read', [
+            'as' => 'public.account.notifications.mark-all-read',
+            'uses' => 'UserNotificationController@markAllAsRead',
+        ]);
+        Route::delete('delete/{id}', [
+            'as' => 'public.account.notifications.delete',
+            'uses' => 'UserNotificationController@delete',
+        ]);
+        Route::delete('delete-all', [
+            'as' => 'public.account.notifications.delete-all',
+            'uses' => 'UserNotificationController@deleteAll',
+        ]);
+        Route::get('count-unread', [
+            'as' => 'public.account.notifications.count-unread',
+            'uses' => 'UserNotificationController@countUnread',
+        ]);
+        
+        // Test Routes (for development/testing only)
+        Route::get('test', [
+            'as' => 'public.account.notifications.test',
+            'uses' => 'NotificationTestController@generateAllNotifications',
+        ]);
+        Route::get('test-job-seeker', [
+            'as' => 'public.account.notifications.test.job-seeker',
+            'uses' => 'NotificationTestController@generateAllJobSeekerNotifications',
+        ]);
+        Route::get('test/{type}', [
+            'as' => 'public.account.notifications.test.single',
+            'uses' => 'NotificationTestController@generateSingleNotification',
+        ]);
     });
 });
 

@@ -105,6 +105,35 @@ class CreditConsumption extends BaseModel
         }
         Transaction::query()->create($data);
 
+        // Check for low balance notification (for job seekers)
+        if (!$account->isEmployer() && $account->credits < 100) {
+            try {
+                $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                // Check if notification already sent in last 24 hours
+                $recentNotification = \Botble\JobBoard\Models\UserNotification::query()
+                    ->where('account_id', $account->id)
+                    ->where('type', \Botble\JobBoard\Services\NotificationService::TYPE_WALLET_LOW)
+                    ->where('created_at', '>', now()->subDay())
+                    ->exists();
+                
+                if (!$recentNotification) {
+                    $notificationService->sendWalletLowBalanceNotification(
+                        $account,
+                        $account->credits
+                    );
+                    \Log::info('[NOTIFICATION] Wallet low balance notification sent', [
+                        'account_id' => $account->id,
+                        'credits' => $account->credits,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('[NOTIFICATION] Failed to send wallet low balance notification', [
+                    'account_id' => $account->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         return true;
     }
 

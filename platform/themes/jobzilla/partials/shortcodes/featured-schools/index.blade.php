@@ -200,10 +200,23 @@
     
     .featured-schools-carousel .company-card-grid {
         height: 100%;
+        min-height: 420px;
         margin-bottom: 0;
         box-shadow: 0 4px 20px rgba(0, 115, 209, 0.08);
         transition: all 0.3s ease;
         width: 100%;
+    }
+    
+    @media (max-width: 991px) {
+        .featured-schools-carousel .company-card-grid {
+            min-height: 400px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .featured-schools-carousel .company-card-grid {
+            min-height: 380px;
+        }
     }
     
     /* Ensure container hides partial items but shows buttons */

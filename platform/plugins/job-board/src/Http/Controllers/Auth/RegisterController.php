@@ -1559,6 +1559,18 @@ class RegisterController extends BaseController
 
         $this->registered($request, $account);
 
+        // Send welcome notification
+        try {
+            $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+            if ($account->isEmployer()) {
+                $notificationService->sendEmployerWelcomeNotification($account);
+            } else {
+                $notificationService->sendWelcomeNotification($account);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send welcome notification: ' . $e->getMessage());
+        }
+
         // Redirect based on account type
         if ($account->isEmployer()) {
             $this->redirectTo = route('public.account.dashboard');
@@ -2306,6 +2318,14 @@ class RegisterController extends BaseController
 
         // Login the employer
         $this->guard()->login($account);
+
+        // Send welcome notification
+        try {
+            $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+            $notificationService->sendEmployerWelcomeNotification($account);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send employer welcome notification: ' . $e->getMessage());
+        }
 
         // Clear session data
         $request->session()->forget(['employer_registration', 'employer_verify_email', 'employer_email_verified']);

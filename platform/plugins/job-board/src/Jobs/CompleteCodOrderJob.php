@@ -76,6 +76,34 @@ class CompleteCodOrderJob implements ShouldQueue
         $account->credits += $creditsToAdd;
         $account->save();
         $account->packages()->syncWithoutDetaching([$package->id]);
+        
+        // Send wallet recharged notification to job seeker
+        if (!$account->isEmployer()) {
+            try {
+                $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                $notificationService->sendWalletRechargedNotification(
+                    $account,
+                    $creditsToAdd
+                );
+                \Log::info('[NOTIFICATION] Wallet recharged notification sent', [
+                    'account_id' => $account->id,
+                    'credits_added' => $creditsToAdd,
+                ]);
+                
+                // Check for low balance after recharge
+                if ($account->credits < 100) {
+                    $notificationService->sendWalletLowBalanceNotification(
+                        $account,
+                        $account->credits
+                    );
+                }
+            } catch (\Exception $e) {
+                \Log::error('[NOTIFICATION] Failed to send wallet notification', [
+                    'account_id' => $account->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         $accountType = $account->isEmployer() ? 'employer' : 'job_seeker';
         $userDetails = [

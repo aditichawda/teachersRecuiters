@@ -516,6 +516,27 @@ class AccountJobController extends BaseController
             EmployerPostedJobEvent::dispatch($job, $account);
         }
 
+        // Send notification to employer when job is posted successfully
+        try {
+            $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+            $notificationService->sendJobPostedNotification(
+                $account,
+                $job->name,
+                $job->id
+            );
+            \Log::info('[JOB_POST] Notification sent to employer for job posting', [
+                'job_id' => $job->id,
+                'job_title' => $job->name,
+                'employer_id' => $account->id,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('[JOB_POST] Failed to send notification to employer: ' . $e->getMessage(), [
+                'job_id' => $job->id,
+                'employer_id' => $account->id,
+            ]);
+            // Don't break the flow if notification fails
+        }
+
         $jobsUrl = url('/account/jobs');
         return redirect()->to($jobsUrl)
             ->with('success_msg', trans('core/base::notices.create_success_message'));
@@ -940,7 +961,17 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
 
         } else {
             $emails = array_values(array_filter(array_map('trim', (array) $request->input('apply_internal_emails', []))));
-            $request->merge(['apply_internal_emails' => array_slice($emails, 0, 3) ?: null]);
+            $slicedEmails = array_slice($emails, 0, 3);
+            // Fix: Empty array should be null, not []
+            $request->merge(['apply_internal_emails' => !empty($slicedEmails) ? $slicedEmails : null]);
+            
+            \Log::info('[JOB_POST] Processed apply_internal_emails', [
+                'original_emails' => $request->input('apply_internal_emails', []),
+                'filtered_emails' => $emails,
+                'sliced_emails' => $slicedEmails,
+                'final_emails' => !empty($slicedEmails) ? $slicedEmails : null,
+            ]);
+            
         // Process apply_internal_phones - format with country code and store
         $phones = array_filter(array_map('trim', (array) $request->input('apply_internal_phones', [])));
         $formattedPhones = [];
@@ -972,7 +1003,9 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
         }
         
         // Store formatted phones (max 3)
-        $request->merge(['apply_internal_phones' => array_slice($formattedPhones, 0, 3) ?: null]);
+        // Fix: Empty array should be null, not []
+        $slicedPhones = array_slice($formattedPhones, 0, 3);
+        $request->merge(['apply_internal_phones' => !empty($slicedPhones) ? $slicedPhones : null]);
         
         \Log::info('[JOB_POST] Processed apply_internal_phones', [
             'original_phones' => $phones,
@@ -1239,6 +1272,16 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
         if (! $job->is_saved) {
             $account->savedJobs()->attach($job->id);
             $message = trans('plugins/job-board::messages.job_added_to_saved', ['job' => $job->name]);
+            
+            // Send notification to job seeker when job is saved
+            if (!$account->isEmployer()) {
+                try {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $notificationService->sendJobSavedNotification($account, $job->name, $job->id);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send job saved notification: ' . $e->getMessage());
+                }
+            }
         } else {
             $account->savedJobs()->detach($job->id);
             $message = trans('plugins/job-board::messages.job_removed_from_saved', ['job' => $job->name]);

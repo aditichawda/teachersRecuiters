@@ -19,28 +19,66 @@ class JobzillaController extends PublicController
 {
     public function ajaxGetCities(Request $request, CityInterface $cityRepository, BaseHttpResponse $response)
     {
-        if (! $request->ajax() || ! $request->wantsJson()) {
-            return $response->setNextUrl(BaseHelper::getHomepageUrl());
-        }
+        // Force JSON response
+        $request->headers->set('Accept', 'application/json');
+        
+        // Support both 'k' and 'keyword' parameters
+        $keyword = BaseHelper::stringify($request->input('k')) ?: BaseHelper::stringify($request->input('keyword'));
 
-        $keyword = BaseHelper::stringify($request->input('k'));
+        // Handle default_country parameter for initial load
+        if ($request->has('default_country') && empty($keyword)) {
+            // Return empty for now, or you can return popular cities
+            return response()->json([
+                'error' => false,
+                'data' => [],
+                'message' => null,
+            ]);
+        }
 
         // Only search if keyword is provided and has at least 2 characters
         if (empty($keyword) || strlen($keyword) < 2) {
-            return $response->setData([]);
+            return response()->json([
+                'error' => false,
+                'data' => [],
+                'message' => null,
+            ]);
         }
 
-        $cities = $cityRepository->filters($keyword, 20, ['state']);
-
-        return $response->setData(CityResource::collection($cities));
+        try {
+            $cities = $cityRepository->filters($keyword, 20, ['state']);
+            
+            // Log for debugging
+            \Log::info('[CITY_SEARCH] Search performed', [
+                'keyword' => $keyword,
+                'cities_count' => $cities->count(),
+            ]);
+            
+            return response()->json([
+                'error' => false,
+                'data' => CityResource::collection($cities)->resolve(),
+                'message' => null,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('[CITY_SEARCH] Error searching cities', [
+                'keyword' => $keyword,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'error' => false,
+                'data' => [],
+                'message' => null,
+            ]);
+        }
     }
 
     public function ajaxGetJobRoles(Request $request, CategoryInterface $categoryRepository, BaseHttpResponse $response)
     {
-        if (! $request->ajax() || ! $request->wantsJson()) {
-            return $response->setNextUrl(BaseHelper::getHomepageUrl());
-        }
-
+        // Accept fetch API requests (not just ajax/wantsJson)
+        // Force JSON response
+        $request->headers->set('Accept', 'application/json');
+        
         $keyword = BaseHelper::stringify($request->input('k'));
 
         $categories = $categoryRepository->advancedGet([
@@ -65,7 +103,12 @@ class JobzillaController extends PublicController
             ];
         });
 
-        return $response->setData($categories->values());
+        // Return JSON directly for fetch API compatibility
+        return response()->json([
+            'error' => false,
+            'data' => $categories->values(),
+            'message' => null,
+        ]);
     }
 
     public function faq()

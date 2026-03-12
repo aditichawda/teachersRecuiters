@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class WalletController extends BaseController
 {
@@ -31,11 +32,43 @@ class WalletController extends BaseController
         Theme::breadcrumb()->add(trans('plugins/job-board::dashboard.menu.wallet'));
         SeoHelper::setTitle(trans('plugins/job-board::dashboard.menu.wallet'));
 
-        $transactions = Transaction::query()
+        // Get all transaction IDs first (unique by ID only)
+        $allTransactionIds = Transaction::query()
             ->where('account_id', $account->getKey())
+            ->select('id')
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->pluck('id')
+            ->unique()
+            ->values()
+            ->toArray();
+        
+        // Manual pagination for unique IDs
+        $perPage = 15;
+        $currentPage = request()->get('page', 1);
+        $total = count($allTransactionIds);
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedIds = array_slice($allTransactionIds, $offset, $perPage);
+        
+        // Load full transactions for paginated IDs with relationships
+        $transactionItems = Transaction::query()
+            ->whereIn('id', $paginatedIds)
             ->with(['payment', 'user'])
-            ->latest()
-            ->paginate(15);
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->sortByDesc('created_at')
+            ->sortByDesc('id')
+            ->values();
+        
+        // Create paginator
+        $transactions = new \Illuminate\Pagination\LengthAwarePaginator(
+            $transactionItems,
+            $total,
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         $paymentIds = $transactions->pluck('payment_id')->filter()->unique()->values()->all();
         $invoiceByPaymentId = Invoice::query()

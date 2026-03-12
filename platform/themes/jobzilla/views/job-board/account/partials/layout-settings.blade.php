@@ -249,6 +249,110 @@
 }
 @media (min-width: 992px) {
     .js-main-content-wallet .wallet-js-page .col-lg-5 { width: 41.666667% !important; flex: 0 0 41.666667% !important; }
+}
+
+/* ===== RESPONSIVE STYLES FOR ALL SIDEBARS ===== */
+/* Account Sidebar Responsive */
+@media (max-width: 991px) {
+    .side-bar-st-1 {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        background: #fff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        padding: 20px;
+        width: 280px;
+        max-width: 280px;
+    }
+    
+    .side-bar-st-1.show {
+        left: 0;
+    }
+    
+    /* Sidebar Toggle Button */
+    .account-sidebar-toggle {
+        display: flex;
+        position: fixed;
+        top: 90px;
+        left: 15px;
+        z-index: 1001;
+        background: #0073d1;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .account-sidebar-toggle:hover {
+        background: #005bb5;
+        transform: scale(1.05);
+    }
+    
+    .account-sidebar-toggle.active {
+        left: 265px;
+    }
+    
+    /* Sidebar Overlay */
+    .account-sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .account-sidebar-overlay.show {
+        display: block;
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .side-bar-st-1 {
+        width: 260px;
+        max-width: 260px;
+        left: -260px;
+    }
+    
+    .account-sidebar-toggle {
+        top: 70px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .account-sidebar-toggle.active {
+        left: 250px;
+    }
+}
+
+@media (max-width: 576px) {
+    .side-bar-st-1 {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .account-sidebar-toggle.active {
+        left: calc(100% - 50px);
+    }
+}
     .js-main-content-wallet .wallet-js-page .col-lg-6 { width: 50% !important; }
     .js-main-content-wallet .wallet-js-page .col-lg-7 { width: 58.333333% !important; flex: 1 1 58.333333% !important; min-width: 280px !important; }
     .js-main-content-wallet .wallet-js-page .col-xl-4 { width: 33.333333% !important; }

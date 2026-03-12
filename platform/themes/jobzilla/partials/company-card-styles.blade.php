@@ -8,6 +8,7 @@
     padding: 0;
     transition: all .3s ease;
     height: 100%;
+    min-height: 420px;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -331,11 +332,17 @@
 
 /* ===== Responsive ===== */
 @media(max-width: 991px) {
+    .company-card-grid {
+        min-height: 400px;
+    }
     .company-card-grid .ccg-top { padding: 22px 18px 14px; }
     .company-card-grid .ccg-body { padding: 14px 18px; }
     .company-card-grid .ccg-footer { padding: 12px 18px; }
 }
 @media(max-width: 767px) {
+    .company-card-grid {
+        min-height: 380px;
+    }
     .company-card-grid .ccg-logo { width: 56px; height: 56px; }
     .company-card-list {
         flex-direction: column;

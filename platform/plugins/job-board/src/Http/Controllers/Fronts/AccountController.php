@@ -132,9 +132,9 @@ class AccountController extends BaseController
             $languagesList = $rows->map(fn ($r) => (object) ['id' => $r->lang_id, 'name' => $r->lang_name]);
         }
         if (Schema::hasTable('jb_specializations')) {
-            // Include both 'published' and 1 so dropdown gets data (DB may store status as 1)
+            // Use BaseStatusEnum::PUBLISHED to ensure correct enum value
             $specializationsList = Specialization::query()
-                ->whereIn('status', ['published', 1])
+                ->where('status', BaseStatusEnum::PUBLISHED)
                 ->orderBy('order')
                 ->orderBy('name')
                 ->get(['id', 'name']);
@@ -316,6 +316,55 @@ class AccountController extends BaseController
         }
 
         AccountActivityLog::query()->create(['action' => 'update_setting']);
+
+        // Check profile completion and send notification if 100%
+        if (!$account->isEmployer()) {
+            try {
+                // Calculate profile completion percentage
+                $profileFields = [
+                    ['field' => 'first_name', 'points' => 10, 'filled' => !empty($account->first_name)],
+                    ['field' => 'phone', 'points' => 10, 'filled' => !empty($account->phone)],
+                    ['field' => 'avatar', 'points' => 15, 'filled' => !empty($account->avatar_id)],
+                    ['field' => 'bio', 'points' => 10, 'filled' => !empty($account->bio)],
+                    ['field' => 'resume', 'points' => 20, 'filled' => !empty($account->resume)],
+                    ['field' => 'address', 'points' => 10, 'filled' => !empty($account->address)],
+                    ['field' => 'dob', 'points' => 5, 'filled' => !empty($account->dob)],
+                    ['field' => 'gender', 'points' => 5, 'filled' => !empty($account->gender)],
+                    ['field' => 'total_experience', 'points' => 10, 'filled' => !empty($account->total_experience)],
+                    ['field' => 'current_salary', 'points' => 5, 'filled' => !empty($account->current_salary)],
+                ];
+                $totalPoints = array_sum(array_column($profileFields, 'points'));
+                $earnedPoints = 0;
+                foreach ($profileFields as $pf) {
+                    if ($pf['filled']) $earnedPoints += $pf['points'];
+                }
+                $completion = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100) : 0;
+                
+                // Send notification if profile is 100% complete (check if not already sent recently)
+                if ($completion >= 100) {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    // Check if notification already sent in last 24 hours
+                    $recentNotification = \Botble\JobBoard\Models\UserNotification::query()
+                        ->where('account_id', $account->id)
+                        ->where('type', \Botble\JobBoard\Services\NotificationService::TYPE_PROFILE_COMPLETED)
+                        ->where('created_at', '>', now()->subDay())
+                        ->exists();
+                    
+                    if (!$recentNotification) {
+                        $notificationService->sendProfileCompletedNotification($account);
+                        \Log::info('[NOTIFICATION] Profile completed notification sent', [
+                            'account_id' => $account->id,
+                            'completion' => $completion,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('[NOTIFICATION] Failed to check profile completion', [
+                    'account_id' => $account->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return $this
             ->httpResponse()
