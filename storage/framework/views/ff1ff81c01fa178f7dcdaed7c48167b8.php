@@ -319,6 +319,7 @@
                 <?php if($company->description && !empty(trim($company->description))): ?>
                     <p class="cd-hero-desc"><?php echo e(Str::limit($company->description, 200)); ?></p>
                 <?php endif; ?>
+<<<<<<< HEAD
                 <?php
                     $admissionOpen = false;
                     if ($company->admission && isset($company->admission->status) && $company->admission->status === 'published') {
@@ -335,6 +336,9 @@
 >>>>>>> 7f84a288 (9 march update)
                 ?>
                 <?php if($admissionOpen): ?>
+=======
+                <?php if(!empty($showAdmissionOnProfile) && $company->admission): ?>
+>>>>>>> 4bffcdd8 (13 marh update)
                 <div class="mt-3">
                     <button type="button" class="btn btn-primary px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#admissionEnquiryModal" style="background: linear-gradient(135deg, #059669, #047857); border: none;">
                         <i class="fas fa-graduation-cap me-2"></i><?php echo e(__('Admission Enquiry')); ?>
@@ -717,10 +721,14 @@
 
                 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <?php if($admissionOpen): ?>
 =======
                 <?php if(isset($admissionOpen) && $admissionOpen && $company->admission): ?>
 >>>>>>> 7f84a288 (9 march update)
+=======
+                <?php if(!empty($showAdmissionOnProfile) && $company->admission): ?>
+>>>>>>> 4bffcdd8 (13 marh update)
                 <div class="cd-content-card">
                     <h4 class="cd-section-title"><?php echo e(__('Get Admission with :name', ['name' => $company->name])); ?></h4>
                     <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;"><?php echo e(__('About School / Institution')); ?></h5>
@@ -735,6 +743,33 @@
                     <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;"><?php echo e(__('Enquiry Form')); ?></h5>
                     <p class="text-muted small mb-3"><?php echo e(__('Submit your admission enquiry using the form below or use the button above.')); ?></p>
                     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                </div>
+                <?php elseif(!empty($admissionFormLocked)): ?>
+                
+                <div class="cd-content-card" style="border: 2px dashed #e2e8f0; background: #f8fafc;">
+                    <h4 class="cd-section-title mb-3">
+                        <i class="fas fa-lock text-secondary me-2"></i><?php echo e(__('Admission Form on Profile')); ?> – <?php echo e(__('Locked')); ?>
+
+                    </h4>
+                    <p class="text-muted mb-3"><?php echo e(__('This feature is not included in your current package. Add "Admission Form on Profile" to your package or unlock it with credits to show the admission enquiry form on your institution profile.')); ?></p>
+                    <?php if(!empty($isOwner)): ?>
+                        <?php if(!empty($canUnlockAdmission)): ?>
+                            <form action="<?php echo e(route('public.account.wallet.unlock_admission_form')); ?>" method="POST" class="d-inline">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="redirect_url" value="<?php echo e($company->url); ?>">
+                                <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill">
+                                    <i class="fas fa-coins me-2"></i><?php echo e(__('Unlock with :credits credits', ['credits' => $admissionUnlockCredits])); ?>
+
+                                </button>
+                            </form>
+                        <?php elseif(isset($admissionUnlockCredits) && $admissionUnlockCredits > 0): ?>
+                            <p class="mb-0">
+                                <a href="<?php echo e(route('public.account.wallet')); ?>" class="btn btn-outline-primary px-4 py-2 rounded-pill">
+                                    <i class="fas fa-wallet me-2"></i><?php echo e(__('Add credits to unlock')); ?> (<?php echo e(__(':credits credits required', ['credits' => $admissionUnlockCredits])); ?>)
+                                </a>
+                            </p>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
             </div>
@@ -846,7 +881,7 @@
 </div>
 
 
-<?php if(isset($admissionOpen) && $admissionOpen): ?>
+<?php if(!empty($showAdmissionOnProfile) && $company->admission): ?>
 <style>
 #admissionEnquiryModal .modal-dialog { max-width: 520px; }
 #admissionEnquiryModal .modal-body { padding: 1rem 1.25rem 1.5rem; }

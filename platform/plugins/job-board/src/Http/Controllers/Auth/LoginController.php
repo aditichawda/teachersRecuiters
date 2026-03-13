@@ -236,10 +236,18 @@ class LoginController extends Controller
 
     protected function attemptLogin(Request $request)
     {
-        if ($this->guard()->validate($this->credentials($request))) {
-            $account = $this->guard()->getLastAttempted();
-            // Verification = only email_verified_at (null = not verified). Unverified handled in login() with OTP step.
-            return $this->baseAttemptLogin($request);
+        try {
+            if ($this->guard()->validate($this->credentials($request))) {
+                $account = $this->guard()->getLastAttempted();
+                // Verification = only email_verified_at (null = not verified). Unverified handled in login() with OTP step.
+                return $this->baseAttemptLogin($request);
+            }
+        } catch (\RuntimeException $e) {
+            // Stored password not in Bcrypt format (e.g. old hash or different algorithm) – treat as invalid login
+            if (str_contains($e->getMessage(), 'Bcrypt algorithm')) {
+                return false;
+            }
+            throw $e;
         }
         return false;
     }

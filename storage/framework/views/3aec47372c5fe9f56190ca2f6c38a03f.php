@@ -81,14 +81,18 @@
         }
     }
 
-    // Admission: separate from Post Job. Lock only when admission enquiry access is missing.
+    // Admission: unlock if (1) package has "Admission Form on Profile" and is valid, OR (2) credits used (debit) and validity.
     $canAccessAdmission = true;
     $admissionLocked = false;
     if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
         try {
-            if (!\Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
+            // 1) Package me "Admission Form on Profile" hai aur package valid hai → unlock
+            if ($packageContext && $packageContext->package && $packageContext->hasAdmissionFormOnProfile() && $packageContext->periodEnd && \Carbon\Carbon::now()->lte($packageContext->periodEnd)) {
+                $canAccessAdmission = true;
+            } elseif (!\Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
                 $canAccessAdmission = false;
             } else {
+                // 2) Package me nahi hai to credits se unlock (debit transaction + validity)
                 $admissionDebit = Transaction::query()
                     ->where('account_id', $account->getKey())
                     ->where('type', Transaction::TYPE_DEBIT)

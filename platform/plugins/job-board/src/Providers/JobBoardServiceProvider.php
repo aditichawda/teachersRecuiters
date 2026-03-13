@@ -433,6 +433,24 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => route('admission-enquiries.index'),
                     'permissions' => ['admission-enquiries.index'],
                 ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-dedicated-recruiter-requests',
+                    'priority' => 5.6,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Dedicated Recruiter Requests'),
+                    'icon' => 'ti ti-user-check',
+                    'url' => route('dedicated-recruiter-requests.index'),
+                    'permissions' => ['dedicated-recruiter-requests.index'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-social-promotion-requests',
+                    'priority' => 5.7,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Social Promotion Requests'),
+                    'icon' => 'ti ti-brand-linkedin',
+                    'url' => route('social-promotion-requests.index'),
+                    'permissions' => ['social-promotion-requests.index'],
+                ])
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), static function (DashboardMenuSupport $dashboardMenu): void {
                     $dashboardMenu
                         ->registerItem([

@@ -59,10 +59,21 @@ class PackageContext
         $this->profileViewsAllowed = $profileViewsAllowed;
     }
 
+    /** @var array<int, self> Request-level cache by account id */
+    private static array $forAccountCache = [];
+
     public static function forAccount(Account $account): self
     {
+        $id = (int) $account->getKey();
+        if (isset(self::$forAccountCache[$id])) {
+            return self::$forAccountCache[$id];
+        }
+
         if (! $account->isEmployer() || ! app(JobBoardHelper::class)->isEnabledCreditsSystem()) {
-            return new self();
+            $result = new self();
+            self::$forAccountCache[$id] = $result;
+
+            return $result;
         }
 
         $lastPurchase = Transaction::query()
@@ -106,7 +117,7 @@ class PackageContext
                 ->count();
         }
 
-        return new self(
+        $result = new self(
             $lastPurchase,
             $package,
             $periodStart ? Carbon::parse($periodStart) : null,
@@ -116,6 +127,9 @@ class PackageContext
             $profileViewsUsed,
             $profileViewsAllowed
         );
+        self::$forAccountCache[$id] = $result;
+
+        return $result;
     }
 
     /** Whether employer has a package (ever purchased). */
@@ -201,5 +215,30 @@ class PackageContext
         }
 
         return $this->profileViewsUsed < $this->profileViewsAllowed;
+    }
+
+    /**
+     * Whether the employer's current package includes a feature by display text
+     * (e.g. "Featured Profile", "Admission Form on Profile"). Package must be valid.
+     */
+    public function hasFeature(string $featureText): bool
+    {
+        if (! $this->hasPackage() || ! $this->isPeriodValid() || ! $this->package) {
+            return false;
+        }
+
+        return $this->package->hasFeatureText($featureText);
+    }
+
+    /**
+     * Whether the employer's package includes Admission Form on Profile (flexible text match).
+     */
+    public function hasAdmissionFormOnProfile(): bool
+    {
+        if (! $this->hasPackage() || ! $this->isPeriodValid() || ! $this->package) {
+            return false;
+        }
+
+        return $this->package->hasAdmissionFormOnProfileFeature();
     }
 }

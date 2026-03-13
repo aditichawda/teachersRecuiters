@@ -178,6 +178,18 @@
                                                 <button type="button" class="btn btn-xs btn-outline-info" data-bs-toggle="modal" data-bs-target="#walletProfileViewSlotModal" title="{{ trans('plugins/job-board::dashboard.wallet_use_credits_for_profile_view') }}">
                                                     {{ trans('plugins/job-board::dashboard.wallet_use_credits_for_profile_view') }}
                                                 </button>
+                                            @elseif($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_SOCIAL_PROMOTION)
+                                                <button type="button" class="btn btn-xs btn-outline-primary" data-bs-toggle="modal" data-bs-target="#walletSocialPromotionModal" title="{{ __('Submit request. Credits deducted when admin approves.') }}">
+                                                    {{ __('Use credits') }}
+                                                </button>
+                                            @elseif($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_DEDICATED_RECRUITER)
+                                                <button type="button" class="btn btn-xs btn-outline-primary" data-bs-toggle="modal" data-bs-target="#walletDedicatedRecruiterModal" title="{{ __('Submit request. Credits deducted when admin approves.') }}">
+                                                    {{ __('Use credits') }}
+                                                </button>
+                                            @elseif($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_MULTIPLE_LOGIN)
+                                                <button type="button" class="btn btn-xs btn-outline-primary" data-bs-toggle="modal" data-bs-target="#walletMultipleLoginModal" title="{{ __('Add sub-account. 250 credits per login.') }}">
+                                                    {{ __('Use credits') }}
+                                                </button>
                                             @elseif($key !== \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING)
                                                 @if($featureActiveWithPackage && isset($packageExpiryAt) && $packageExpiryAt)
                                                     <span class="badge bg-success" title="{{ trans('plugins/job-board::dashboard.wallet_valid_till_package', ['date' => $packageExpiryAt->format('M d, Y')]) }}">{{ __('Valid till') }} {{ $packageExpiryAt->format('M d, Y') }}</span>
@@ -282,6 +294,164 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
                     <button type="button" class="btn btn-primary" id="walletProfileViewSlotConfirmBtn">{{ __('OK') }}</button>
                 </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Social Promotion request form (credits deducted when admin approves) --}}
+    @if($account->isEmployer())
+    <div class="modal fade" id="walletSocialPromotionModal" tabindex="-1" aria-labelledby="walletSocialPromotionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletSocialPromotionModalLabel">{{ __('Post/Promote on LinkedIn/Other Social Pages') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletSocialPromotionForm">
+                    @csrf
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3">{{ __('3000 credits will be deducted when admin approves your request.') }}</p>
+                        <div class="mb-2">
+                            <label for="social_promotion_company_id" class="form-label">{{ __('Institution') }}</label>
+                            <select name="company_id" id="social_promotion_company_id" class="form-select form-select-sm">
+                                <option value="">{{ __('— Select —') }}</option>
+                                @foreach($companies ?? [] as $company)
+                                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label for="social_promotion_title" class="form-label">{{ __('Title') }}</label>
+                                <input type="text" name="title" id="social_promotion_title" class="form-control form-control-sm" maxlength="255" placeholder="{{ __('Title') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="social_promotion_tag" class="form-label">{{ __('Tag') }}</label>
+                                <input type="text" name="tag" id="social_promotion_tag" class="form-control form-control-sm" maxlength="255" placeholder="{{ __('Tag') }}">
+                            </div>
+                        </div>
+                        <div class="mb-2 mt-2">
+                            <label for="social_promotion_platform" class="form-label">{{ __('Platform') }} <span class="text-danger">*</span></label>
+                            <select name="platform" id="social_promotion_platform" class="form-select form-select-sm" required>
+                                <option value="">{{ __('— Select —') }}</option>
+                                <option value="LinkedIn">LinkedIn</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="Twitter">Twitter</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="social_promotion_message" class="form-label">{{ __('Message') }}</label>
+                            <textarea name="message" id="social_promotion_message" class="form-control form-control-sm" rows="3" maxlength="2000" placeholder="{{ __('Message / Description') }}"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label for="social_promotion_image" class="form-label">{{ __('Image') }}</label>
+                            <input type="file" name="image" id="social_promotion_image" class="form-control form-control-sm" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
+                            <small class="text-muted">{{ __('Optional. JPG, PNG, GIF, WebP. Max 5MB.') }}</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary" id="walletSocialPromotionSubmitBtn">{{ __('Submit request') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Dedicated Recruiter request form (5000 credits deducted when admin approves) --}}
+    <div class="modal fade" id="walletDedicatedRecruiterModal" tabindex="-1" aria-labelledby="walletDedicatedRecruiterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletDedicatedRecruiterModalLabel">{{ __('Dedicated Recruiter / Personal Account Manager') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletDedicatedRecruiterForm">
+                    @csrf
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3">{{ __('5000 credits will be deducted when admin approves your request.') }}</p>
+                        <div class="mb-2">
+                            <label for="dr_duration_months" class="form-label">{{ __('Duration (months)') }} <span class="text-danger">*</span></label>
+                            <select name="duration_months" id="dr_duration_months" class="form-select form-select-sm" required>
+                                @for($i = 1; $i <= 24; $i++)
+                                    <option value="{{ $i }}">{{ $i }} {{ $i === 1 ? __('month') : __('months') }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="dr_company_id" class="form-label">{{ __('Institution') }}</label>
+                            <select name="company_id" id="dr_company_id" class="form-select form-select-sm">
+                                <option value="">{{ __('— Select —') }}</option>
+                                @foreach($companies ?? [] as $company)
+                                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label for="dr_start_date" class="form-label">{{ __('Start date') }}</label>
+                                <input type="date" name="start_date" id="dr_start_date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label for="dr_end_date" class="form-label">{{ __('End date') }}</label>
+                                <input type="date" name="end_date" id="dr_end_date" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        <div class="mb-2 mt-2">
+                            <label for="dr_note" class="form-label">{{ __('Note') }}</label>
+                            <textarea name="note" id="dr_note" class="form-control form-control-sm" rows="2" maxlength="1000" placeholder="{{ __('e.g. Need assistance for bulk teacher hiring') }}"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary" id="walletDedicatedRecruiterSubmitBtn">{{ __('Submit request') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Multiple Login / Add Sub-Account (250 credits, immediate deduct) --}}
+    <div class="modal fade" id="walletMultipleLoginModal" tabindex="-1" aria-labelledby="walletMultipleLoginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletMultipleLoginModalLabel">{{ __('Multiple Login / Add Sub-Account') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletMultipleLoginForm">
+                    @csrf
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3">{{ __('250 credits will be deducted. Sub-account can log in and manage recruitment.') }}</p>
+                        <div class="mb-2">
+                            <label for="ml_email" class="form-label">{{ __('Email') }} <span class="text-danger">*</span></label>
+                            <input type="email" name="email" id="ml_email" class="form-control form-control-sm" required placeholder="hr@school.com">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_name" class="form-label">{{ __('Name') }} <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="ml_name" class="form-control form-control-sm" required maxlength="255" placeholder="{{ __('e.g. HR Manager') }}">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_role" class="form-label">{{ __('Role') }}</label>
+                            <input type="text" name="role" id="ml_role" class="form-control form-control-sm" maxlength="60" placeholder="{{ __('e.g. Recruiter') }}">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_password" class="form-label">{{ __('Password') }} <span class="text-danger">*</span></label>
+                            <input type="password" name="password" id="ml_password" class="form-control form-control-sm" required minlength="6" placeholder="••••••">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_password_confirmation" class="form-label">{{ __('Confirm Password') }} <span class="text-danger">*</span></label>
+                            <input type="password" name="password_confirmation" id="ml_password_confirmation" class="form-control form-control-sm" required minlength="6" placeholder="••••••">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary" id="walletMultipleLoginSubmitBtn">{{ __('Add Sub-Account') }}</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -411,12 +581,177 @@
                 .finally(function() { profileViewBtn.disabled = false; });
             });
         }
+
+        var socialPromotionForm = document.getElementById('walletSocialPromotionForm');
+        if (socialPromotionForm) {
+            socialPromotionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletSocialPromotionSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(socialPromotionForm);
+                fetch('{{ route('public.account.social-promotion-request.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletSocialPromotionModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request submitted.') }}');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() {
+                    alert('{{ __('Something went wrong.') }}');
+                })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
+
+        var dedicatedRecruiterForm = document.getElementById('walletDedicatedRecruiterForm');
+        if (dedicatedRecruiterForm) {
+            dedicatedRecruiterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletDedicatedRecruiterSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(dedicatedRecruiterForm);
+                fetch('{{ route('public.account.dedicated-recruiter-request.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletDedicatedRecruiterModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request submitted.') }}');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() {
+                    alert('{{ __('Something went wrong.') }}');
+                })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
+
+        var multipleLoginForm = document.getElementById('walletMultipleLoginForm');
+        if (multipleLoginForm) {
+            multipleLoginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletMultipleLoginSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(multipleLoginForm);
+                var body = {};
+                formData.forEach(function(v, k) { body[k] = v; });
+                fetch('{{ route('public.account.team-members.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletMultipleLoginModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Sub-account created.') }}');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() {
+                    alert('{{ __('Something went wrong.') }}');
+                })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
     });
     </script>
     @endpush
 
+    {{-- Pending credit requests (Social Promotion + Dedicated Recruiter: credits deducted when admin approves) --}}
+    @php
+        $hasPendingSocial = $account->isEmployer() && isset($socialPromotionRequests) && $socialPromotionRequests->where('status', 'pending')->isNotEmpty();
+        $hasPendingDR = $account->isEmployer() && isset($dedicatedRecruiterRequests) && $dedicatedRecruiterRequests->where('status', 'pending')->isNotEmpty();
+        $hasAnyPending = $hasPendingSocial || $hasPendingDR;
+    @endphp
+    @if($hasAnyPending)
+    <x-core::card class="mb-4">
+        <x-core::card.header>
+            <x-core::card.title>
+                <x-core::icon name="ti ti-clock" class="me-2" />
+                {{ __('Pending requests') }}
+            </x-core::card.title>
+        </x-core::card.header>
+        <x-core::card.body class="p-0">
+            <p class="small text-muted px-3 pt-2 mb-0">{{ __('Credits will be deducted when admin approves.') }}</p>
+            <ul class="list-group list-group-flush">
+                @foreach(($socialPromotionRequests ?? collect())->where('status', 'pending') as $req)
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            {{ __('Social Promotion') }} – {{ $req->platform ?: __('Social') }}
+                            @if($req->title)<span class="text-muted">({{ \Illuminate\Support\Str::limit($req->title, 40) }})</span>@endif
+                            <br><small class="text-muted">{{ __('Requested') }}: {{ $req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—' }}</small>
+                        </span>
+                        <span class="badge bg-warning text-dark">{{ __('Pending') }}</span>
+                    </li>
+                @endforeach
+                @foreach(($dedicatedRecruiterRequests ?? collect())->where('status', 'pending') as $req)
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            {{ __('Dedicated Recruiter / Personal Account Manager') }} – {{ $req->duration_months }} {{ __('month(s)') }}
+                            <br><small class="text-muted">{{ __('Requested') }}: {{ $req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—' }}</small>
+                        </span>
+                        <span class="badge bg-warning text-dark">{{ __('Pending') }}</span>
+                    </li>
+                @endforeach
+            </ul>
+        </x-core::card.body>
+    </x-core::card>
+    @endif
+
     <div class="wallet-consumption-invoice-section">
-    {{-- Consumption Report --}}
+    {{-- Consumption Report (includes pending requests) --}}
+    @php
+        $pendingSocial = ($account->isEmployer() && isset($socialPromotionRequests) && $socialPromotionRequests) ? $socialPromotionRequests->where('status', 'pending') : collect();
+        $pendingDR = ($account->isEmployer() && isset($dedicatedRecruiterRequests) && $dedicatedRecruiterRequests) ? $dedicatedRecruiterRequests->where('status', 'pending') : collect();
+        $hasPending = $pendingSocial->isNotEmpty() || $pendingDR->isNotEmpty();
+        $hasTransactions = $transactions->isNotEmpty();
+        $showConsumptionTable = $hasTransactions || $hasPending;
+    @endphp
     <x-core::card class="mb-4">
         <x-core::card.header>
             <x-core::card.title>
@@ -425,10 +760,9 @@
             </x-core::card.title>
         </x-core::card.header>
         <x-core::card.body class="p-0">
-            @if($transactions->isNotEmpty())
+            @if($showConsumptionTable)
                 <div class="table-responsive">
                     <table class="table table-vcenter table-hover card-table mb-0 wallet-consumption-table" style="table-layout: fixed; width: 100%;">
-                        
                         <thead>
                             <tr>
                                 <th>{{ trans('plugins/job-board::dashboard.wallet_sl_no') }}</th>
@@ -437,6 +771,7 @@
                                 <th>{{ __('Package') }}</th>
                                 <th>{{ trans('plugins/job-board::dashboard.wallet_valid_till') }}</th>
                                 <th class="text-end">{{ trans('plugins/job-board::dashboard.wallet_amount_coins') }}</th>
+                                <th>{{ trans('plugins/job-board::dashboard.wallet_status') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -444,7 +779,34 @@
                                 $runningBalance = $account->credits;
                                 $sn = 0;
                                 $packageValidFeatures = [\Botble\JobBoard\Models\CreditConsumption::FEATURE_FEATURED_JOB, \Botble\JobBoard\Models\CreditConsumption::FEATURE_FEATURED_PROFILE_EMPLOYER, \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY, \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE];
+                                $socialPromotionCredits = 3000;
+                                $dedicatedRecruiterCredits = 5000;
                             @endphp
+                            {{-- Pending requests first (credits to be deducted when admin approves) --}}
+                            @foreach($pendingSocial as $req)
+                                @php $sn++; @endphp
+                                <tr>
+                                    <td>{{ $sn }}</td>
+                                    <td class="text-nowrap">{{ $req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—' }}</td>
+                                    <td class="wallet-txn-description">{{ __('Post/Promote on LinkedIn/Other Social Pages') }}@if($req->title) – {{ \Illuminate\Support\Str::limit($req->title, 30) }}@endif</td>
+                                    <td>—</td>
+                                    <td class="text-nowrap small">—</td>
+                                    <td class="text-end"><span class="text-warning fw-medium">-{{ format_credits_short($socialPromotionCredits) }}</span></td>
+                                    <td><span class="badge bg-warning text-dark">{{ __('Pending') }}</span></td>
+                                </tr>
+                            @endforeach
+                            @foreach($pendingDR as $req)
+                                @php $sn++; @endphp
+                                <tr>
+                                    <td>{{ $sn }}</td>
+                                    <td class="text-nowrap">{{ $req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—' }}</td>
+                                    <td class="wallet-txn-description">{{ __('Dedicated Recruiter / Personal Account Manager') }} – {{ $req->duration_months }} {{ __('month(s)') }}</td>
+                                    <td>—</td>
+                                    <td class="text-nowrap small">—</td>
+                                    <td class="text-end"><span class="text-warning fw-medium">-{{ format_credits_short($dedicatedRecruiterCredits) }}</span></td>
+                                    <td><span class="badge bg-warning text-dark">{{ __('Pending') }}</span></td>
+                                </tr>
+                            @endforeach
                             @foreach($transactions as $txn)
                                 @php
                                     $sn++;
@@ -470,6 +832,7 @@
                                             <span class="text-danger fw-medium">-{{ format_credits_short($txn->credits) }}</span>
                                         @endif
                                     </td>
+                                    <td>—</td>
                                 </tr>
                             @endforeach
                         </tbody>

@@ -470,20 +470,20 @@
         'use strict';
         window.onload = function() {
             <?php if(session()->has('success_msg')): ?>
-                window.showAlert('text-success', "<?php echo addslashes(session('success_msg')); ?>");
+                window.showAlert("<?php echo addslashes(session('success_msg')); ?>", 'success');
             <?php endif; ?>
             <?php if(session()->has('status')): ?>
-                window.showAlert('text-success', "<?php echo addslashes(session('status')); ?>");
+                window.showAlert("<?php echo addslashes(session('status')); ?>", 'success');
             <?php endif; ?>
             <?php if(session()->has('error_msg')): ?>
-                window.showAlert('text-danger', "<?php echo addslashes(session('error_msg')); ?>");
+                window.showAlert("<?php echo addslashes(session('error_msg')); ?>", 'danger');
             <?php endif; ?>
             <?php if(isset($error_msg)): ?>
-                window.showAlert('text-danger', "<?php echo addslashes($error_msg); ?>");
+                window.showAlert("<?php echo addslashes($error_msg); ?>", 'danger');
             <?php endif; ?>
             <?php if(isset($errors)): ?>
                 <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    window.showAlert('text-danger', "<?php echo addslashes($error); ?>");
+                    window.showAlert("<?php echo addslashes($error); ?>", 'danger');
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             <?php endif; ?>
         };

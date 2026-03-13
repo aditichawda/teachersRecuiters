@@ -26,4 +26,18 @@ return [
     'title' => 'Title',
     'feature_helper_text' => 'Ex: 60-Day Properties/Project Postings',
     'feature_title' => 'Feature title',
+
+    'package_feature_options' => 'Package feature options',
+    'employer_features' => 'Employer package features',
+    'job_seeker_features' => 'Job seeker package features',
+    'number_of_listings_help' => 'Job postings (database access)',
+    'job_apply_limit' => 'Job apply limit',
+    'job_apply_limit_placeholder' => 'Max job applications in package period (e.g. 25)',
+    'feature_featured_profile' => 'Featured Profile',
+    'feature_admission_form_on_profile' => 'Admission Form on Profile',
+    'feature_resume_builder' => 'Resume Builder',
+    'feature_basic_cv' => 'Basic CV',
+    'feature_advance_cv' => 'Advance CV',
+    'feature_view_school_contact_info' => 'View School Contact Info',
+    'feature_job_alerts_whatsapp' => 'Job Alerts on WhatsApp',
 ];

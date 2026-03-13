@@ -302,21 +302,7 @@
                 @if ($company->description && !empty(trim($company->description)))
                     <p class="cd-hero-desc">{{ Str::limit($company->description, 200) }}</p>
                 @endif
-                @php
-                    $admissionOpen = false;
-                    if ($company->admission && isset($company->admission->status) && $company->admission->status === 'published') {
-                        $content = $company->admission->content ?? '';
-                        $deadline = $company->admission->admission_deadline ?? null;
-                        if (trim($content) !== '' && $deadline) {
-                            try {
-                                $admissionOpen = !\Carbon\Carbon::parse($deadline)->endOfDay()->isPast();
-                            } catch (\Exception $e) {
-                                $admissionOpen = false;
-                            }
-                        }
-                    }
-                @endphp
-                @if ($admissionOpen)
+                @if (!empty($showAdmissionOnProfile) && $company->admission)
                 <div class="mt-3">
                     <button type="button" class="btn btn-primary px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#admissionEnquiryModal" style="background: linear-gradient(135deg, #059669, #047857); border: none;">
                         <i class="fas fa-graduation-cap me-2"></i>{{ __('Admission Enquiry') }}
@@ -670,8 +656,8 @@
                     </div>
                 @endif
 
-                {{-- Admission Section + Enquiry Form: only when employer has added About School/Institution and deadline has not passed --}}
-                @if (isset($admissionOpen) && $admissionOpen && $company->admission)
+                {{-- Admission Section: unlocked when package has "Admission Form on Profile" or credits entitlement --}}
+                @if (!empty($showAdmissionOnProfile) && $company->admission)
                 <div class="cd-content-card">
                     <h4 class="cd-section-title">{{ __('Get Admission with :name', ['name' => $company->name]) }}</h4>
                     <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;">{{ __('About School / Institution') }}</h5>
@@ -682,6 +668,31 @@
                     <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;">{{ __('Enquiry Form') }}</h5>
                     <p class="text-muted small mb-3">{{ __('Submit your admission enquiry using the form below or use the button above.') }}</p>
                     @include(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company])
+                </div>
+                @elseif (!empty($admissionFormLocked))
+                {{-- Admission Form Locked: show for owner with "Unlock with X credits" --}}
+                <div class="cd-content-card" style="border: 2px dashed #e2e8f0; background: #f8fafc;">
+                    <h4 class="cd-section-title mb-3">
+                        <i class="fas fa-lock text-secondary me-2"></i>{{ __('Admission Form on Profile') }} – {{ __('Locked') }}
+                    </h4>
+                    <p class="text-muted mb-3">{{ __('This feature is not included in your current package. Add "Admission Form on Profile" to your package or unlock it with credits to show the admission enquiry form on your institution profile.') }}</p>
+                    @if (!empty($isOwner))
+                        @if (!empty($canUnlockAdmission))
+                            <form action="{{ route('public.account.wallet.unlock_admission_form') }}" method="POST" class="d-inline">
+                                @csrf
+                                <input type="hidden" name="redirect_url" value="{{ $company->url }}">
+                                <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill">
+                                    <i class="fas fa-coins me-2"></i>{{ __('Unlock with :credits credits', ['credits' => $admissionUnlockCredits]) }}
+                                </button>
+                            </form>
+                        @elseif (isset($admissionUnlockCredits) && $admissionUnlockCredits > 0)
+                            <p class="mb-0">
+                                <a href="{{ route('public.account.wallet') }}" class="btn btn-outline-primary px-4 py-2 rounded-pill">
+                                    <i class="fas fa-wallet me-2"></i>{{ __('Add credits to unlock') }} ({{ __(':credits credits required', ['credits' => $admissionUnlockCredits]) }})
+                                </a>
+                            </p>
+                        @endif
+                    @endif
                 </div>
                 @endif
             </div>
@@ -784,8 +795,8 @@
     </div>
 </div>
 
-{{-- Admission Enquiry Modal - only when admission is open (content + deadline not passed) --}}
-@if (isset($admissionOpen) && $admissionOpen)
+{{-- Admission Enquiry Modal - when admission shown on profile (package feature or open deadline) --}}
+@if (!empty($showAdmissionOnProfile) && $company->admission)
 <style>
 #admissionEnquiryModal .modal-dialog { max-width: 520px; }
 #admissionEnquiryModal .modal-body { padding: 1rem 1.25rem 1.5rem; }

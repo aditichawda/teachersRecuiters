@@ -13,6 +13,7 @@ use Botble\JobBoard\Http\Requests\CreditConsumptionRequest;
 use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Tables\CreditConsumptionTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CreditConsumptionController extends BaseController
 {
@@ -53,16 +54,17 @@ class CreditConsumptionController extends BaseController
             $created = [];
 
             foreach ($features as $row) {
-                $key = $this->getRepeaterValueFromRow($row, 'feature_key');
                 $label = $this->getRepeaterValueFromRow($row, 'feature_label');
                 $credits = (int) $this->getRepeaterValueFromRow($row, 'credits');
 
-                if ($key === '' && $label === '' && $credits === 0) {
+                if ($label === '' && $credits === 0) {
                     continue;
                 }
-                if ($key === '' || $label === '') {
+                if ($label === '') {
                     continue;
                 }
+
+                $key = $this->generateFeatureKeyFromLabel($label);
 
                 $item = CreditConsumption::query()->create([
                     'account_type' => $accountType,
@@ -91,7 +93,11 @@ class CreditConsumptionController extends BaseController
                     : trans('core/base::notices.no_select'));
         }
 
-        $item = CreditConsumption::query()->create($request->input());
+        $input = $request->input();
+        if (empty($input['feature_key']) && ! empty($input['feature_label'])) {
+            $input['feature_key'] = $this->generateFeatureKeyFromLabel($input['feature_label']);
+        }
+        $item = CreditConsumption::query()->create($input);
 
         event(new CreatedContentEvent(CREDIT_CONSUMPTION_MODULE_SCREEN_NAME, $request, $item));
 
@@ -100,6 +106,15 @@ class CreditConsumptionController extends BaseController
             ->setPreviousUrl(route('credit-consumption.index'))
             ->setNextUrl(route('credit-consumption.edit', $item->id))
             ->withCreatedSuccessMessage();
+    }
+
+    /**
+     * Generate a feature key from label (e.g. "Job Posting" → job_posting).
+     */
+    private function generateFeatureKeyFromLabel(string $label): string
+    {
+        $key = Str::slug(Str::lower($label), '_');
+        return $key !== '' ? $key : 'feature_' . uniqid();
     }
 
     /**
@@ -134,7 +149,14 @@ class CreditConsumptionController extends BaseController
 
     public function update(CreditConsumption $creditConsumption, CreditConsumptionRequest $request)
     {
-        $creditConsumption->fill($request->input());
+        $input = $request->input();
+        $label = $input['feature_label'] ?? $creditConsumption->feature_label;
+        if (empty($input['feature_key'])) {
+            $input['feature_key'] = (string) $creditConsumption->feature_key !== ''
+                ? $creditConsumption->feature_key
+                : $this->generateFeatureKeyFromLabel((string) $label);
+        }
+        $creditConsumption->fill($input);
         $creditConsumption->save();
 
         event(new UpdatedContentEvent(CREDIT_CONSUMPTION_MODULE_SCREEN_NAME, $request, $creditConsumption));

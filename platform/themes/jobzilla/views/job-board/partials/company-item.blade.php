@@ -1,7 +1,7 @@
 <div class="col-lg-4 col-md-6">
     <div class="card text-center mb-4">
         <div class="card-body px-4 py-5">
-            @if ($company->is_featured)
+            @if ($company->effective_is_featured)
                 <div class="featured-label">
                     <span class="featured">{{ __('featured') }}</span>
                 </div>

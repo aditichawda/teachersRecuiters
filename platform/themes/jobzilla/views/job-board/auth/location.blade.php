@@ -466,23 +466,25 @@
                 url: '{{ route("ajax.search-cities") }}',
                 type: 'GET',
                 data: { default_country: '1', page: page },
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 success: function(response) {
-                    const data = response.data || {};
-                    const cities = data.cities || [];
+                    const data = response.data != null ? response.data : {};
+                    const cities = Array.isArray(data) ? data : (data.cities || []);
                     const hasMore = data.has_more || false;
                     if (!append) $suggestions.empty();
                     if (cities.length === 0 && !append) {
-                        $suggestions.html('<div class="city-no-results">No cities found</div>');
+                        $suggestions.html('<div class="city-no-results">No cities found</div>').addClass('show');
                         indiaLoading = false;
                         return;
                     }
                     $('#city-loading-more').remove();
                     $suggestions.append(renderCityItems(cities));
+                    if (!append) $suggestions.addClass('show');
                     $suggestions.data('india-page', page);
                     $suggestions.data('india-has-more', hasMore);
                 },
-                error: function() {
-                    if (!append) $suggestions.html('<div class="city-no-results">Error loading cities</div>');
+                error: function(xhr) {
+                    if (!append) $suggestions.html('<div class="city-no-results">Error loading cities</div>').addClass('show');
                     $('#city-loading-more').remove();
                 },
                 complete: function() { indiaLoading = false; }
@@ -530,8 +532,10 @@
                     url: '{{ route("ajax.search-cities") }}',
                     type: 'GET',
                     data: { k: keyword },
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     success: function(response) {
-                        const cities = response.data || [];
+                        const raw = response.data != null ? response.data : [];
+                        const cities = Array.isArray(raw) ? raw : (raw.cities || []);
                         
                         if (cities.length === 0) {
                             $suggestions.html('<div class="city-no-results">No cities found</div>');

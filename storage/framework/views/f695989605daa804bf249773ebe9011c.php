@@ -515,6 +515,21 @@
                                                     <?php echo e(trans('plugins/job-board::dashboard.wallet_use_credits_for_profile_view')); ?>
 
                                                 </button>
+                                            <?php elseif($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_SOCIAL_PROMOTION): ?>
+                                                <button type="button" class="btn btn-xs btn-outline-primary" data-bs-toggle="modal" data-bs-target="#walletSocialPromotionModal" title="<?php echo e(__('Submit request. Credits deducted when admin approves.')); ?>">
+                                                    <?php echo e(__('Use credits')); ?>
+
+                                                </button>
+                                            <?php elseif($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_DEDICATED_RECRUITER): ?>
+                                                <button type="button" class="btn btn-xs btn-outline-primary" data-bs-toggle="modal" data-bs-target="#walletDedicatedRecruiterModal" title="<?php echo e(__('Submit request. Credits deducted when admin approves.')); ?>">
+                                                    <?php echo e(__('Use credits')); ?>
+
+                                                </button>
+                                            <?php elseif($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_MULTIPLE_LOGIN): ?>
+                                                <button type="button" class="btn btn-xs btn-outline-primary" data-bs-toggle="modal" data-bs-target="#walletMultipleLoginModal" title="<?php echo e(__('Add sub-account. 250 credits per login.')); ?>">
+                                                    <?php echo e(__('Use credits')); ?>
+
+                                                </button>
                                             <?php elseif($key !== \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING): ?>
                                                 <?php if($featureActiveWithPackage && isset($packageExpiryAt) && $packageExpiryAt): ?>
                                                     <span class="badge bg-success" title="<?php echo e(trans('plugins/job-board::dashboard.wallet_valid_till_package', ['date' => $packageExpiryAt->format('M d, Y')])); ?>"><?php echo e(__('Valid till')); ?> <?php echo e($packageExpiryAt->format('M d, Y')); ?></span>
@@ -668,6 +683,164 @@
     </div>
     <?php endif; ?>
 
+    
+    <?php if($account->isEmployer()): ?>
+    <div class="modal fade" id="walletSocialPromotionModal" tabindex="-1" aria-labelledby="walletSocialPromotionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletSocialPromotionModalLabel"><?php echo e(__('Post/Promote on LinkedIn/Other Social Pages')); ?></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletSocialPromotionForm">
+                    <?php echo csrf_field(); ?>
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3"><?php echo e(__('3000 credits will be deducted when admin approves your request.')); ?></p>
+                        <div class="mb-2">
+                            <label for="social_promotion_company_id" class="form-label"><?php echo e(__('Institution')); ?></label>
+                            <select name="company_id" id="social_promotion_company_id" class="form-select form-select-sm">
+                                <option value=""><?php echo e(__('— Select —')); ?></option>
+                                <?php $__currentLoopData = $companies ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $company): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($company->id); ?>"><?php echo e($company->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label for="social_promotion_title" class="form-label"><?php echo e(__('Title')); ?></label>
+                                <input type="text" name="title" id="social_promotion_title" class="form-control form-control-sm" maxlength="255" placeholder="<?php echo e(__('Title')); ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="social_promotion_tag" class="form-label"><?php echo e(__('Tag')); ?></label>
+                                <input type="text" name="tag" id="social_promotion_tag" class="form-control form-control-sm" maxlength="255" placeholder="<?php echo e(__('Tag')); ?>">
+                            </div>
+                        </div>
+                        <div class="mb-2 mt-2">
+                            <label for="social_promotion_platform" class="form-label"><?php echo e(__('Platform')); ?> <span class="text-danger">*</span></label>
+                            <select name="platform" id="social_promotion_platform" class="form-select form-select-sm" required>
+                                <option value=""><?php echo e(__('— Select —')); ?></option>
+                                <option value="LinkedIn">LinkedIn</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="Twitter">Twitter</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="social_promotion_message" class="form-label"><?php echo e(__('Message')); ?></label>
+                            <textarea name="message" id="social_promotion_message" class="form-control form-control-sm" rows="3" maxlength="2000" placeholder="<?php echo e(__('Message / Description')); ?>"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label for="social_promotion_image" class="form-label"><?php echo e(__('Image')); ?></label>
+                            <input type="file" name="image" id="social_promotion_image" class="form-control form-control-sm" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
+                            <small class="text-muted"><?php echo e(__('Optional. JPG, PNG, GIF, WebP. Max 5MB.')); ?></small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo e(__('Cancel')); ?></button>
+                        <button type="submit" class="btn btn-primary" id="walletSocialPromotionSubmitBtn"><?php echo e(__('Submit request')); ?></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="modal fade" id="walletDedicatedRecruiterModal" tabindex="-1" aria-labelledby="walletDedicatedRecruiterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletDedicatedRecruiterModalLabel"><?php echo e(__('Dedicated Recruiter / Personal Account Manager')); ?></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletDedicatedRecruiterForm">
+                    <?php echo csrf_field(); ?>
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3"><?php echo e(__('5000 credits will be deducted when admin approves your request.')); ?></p>
+                        <div class="mb-2">
+                            <label for="dr_duration_months" class="form-label"><?php echo e(__('Duration (months)')); ?> <span class="text-danger">*</span></label>
+                            <select name="duration_months" id="dr_duration_months" class="form-select form-select-sm" required>
+                                <?php for($i = 1; $i <= 24; $i++): ?>
+                                    <option value="<?php echo e($i); ?>"><?php echo e($i); ?> <?php echo e($i === 1 ? __('month') : __('months')); ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="dr_company_id" class="form-label"><?php echo e(__('Institution')); ?></label>
+                            <select name="company_id" id="dr_company_id" class="form-select form-select-sm">
+                                <option value=""><?php echo e(__('— Select —')); ?></option>
+                                <?php $__currentLoopData = $companies ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $company): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($company->id); ?>"><?php echo e($company->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label for="dr_start_date" class="form-label"><?php echo e(__('Start date')); ?></label>
+                                <input type="date" name="start_date" id="dr_start_date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label for="dr_end_date" class="form-label"><?php echo e(__('End date')); ?></label>
+                                <input type="date" name="end_date" id="dr_end_date" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        <div class="mb-2 mt-2">
+                            <label for="dr_note" class="form-label"><?php echo e(__('Note')); ?></label>
+                            <textarea name="note" id="dr_note" class="form-control form-control-sm" rows="2" maxlength="1000" placeholder="<?php echo e(__('e.g. Need assistance for bulk teacher hiring')); ?>"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo e(__('Cancel')); ?></button>
+                        <button type="submit" class="btn btn-primary" id="walletDedicatedRecruiterSubmitBtn"><?php echo e(__('Submit request')); ?></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="modal fade" id="walletMultipleLoginModal" tabindex="-1" aria-labelledby="walletMultipleLoginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletMultipleLoginModalLabel"><?php echo e(__('Multiple Login / Add Sub-Account')); ?></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletMultipleLoginForm">
+                    <?php echo csrf_field(); ?>
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3"><?php echo e(__('250 credits will be deducted. Sub-account can log in and manage recruitment.')); ?></p>
+                        <div class="mb-2">
+                            <label for="ml_email" class="form-label"><?php echo e(__('Email')); ?> <span class="text-danger">*</span></label>
+                            <input type="email" name="email" id="ml_email" class="form-control form-control-sm" required placeholder="hr@school.com">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_name" class="form-label"><?php echo e(__('Name')); ?> <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="ml_name" class="form-control form-control-sm" required maxlength="255" placeholder="<?php echo e(__('e.g. HR Manager')); ?>">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_role" class="form-label"><?php echo e(__('Role')); ?></label>
+                            <input type="text" name="role" id="ml_role" class="form-control form-control-sm" maxlength="60" placeholder="<?php echo e(__('e.g. Recruiter')); ?>">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_password" class="form-label"><?php echo e(__('Password')); ?> <span class="text-danger">*</span></label>
+                            <input type="password" name="password" id="ml_password" class="form-control form-control-sm" required minlength="6" placeholder="••••••">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_password_confirmation" class="form-label"><?php echo e(__('Confirm Password')); ?> <span class="text-danger">*</span></label>
+                            <input type="password" name="password_confirmation" id="ml_password_confirmation" class="form-control form-control-sm" required minlength="6" placeholder="••••••">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo e(__('Cancel')); ?></button>
+                        <button type="submit" class="btn btn-primary" id="walletMultipleLoginSubmitBtn"><?php echo e(__('Add Sub-Account')); ?></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <?php $__env->startPush('footer'); ?>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -792,11 +965,266 @@
                 .finally(function() { profileViewBtn.disabled = false; });
             });
         }
+
+        var socialPromotionForm = document.getElementById('walletSocialPromotionForm');
+        if (socialPromotionForm) {
+            socialPromotionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletSocialPromotionSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(socialPromotionForm);
+                fetch('<?php echo e(route('public.account.social-promotion-request.store')); ?>', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletSocialPromotionModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '<?php echo e(__('Request submitted.')); ?>');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '<?php echo e(__('Request failed.')); ?>');
+                    }
+                })
+                .catch(function() {
+                    alert('<?php echo e(__('Something went wrong.')); ?>');
+                })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
+
+        var dedicatedRecruiterForm = document.getElementById('walletDedicatedRecruiterForm');
+        if (dedicatedRecruiterForm) {
+            dedicatedRecruiterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletDedicatedRecruiterSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(dedicatedRecruiterForm);
+                fetch('<?php echo e(route('public.account.dedicated-recruiter-request.store')); ?>', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletDedicatedRecruiterModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '<?php echo e(__('Request submitted.')); ?>');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '<?php echo e(__('Request failed.')); ?>');
+                    }
+                })
+                .catch(function() {
+                    alert('<?php echo e(__('Something went wrong.')); ?>');
+                })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
+
+        var multipleLoginForm = document.getElementById('walletMultipleLoginForm');
+        if (multipleLoginForm) {
+            multipleLoginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletMultipleLoginSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(multipleLoginForm);
+                var body = {};
+                formData.forEach(function(v, k) { body[k] = v; });
+                fetch('<?php echo e(route('public.account.team-members.store')); ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletMultipleLoginModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '<?php echo e(__('Sub-account created.')); ?>');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '<?php echo e(__('Request failed.')); ?>');
+                    }
+                })
+                .catch(function() {
+                    alert('<?php echo e(__('Something went wrong.')); ?>');
+                })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
     });
     </script>
     <?php $__env->stopPush(); ?>
 
+<<<<<<< HEAD
 >>>>>>> 7f84a288 (9 march update)
+=======
+    
+    <?php
+        $hasPendingSocial = $account->isEmployer() && isset($socialPromotionRequests) && $socialPromotionRequests->where('status', 'pending')->isNotEmpty();
+        $hasPendingDR = $account->isEmployer() && isset($dedicatedRecruiterRequests) && $dedicatedRecruiterRequests->where('status', 'pending')->isNotEmpty();
+        $hasAnyPending = $hasPendingSocial || $hasPendingDR;
+    ?>
+    <?php if($hasAnyPending): ?>
+    <?php if (isset($component)) { $__componentOriginalc107e2f90dff5eb05519f33918d2c807 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalc107e2f90dff5eb05519f33918d2c807 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::card.index','data' => ['class' => 'mb-4']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::card'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'mb-4']); ?>
+        <?php if (isset($component)) { $__componentOriginalf7ec4b8ef3fc6db54b9665bd653222c4 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalf7ec4b8ef3fc6db54b9665bd653222c4 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::card.header.index','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::card.header'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+            <?php if (isset($component)) { $__componentOriginal61297c2b6766060b621d6f9a17b28154 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal61297c2b6766060b621d6f9a17b28154 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::card.title','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::card.title'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+                <?php if (isset($component)) { $__componentOriginal73995948b3bd877b76251b40caf28170 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal73995948b3bd877b76251b40caf28170 = $attributes; } ?>
+<?php $component = Botble\Icon\View\Components\Icon::resolve(['name' => 'ti ti-clock'] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::icon'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Botble\Icon\View\Components\Icon::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'me-2']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $attributes = $__attributesOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__attributesOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $component = $__componentOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__componentOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+                <?php echo e(__('Pending requests')); ?>
+
+             <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal61297c2b6766060b621d6f9a17b28154)): ?>
+<?php $attributes = $__attributesOriginal61297c2b6766060b621d6f9a17b28154; ?>
+<?php unset($__attributesOriginal61297c2b6766060b621d6f9a17b28154); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal61297c2b6766060b621d6f9a17b28154)): ?>
+<?php $component = $__componentOriginal61297c2b6766060b621d6f9a17b28154; ?>
+<?php unset($__componentOriginal61297c2b6766060b621d6f9a17b28154); ?>
+<?php endif; ?>
+         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalf7ec4b8ef3fc6db54b9665bd653222c4)): ?>
+<?php $attributes = $__attributesOriginalf7ec4b8ef3fc6db54b9665bd653222c4; ?>
+<?php unset($__attributesOriginalf7ec4b8ef3fc6db54b9665bd653222c4); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalf7ec4b8ef3fc6db54b9665bd653222c4)): ?>
+<?php $component = $__componentOriginalf7ec4b8ef3fc6db54b9665bd653222c4; ?>
+<?php unset($__componentOriginalf7ec4b8ef3fc6db54b9665bd653222c4); ?>
+<?php endif; ?>
+        <?php if (isset($component)) { $__componentOriginal4fdb92edf089f19cd17d37829580c9a6 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal4fdb92edf089f19cd17d37829580c9a6 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::card.body.index','data' => ['class' => 'p-0']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::card.body'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'p-0']); ?>
+            <p class="small text-muted px-3 pt-2 mb-0"><?php echo e(__('Credits will be deducted when admin approves.')); ?></p>
+            <ul class="list-group list-group-flush">
+                <?php $__currentLoopData = ($socialPromotionRequests ?? collect())->where('status', 'pending'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $req): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <?php echo e(__('Social Promotion')); ?> – <?php echo e($req->platform ?: __('Social')); ?>
+
+                            <?php if($req->title): ?><span class="text-muted">(<?php echo e(\Illuminate\Support\Str::limit($req->title, 40)); ?>)</span><?php endif; ?>
+                            <br><small class="text-muted"><?php echo e(__('Requested')); ?>: <?php echo e($req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—'); ?></small>
+                        </span>
+                        <span class="badge bg-warning text-dark"><?php echo e(__('Pending')); ?></span>
+                    </li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php $__currentLoopData = ($dedicatedRecruiterRequests ?? collect())->where('status', 'pending'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $req): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <?php echo e(__('Dedicated Recruiter / Personal Account Manager')); ?> – <?php echo e($req->duration_months); ?> <?php echo e(__('month(s)')); ?>
+
+                            <br><small class="text-muted"><?php echo e(__('Requested')); ?>: <?php echo e($req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—'); ?></small>
+                        </span>
+                        <span class="badge bg-warning text-dark"><?php echo e(__('Pending')); ?></span>
+                    </li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </ul>
+         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal4fdb92edf089f19cd17d37829580c9a6)): ?>
+<?php $attributes = $__attributesOriginal4fdb92edf089f19cd17d37829580c9a6; ?>
+<?php unset($__attributesOriginal4fdb92edf089f19cd17d37829580c9a6); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal4fdb92edf089f19cd17d37829580c9a6)): ?>
+<?php $component = $__componentOriginal4fdb92edf089f19cd17d37829580c9a6; ?>
+<?php unset($__componentOriginal4fdb92edf089f19cd17d37829580c9a6); ?>
+<?php endif; ?>
+     <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalc107e2f90dff5eb05519f33918d2c807)): ?>
+<?php $attributes = $__attributesOriginalc107e2f90dff5eb05519f33918d2c807; ?>
+<?php unset($__attributesOriginalc107e2f90dff5eb05519f33918d2c807); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalc107e2f90dff5eb05519f33918d2c807)): ?>
+<?php $component = $__componentOriginalc107e2f90dff5eb05519f33918d2c807; ?>
+<?php unset($__componentOriginalc107e2f90dff5eb05519f33918d2c807); ?>
+<?php endif; ?>
+    <?php endif; ?>
+
+>>>>>>> 4bffcdd8 (13 marh update)
     <div class="wallet-consumption-invoice-section">
 =======
 >>>>>>> 689f01a2 (payment update)
@@ -804,6 +1232,13 @@
     <div class="wallet-consumption-invoice-section">
 >>>>>>> 62ab1307 (3 feb update)
     
+    <?php
+        $pendingSocial = ($account->isEmployer() && isset($socialPromotionRequests) && $socialPromotionRequests) ? $socialPromotionRequests->where('status', 'pending') : collect();
+        $pendingDR = ($account->isEmployer() && isset($dedicatedRecruiterRequests) && $dedicatedRecruiterRequests) ? $dedicatedRecruiterRequests->where('status', 'pending') : collect();
+        $hasPending = $pendingSocial->isNotEmpty() || $pendingDR->isNotEmpty();
+        $hasTransactions = $transactions->isNotEmpty();
+        $showConsumptionTable = $hasTransactions || $hasPending;
+    ?>
     <?php if (isset($component)) { $__componentOriginalc107e2f90dff5eb05519f33918d2c807 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalc107e2f90dff5eb05519f33918d2c807 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::card.index','data' => ['class' => 'mb-4']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -886,11 +1321,12 @@
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['class' => 'p-0']); ?>
-            <?php if($transactions->isNotEmpty()): ?>
+            <?php if($showConsumptionTable): ?>
                 <div class="table-responsive">
 <<<<<<< HEAD
 <<<<<<< HEAD
                     <table class="table table-vcenter table-hover card-table mb-0 wallet-consumption-table" style="table-layout: fixed; width: 100%;">
+<<<<<<< HEAD
                         
 =======
                     <table class="table table-vcenter table-hover card-table mb-0">
@@ -899,6 +1335,8 @@
                     <table class="table table-vcenter table-hover card-table mb-0 wallet-consumption-table" style="table-layout: fixed; width: 100%;">
                         
 >>>>>>> 62ab1307 (3 feb update)
+=======
+>>>>>>> 4bffcdd8 (13 marh update)
                         <thead>
                             <tr>
                                 <th><?php echo e(trans('plugins/job-board::dashboard.wallet_sl_no')); ?></th>
@@ -919,6 +1357,7 @@
                                 <th><?php echo e(trans('plugins/job-board::dashboard.wallet_valid_till')); ?></th>
 >>>>>>> 7f84a288 (9 march update)
                                 <th class="text-end"><?php echo e(trans('plugins/job-board::dashboard.wallet_amount_coins')); ?></th>
+                                <th><?php echo e(trans('plugins/job-board::dashboard.wallet_status')); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -926,7 +1365,34 @@
                                 $runningBalance = $account->credits;
                                 $sn = 0;
                                 $packageValidFeatures = [\Botble\JobBoard\Models\CreditConsumption::FEATURE_FEATURED_JOB, \Botble\JobBoard\Models\CreditConsumption::FEATURE_FEATURED_PROFILE_EMPLOYER, \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY, \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE];
+                                $socialPromotionCredits = 3000;
+                                $dedicatedRecruiterCredits = 5000;
                             ?>
+                            
+                            <?php $__currentLoopData = $pendingSocial; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $req): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php $sn++; ?>
+                                <tr>
+                                    <td><?php echo e($sn); ?></td>
+                                    <td class="text-nowrap"><?php echo e($req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—'); ?></td>
+                                    <td class="wallet-txn-description"><?php echo e(__('Post/Promote on LinkedIn/Other Social Pages')); ?><?php if($req->title): ?> – <?php echo e(\Illuminate\Support\Str::limit($req->title, 30)); ?><?php endif; ?></td>
+                                    <td>—</td>
+                                    <td class="text-nowrap small">—</td>
+                                    <td class="text-end"><span class="text-warning fw-medium">-<?php echo e(format_credits_short($socialPromotionCredits)); ?></span></td>
+                                    <td><span class="badge bg-warning text-dark"><?php echo e(__('Pending')); ?></span></td>
+                                </tr>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $pendingDR; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $req): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php $sn++; ?>
+                                <tr>
+                                    <td><?php echo e($sn); ?></td>
+                                    <td class="text-nowrap"><?php echo e($req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—'); ?></td>
+                                    <td class="wallet-txn-description"><?php echo e(__('Dedicated Recruiter / Personal Account Manager')); ?> – <?php echo e($req->duration_months); ?> <?php echo e(__('month(s)')); ?></td>
+                                    <td>—</td>
+                                    <td class="text-nowrap small">—</td>
+                                    <td class="text-end"><span class="text-warning fw-medium">-<?php echo e(format_credits_short($dedicatedRecruiterCredits)); ?></span></td>
+                                    <td><span class="badge bg-warning text-dark"><?php echo e(__('Pending')); ?></span></td>
+                                </tr>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             <?php $__currentLoopData = $transactions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $txn): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <?php
                                     $sn++;
@@ -972,6 +1438,7 @@
 >>>>>>> 62ab1307 (3 feb update)
                                         <?php endif; ?>
                                     </td>
+                                    <td>—</td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>

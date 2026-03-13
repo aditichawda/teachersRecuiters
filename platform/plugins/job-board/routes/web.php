@@ -284,6 +284,57 @@ AdminHelper::registerRoutes(function (): void {
             ])->wherePrimaryKey('admission_enquiry');
         });
 
+        Route::group(['prefix' => 'dedicated-recruiter-requests', 'as' => 'dedicated-recruiter-requests.'], function (): void {
+            Route::match(['get', 'post'], '/', [
+                'as' => 'index',
+                'uses' => 'DedicatedRecruiterRequestController@index',
+                'permission' => 'dedicated-recruiter-requests.index',
+            ]);
+            Route::post('{id}/accept', [
+                'as' => 'accept',
+                'uses' => 'DedicatedRecruiterRequestController@accept',
+                'permission' => 'dedicated-recruiter-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::post('{id}/reject', [
+                'as' => 'reject',
+                'uses' => 'DedicatedRecruiterRequestController@reject',
+                'permission' => 'dedicated-recruiter-requests.index',
+            ])->where('id', '[0-9]+');
+        });
+
+        Route::group(['prefix' => 'social-promotion-requests', 'as' => 'social-promotion-requests.'], function (): void {
+            Route::match(['get', 'post'], '/', [
+                'as' => 'index',
+                'uses' => 'SocialPromotionRequestController@index',
+                'permission' => 'social-promotion-requests.index',
+            ]);
+            Route::get('{id}/edit', [
+                'as' => 'edit',
+                'uses' => 'SocialPromotionRequestController@edit',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::get('{id}/download-image', [
+                'as' => 'download-image',
+                'uses' => 'SocialPromotionRequestController@downloadImage',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::put('{id}', [
+                'as' => 'update',
+                'uses' => 'SocialPromotionRequestController@update',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::post('{id}/accept', [
+                'as' => 'accept',
+                'uses' => 'SocialPromotionRequestController@accept',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::post('{id}/reject', [
+                'as' => 'reject',
+                'uses' => 'SocialPromotionRequestController@reject',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+        });
+
         Route::group(['prefix' => 'job-applications', 'as' => 'job-applications.'], function (): void {
             Route::resource('', 'JobApplicationController')
                 ->except(['create', 'store'])

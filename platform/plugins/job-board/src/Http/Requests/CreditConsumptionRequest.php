@@ -28,7 +28,7 @@ class CreditConsumptionRequest extends Request
             $rules['features.*.1.value'] = ['nullable', 'string', 'max:255'];
             $rules['features.*.2.value'] = ['nullable', 'integer', 'min:0'];
         } else {
-            $rules['feature_key'] = ['required', 'string', 'max:100'];
+            $rules['feature_key'] = ['nullable', 'string', 'max:100'];
             $rules['feature_label'] = ['required', 'string', 'max:255'];
             $rules['credits'] = ['required', 'integer', 'min:0'];
             $rules['order'] = ['nullable', 'integer', 'min:0', 'max:127'];
