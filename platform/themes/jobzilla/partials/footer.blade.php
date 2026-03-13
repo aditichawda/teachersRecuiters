@@ -491,20 +491,20 @@
         'use strict';
         window.onload = function() {
             @if (session()->has('success_msg'))
-                window.showAlert('text-success', "{!! addslashes(session('success_msg')) !!}");
+                window.showAlert("{!! addslashes(session('success_msg')) !!}", 'success');
             @endif
             @if (session()->has('status'))
-                window.showAlert('text-success', "{!! addslashes(session('status')) !!}");
+                window.showAlert("{!! addslashes(session('status')) !!}", 'success');
             @endif
             @if (session()->has('error_msg'))
-                window.showAlert('text-danger', "{!! addslashes(session('error_msg')) !!}");
+                window.showAlert("{!! addslashes(session('error_msg')) !!}", 'danger');
             @endif
             @if (isset($error_msg))
-                window.showAlert('text-danger', "{!! addslashes($error_msg) !!}");
+                window.showAlert("{!! addslashes($error_msg) !!}", 'danger');
             @endif
             @if (isset($errors))
                 @foreach ($errors->all() as $error)
-                    window.showAlert('text-danger', "{!! addslashes($error) !!}");
+                    window.showAlert("{!! addslashes($error) !!}", 'danger');
                 @endforeach
             @endif
         };

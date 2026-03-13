@@ -1,4 +1,4 @@
-@php
+<?php
     Theme::layout('without-navbar');
     
     // Get countries
@@ -10,7 +10,7 @@
             ->pluck('name', 'id')
             ->toArray();
     }
-@endphp
+?>
 
 <style>
     .employer-location-wrapper {
@@ -286,7 +286,7 @@
          
 
             <form id="location-form">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="city_id" id="city_id" value="" />
                 
                 <!-- City (Primary - Search) -->
@@ -311,9 +311,9 @@
                     <label class="form-label">Country</label>
                     <select name="country_id" id="country_id" class="form-select" disabled>
                         <option value="">Select Country</option>
-                        @foreach($countries as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $countries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($id); ?>"><?php echo e($name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
 
@@ -325,7 +325,7 @@
             </form>
 
             <p class="mt-4 text-center">
-                <a href="{{ route('public.account.register.employer.institutionTypePage') }}" class="back-link">
+                <a href="<?php echo e(route('public.account.register.employer.institutionTypePage')); ?>" class="back-link">
                     <i class="ti ti-arrow-left"></i> Back
                 </a>
             </p>
@@ -372,7 +372,7 @@ $(document).ready(function() {
             $suggestions.append('<div class="city-loading city-loading-more" id="city-loading-more">Loading...</div>');
         }
         $.ajax({
-            url: '{{ route("ajax.search-cities") }}',
+            url: '<?php echo e(route("ajax.search-cities")); ?>',
             type: 'GET',
             data: { default_country: '1', page: page },
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -438,27 +438,13 @@ $(document).ready(function() {
 
         searchTimeout = setTimeout(function() {
             $.ajax({
-                url: '{{ route("ajax.search-cities") }}',
+                url: '<?php echo e(route("ajax.search-cities")); ?>',
                 type: 'GET',
                 data: { k: keyword },
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                dataType: 'json',
                 success: function(response) {
                     const raw = response.data != null ? response.data : [];
                     const cities = Array.isArray(raw) ? raw : (raw.cities || []);
-                    console.log('City search response:', response);
-                    
-                    // Handle different response structures
-                    let cities = [];
-                    if (Array.isArray(response.data)) {
-                        cities = response.data;
-                    } else if (Array.isArray(response)) {
-                        cities = response;
-                    } else if (response.data && Array.isArray(response.data.cities)) {
-                        cities = response.data.cities;
-                    }
-
-                    console.log('Parsed cities:', cities);
 
                     if (cities.length === 0) {
                         $suggestions.html('<div class="city-no-results">No cities found</div>');
@@ -485,8 +471,7 @@ $(document).ready(function() {
 
                     $suggestions.html(html);
                 },
-                error: function(xhr, status, error) {
-                    console.error('City search error:', status, error, xhr.responseText);
+                error: function() {
                     $suggestions.html('<div class="city-no-results">Error searching cities</div>');
                 }
             });
@@ -582,7 +567,7 @@ $(document).ready(function() {
         $('#error-message').hide();
 
         $.ajax({
-            url: '{{ route("public.account.register.employer.saveLocation") }}',
+            url: '<?php echo e(route("public.account.register.employer.saveLocation")); ?>',
             type: 'POST',
             headers: {
                 'X-CSRF-TOKEN': $('input[name="_token"]').val()
@@ -598,7 +583,7 @@ $(document).ready(function() {
                     showError(response.message);
                     submitBtn.prop('disabled', false).html('Complete Registration <i class="ti ti-check ms-2"></i>');
                 } else {
-                    window.location.href = response.next_url || '{{ route("public.account.dashboard") }}';
+                    window.location.href = response.next_url || '<?php echo e(route("public.account.dashboard")); ?>';
                 }
             },
             error: function() {
@@ -613,3 +598,4 @@ $(document).ready(function() {
     }
 });
 </script>
+<?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/auth/employer-location.blade.php ENDPATH**/ ?>
