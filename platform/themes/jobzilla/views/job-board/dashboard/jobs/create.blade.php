@@ -639,7 +639,7 @@
                 $creditsEnabled = \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem();
                 $additionalEmailCredits = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100) : 0;
                 $whatsappCreditsPerAlert = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10) : 0;
-<<<<<<< HEAD
+
                 $accountCredits = $creditsEnabled ? (int) (auth('account')->user()->credits ?? 0) : 99999;
             @endphp
             <script>
@@ -653,9 +653,9 @@
                 msgWhatsAppCheckbox: @json('WhatsApp notifications use ' . $whatsappCreditsPerAlert . ' credits per application. You need at least ' . $whatsappCreditsPerAlert . ' credits. Current balance: ' . $accountCredits)
             };
             </script>
-=======
+
             @endphp
->>>>>>> 37fac6c5 (10 march)
+
             <div class="jp-registered-email-info" style="margin-bottom:16px; padding:12px 14px; background:#f0f7ff; border-radius:8px; border:1px solid #cce5ff;">
                 <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i>{{ __('Your registered email') }}</label>
                 <p class="mb-0" style="font-size:14px; color:#333;"><strong>{{ $registeredEmail }}</strong> — {{ __('Applications will always be sent to this email.') }}</p>
@@ -726,10 +726,8 @@
                     {{ trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert]) }}
                 </small>
                 @endif
-<<<<<<< HEAD
+
                
-=======
->>>>>>> 37fac6c5 (10 march)
             </div>
         </div>
         @endif
@@ -1340,6 +1338,7 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
     });
 
     // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits (valid till package) =====
+
     var addEmailBtn = document.getElementById('add-internal-email-btn');
     var internalEmailsList = document.getElementById('internal-emails-list');
     if (addEmailBtn && internalEmailsList) {
@@ -1349,6 +1348,7 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
             e.stopImmediatePropagation();
             var rows = internalEmailsList.querySelectorAll('.jp-internal-email-row');
             if (rows.length >= 3) return;
+
             if (creditsEnabled && accountCredits < emailCreditsRequired) {
                 showBuyCreditsPopup('Insufficient credits. Need 100 credits (one-time) for additional email. Please buy credits from Wallet.');
                 return;
@@ -1379,6 +1379,7 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
             })
             .catch(function() { showBuyCreditsPopup('Request failed. Please try again or buy credits from Wallet.'); })
             .finally(function() { btn.disabled = false; });
+
         });
         internalEmailsList.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.jp-remove-internal-email');
@@ -1387,6 +1388,7 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
     }
 
     // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
+
     var addPhoneBtn = document.getElementById('add-internal-phone-btn');
     var internalPhonesList = document.getElementById('internal-phones-list');
     if (addPhoneBtn && internalPhonesList) {
