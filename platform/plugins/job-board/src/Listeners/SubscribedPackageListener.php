@@ -79,6 +79,8 @@ class SubscribedPackageListener
             'package_name' => $package->name,
         ]);
 
+        $package->applyEmployerPackageFeatures($account);
+
         $emailHandler = EmailHandler::setModule(JOB_BOARD_MODULE_SCREEN_NAME);
 
         if (! $package->price) {

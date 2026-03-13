@@ -5,6 +5,7 @@ namespace Theme\Jobzilla\Http\Controllers;
 use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\JobBoard\Models\Package;
 use Botble\JobBoard\Models\UserNotification;
 use Botble\JobBoard\Repositories\Interfaces\CategoryInterface;
 use Botble\Location\Repositories\Interfaces\CityInterface;
@@ -83,7 +84,21 @@ class JobzillaController extends PublicController
             ->add(__('Home'), url('/'))
             ->add(__('Premium Service'), route('public.premium-service'));
 
-        return Theme::scope('premium-service')->render();
+        $account = Auth::guard('account')->user();
+        $packageType = 'job-seeker'; // default when guest or job seeker
+        if ($account && $account->isEmployer()) {
+            $packageType = 'employer';
+        }
+
+        $packages = Package::query()
+            ->wherePublished()
+            ->where('package_type', $packageType)
+            ->with('currency')
+            ->orderBy('order')
+            ->orderBy('id')
+            ->get();
+
+        return Theme::scope('premium-service', compact('packages', 'packageType'))->render();
     }
 
     public function forTeachers()

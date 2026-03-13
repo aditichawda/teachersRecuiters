@@ -10,6 +10,8 @@ use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Invoice;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\Package;
+use Botble\JobBoard\Models\DedicatedRecruiterRequest;
+use Botble\JobBoard\Models\SocialPromotionRequest;
 use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Supports\PackageContext;
 use Botble\SeoHelper\Facades\SeoHelper;
@@ -17,6 +19,7 @@ use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
@@ -137,6 +140,27 @@ class WalletController extends BaseController
                     $activePackageFeatureKeys[] = $fk;
                 }
             }
+            // Admission Enquiry Form: also active when current package includes "Admission Form on Profile" (no separate credit use needed)
+            if ($packageContext && $packageContext->hasAdmissionFormOnProfile() && ! in_array(CreditConsumption::FEATURE_ADMISSION_ENQUIRY, $activePackageFeatureKeys)) {
+                $activePackageFeatureKeys[] = CreditConsumption::FEATURE_ADMISSION_ENQUIRY;
+            }
+        }
+
+        $socialPromotionRequests = [];
+        $dedicatedRecruiterRequests = [];
+        $companies = [];
+        if ($account->isEmployer()) {
+            $socialPromotionRequests = SocialPromotionRequest::query()
+                ->where('account_id', $account->getKey())
+                ->with('company')
+                ->latest('requested_at')
+                ->get();
+            $dedicatedRecruiterRequests = DedicatedRecruiterRequest::query()
+                ->where('account_id', $account->getKey())
+                ->with('company')
+                ->latest('requested_at')
+                ->get();
+            $companies = $account->companies()->orderBy('name')->get(['id', 'name']);
         }
 
         $viewData = compact(
@@ -161,7 +185,10 @@ class WalletController extends BaseController
             'jobPostCreditsBalance',
             'profileViewCreditsRequired',
             'profileViewCreditsBalance',
-            'activePackageFeatureKeys'
+            'activePackageFeatureKeys',
+            'socialPromotionRequests',
+            'dedicatedRecruiterRequests',
+            'companies'
         );
 
         if ($account->isEmployer()) {
@@ -349,5 +376,52 @@ class WalletController extends BaseController
             'message' => __('Credits used successfully.'),
             'credits' => (int) $account->credits,
         ]);
+    }
+
+    /**
+     * Unlock Admission Form on Profile with credits (redirect back to company page).
+     */
+    public function unlockAdmissionForm(Request $request): RedirectResponse
+    {
+        abort_unless(JobBoardHelper::isEnabledCreditsSystem(), 404);
+
+        $account = auth('account')->user();
+        if (! $account->isEmployer()) {
+            return redirect()->back()->with('error_msg', __('Unauthorized.'));
+        }
+
+        $company = $account->companies()->first();
+        if (! $company) {
+            return redirect()->back()->with('error_msg', __('Please add an institution first.'));
+        }
+
+        $creditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_ADMISSION_ENQUIRY, 500);
+        if ($creditsRequired <= 0) {
+            return redirect()->back()->with('error_msg', __('Feature not available.'));
+        }
+        if ($account->credits < $creditsRequired) {
+            return redirect()
+                ->back()
+                ->with('error_msg', trans('plugins/job-board::messages.insufficient_credits'));
+        }
+
+        $consumption = CreditConsumption::getForAccountType('employer');
+        $label = (string) Arr::get($consumption[CreditConsumption::FEATURE_ADMISSION_ENQUIRY] ?? [], 'label', 'Admission Form on Profile');
+
+        $ok = CreditConsumption::deductForFeature(
+            $account,
+            CreditConsumption::FEATURE_ADMISSION_ENQUIRY,
+            $creditsRequired,
+            trans('plugins/job-board::messages.credits_used', ['credits' => $creditsRequired]) . ' (' . $label . ')',
+            ['source' => 'unlock_admission_form', 'feature_label' => $label]
+        );
+
+        if (! $ok) {
+            return redirect()->back()->with('error_msg', trans('plugins/job-board::messages.insufficient_credits'));
+        }
+
+        $redirectUrl = $request->input('redirect_url', $company->url);
+
+        return redirect()->to($redirectUrl)->with('success_msg', __('Admission form on profile has been unlocked.'));
     }
 }

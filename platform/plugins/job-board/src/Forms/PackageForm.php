@@ -104,6 +104,74 @@ class PackageForm extends FormAbstract
                 'wrapper' => [
                     'class' => 'form-group col-md-12',
                 ],
+                'attr' => ['id' => 'package_type_select', 'class' => 'form-control package-type-select'],
+            ])
+            ->add('package_feature_options_heading', 'html', [
+                'html' => '<div class="col-12 mt-3"><h6 class="mb-2">' . trans('plugins/job-board::package.package_feature_options') . '</h6></div>',
+            ])
+            ->add('employer_features_wrap_open', 'html', [
+                'html' => '<div id="employer_features_section" class="col-12" style="display:none;"><p class="text-muted small mb-2">' . trans('plugins/job-board::package.employer_features') . '</p><div class="row">',
+            ])
+            ->add('feature_featured_profile', OnOffField::class, [
+                'label' => trans('plugins/job-board::package.feature_featured_profile'),
+                'wrapper' => ['class' => 'form-group col-md-6'],
+            ])
+            ->add('feature_admission_form_on_profile', OnOffField::class, [
+                'label' => trans('plugins/job-board::package.feature_admission_form_on_profile'),
+                'wrapper' => ['class' => 'form-group col-md-6'],
+            ])
+            ->add('employer_features_wrap_close', 'html', [
+                'html' => '</div></div>',
+            ])
+            ->add('jobseeker_features_wrap_open', 'html', [
+                'html' => '<div id="jobseeker_features_section" class="col-12" style="display:none;"><p class="text-muted small mb-2">' . trans('plugins/job-board::package.job_seeker_features') . '</p><div class="row">',
+            ])
+            ->add('job_apply_limit', NumberField::class, [
+                'label' => trans('plugins/job-board::package.job_apply_limit'),
+                'wrapper' => ['class' => 'form-group col-md-12'],
+                'attr' => ['placeholder' => trans('plugins/job-board::package.job_apply_limit_placeholder'), 'min' => 0],
+            ])
+            ->add('feature_featured_profile_js', OnOffField::class, [
+                'label' => trans('plugins/job-board::package.feature_featured_profile'),
+                'wrapper' => ['class' => 'form-group col-md-6'],
+            ])
+            ->add('feature_resume_builder', OnOffField::class, [
+                'label' => trans('plugins/job-board::package.feature_resume_builder'),
+                'wrapper' => ['class' => 'form-group col-md-6'],
+            ])
+            ->add('feature_basic_cv', OnOffField::class, [
+                'label' => trans('plugins/job-board::package.feature_basic_cv'),
+                'wrapper' => ['class' => 'form-group col-md-6'],
+            ])
+            ->add('feature_advance_cv', OnOffField::class, [
+                'label' => trans('plugins/job-board::package.feature_advance_cv'),
+                'wrapper' => ['class' => 'form-group col-md-6'],
+            ])
+            ->add('feature_view_school_contact_info', OnOffField::class, [
+                'label' => trans('plugins/job-board::package.feature_view_school_contact_info'),
+                'wrapper' => ['class' => 'form-group col-md-6'],
+            ])
+            ->add('feature_job_alerts_whatsapp', OnOffField::class, [
+                'label' => trans('plugins/job-board::package.feature_job_alerts_whatsapp'),
+                'wrapper' => ['class' => 'form-group col-md-6'],
+            ])
+            ->add('jobseeker_features_wrap_close', 'html', [
+                'html' => '</div></div>',
+            ])
+            ->add('package_feature_toggle_script', 'html', [
+                'html' => '<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var sel = document.getElementById("package_type_select") || document.querySelector(".package-type-select");
+    var empSec = document.getElementById("employer_features_section");
+    var jsSec = document.getElementById("jobseeker_features_section");
+    function toggle() {
+        var v = (sel && sel.value) ? sel.value : "";
+        if (empSec) empSec.style.display = (v === "employer") ? "block" : "none";
+        if (jsSec) jsSec.style.display = (v === "job-seeker") ? "block" : "none";
+    }
+    if (sel) { sel.addEventListener("change", toggle); toggle(); }
+});
+</script>',
             ])
             ->add('rowOpen3', 'html', [
                 'html' => '<div class="row">',

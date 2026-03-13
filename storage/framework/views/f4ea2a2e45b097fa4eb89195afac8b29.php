@@ -601,6 +601,9 @@
                 <?php endif; ?>
                 <?php if(!$profileLocked && JobBoardHelper::canViewCandidateInformation()): ?>
                     <div class="cdt-hero-actions">
+                        <?php if(isset($account) && $account && $account->isEmployer() && ($employerJobs ?? collect())->isNotEmpty()): ?>
+                            <button type="button" class="cdt-btn-primary" data-bs-toggle="modal" data-bs-target="#cdtInviteToApplyModal" title="<?php echo e(__('25 credits per invite')); ?>"><i class="feather-send"></i> <?php echo e(__('Invite to Apply')); ?></button>
+                        <?php endif; ?>
                         <?php if($candidate->phone ?? null): ?>
                             <a href="tel:<?php echo e($candidate->phone); ?>" class="cdt-btn-primary"><i class="feather-phone"></i> <?php echo e(__('Hire Me Now')); ?></a>
                         <?php endif; ?>
@@ -919,6 +922,82 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
+
+
+<?php if(isset($account) && $account && $account->isEmployer() && ($employerJobs ?? collect())->isNotEmpty()): ?>
+<div class="modal fade" id="cdtInviteToApplyModal" tabindex="-1" aria-labelledby="cdtInviteToApplyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cdtInviteToApplyModalLabel"><?php echo e(__('Invite to Apply')); ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cdtInviteToApplyForm">
+                <?php echo csrf_field(); ?>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3"><?php echo e(__('25 credits will be deducted. An email will be sent to the candidate.')); ?></p>
+                    <input type="hidden" name="candidate_id" value="<?php echo e($candidate->id); ?>">
+                    <div class="mb-2">
+                        <label for="cdt_invite_job_id" class="form-label"><?php echo e(__('Select Job')); ?> <span class="text-danger">*</span></label>
+                        <select name="job_id" id="cdt_invite_job_id" class="form-select form-select-sm" required>
+                            <option value=""><?php echo e(__('— Select job —')); ?></option>
+                            <?php $__currentLoopData = $employerJobs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($job->id); ?>"><?php echo e($job->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo e(__('Cancel')); ?></button>
+                    <button type="submit" class="btn btn-primary" id="cdtInviteToApplySubmitBtn"><?php echo e(__('Send Invite')); ?></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    var form = document.getElementById('cdtInviteToApplyForm');
+    if (!form) return;
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var btn = document.getElementById('cdtInviteToApplySubmitBtn');
+        if (btn) btn.disabled = true;
+        var body = {
+            job_id: parseInt(document.getElementById('cdt_invite_job_id').value, 10),
+            candidate_id: parseInt(form.querySelector('input[name="candidate_id"]').value, 10)
+        };
+        fetch('<?php echo e(route('public.account.invite-candidate.store')); ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]') ? document.querySelector('input[name="_token"]').value : '<?php echo e(csrf_token()); ?>',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(body)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var ok = data.error === false || (data.data && data.data.error === false);
+            if (ok) {
+                var modal = document.getElementById('cdtInviteToApplyModal');
+                if (modal && typeof bootstrap !== 'undefined') {
+                    var m = bootstrap.Modal.getInstance(modal);
+                    if (m) m.hide();
+                }
+                alert(data.message || (data.data && data.data.message) || '<?php echo e(__('Invite sent.')); ?>');
+                if (typeof window.location !== 'undefined') window.location.reload();
+            } else {
+                alert(data.message || (data.data && data.data.message) || '<?php echo e(__('Request failed.')); ?>');
+            }
+        })
+        .catch(function() { alert('<?php echo e(__('Something went wrong.')); ?>'); })
+        .finally(function() { if (btn) btn.disabled = false; });
+    });
+})();
+</script>
 <?php endif; ?>
 
 <script>

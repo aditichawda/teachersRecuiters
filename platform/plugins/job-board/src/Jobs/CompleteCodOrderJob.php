@@ -103,6 +103,8 @@ class CompleteCodOrderJob implements ShouldQueue
             'package_name' => $package->name,
         ]);
 
+        $package->applyEmployerPackageFeatures($account);
+
         Invoice::query()
             ->where('reference_id', $package->getKey())
             ->where('reference_type', Package::class)

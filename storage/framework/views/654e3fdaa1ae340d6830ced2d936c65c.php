@@ -4,7 +4,7 @@
     <?php $__empty_1 = true; $__currentLoopData = $companies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $company): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="company-card-grid">
-                <?php if($company->is_featured): ?>
+                <?php if($company->effective_is_featured): ?>
                     <span class="ccg-featured">★ <?php echo e(__('Featured')); ?></span>
                 <?php endif; ?>
                 <?php if($company->is_verified): ?>

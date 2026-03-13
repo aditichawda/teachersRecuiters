@@ -148,10 +148,6 @@ class CityController extends BaseController
 
             $query = City::query()
                 ->select(['id', 'name', 'state_id', 'country_id'])
-                ->where(function ($q) {
-                    $q->where('cities.status', BaseStatusEnum::PUBLISHED)
-                        ->orWhereNull('cities.status');
-                })
                 ->with(['state:id,name,country_id', 'state.country:id,name', 'country:id,name']);
 
             $perPage = 10;
@@ -161,10 +157,7 @@ class CityController extends BaseController
             if (! $keyword || strlen($keyword) < 2) {
                 if ($defaultCountry === '1' || $defaultCountry === 'true') {
                     $india = Country::query()
-                        ->where(function ($q) {
-                            $q->where('status', BaseStatusEnum::PUBLISHED)->orWhereNull('status');
-                        })
-                        ->whereRaw('LOWER(name) = ?', ['india'])
+                        ->whereRaw('LOWER(TRIM(name)) = ?', ['india'])
                         ->first();
                     if ($india) {
                         $query->where(function ($q) use ($india) {
@@ -172,7 +165,7 @@ class CityController extends BaseController
                                 ->orWhereHas('state', fn ($s) => $s->where('country_id', $india->id));
                         });
                         $total = $query->count();
-                        $citiesQuery = (clone $query)->orderBy('order')->orderBy('name')
+                        $citiesQuery = (clone $query)->orderBy('name')
                             ->offset(($page - 1) * $perPage)
                             ->limit($perPage);
                         $cities = $citiesQuery->get()->map(function ($city) {
@@ -204,7 +197,10 @@ class CityController extends BaseController
                 $query->whereRaw('LOWER(cities.name) LIKE ?', ['%' . mb_strtolower($keyword) . '%'])->limit(15);
             }
 
-            $query->orderBy('order')->orderBy('name');
+            if (\Illuminate\Support\Facades\Schema::hasColumn((new City)->getTable(), 'order')) {
+                $query->orderBy('order');
+            }
+            $query->orderBy('name');
 
             $cities = $query->get()->map(function ($city) {
                 $countryId = $city->country_id ?: $city->state?->country_id;
@@ -219,6 +215,14 @@ class CityController extends BaseController
                     'country_name' => $countryName,
                 ];
             });
+
+            if (! $keyword || strlen($keyword) < 2) {
+                return $this->httpResponse()->setData([
+                    'cities' => $cities,
+                    'has_more' => false,
+                    'page' => $page,
+                ]);
+            }
 
             return $this
                 ->httpResponse()

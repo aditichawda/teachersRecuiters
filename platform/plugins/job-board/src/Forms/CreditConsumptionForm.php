@@ -39,19 +39,6 @@ class CreditConsumptionForm extends FormAbstract
                     'fields' => [
                         [
                             'type' => 'text',
-                            'label' => trans('plugins/job-board::credit-consumption.feature_key'),
-                            'attributes' => [
-                                'name' => 'feature_key',
-                                'value' => null,
-                                'options' => [
-                                    'class' => 'form-control',
-                                    'data-counter' => 100,
-                                    'placeholder' => 'e.g. job_posting',
-                                ],
-                            ],
-                        ],
-                        [
-                            'type' => 'text',
                             'label' => trans('plugins/job-board::credit-consumption.feature_label'),
                             'attributes' => [
                                 'name' => 'feature_label',
@@ -90,12 +77,9 @@ class CreditConsumptionForm extends FormAbstract
                         'job-seeker' => trans('plugins/job-board::package.package_type_job_seeker'),
                     ],
                 ])
-                ->add('feature_key', TextField::class, [
-                    'label' => trans('plugins/job-board::credit-consumption.feature_key'),
-                    'attr' => ['placeholder' => 'e.g. featured_job'],
-                ])
                 ->add('feature_label', TextField::class, [
                     'label' => trans('plugins/job-board::credit-consumption.feature_label'),
+                    'helper_text' => trans('plugins/job-board::credit-consumption.feature_key_auto_help'),
                     'attr' => ['placeholder' => 'e.g. Featured Job (highlighted + WhatsApp)'],
                 ])
                 ->add('credits', NumberField::class, [

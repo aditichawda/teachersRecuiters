@@ -635,7 +635,19 @@
                 $creditsEnabled = \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem();
                 $additionalEmailCredits = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100) : 0;
                 $whatsappCreditsPerAlert = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10) : 0;
+                $accountCredits = $creditsEnabled ? (int) (auth('account')->user()->credits ?? 0) : 99999;
             ?>
+            <script>
+            window.jobCreateCredits = {
+                enabled: <?php echo json_encode($creditsEnabled, 15, 512) ?>,
+                accountCredits: <?php echo json_encode($accountCredits, 15, 512) ?>,
+                additionalEmailCredits: <?php echo json_encode($additionalEmailCredits, 15, 512) ?>,
+                whatsappCreditsPerAlert: <?php echo json_encode($whatsappCreditsPerAlert, 15, 512) ?>,
+                msgAdditionalEmail: <?php echo json_encode('Additional emails cost ' . $additionalEmailCredits . ' credits (one-time). Valid while your package is active. You need ' . $additionalEmailCredits . ' credits to add. Current balance: ' . $accountCredits, 15, 512) ?>,
+                msgWhatsAppPhone: <?php echo json_encode('WhatsApp alerts use ' . $whatsappCreditsPerAlert . ' credits per application. You need at least ' . $whatsappCreditsPerAlert . ' credits to add a phone. Current balance: ' . $accountCredits, 15, 512) ?>,
+                msgWhatsAppCheckbox: <?php echo json_encode('WhatsApp notifications use ' . $whatsappCreditsPerAlert . ' credits per application. You need at least ' . $whatsappCreditsPerAlert . ' credits. Current balance: ' . $accountCredits, 15, 512) ?>
+            };
+            </script>
             <div class="jp-registered-email-info" style="margin-bottom:16px; padding:12px 14px; background:#f0f7ff; border-radius:8px; border:1px solid #cce5ff;">
                 <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i><?php echo e(__('Your registered email')); ?></label>
                 <p class="mb-0" style="font-size:14px; color:#333;"><strong><?php echo e($registeredEmail); ?></strong> — <?php echo e(__('Applications will always be sent to this email.')); ?></p>
@@ -1224,13 +1236,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ===== INTERNAL EMAILS (up to 3) - Add email button =====
+    // ===== INTERNAL EMAILS (up to 3) - Add email button: credit check + popup =====
     var addEmailBtn = document.getElementById('add-internal-email-btn');
     var internalEmailsList = document.getElementById('internal-emails-list');
     if (addEmailBtn && internalEmailsList) {
         addEmailBtn.addEventListener('click', function() {
             var rows = internalEmailsList.querySelectorAll('.jp-internal-email-row');
             if (rows.length >= 3) return;
+            var c = window.jobCreateCredits;
+            if (c && c.enabled && rows.length === 0 && c.accountCredits < c.additionalEmailCredits) {
+                alert(c.msgAdditionalEmail || ('You need ' + c.additionalEmailCredits + ' credits to add additional email. Current balance: ' + c.accountCredits));
+                return;
+            }
             var row = document.createElement('div');
             row.className = 'jp-internal-email-row';
             row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
@@ -1245,13 +1262,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== INTERNAL PHONES (up to 3) - Add phone button =====
+    // ===== INTERNAL PHONES (up to 3) - Add phone button: credit check + popup =====
     var addPhoneBtn = document.getElementById('add-internal-phone-btn');
     var internalPhonesList = document.getElementById('internal-phones-list');
     if (addPhoneBtn && internalPhonesList) {
         addPhoneBtn.addEventListener('click', function() {
             var rows = internalPhonesList.querySelectorAll('.jp-internal-phone-row');
             if (rows.length >= 3) return;
+            var c = window.jobCreateCredits;
+            if (c && c.enabled && c.accountCredits < c.whatsappCreditsPerAlert) {
+                alert(c.msgWhatsAppPhone || ('You need at least ' + c.whatsappCreditsPerAlert + ' credits to add phone for WhatsApp alerts. Current balance: ' + c.accountCredits));
+                return;
+            }
             var row = document.createElement('div');
             row.className = 'jp-internal-phone-row';
             row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
@@ -1263,6 +1285,20 @@ document.addEventListener('DOMContentLoaded', function() {
         internalPhonesList.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.jp-remove-internal-phone');
             if (removeBtn) removeBtn.closest('.jp-internal-phone-row').remove();
+        });
+    }
+
+    // ===== WhatsApp checkbox: prevent enable if insufficient credits + popup =====
+    var whatsappCb = document.getElementById('enable_whatsapp_notifications');
+    if (whatsappCb && window.jobCreateCredits && window.jobCreateCredits.enabled) {
+        whatsappCb.addEventListener('click', function(e) {
+            if (this.checked) return;
+            var c = window.jobCreateCredits;
+            if (c.accountCredits < c.whatsappCreditsPerAlert) {
+                e.preventDefault();
+                this.checked = false;
+                alert(c.msgWhatsAppCheckbox || ('You need at least ' + c.whatsappCreditsPerAlert + ' credits. Current balance: ' + c.accountCredits));
+            }
         });
     }
 
