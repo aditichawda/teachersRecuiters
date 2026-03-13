@@ -526,6 +526,32 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     'as' => 'wallet.purchase_feature',
                     'uses' => 'WalletController@purchaseFeature',
                 ]);
+                Route::post('wallet/unlock-admission-form', [
+                    'as' => 'wallet.unlock_admission_form',
+                    'uses' => 'WalletController@unlockAdmissionForm',
+                ]);
+            });
+
+            // Credit features: sub-account (multiple login), dedicated recruiter request, social promotion request
+            Route::group([
+                'middleware' => ['enable-credits', LocaleMiddleware::class],
+            ], function (): void {
+                Route::post('team-members', [
+                    'as' => 'team-members.store',
+                    'uses' => 'EmployerCreditFeatureController@storeSubAccount',
+                ]);
+                Route::post('dedicated-recruiter-request', [
+                    'as' => 'dedicated-recruiter-request.store',
+                    'uses' => 'EmployerCreditFeatureController@storeDedicatedRecruiterRequest',
+                ]);
+                Route::post('social-promotion-request', [
+                    'as' => 'social-promotion-request.store',
+                    'uses' => 'EmployerCreditFeatureController@storeSocialPromotionRequest',
+                ]);
+                Route::post('invite-candidate', [
+                    'as' => 'invite-candidate.store',
+                    'uses' => 'EmployerCreditFeatureController@inviteCandidate',
+                ]);
             });
         });
 

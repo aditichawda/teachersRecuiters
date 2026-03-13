@@ -72,6 +72,8 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         
         // Account type & package
         'package_id',
+        'parent_account_id',
+        'sub_account_role',
         'type',
         'registration_type',
         'credits',

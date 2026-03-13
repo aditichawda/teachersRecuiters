@@ -6,6 +6,7 @@ return [
     'account_type' => 'Account type',
     'feature_key' => 'Feature key',
     'feature_label' => 'Feature label',
+    'feature_key_auto_help' => 'Feature key is auto-generated from this label (e.g. "Job Posting" → job_posting). You do not need to enter it separately.',
     'credits' => 'Credits',
     'multiple_features' => 'Features (add multiple rows)',
     'multiple_features_help' => 'Add one row per feature. Each feature will use the given credits. Save to create all rows at once.',

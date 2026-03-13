@@ -519,4 +519,14 @@ return [
         'flag' => 'admission-enquiries.destroy',
         'parent_flag' => 'admission-enquiries.index',
     ],
+    [
+        'name' => 'Dedicated Recruiter Requests',
+        'flag' => 'dedicated-recruiter-requests.index',
+        'parent_flag' => 'plugins.job-board',
+    ],
+    [
+        'name' => 'Social Promotion Requests',
+        'flag' => 'social-promotion-requests.index',
+        'parent_flag' => 'plugins.job-board',
+    ],
 ];

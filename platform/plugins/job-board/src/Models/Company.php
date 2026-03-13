@@ -10,6 +10,7 @@ use Botble\Base\Supports\Avatar;
 use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Models\Concerns\HasActiveJobsRelation;
 use Botble\JobBoard\Models\Concerns\UniqueId;
+use Botble\JobBoard\Supports\PackageContext;
 use Botble\Media\Facades\RvMedia;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -112,6 +113,28 @@ class Company extends BaseModel
             'company_id',
             'account_id'
         );
+    }
+
+    /**
+     * Featured either from DB (is_featured) or from employer's valid package that includes "Featured Profile".
+     */
+    protected function effectiveIsFeatured(): Attribute
+    {
+        return Attribute::get(function (): bool {
+            if ($this->is_featured) {
+                return true;
+            }
+            if (! JobBoardHelper::isEnabledCreditsSystem()) {
+                return false;
+            }
+            $owner = $this->accounts()->first();
+            if (! $owner || ! $owner->isEmployer()) {
+                return false;
+            }
+            $ctx = PackageContext::forAccount($owner);
+
+            return $ctx->hasFeature('Featured Profile');
+        });
     }
 
     public function completedProfile(): bool

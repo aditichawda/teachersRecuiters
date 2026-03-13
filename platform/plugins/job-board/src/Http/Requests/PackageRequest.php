@@ -26,7 +26,16 @@ class PackageRequest extends Request
             'validity_days' => ['nullable', 'integer', 'min:0'],
             'credits_included' => ['nullable', 'integer', 'min:0'],
             'profile_views_allowed' => ['nullable', 'integer', 'min:0'],
+            'job_apply_limit' => ['nullable', 'integer', 'min:0'],
             'worth' => ['nullable', 'numeric', 'min:0'],
+            'feature_featured_profile' => ['nullable', 'boolean'],
+            'feature_admission_form_on_profile' => ['nullable', 'boolean'],
+            'feature_resume_builder' => ['nullable', 'boolean'],
+            'feature_basic_cv' => ['nullable', 'boolean'],
+            'feature_advance_cv' => ['nullable', 'boolean'],
+            'feature_view_school_contact_info' => ['nullable', 'boolean'],
+            'feature_job_alerts_whatsapp' => ['nullable', 'boolean'],
+            'feature_featured_profile_js' => ['nullable', 'boolean'],
         ];
     }
 

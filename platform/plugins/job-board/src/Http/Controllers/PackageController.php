@@ -16,6 +16,62 @@ use Illuminate\Http\Request;
 
 class PackageController extends BaseController
 {
+    /**
+     * Merge package feature checkboxes into features array for save.
+     */
+    private function mergePackageFeatures(PackageRequest $request): array
+    {
+        $type = $request->input('package_type', 'employer');
+        $standardTexts = [];
+
+        if ($type === 'employer') {
+            if ($request->boolean('feature_featured_profile')) {
+                $standardTexts[] = 'Featured Profile';
+            }
+            if ($request->boolean('feature_admission_form_on_profile')) {
+                $standardTexts[] = 'Admission Form on Profile';
+            }
+        }
+
+        if ($type === 'job-seeker') {
+            if ($request->boolean('feature_featured_profile_js')) {
+                $standardTexts[] = 'Featured Profile';
+            }
+            if ($request->boolean('feature_resume_builder')) {
+                $standardTexts[] = 'Resume Builder';
+            }
+            if ($request->boolean('feature_basic_cv')) {
+                $standardTexts[] = 'Basic CV';
+            }
+            if ($request->boolean('feature_advance_cv')) {
+                $standardTexts[] = 'Advance CV';
+            }
+            if ($request->boolean('feature_view_school_contact_info')) {
+                $standardTexts[] = 'View School Contact Info';
+            }
+            if ($request->boolean('feature_job_alerts_whatsapp')) {
+                $standardTexts[] = 'Job Alerts on WhatsApp';
+            }
+        }
+
+        $repeater = $request->input('features');
+        $repeaterItems = [];
+        if (is_array($repeater)) {
+            foreach ($repeater as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                $text = $row['text'] ?? $row['title'] ?? $row['value'] ?? $row['key'] ?? null;
+                if (is_string($text) && trim($text) !== '') {
+                    $repeaterItems[] = ['text' => trim($text)];
+                }
+            }
+        }
+
+        $allTexts = array_unique(array_merge($standardTexts, array_column($repeaterItems, 'text')));
+
+        return array_values(array_map(fn ($t) => ['text' => $t], $allTexts));
+    }
     protected function breadcrumb(): Breadcrumb
     {
         return parent::breadcrumb()
@@ -43,7 +99,11 @@ class PackageController extends BaseController
             $request->merge(['price' => 0]);
         }
 
-        $package = Package::query()->create($request->input());
+        $input = $request->input();
+        $input['features'] = $this->mergePackageFeatures($request);
+        $input['job_apply_limit'] = $request->input('job_apply_limit');
+
+        $package = Package::query()->create($input);
 
         event(new CreatedContentEvent(PACKAGE_MODULE_SCREEN_NAME, $request, $package));
 
@@ -70,6 +130,8 @@ class PackageController extends BaseController
         }
 
         $package->fill($request->input());
+        $package->features = $this->mergePackageFeatures($request);
+        $package->job_apply_limit = $request->input('job_apply_limit');
         $package->save();
 
         event(new UpdatedContentEvent(PACKAGE_MODULE_SCREEN_NAME, $request, $package));

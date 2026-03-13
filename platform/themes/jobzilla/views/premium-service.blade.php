@@ -257,46 +257,48 @@
         <div class="premium-pricing">
             <h2>{{ __('Choose Your Plan') }}</h2>
             <div class="pricing-plans">
-                <div class="pricing-plan">
-                    <h3>{{ __('Basic') }}</h3>
-                    <div class="pricing-amount">$9<span style="font-size: 18px;">/month</span></div>
-                    <div class="pricing-period">{{ __('Perfect for getting started') }}</div>
-                    <ul class="pricing-features">
-                        <li>{{ __('Priority job access') }}</li>
-                        <li>{{ __('Job alerts') }}</li>
-                        <li>{{ __('Basic resume builder') }}</li>
-                        <li>{{ __('Email support') }}</li>
-                    </ul>
-                    <a href="#" class="pricing-btn">{{ __('Get Started') }}</a>
-                </div>
-
-                <div class="pricing-plan featured">
-                    <h3>{{ __('Premium') }}</h3>
-                    <div class="pricing-amount">$19<span style="font-size: 18px;">/month</span></div>
-                    <div class="pricing-period">{{ __('Most popular choice') }}</div>
-                    <ul class="pricing-features">
-                        <li>{{ __('All Basic features') }}</li>
-                        <li>{{ __('Featured profile') }}</li>
-                        <li>{{ __('Advanced resume builder') }}</li>
-                        <li>{{ __('Career coaching sessions') }}</li>
-                        <li>{{ __('Priority support') }}</li>
-                    </ul>
-                    <a href="#" class="pricing-btn">{{ __('Get Started') }}</a>
-                </div>
-
-                <div class="pricing-plan">
-                    <h3>{{ __('Enterprise') }}</h3>
-                    <div class="pricing-amount">$39<span style="font-size: 18px;">/month</span></div>
-                    <div class="pricing-period">{{ __('For professionals') }}</div>
-                    <ul class="pricing-features">
-                        <li>{{ __('All Premium features') }}</li>
-                        <li>{{ __('Verified badge') }}</li>
-                        <li>{{ __('Unlimited coaching') }}</li>
-                        <li>{{ __('Dedicated support') }}</li>
-                        <li>{{ __('Custom profile design') }}</li>
-                    </ul>
-                    <a href="#" class="pricing-btn">{{ __('Get Started') }}</a>
-                </div>
+                @forelse($packages ?? [] as $plan)
+                    <div class="pricing-plan {{ $plan->is_default ? 'featured' : '' }}">
+                        <h3>{{ $plan->name }}</h3>
+                        <div class="pricing-amount">
+                            @if((float)($plan->price ?? 0) == 0)
+                                {{ __('Free') }}
+                            @else
+                                {{ $plan->price_text }}
+                            @endif
+                            @if($plan->validity_days)
+                                <span style="font-size: 18px;">/{{ $plan->validity_days }} {{ __('days') }}</span>
+                            @else
+                                <span style="font-size: 18px;"> · {{ __('Unlimited validity') }}</span>
+                            @endif
+                        </div>
+                        <div class="pricing-period">{{ $plan->description ?: __('Choose this plan') }}</div>
+                        <ul class="pricing-features">
+                            @if(($packageType ?? '') === 'employer')
+                                @if(isset($plan->number_of_listings) && $plan->number_of_listings !== null && $plan->number_of_listings !== '')
+                                    <li>{{ $plan->number_of_listings }} {{ __('Job Postings') }}</li>
+                                @endif
+                                @if(isset($plan->profile_views_allowed) && $plan->profile_views_allowed !== null && $plan->profile_views_allowed !== '')
+                                    <li>{{ __('Database Access') }} {{ $plan->profile_views_allowed }} {{ __('Profile Views') }}</li>
+                                @endif
+                                @if(!empty($plan->credits_included))
+                                    <li>{{ $plan->credits_included }} {{ trans('plugins/job-board::dashboard.credits') }} {{ __('included') }}</li>
+                                @endif
+                            @endif
+                            @foreach($plan->formatted_features ?? [] as $feature)
+                                @php $featureText = is_string($feature) ? $feature : ($feature['text'] ?? $feature['title'] ?? $feature['value'] ?? $feature['key'] ?? ''); @endphp
+                                @if($featureText !== '')
+                                    <li>{{ $featureText }}</li>
+                                @endif
+                            @endforeach
+                        </ul>
+                        <a href="{{ route('public.account.package.subscribe.checkout', ['id' => $plan->id]) }}" class="pricing-btn">{{ __('Get Started') }}</a>
+                    </div>
+                @empty
+                    <div class="col-12 text-center py-4">
+                        <p class="text-muted mb-0">{{ ($packageType ?? 'job-seeker') === 'employer' ? __('No employer plans available at the moment. Please check back later.') : __('No job seeker plans available at the moment. Please check back later.') }}</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>
