@@ -20,7 +20,8 @@ class PackageRequest extends Request
             'account_limit' => ['nullable', 'integer', 'min:0'],
             'order' => ['required', 'integer', 'min:0', 'max:127'],
             'features' => ['nullable', 'array'],
-            'features.*.*.value' => ['required', 'string'],
+            'features.*.text' => ['nullable', 'string', 'max:255'],
+            'features.*.value' => ['nullable', 'string', 'max:255'],
             'status' => Rule::in(BaseStatusEnum::values()),
             'package_type' => ['required', 'string', 'in:employer,job-seeker'],
             'validity_days' => ['nullable', 'integer', 'min:0'],
@@ -51,7 +52,7 @@ class PackageRequest extends Request
     public function attributes(): array
     {
         return [
-            'features.*.*.value' => trans('plugins/job-board::package.feature_title'),
+            'features.*.text' => trans('plugins/job-board::package.feature_title'),
         ];
     }
 }

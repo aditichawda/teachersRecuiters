@@ -12,6 +12,7 @@ use Botble\JobBoard\Forms\PackageForm;
 use Botble\JobBoard\Http\Requests\PackageRequest;
 use Botble\JobBoard\Models\Package;
 use Botble\JobBoard\Tables\PackageTable;
+use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Illuminate\Http\Request;
 
 class PackageController extends BaseController
@@ -83,6 +84,10 @@ class PackageController extends BaseController
     {
         $this->pageTitle(trans('plugins/job-board::package.name'));
 
+        if (request()->has('draw') || request()->ajax() || request()->wantsJson()) {
+            return $table->ajax();
+        }
+
         return $table->renderTable();
     }
 
@@ -134,12 +139,33 @@ class PackageController extends BaseController
         $package->job_apply_limit = $request->input('job_apply_limit');
         $package->save();
 
+        // Sync translatable fields (name, description, features) to current locale so edit form shows saved data
+        if (is_plugin_active('language-advanced') && LanguageAdvancedManager::isSupported($package)) {
+            $request->merge([
+                'name' => $package->name,
+                'description' => $package->description,
+                'features' => $package->features,
+            ]);
+            if (! $request->has('language')) {
+                $request->merge(['language' => \Botble\Language\Facades\Language::getCurrentAdminLocaleCode() ?: \Botble\Language\Facades\Language::getDefaultLocaleCode()]);
+            }
+            LanguageAdvancedManager::save($package, $request);
+        }
+
         event(new UpdatedContentEvent(PACKAGE_MODULE_SCREEN_NAME, $request, $package));
 
-        return $this
+        $response = $this
             ->httpResponse()
             ->setPreviousUrl(route('packages.index'))
             ->withUpdatedSuccessMessage();
+
+        // When "Save and continue" is used, redirect to the correct edit URL (packages/{id}/edit)
+        // so we never redirect to a wrong URL like packages/edit/{id} which would 404.
+        if ($request->input('submitter') === 'apply') {
+            $response->setNextUrl(route('packages.edit', $package));
+        }
+
+        return $response;
     }
 
     public function destroy(Package $package)

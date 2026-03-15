@@ -126,7 +126,7 @@
     @foreach ($menuItems as $item)
         @continue(! $item['name'])
         @php
-            $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages'];
+            $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages', 'cms-account-staff'];
             if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
                 continue;
             }

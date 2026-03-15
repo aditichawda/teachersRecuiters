@@ -81,54 +81,56 @@
         }
     }
 
-    // Admission: unlock if (1) package has "Admission Form on Profile" and is valid, OR (2) credits used (debit) and validity.
-    $canAccessAdmission = true;
-    $admissionLocked = false;
-    if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
-        try {
-            // 1) Package me "Admission Form on Profile" hai aur package valid hai → unlock
-            if ($packageContext && $packageContext->package && $packageContext->hasAdmissionFormOnProfile() && $packageContext->periodEnd && \Carbon\Carbon::now()->lte($packageContext->periodEnd)) {
-                $canAccessAdmission = true;
-            } elseif (!\Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
+
+
+// Admission: unlock if (1) package has "Admission Form on Profile" and is valid, OR (2) credits used (debit) and validity.
+$canAccessAdmission = true;
+$admissionLocked = false;
+if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
+    try {
+        // 1) Package me "Admission Form on Profile" hai aur package valid hai → unlock
+        if ($packageContext && $packageContext->package && $packageContext->hasAdmissionFormOnProfile() && $packageContext->periodEnd && \Carbon\Carbon::now()->lte($packageContext->periodEnd)) {
+            $canAccessAdmission = true;
+        } elseif (!\Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
+            $canAccessAdmission = false;
+        } else {
+            // 2) Package me nahi hai to credits se unlock (debit transaction + validity)
+            $admissionDebit = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where('type', Transaction::TYPE_DEBIT)
+                ->where('feature_key', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
+                ->latest()
+                ->first();
+            if (!$admissionDebit || !$admissionDebit->created_at) {
                 $canAccessAdmission = false;
             } else {
-                // 2) Package me nahi hai to credits se unlock (debit transaction + validity)
-                $admissionDebit = Transaction::query()
+                $lastPurchase = Transaction::query()
                     ->where('account_id', $account->getKey())
-                    ->where('type', Transaction::TYPE_DEBIT)
-                    ->where('feature_key', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
+                    ->where(function ($q): void {
+                        $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                    })
+                    ->whereNotNull('payment_id')
+                    ->whereNotNull('package_id')
+                    ->with('package')
                     ->latest()
                     ->first();
-                if (!$admissionDebit || !$admissionDebit->created_at) {
-                    $canAccessAdmission = false;
+                if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                    $packageExpiryAt = \Carbon\Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                    $canAccessAdmission = \Carbon\Carbon::now()->lte($packageExpiryAt);
                 } else {
-                    $lastPurchase = Transaction::query()
-                        ->where('account_id', $account->getKey())
-                        ->where(function ($q): void {
-                            $q->whereNull('type')->orWhere('type', '!=', 'deduct');
-                        })
-                        ->whereNotNull('payment_id')
-                        ->whereNotNull('package_id')
-                        ->with('package')
-                        ->latest()
-                        ->first();
-                    if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
-                        $packageExpiryAt = \Carbon\Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
-                        $canAccessAdmission = \Carbon\Carbon::now()->lte($packageExpiryAt);
-                    } else {
-                        $debitDate = $admissionDebit->created_at instanceof \DateTimeInterface
-                            ? \Carbon\Carbon::parse($admissionDebit->created_at)
-                            : \Carbon\Carbon::parse((string) $admissionDebit->created_at);
-                        $canAccessAdmission = $debitDate->gte(\Carbon\Carbon::now()->subDays(365));
-                    }
+                    $debitDate = $admissionDebit->created_at instanceof \DateTimeInterface
+                        ? \Carbon\Carbon::parse($admissionDebit->created_at)
+                        : \Carbon\Carbon::parse((string) $admissionDebit->created_at);
+                    $canAccessAdmission = $debitDate->gte(\Carbon\Carbon::now()->subDays(365));
                 }
             }
-            $admissionLocked = !$canAccessAdmission;
-        } catch (\Throwable $e) {
-            $canAccessAdmission = false;
-            $admissionLocked = true;
         }
+        $admissionLocked = !$canAccessAdmission;
+    } catch (\Throwable $e) {
+        $canAccessAdmission = false;
+        $admissionLocked = true;
     }
+}
 
     // Get featured categories with job counts
     $featuredCategories = collect();
@@ -1154,9 +1156,9 @@
                         <span class="enl-comp-text" onclick="document.getElementById('enlProfileModal').style.display='flex'">{{ $empCompletion }}% Complete</span>
                     </div>
                     
-                    <!-- Post Job Button (locked: show limit-over popup with "Use credits for 1 Job Post"; no auto-deduct) -->
+                    <!-- Post Job Button: click opens choice popup (Need assistant → Wallet, Post by self → Job form) -->
                     @php $postJobLocked = !($canPost ?? true); @endphp
-                    <a href="{{ $postJobLocked ? route('public.account.wallet') : route('public.account.jobs.create') }}" class="enl-postjob {{ $postJobLocked ? 'enl-postjob-locked' : '' }} @if($postJobLocked && $account->isEmployer() && $jobPostCreditsRequired > 0) enl-limit-over-trigger @endif" data-limit-over="job_post" data-credits-required="{{ $jobPostCreditsRequired }}" data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" title="{{ $postJobLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
+                    <a href="#" class="enl-postjob enl-postjob-choice-trigger {{ $postJobLocked ? 'enl-postjob-locked' : '' }}" data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" data-can-post="{{ $canPost ? '1' : '0' }}" title="{{ __('Choose how to post job') }}">
                         @if($postJobLocked)
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
                             <span>{{ __('Post Job') }}</span>
@@ -1312,6 +1314,67 @@
     </div>
 </div>
 
+@if($account && $account->isEmployer())
+{{-- Post Job choice popup: Need assistant (→ Wallet) or Post by self (→ Job form) --}}
+<div id="enlPostJobChoiceModal" class="enl-pm-overlay" style="display:none;">
+    <div class="enl-pm-modal" style="max-width:420px;">
+        <button type="button" class="enl-pm-close" onclick="document.getElementById('enlPostJobChoiceModal').style.display='none'">&times;</button>
+        <h5 style="font-size:18px;font-weight:700;color:#333;margin-bottom:12px;">
+            <i class="fa fa-plus-circle" style="color:#0073d1;margin-right:8px;"></i>
+            {{ __('Post Job') }}
+        </h5>
+        <p style="font-size:14px;color:#555;line-height:1.5;margin-bottom:20px;">{{ __('Choose how you want to post a job:') }}</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <button type="button" id="enlPostJobChoiceNeedAssistantBtn" style="padding:12px 18px;border:1.5px solid #0073d1;border-radius:8px;background:#fff;color:#0073d1;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+                <i class="fa fa-hand-holding-heart" style="margin-right:8px;"></i> {{ __('Need assistant for job posting') }}
+            </button>
+            <button type="button" id="enlPostJobChoiceBySelfBtn" style="padding:12px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,#0073d1,#005bb5);color:#fff;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+                <i class="fa fa-edit" style="margin-right:8px;"></i> {{ __('Post a job by self') }}
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    var trigger = document.querySelector('a.enl-postjob-choice-trigger');
+    var choiceModal = document.getElementById('enlPostJobChoiceModal');
+    var needAssistantBtn = document.getElementById('enlPostJobChoiceNeedAssistantBtn');
+    var bySelfBtn = document.getElementById('enlPostJobChoiceBySelfBtn');
+    var limitOverModal = document.getElementById('enlLimitOverModal');
+    if (!trigger || !choiceModal) return;
+    trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        choiceModal.style.display = 'flex';
+    });
+    choiceModal.addEventListener('click', function(e) {
+        if (e.target === choiceModal) choiceModal.style.display = 'none';
+    });
+    if (needAssistantBtn) {
+        needAssistantBtn.addEventListener('click', function() {
+            var url = trigger.getAttribute('data-wallet-url');
+            if (url) window.location.href = url;
+        });
+    }
+    if (bySelfBtn) {
+        bySelfBtn.addEventListener('click', function() {
+            var canPost = trigger.getAttribute('data-can-post') === '1';
+            var jobCreateUrl = trigger.getAttribute('data-job-create-url');
+            if (canPost && jobCreateUrl) {
+                choiceModal.style.display = 'none';
+                window.location.href = jobCreateUrl;
+            } else if (limitOverModal) {
+                choiceModal.style.display = 'none';
+                limitOverModal.style.display = 'flex';
+            } else if (jobCreateUrl) {
+                choiceModal.style.display = 'none';
+                window.location.href = jobCreateUrl;
+            }
+        });
+    }
+})();
+</script>
+@endif
+
 @if($account && $account->isEmployer() && $jobPostCreditsRequired > 0)
 <!-- Limit over popup: message + Use credits for 1 Job Post (no auto-deduct) -->
 <div id="enlLimitOverModal" class="enl-pm-overlay" style="display:none;">
@@ -1334,15 +1397,11 @@
 </div>
 <script>
 (function() {
-    var trigger = document.querySelector('a.enl-limit-over-trigger[data-limit-over="job_post"]');
+    var trigger = document.querySelector('a.enl-postjob-choice-trigger[data-purchase-url]');
     var modal = document.getElementById('enlLimitOverModal');
     var useCreditsBtn = document.getElementById('enlLimitOverUseCreditsBtn');
     var walletBtn = document.getElementById('enlLimitOverWalletBtn');
     if (!trigger || !modal || !useCreditsBtn) return;
-    trigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        modal.style.display = 'flex';
-    });
     useCreditsBtn.addEventListener('click', function() {
         var url = trigger.getAttribute('data-purchase-url');
         var jobCreateUrl = trigger.getAttribute('data-job-create-url');

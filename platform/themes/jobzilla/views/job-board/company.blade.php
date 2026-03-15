@@ -290,13 +290,15 @@
             <div class="cd-hero-info">
                 <h1>{{ $company->name }} {!! $company->badge !!}</h1>
                 <div class="cd-hero-meta">
-                    @if ($company->full_address)
-                        <span><i class="feather-map-pin"></i> {{ $company->full_address }}</span>
-                    @elseif ($company->address)
-                        <span><i class="feather-map-pin"></i> {{ $company->address }}</span>
-                    @endif
-                    @if ($company->website && !empty(trim($company->website)))
-                        <a href="{{ $company->website }}" target="_blank" rel="noopener"><i class="feather-globe"></i> {{ Str::limit($company->website, 50) }}</a>
+                    @if ($canViewSchoolContactInfo ?? true)
+                        @if ($company->full_address)
+                            <span><i class="feather-map-pin"></i> {{ $company->full_address }}</span>
+                        @elseif ($company->address)
+                            <span><i class="feather-map-pin"></i> {{ $company->address }}</span>
+                        @endif
+                        @if ($company->website && !empty(trim($company->website)))
+                            <a href="{{ $company->website }}" target="_blank" rel="noopener"><i class="feather-globe"></i> {{ Str::limit($company->website, 50) }}</a>
+                        @endif
                     @endif
                 </div>
                 @if ($company->description && !empty(trim($company->description)))
@@ -370,26 +372,36 @@
                             </div>
                         @endif
 
-                        @if ($company->email)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Email') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->email }}</span>
-                            </div>
-                        @endif
-
-                        @if ($company->phone)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Phone') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->phone }}</span>
-                            </div>
-                        @endif
-
-                        @if ($company->website)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Website') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
-                                    <a href="{{ $company->website }}" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;">{{ $company->website }}</a>
-                                </span>
+                        @if ($canViewSchoolContactInfo ?? true)
+                            @if ($company->email)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Email') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->email }}</span>
+                                </div>
+                            @endif
+                            @if ($company->phone)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Phone') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->phone }}</span>
+                                </div>
+                            @endif
+                            @if ($company->website)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Website') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                        <a href="{{ $company->website }}" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;">{{ $company->website }}</a>
+                                    </span>
+                                </div>
+                            @endif
+                        @else
+                            <div class="company-detail-item p-3 rounded" style="background: #f8fafc; border: 1px dashed #e2e8f0;">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <i class="fas fa-lock text-secondary"></i>
+                                    <span style="color: #475569; font-size: 15px;">{{ __('plugins/job-board::messages.view_contact_info_locked') }}</span>
+                                    @if (!empty($contactInfoUpgradeUrl))
+                                        <a href="{{ $contactInfoUpgradeUrl }}" class="btn btn-sm btn-primary ms-2">{{ __('Upgrade') }}</a>
+                                    @endif
+                                </div>
                             </div>
                         @endif
 
@@ -435,16 +447,18 @@
                             </div>
                         @endif
 
-                        @if ($company->full_address)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Full Address') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->full_address }}</span>
-                            </div>
-                        @elseif ($company->address)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Address') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->address }}</span>
-                            </div>
+                        @if ($canViewSchoolContactInfo ?? true)
+                            @if ($company->full_address)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Full Address') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->full_address }}</span>
+                                </div>
+                            @elseif ($company->address)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Address') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->address }}</span>
+                                </div>
+                            @endif
                         @endif
 
                         @if (is_plugin_active('location'))
@@ -675,23 +689,13 @@
                     <h4 class="cd-section-title mb-3">
                         <i class="fas fa-lock text-secondary me-2"></i>{{ __('Admission Form on Profile') }} – {{ __('Locked') }}
                     </h4>
-                    <p class="text-muted mb-3">{{ __('This feature is not included in your current package. Add "Admission Form on Profile" to your package or unlock it with credits to show the admission enquiry form on your institution profile.') }}</p>
+                    <p class="text-muted mb-3">{{ __('This feature is not included in your current package. Unlock it with payment (not coins) to show the admission enquiry form on your institution profile.') }}</p>
                     @if (!empty($isOwner))
-                        @if (!empty($canUnlockAdmission))
-                            <form action="{{ route('public.account.wallet.unlock_admission_form') }}" method="POST" class="d-inline">
-                                @csrf
-                                <input type="hidden" name="redirect_url" value="{{ $company->url }}">
-                                <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill">
-                                    <i class="fas fa-coins me-2"></i>{{ __('Unlock with :credits credits', ['credits' => $admissionUnlockCredits]) }}
-                                </button>
-                            </form>
-                        @elseif (isset($admissionUnlockCredits) && $admissionUnlockCredits > 0)
-                            <p class="mb-0">
-                                <a href="{{ route('public.account.wallet') }}" class="btn btn-outline-primary px-4 py-2 rounded-pill">
-                                    <i class="fas fa-wallet me-2"></i>{{ __('Add credits to unlock') }} ({{ __(':credits credits required', ['credits' => $admissionUnlockCredits]) }})
-                                </a>
-                            </p>
-                        @endif
+                        <p class="mb-0">
+                            <a href="{{ route('public.account.packages') }}#choose-plan" class="btn btn-primary px-4 py-2 rounded-pill">
+                                <i class="fas fa-credit-card me-2"></i>{{ __('Unlock with payment') }}
+                            </a>
+                        </p>
                     @endif
                 </div>
                 @endif
@@ -749,7 +753,7 @@
                                         </div>
                                     </li>
                                 @endif
-                                @if ($company->phone)
+                                @if (($canViewSchoolContactInfo ?? true) && $company->phone)
                                     <li>
                                         <span class="cd-info-icon"><i class="fas fa-mobile-alt"></i></span>
                                         <div class="cd-info-text">

@@ -13,6 +13,19 @@
                         <p class="text-muted small mb-0">{{ __('Employer') }}: {{ $item->account ? trim($item->account->first_name . ' ' . $item->account->last_name) : '—' }} (ID: {{ $item->account_id }})</p>
                     </div>
                     <div class="col-md-6">
+                        <x-core::form.select
+                            name="status"
+                            :label="__('Status')"
+                            :options="[
+                                'pending' => __('Pending'),
+                                'accepted' => __('Accepted'),
+                                'rejected' => __('Rejected'),
+                                'posted' => __('Posted'),
+                            ]"
+                            :value="$item->status"
+                        />
+                    </div>
+                    <div class="col-md-6">
                         <x-core::form.text-input
                             name="title"
                             :label="__('Title')"

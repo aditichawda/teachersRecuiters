@@ -641,8 +641,40 @@
     </div>
 </form>
 
+{{-- Buy credits popup (shown when insufficient credits for Add email / Add phone) --}}
+<div id="buy-credits-popup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; margin:20px; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <p id="buy-credits-popup-msg" class="mb-4" style="font-size:15px; color:#333;">{{ __('Insufficient credits. Please buy credits to use this feature.') }}</p>
+        <div class="d-flex gap-2 justify-content-end">
+            <button type="button" class="btn btn-secondary" id="buy-credits-popup-close">{{ __('Cancel') }}</button>
+            <a href="{{ $walletUrl ?? route('public.account.wallet') }}" class="btn btn-primary" id="buy-credits-popup-wallet">{{ __('Buy credits') }}</a>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var walletUrl = '{{ $walletUrl ?? route("public.account.wallet") }}';
+    var accountCredits = {{ (int) ($accountCredits ?? 0) }};
+    var emailCreditsRequired = {{ (int) ($emailCreditsRequired ?? 100) }};
+    var wpCreditsRequired = {{ (int) ($wpCreditsRequired ?? 10) }};
+
+    function showBuyCreditsPopup(msg) {
+        var el = document.getElementById('buy-credits-popup');
+        var msgEl = document.getElementById('buy-credits-popup-msg');
+        if (el && msgEl) {
+            msgEl.textContent = msg || '{{ __("Insufficient credits. Please buy credits from Wallet to use this feature.") }}';
+            el.style.display = 'flex';
+        }
+    }
+    function hideBuyCreditsPopup() {
+        var el = document.getElementById('buy-credits-popup');
+        if (el) el.style.display = 'none';
+    }
+    document.getElementById('buy-credits-popup-close')?.addEventListener('click', hideBuyCreditsPopup);
+    document.getElementById('buy-credits-popup')?.addEventListener('click', function(e) {
+        if (e.target === this) hideBuyCreditsPopup();
+    });
 
     // ===== JOB TITLES DATABASE =====
     const jobTitles = [
@@ -907,35 +939,85 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // ===== INTERNAL EMAILS (up to 3) =====
-    document.getElementById('add-internal-email-btn').addEventListener('click', function() {
+    // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits; else show Buy credits popup =====
+    document.getElementById('add-internal-email-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         const list = document.getElementById('internal-emails-list');
         const rows = list.querySelectorAll('.jp-internal-email-row');
         if (rows.length >= 3) return;
-        const row = document.createElement('div');
-        row.className = 'jp-internal-email-row';
-        row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
-        row.innerHTML = '<input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" style="flex:1;">' +
-            '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="ti ti-x"></i></button>';
-        list.appendChild(row);
-        row.querySelector('.jp-remove-internal-email').addEventListener('click', function() { row.remove(); });
+        if (accountCredits < emailCreditsRequired) {
+            showBuyCreditsPopup('{{ __("Insufficient credits. Need 100 credits (one-time) for additional email. Please buy credits from Wallet.") }}');
+            return;
+        }
+        var btn = this;
+        var deductUrl = '{{ route("public.account.jobs.deduct-additional-email") }}';
+        if (!deductUrl) { showBuyCreditsPopup('{{ __("Action not available.") }}'); return; }
+        btn.disabled = true;
+        var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        fetch(deductUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({})
+        })
+        .then(function(r) { return r.json().catch(function() { return { success: false, message: 'Invalid response' }; }); })
+        .then(function(data) {
+            if (data && data.success === true) {
+                var row = document.createElement('div');
+                row.className = 'jp-internal-email-row';
+                row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+                row.innerHTML = '<input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" style="flex:1;">' +
+                    '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="ti ti-x"></i></button>';
+                list.appendChild(row);
+                row.querySelector('.jp-remove-internal-email').addEventListener('click', function() { row.remove(); });
+            } else {
+                showBuyCreditsPopup(data && data.message ? data.message : '{{ __("Insufficient credits. Please buy credits from Wallet.") }}');
+            }
+        })
+        .catch(function() { showBuyCreditsPopup('{{ __("Request failed. Please try again or buy credits from Wallet.") }}'); })
+        .finally(function() { btn.disabled = false; });
     });
     document.getElementById('internal-emails-list').addEventListener('click', function(e) {
         if (e.target.closest('.jp-remove-internal-email')) e.target.closest('.jp-internal-email-row').remove();
     });
 
-    // ===== INTERNAL PHONES (up to 3) =====
-    document.getElementById('add-internal-phone-btn').addEventListener('click', function() {
+    // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
+    document.getElementById('add-internal-phone-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         const list = document.getElementById('internal-phones-list');
         const rows = list.querySelectorAll('.jp-internal-phone-row');
         if (rows.length >= 3) return;
-        const row = document.createElement('div');
-        row.className = 'jp-internal-phone-row';
-        row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
-        row.innerHTML = '<input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" style="flex:1;">' +
-            '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="ti ti-x"></i></button>';
-        list.appendChild(row);
-        row.querySelector('.jp-remove-internal-phone').addEventListener('click', function() { row.remove(); });
+        if (accountCredits < wpCreditsRequired) {
+            showBuyCreditsPopup('{{ __("Insufficient credits. Need 10 credits per number for WhatsApp alerts. Please buy credits from Wallet.") }}');
+            return;
+        }
+        var btn = this;
+        var deductUrl = '{{ route("public.account.jobs.deduct-whatsapp-number") }}';
+        if (!deductUrl) { showBuyCreditsPopup('{{ __("Action not available.") }}'); return; }
+        btn.disabled = true;
+        var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        fetch(deductUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({})
+        })
+        .then(function(r) { return r.json().catch(function() { return { success: false, message: 'Invalid response' }; }); })
+        .then(function(data) {
+            if (data && data.success === true) {
+                var row = document.createElement('div');
+                row.className = 'jp-internal-phone-row';
+                row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+                row.innerHTML = '<input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" style="flex:1;">' +
+                    '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="ti ti-x"></i></button>';
+                list.appendChild(row);
+                row.querySelector('.jp-remove-internal-phone').addEventListener('click', function() { row.remove(); });
+            } else {
+                showBuyCreditsPopup(data && data.message ? data.message : '{{ __("Insufficient credits. Please buy credits from Wallet.") }}');
+            }
+        })
+        .catch(function() { showBuyCreditsPopup('{{ __("Request failed. Please try again or buy credits from Wallet.") }}'); })
+        .finally(function() { btn.disabled = false; });
     });
     document.getElementById('internal-phones-list').addEventListener('click', function(e) {
         if (e.target.closest('.jp-remove-internal-phone')) e.target.closest('.jp-internal-phone-row').remove();

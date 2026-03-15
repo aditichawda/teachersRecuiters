@@ -3,8 +3,11 @@
 namespace Botble\JobBoard\Jobs;
 
 use Botble\JobBoard\Facades\JobBoardHelper;
+use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
+use Botble\JobBoard\Models\Account;
+use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\CreditConsumption;
 use Botble\Media\Facades\RvMedia;
@@ -546,7 +549,7 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
             ]);
             
             if ($whatsappEnabled) {
-                // Per-alert credit deduction: only send WhatsApp if employer has credits (New Application Alert by WhatsApp)
+                // WhatsApp: send only if employer has entitlement (deducted when adding phone; valid till package active)
                 $shouldSendWhatsApp = true;
                 
                 // Check if credits system is enabled and table exists
@@ -566,26 +569,9 @@ class SendEmployerApplicationNotificationJob implements ShouldQueue
                     try {
                     $account = $this->jobModel->author;
                     $account->refresh();
-                    $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
-                    if ($account->credits < $wpCredits) {
+                    if (! CreditConsumption::hasEntitlement($account, CreditConsumption::FEATURE_APPLICATION_ALERT_WP)) {
                         $shouldSendWhatsApp = false;
-                        Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - insufficient credits (per-alert)', [
-                            'job_id' => $this->jobModel->id,
-                            'account_credits' => $account->credits,
-                            'required' => $wpCredits,
-                        ]);
-                    } else {
-                        $ok = CreditConsumption::deductForFeature(
-                            $account,
-                            CreditConsumption::FEATURE_APPLICATION_ALERT_WP,
-                            $wpCredits,
-                            'New Application Alert by WhatsApp (per alert)',
-                            ['job_id' => $this->jobModel->id, 'application_id' => $this->application->id]
-                        );
-                        if (! $ok) {
-                            $shouldSendWhatsApp = false;
-                            Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - deduct failed', ['job_id' => $this->jobModel->id]);
-                        }
+                        Log::warning('[WHATSAPP_NOTIFICATION] ✗ Skipping WhatsApp - no entitlement (valid till package active)', ['job_id' => $this->jobModel->id]);
                     }
                     } catch (\Exception $e) {
                         // If credit check fails, still send WhatsApp (don't block notifications)

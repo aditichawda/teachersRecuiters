@@ -320,6 +320,24 @@
 @endunless
 
 @if (is_plugin_active('job-board'))
+    @php
+        $jobSeekerCanApply = true;
+        $jobSeekerPackagesUrl = function_exists('route') ? route('public.account.jobseeker.packages') : '#';
+        $jobSeekerApplyMessage = '';
+        if (auth('account')->check()) {
+            $acc = auth('account')->user();
+            if ($acc && method_exists($acc, 'isJobSeeker') && $acc->isJobSeeker()) {
+                $jobSeekerCtxForApply = \Botble\JobBoard\Supports\JobSeekerPackageContext::forAccount($acc);
+                $jobSeekerCanApply = $jobSeekerCtxForApply->canApply();
+                $jobSeekerPackagesUrl = $jobSeekerCtxForApply->packagesUrl();
+                if (!$jobSeekerCanApply) {
+                    $jobSeekerApplyMessage = $jobSeekerCtxForApply->hasPackage() && $jobSeekerCtxForApply->isPeriodValid()
+                        ? trans('plugins/job-board::messages.job_apply_limit_reached')
+                        : trans('plugins/job-board::messages.job_apply_upgrade_required');
+                }
+            }
+        }
+    @endphp
     @include(Theme::getThemeNamespace('views.job-board.partials.apply-modal'))
     @include(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'))
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">

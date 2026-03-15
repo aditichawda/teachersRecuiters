@@ -4,6 +4,7 @@ namespace Botble\JobBoard\Listeners;
 
 use Botble\Base\Facades\EmailHandler;
 use Botble\JobBoard\Models\Account;
+use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Package;
 use Botble\JobBoard\Models\Transaction;
 use Botble\Payment\Enums\PaymentStatusEnum;
@@ -44,11 +45,32 @@ class SubscribedPackageListener
             return;
         }
 
+        // Idempotency: if we've already created a transaction for this payment, don't process again
+        if (Transaction::query()->where('payment_id', $payment->id)->exists()) {
+            return;
+        }
+
         if (($payment->status == PaymentStatusEnum::COMPLETED)) {
-            $account->credits += $package->number_of_listings;
+            $creditsToAdd = $package->isAdmissionUnlockOnly() ? 0 : (int) $package->number_of_listings;
+            $account->credits += $creditsToAdd;
             $account->save();
 
             $account->packages()->attach($package);
+
+            // When package is "Admission Form Unlock" (payment only, no credits), grant admission entitlement
+            if ($package->isAdmissionUnlockOnly() && \Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
+                Transaction::query()->create([
+                    'account_id' => $account->getKey(),
+                    'account_type' => $account->isEmployer() ? 'employer' : 'job_seeker',
+                    'credits' => 0,
+                    'type' => Transaction::TYPE_DEBIT,
+                    'feature_key' => CreditConsumption::FEATURE_ADMISSION_ENQUIRY,
+                    'description' => __('Admission Form on Profile (paid)'),
+                    'payment_id' => $payment->id,
+                    'package_id' => $package->getKey(),
+                    'package_name' => $package->name,
+                ]);
+            }
         }
 
         $accountType = $account->isEmployer() ? 'employer' : 'job_seeker';

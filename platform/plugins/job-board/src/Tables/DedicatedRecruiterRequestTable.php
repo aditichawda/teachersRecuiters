@@ -4,6 +4,8 @@ namespace Botble\JobBoard\Tables;
 
 use Botble\JobBoard\Models\DedicatedRecruiterRequest;
 use Botble\Table\Abstracts\TableAbstract;
+use Botble\Table\Actions\DeleteAction;
+use Botble\Table\Actions\EditAction;
 use Botble\Table\Columns\Column;
 use Botble\Table\Columns\CreatedAtColumn;
 use Botble\Table\Columns\IdColumn;
@@ -16,12 +18,17 @@ class DedicatedRecruiterRequestTable extends TableAbstract
 {
     public function setup(): void
     {
-        $this->model(DedicatedRecruiterRequest::class);
+        $this
+            ->model(DedicatedRecruiterRequest::class)
+            ->addActions([
+                EditAction::make()->route('dedicated-recruiter-requests.edit')->permission('dedicated-recruiter-requests.index'),
+                DeleteAction::make()->route('dedicated-recruiter-requests.destroy')->permission('dedicated-recruiter-requests.index'),
+            ]);
     }
 
     public function query(): Relation|Builder|QueryBuilder
     {
-        $query = $this->getModel()->query()->select(['*'])->with(['account:id,first_name,last_name,email', 'company:id,name']);
+        $query = $this->getModel()->query()->select(['*'])->with(['account:id,first_name,last_name,email', 'company:id,name', 'staff:id,first_name,last_name,email']);
 
         if ($keyword = $this->request()->input('search.value')) {
             $keyword = '%' . $keyword . '%';
@@ -63,10 +70,26 @@ class DedicatedRecruiterRequestTable extends TableAbstract
             Column::make('staff_id')
                 ->title(__('Staff'))
                 ->orderable(false)
-                ->formatUsing(fn ($v) => $v ?: '—'),
+                ->formatUsing(function ($value, DedicatedRecruiterRequest $item) {
+                    $staff = $item->staff;
+                    if (! $staff) {
+                        return '—';
+                    }
+                    $name = trim(e($staff->first_name . ' ' . $staff->last_name)) ?: e($staff->email);
+                    return $name;
+                }),
             Column::make('status')
                 ->title(__('Status'))
-                ->formatUsing(fn ($v) => ucfirst($v ?? 'pending')),
+                ->orderable(true)
+                ->formatUsing(function ($v, DedicatedRecruiterRequest $item) {
+                    $status = $item->status ?? 'pending';
+                    $badge = match ($status) {
+                        DedicatedRecruiterRequest::STATUS_ACCEPTED => 'bg-success',
+                        DedicatedRecruiterRequest::STATUS_REJECTED => 'bg-danger',
+                        default => 'bg-warning text-dark',
+                    };
+                    return '<span class="badge ' . $badge . '">' . ucfirst($status) . '</span>';
+                }),
             Column::make('actions')
                 ->title(__('Actions'))
                 ->orderable(false)

@@ -30,6 +30,7 @@ use Botble\JobBoard\Models\Tag;
 use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Repositories\Interfaces\JobInterface;
+use Botble\JobBoard\Supports\JobSeekerPackageContext;
 use Botble\JobBoard\Supports\PackageContext;
 use Botble\Language\Facades\Language;
 use Botble\Location\Facades\Location;
@@ -678,6 +679,20 @@ class PublicController extends BaseController
                             trans('plugins/job-board::messages.already_applied')
                         );
                 }
+
+                // Job seeker package: enforce apply limit; if exceeded, ask to upgrade
+                $jsCtx = JobSeekerPackageContext::forAccount($account);
+                if (! $jsCtx->canApply()) {
+                    $message = $jsCtx->hasPackage() && $jsCtx->isPeriodValid()
+                        ? trans('plugins/job-board::messages.job_apply_limit_reached')
+                        : trans('plugins/job-board::messages.job_apply_upgrade_required');
+
+                    return $this
+                        ->httpResponse()
+                        ->setError()
+                        ->setMessage($message)
+                        ->setData(['upgrade_url' => $jsCtx->packagesUrl()]);
+                }
             }
 
             $jobApplication = new JobApplication();
@@ -827,6 +842,18 @@ class PublicController extends BaseController
             
             $jobApplication->fill($fillableData);
             $jobApplication->save();
+
+            if ($account && $account->isJobSeeker()) {
+                // Used wallet-purchased job apply slot when package limit was already reached
+                if (Schema::hasColumn('jb_accounts', 'job_apply_credits_balance')) {
+                    $bal = (int) ($account->getAttribute('job_apply_credits_balance') ?? 0);
+                    if ($bal > 0 && $jsCtx->jobApplyLimit !== null && $jsCtx->jobApplicationsUsed >= $jsCtx->jobApplyLimit) {
+                        $account->job_apply_credits_balance = $bal - 1;
+                        $account->save();
+                    }
+                }
+                JobSeekerPackageContext::clearCache((int) $account->getKey());
+            }
 
             \Log::info('[JOB_APPLICATION] Application saved successfully', [
                 'application_id' => $jobApplication->id,
@@ -1446,6 +1473,20 @@ class PublicController extends BaseController
             $canUnlockAdmission = $isOwner && $currentAccount->credits >= $admissionUnlockCredits && $admissionUnlockCredits > 0;
         }
 
+        // Job seeker package: "View School Contact Info" – gate email, phone, address, website for job seekers without feature
+        $canViewSchoolContactInfo = true;
+        $contactInfoUpgradeUrl = null;
+        if (Auth::guard('account')->check() && JobBoardHelper::isEnabledCreditsSystem()) {
+            $viewerAccount = Auth::guard('account')->user();
+            if ($viewerAccount->isJobSeeker()) {
+                $jsCtx = JobSeekerPackageContext::forAccount($viewerAccount);
+                $canViewSchoolContactInfo = $jsCtx->hasViewContactInfo();
+                if (! $canViewSchoolContactInfo) {
+                    $contactInfoUpgradeUrl = $jsCtx->packagesUrl();
+                }
+            }
+        }
+
         return Theme::scope(
             'job-board.company',
             compact(
@@ -1458,6 +1499,8 @@ class PublicController extends BaseController
                 'admissionUnlockCredits',
                 'isOwner',
                 'canUnlockAdmission',
+                'canViewSchoolContactInfo',
+                'contactInfoUpgradeUrl',
             ),
             'plugins/job-board::themes.company'
         )->render();
@@ -1647,9 +1690,13 @@ class PublicController extends BaseController
                 ->get(['id', 'name']);
         }
 
+        $candidateIsFeatured = $candidate->isJobSeeker()
+            ? JobSeekerPackageContext::forAccount($candidate)->hasFeaturedProfile()
+            : false;
+
         return Theme::scope(
             'job-board.candidate',
-            compact('candidate', 'experiences', 'educations', 'account', 'canReview', 'profileLocked', 'employerJobs'),
+            compact('candidate', 'experiences', 'educations', 'account', 'canReview', 'profileLocked', 'employerJobs', 'candidateIsFeatured'),
             'plugins/job-board::themes.candidate'
         )->render();
     }

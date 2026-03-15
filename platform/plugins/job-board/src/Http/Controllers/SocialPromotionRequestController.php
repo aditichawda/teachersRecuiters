@@ -56,7 +56,7 @@ class SocialPromotionRequestController extends BaseController
 
     public function update(Request $request, int $id)
     {
-        $item = SocialPromotionRequest::query()->where('status', SocialPromotionRequest::STATUS_PENDING)->findOrFail($id);
+        $item = SocialPromotionRequest::query()->findOrFail($id);
 
         $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
@@ -64,6 +64,7 @@ class SocialPromotionRequestController extends BaseController
             'platform' => ['required', 'string', 'max:60'],
             'message' => ['nullable', 'string', 'max:2000'],
             'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'status' => ['required', 'string', 'in:pending,accepted,rejected,posted'],
         ]);
 
         $imageUrl = $item->image;
@@ -82,6 +83,7 @@ class SocialPromotionRequestController extends BaseController
             'platform' => $request->input('platform'),
             'message' => $request->input('message'),
             'image' => $imageUrl,
+            'status' => $request->input('status'),
         ]);
 
         return redirect()->route('social-promotion-requests.index')->with('success_msg', __('Request updated.'));
@@ -89,31 +91,7 @@ class SocialPromotionRequestController extends BaseController
 
     public function accept(Request $request, int $id)
     {
-        $req = SocialPromotionRequest::query()->where('status', 'pending')->findOrFail($id);
-        $account = $req->account;
-        if (! $account) {
-            $msg = __('Employer account not found.');
-            if ($request->expectsJson()) {
-                return $this->httpResponse()->setError()->setMessage($msg);
-            }
-            return redirect()->route('social-promotion-requests.index')->with('error_msg', $msg);
-        }
-
-        $credits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_SOCIAL_PROMOTION, 3000);
-        if ($account->credits < $credits) {
-            $msg = __('Employer has insufficient credits.');
-            if ($request->expectsJson()) {
-                return $this->httpResponse()->setError()->setMessage($msg);
-            }
-            return redirect()->route('social-promotion-requests.index')->with('error_msg', $msg);
-        }
-
-        CreditConsumption::deductForFeature(
-            $account,
-            CreditConsumption::FEATURE_SOCIAL_PROMOTION,
-            $credits,
-            'Social Promotion – ' . ($req->platform ?: 'social')
-        );
+        $req = SocialPromotionRequest::query()->where('status', SocialPromotionRequest::STATUS_PENDING)->findOrFail($id);
 
         $req->update([
             'status' => SocialPromotionRequest::STATUS_ACCEPTED,
@@ -122,9 +100,9 @@ class SocialPromotionRequestController extends BaseController
         ]);
 
         if ($request->expectsJson()) {
-            return $this->httpResponse()->setMessage(__('Request accepted. Credits deducted.'));
+            return $this->httpResponse()->setMessage(__('Request accepted.'));
         }
-        return redirect()->route('social-promotion-requests.index')->with('success_msg', __('Request accepted. Credits deducted.'));
+        return redirect()->route('social-promotion-requests.index')->with('success_msg', __('Request accepted.'));
     }
 
     public function reject(Request $request, int $id)
@@ -135,5 +113,12 @@ class SocialPromotionRequestController extends BaseController
             return $this->httpResponse()->setMessage(__('Request rejected.'));
         }
         return redirect()->route('social-promotion-requests.index')->with('success_msg', __('Request rejected.'));
+    }
+
+    public function destroy(int $id)
+    {
+        $item = SocialPromotionRequest::query()->findOrFail($id);
+        $item->delete();
+        return $this->httpResponse()->setMessage(__('Request deleted.'));
     }
 }

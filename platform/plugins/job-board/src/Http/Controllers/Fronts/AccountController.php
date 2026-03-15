@@ -2,6 +2,7 @@
 
 namespace Botble\JobBoard\Http\Controllers\Fronts;
 
+use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Forms\Fronts\AccountLanguageForm;
@@ -19,6 +20,8 @@ use Botble\JobBoard\Models\JobSkill;
 use Botble\JobBoard\Models\Language;
 use Botble\JobBoard\Models\Specialization;
 use Botble\JobBoard\Models\Tag;
+use Botble\JobBoard\Models\Transaction;
+use Botble\JobBoard\Supports\JobSeekerPackageContext;
 use Illuminate\Support\Facades\Schema;
 use Botble\Media\Facades\RvMedia;
 use Botble\Media\Models\MediaFile;
@@ -133,7 +136,9 @@ class AccountController extends BaseController
         }
         if (Schema::hasTable('jb_specializations')) {
             // Use BaseStatusEnum::PUBLISHED to ensure correct enum value
+            // Use BaseStatusEnum::PUBLISHED to ensure correct enum value
             $specializationsList = Specialization::query()
+                ->where('status', BaseStatusEnum::PUBLISHED)
                 ->where('status', BaseStatusEnum::PUBLISHED)
                 ->orderBy('order')
                 ->orderBy('name')
@@ -356,6 +361,36 @@ class AccountController extends BaseController
                             'account_id' => $account->id,
                             'completion' => $completion,
                         ]);
+                    }
+
+                    // One-time 500 credits reward for profile completion (when credits system is enabled)
+                    if (JobBoardHelper::isEnabledCreditsSystem() && Schema::hasColumn('jb_accounts', 'credits')) {
+                        $profileCompleteBonusKey = 'profile_complete_bonus';
+                        $alreadyGranted = Transaction::query()
+                            ->where('account_id', $account->getKey())
+                            ->where('feature_key', $profileCompleteBonusKey)
+                            ->exists();
+                        if (!$alreadyGranted) {
+                            $rewardCredits = 500;
+                            $account->credits = ($account->credits ?? 0) + $rewardCredits;
+                            $account->save();
+                            Transaction::query()->create([
+                                'account_id' => $account->getKey(),
+                                'account_type' => 'job_seeker',
+                                'credits' => $rewardCredits,
+                                'type' => Transaction::TYPE_CREDIT,
+                                'feature_key' => $profileCompleteBonusKey,
+                                'description' => __('Profile completion reward'),
+                                'user_details' => [
+                                    'name' => $account->name,
+                                    'email' => $account->email,
+                                ],
+                            ]);
+                            \Log::info('[CREDITS] Profile completion reward granted', [
+                                'account_id' => $account->id,
+                                'credits' => $rewardCredits,
+                            ]);
+                        }
                     }
                 }
             } catch (\Exception $e) {
@@ -594,9 +629,13 @@ class AccountController extends BaseController
 
         $skills = $account->favoriteSkills()->pluck('name')->all();
 
+        $jobSeekerCtx = $account->isJobSeeker()
+            ? JobSeekerPackageContext::forAccount($account)
+            : null;
+
         return JobBoardHelper::scope(
             'account.resume-builder',
-            compact('account', 'educations', 'experiences', 'skills')
+            compact('account', 'educations', 'experiences', 'skills', 'jobSeekerCtx')
         );
     }
 

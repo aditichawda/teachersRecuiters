@@ -79,6 +79,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'credits',
         'job_post_credits_balance',
         'profile_view_credits_balance',
+        'job_apply_credits_balance',
         'profile_views',
         'unique_id',
         
@@ -389,6 +390,18 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
     public function companies(): BelongsToMany
     {
         return $this->belongsToMany(Company::class, 'jb_companies_accounts', 'account_id', 'company_id');
+    }
+
+    /** Parent employer account (for staff/sub-accounts created via Multiple Login). */
+    public function parentAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'parent_account_id');
+    }
+
+    /** Staff/sub-accounts created by this employer via Multiple Login. */
+    public function staffAccounts(): HasMany
+    {
+        return $this->hasMany(Account::class, 'parent_account_id');
     }
 
     public function transactions(): HasMany

@@ -8,6 +8,8 @@
 @if($candidates && ($candidates->count() > 0 || ($candidates instanceof \Illuminate\Pagination\LengthAwarePaginator && $candidates->total() > 0)))
 @foreach ($candidates as $candidate)
     @php
+        $candidateSeekerCtx = $candidate->isJobSeeker() ? \Botble\JobBoard\Supports\JobSeekerPackageContext::forAccount($candidate) : null;
+        $candidateIsFeatured = $candidateSeekerCtx && $candidateSeekerCtx->hasFeaturedProfile();
         // Auto-create slug if missing but candidate is eligible
         if (! JobBoardHelper::isDisabledPublicProfile() && $candidate->isJobSeeker() && $candidate->is_public_profile) {
             if (! $candidate->relationLoaded('slugable')) {
@@ -209,8 +211,13 @@
         
         {{-- Main Info Section --}}
         <div class="cl-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
-            {{-- Name --}}
-            <a href="{{ $canViewCandidates ? $candidate->url : '#' }}" class="cl-name {{ !$canViewCandidates ? 'cl-name-locked' : '' }}" @if(!$canViewCandidates) data-bs-toggle="modal" data-bs-target="#candidateLockModal" onclick="event.preventDefault();" @endif style="font-size: 16px; font-weight: 600; color: #0073d1; text-decoration: none; display: block; margin-bottom: 4px;">{{ $candidate->name }}</a>
+            {{-- Name + Featured badge when package has Featured Profile --}}
+            <div class="d-flex align-items-center gap-2 flex-wrap" style="margin-bottom: 4px;">
+                <a href="{{ $canViewCandidates ? $candidate->url : '#' }}" class="cl-name {{ !$canViewCandidates ? 'cl-name-locked' : '' }}" @if(!$canViewCandidates) data-bs-toggle="modal" data-bs-target="#candidateLockModal" onclick="event.preventDefault();" @endif style="font-size: 16px; font-weight: 600; color: #0073d1; text-decoration: none; display: inline-block;">{{ $candidate->name }}</a>
+                @if($candidateIsFeatured)
+                    <span class="badge bg-warning text-dark" style="font-size: 10px; font-weight: 600;">{{ __('Featured') }}</span>
+                @endif
+            </div>
             
             {{-- Details List (Only Fields with Data) --}}
             <div class="cl-details-list" style="display: flex; flex-direction: column; gap: 6px; flex-wrap: wrap; max-height: 140px;">

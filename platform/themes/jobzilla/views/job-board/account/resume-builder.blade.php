@@ -93,6 +93,34 @@
         font-weight: bold;
         z-index: 5;
     }
+    .rb-template-card.rb-template-locked {
+        pointer-events: none;
+        opacity: 0.85;
+    }
+    .rb-template-card.rb-template-locked .rb-locked-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255,255,255,0.9);
+        z-index: 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        pointer-events: auto;
+    }
+    .rb-template-card.rb-template-locked .rb-locked-overlay i.fa-lock {
+        font-size: 28px;
+        color: #6c757d;
+        margin-bottom: 8px;
+    }
+    .rb-template-card.rb-template-locked .rb-locked-overlay span {
+        font-size: 13px;
+        color: #495057;
+    }
+    .rb-template-card.rb-template-locked .rb-locked-overlay a {
+        pointer-events: auto;
+    }
 
     .rb-template-preview {
         height: 360px;
@@ -285,8 +313,20 @@
         </div>
     </div>
 
-    <!-- Template 2: Modern -->
-    <div class="rb-template-card" data-template="modern" onclick="selectTemplate(this)">
+    <!-- Template 2: Modern (Advance CV – locked unless package includes Advance CV) -->
+    @php
+        $hasAdvanceCv = ($jobSeekerCtx ?? null) && $jobSeekerCtx->hasAdvanceCv();
+        $modernLocked = !$hasAdvanceCv;
+        $upgradeUrl = ($jobSeekerCtx ?? null) ? $jobSeekerCtx->packagesUrl() : (function_exists('route') ? route('public.account.jobseeker.packages') : '#');
+    @endphp
+    <div class="rb-template-card {{ $modernLocked ? 'rb-template-locked' : '' }}" data-template="modern" data-locked="{{ $modernLocked ? '1' : '0' }}" onclick="selectTemplate(this)">
+        @if($modernLocked)
+            <div class="rb-locked-overlay">
+                <i class="fa fa-lock"></i>
+                <span>{{ __('Advance CV') }}</span>
+                <a href="{{ $upgradeUrl }}" class="btn btn-sm btn-primary mt-2">{{ __('Upgrade') }}</a>
+            </div>
+        @endif
         <div class="rb-template-preview">
             <div class="preview-inner">
                 @include(Theme::getThemeNamespace('views.job-board.account.resume-templates.modern'), ['account' => $account, 'educations' => $educations, 'experiences' => $experiences, 'skills' => $skills])
@@ -294,10 +334,10 @@
             <div class="preview-fade"></div>
         </div>
         <div class="rb-template-info">
-            <h5>{{ __('Modern') }}</h5>
+            <h5>{{ __('Modern') }} @if($modernLocked)<span class="badge bg-secondary ms-1" style="font-size: 10px;">{{ __('Upgrade') }}</span>@endif</h5>
             <p>{{ __('Two-column design with sidebar. Profile details and dummy text when fields are empty.') }}</p>
             <div class="rb-template-tags">
-                <span class="rb-template-tag tag-free">Free</span>
+                @if(!$modernLocked)<span class="rb-template-tag tag-free">Free</span>@endif
                 <span class="rb-template-tag">Creative</span>
                 <span class="rb-template-tag">Two Column</span>
             </div>
@@ -347,6 +387,7 @@
 let selectedTemplate = 'classic';
 
 function selectTemplate(card) {
+    if (card.dataset.locked === '1') return;
     document.querySelectorAll('.rb-template-card').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
     selectedTemplate = card.dataset.template;
@@ -374,6 +415,12 @@ function previewResume() {
 }
 
 function downloadResume() {
+    @if(($jobSeekerCtx ?? null) && !($jobSeekerCtx->hasAdvanceCv()))
+    if (selectedTemplate === 'modern') {
+        window.location.href = '{{ $jobSeekerCtx->packagesUrl() }}';
+        return;
+    }
+    @endif
     const url = '{{ route("public.account.resume-builder.download") }}?template=' + selectedTemplate;
     
     fetch(url)
