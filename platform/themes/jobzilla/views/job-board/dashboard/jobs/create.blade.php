@@ -660,6 +660,9 @@
             @if($creditsEnabled && $additionalEmailCredits > 0)
             <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
             @endif
+            @if($creditsEnabled && $additionalEmailCredits > 0)
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
+            @endif
             <div id="internal-emails-list">
                 @php
                     $internalEmails = $isEdit ? old('apply_internal_emails', $job->apply_internal_emails ?? []) : (old('apply_internal_emails') ?? []);
@@ -681,6 +684,9 @@
 
         <div class="jp-group" id="internal-phones-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
             <label class="jp-label">{{ __('Additional phone numbers to receive applications') }} <span class="hint">({{ __('optional, up to 3') }})</span></label>
+            @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
+            @endif
             @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
             <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
             @endif

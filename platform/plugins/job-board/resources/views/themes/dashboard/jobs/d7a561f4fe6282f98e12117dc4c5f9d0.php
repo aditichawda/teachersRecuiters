@@ -646,11 +646,9 @@ body.filter-open {
                     </div>
             </div> -->
 
-            <div class="companies-wrap">
-                <div id="page-loading" style="display: none">
-                    <div class="page-backdrop"></div>
-                    <div class="page-loading"><div></div><div></div><div></div><div></div></div>
-                </div>
+            <div class="companies-wrap" id="companies-listing-container" style="position: relative; min-height: 400px;">
+                <?php echo Theme::partial('loader', ['containerId' => 'companies-loader-overlay', 'size' => 'large', 'text' => 'Loading companies...']); ?>
+
                 <div class="companies-content">
                     <?php switch($layout):
                         case ('list'): ?>

@@ -219,8 +219,14 @@ class AdmissionAccountController extends BaseController
             if (Carbon::now()->lte($packageExpiryAt)) {
                 return true;
             }
+        if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days) {
+            $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+            if (Carbon::now()->lte($packageExpiryAt)) {
+                return true;
+            }
         }
 
+        return $debit->created_at->gte(Carbon::now()->subDays(365));
         return $debit->created_at->gte(Carbon::now()->subDays(365));
     }
 }
