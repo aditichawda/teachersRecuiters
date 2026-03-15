@@ -5,6 +5,8 @@
 <div class="row">
     @foreach ($candidates as $candidate)
         @php
+            $candidateSeekerCtx = $candidate->isJobSeeker() ? \Botble\JobBoard\Supports\JobSeekerPackageContext::forAccount($candidate) : null;
+            $candidateIsFeatured = $candidateSeekerCtx && $candidateSeekerCtx->hasFeaturedProfile();
             // Auto-create slug if missing but candidate is eligible
             if (! JobBoardHelper::isDisabledPublicProfile() && $candidate->isJobSeeker() && $candidate->is_public_profile) {
                 if (! $candidate->relationLoaded('slugable')) {
@@ -22,7 +24,7 @@
         @endphp
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="cand-card-grid" style="height: 100%; display: flex; flex-direction: column;">
-                @if ($candidate->is_featured)
+                @if ($candidateIsFeatured || $candidate->is_featured)
                     <span class="cg-featured">{{ __('Featured') }}</span>
                 @endif
                 <div class="cg-avatar">

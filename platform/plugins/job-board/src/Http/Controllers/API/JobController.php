@@ -10,6 +10,7 @@ use Botble\JobBoard\Http\Resources\JobResource;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\JobApplication;
 use Botble\JobBoard\Repositories\Interfaces\JobInterface;
+use Botble\JobBoard\Supports\JobSeekerPackageContext;
 use Illuminate\Http\Request;
 use App\Services\WhatsappService;
 
@@ -277,6 +278,29 @@ class JobController extends BaseController
                 ->setError()
                 ->setCode(400)
                 ->setMessage(trans('plugins/job-board::messages.job_no_longer_accepting'));
+        }
+
+        $account = auth('account')->user();
+        if ($account && $account->isJobSeeker()) {
+            if (JobApplication::query()->where('job_id', $job->id)->where('account_id', $account->getKey())->exists()) {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setCode(422)
+                    ->setMessage(trans('plugins/job-board::messages.already_applied'));
+            }
+            $jsCtx = JobSeekerPackageContext::forAccount($account);
+            if (! $jsCtx->canApply()) {
+                $message = $jsCtx->hasPackage() && $jsCtx->isPeriodValid()
+                    ? trans('plugins/job-board::messages.job_apply_limit_reached')
+                    : trans('plugins/job-board::messages.job_apply_upgrade_required');
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setCode(422)
+                    ->setMessage($message)
+                    ->setData(['upgrade_url' => $jsCtx->packagesUrl()]);
+            }
         }
 
         $data = $request->validated();

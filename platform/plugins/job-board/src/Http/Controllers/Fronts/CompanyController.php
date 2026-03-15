@@ -67,6 +67,16 @@ class CompanyController extends BaseController
 
     public function create()
     {
+        $account = auth('account')->user();
+        if ($account && JobBoardHelper::employerCreateMultiplecompanies() && JobBoardHelper::isEnabledCreditsSystem() && $account->companies()->count() >= 1) {
+            $required = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_ADDITIONAL_EMPLOYER_PROFILE, 500);
+            if ((int) $account->credits < $required) {
+                return redirect()
+                    ->to(route('public.account.wallet'))
+                    ->with('error_msg', __('To add another institution you need :credits credits. Please buy or use credits from Wallet.', ['credits' => $required]));
+            }
+        }
+
         SeoHelper::setTitle(trans('plugins/job-board::messages.create_a_company'));
         Theme::breadcrumb()
             ->add(trans('plugins/job-board::messages.my_profile'), route('public.account.dashboard'))
@@ -94,10 +104,11 @@ class CompanyController extends BaseController
          */
         $account = auth('account')->user();
 
-        // Additional Employer Profile (per new profile): first company free, from second onwards deduct credits
+        // Additional Employer Profile (per new profile): first company free, from second onwards deduct credits (unless already deducted via popup)
+        $creditsAlreadyDeducted = (bool) $request->input('credits_already_deducted');
         if (JobBoardHelper::employerCreateMultiplecompanies() && JobBoardHelper::isEnabledCreditsSystem()) {
             $existingCount = $account->companies()->count();
-            if ($existingCount >= 1) {
+            if ($existingCount >= 1 && ! $creditsAlreadyDeducted) {
                 $profileCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_ADDITIONAL_EMPLOYER_PROFILE, 500);
                 if ($account->credits < $profileCredits) {
                     return $this->httpResponse()

@@ -5,6 +5,8 @@ namespace Botble\JobBoard\Tables;
 use Botble\JobBoard\Models\SocialPromotionRequest;
 use Botble\Media\Facades\RvMedia;
 use Botble\Table\Abstracts\TableAbstract;
+use Botble\Table\Actions\DeleteAction;
+use Botble\Table\Actions\EditAction;
 use Botble\Table\Columns\Column;
 use Botble\Table\Columns\CreatedAtColumn;
 use Botble\Table\Columns\IdColumn;
@@ -17,7 +19,12 @@ class SocialPromotionRequestTable extends TableAbstract
 {
     public function setup(): void
     {
-        $this->model(SocialPromotionRequest::class);
+        $this
+            ->model(SocialPromotionRequest::class)
+            ->addActions([
+                EditAction::make()->route('social-promotion-requests.edit')->permission('social-promotion-requests.index'),
+                DeleteAction::make()->route('social-promotion-requests.destroy')->permission('social-promotion-requests.index'),
+            ]);
     }
 
     public function query(): Relation|Builder|QueryBuilder
@@ -94,22 +101,30 @@ class SocialPromotionRequestTable extends TableAbstract
                 }),
             Column::make('status')
                 ->title(__('Status'))
-                ->formatUsing(fn ($v) => ucfirst($v ?? 'pending')),
+                ->orderable(true)
+                ->formatUsing(function ($v, SocialPromotionRequest $item) {
+                    $status = $item->status ?? 'pending';
+                    $badge = match ($status) {
+                        SocialPromotionRequest::STATUS_ACCEPTED => 'bg-success',
+                        SocialPromotionRequest::STATUS_REJECTED => 'bg-danger',
+                        SocialPromotionRequest::STATUS_POSTED => 'bg-info',
+                        default => 'bg-warning text-dark',
+                    };
+                    return '<span class="badge ' . $badge . '">' . ucfirst($status) . '</span>';
+                }),
             Column::make('actions')
-                ->title(__('Action'))
+                ->title(__('Actions'))
                 ->orderable(false)
                 ->searchable(false)
                 ->formatUsing(function ($_, SocialPromotionRequest $item) {
                     if ($item->status !== SocialPromotionRequest::STATUS_PENDING) {
-                        return '<span class="badge bg-secondary">' . ucfirst($item->status) . '</span>';
+                        return '—';
                     }
                     $accept = route('social-promotion-requests.accept', $item->id);
                     $reject = route('social-promotion-requests.reject', $item->id);
-                    $edit = route('social-promotion-requests.edit', $item->id);
                     $csrf = csrf_field();
                     return '<form method="post" action="' . e($accept) . '" class="d-inline me-1">' . $csrf . '<button type="submit" class="btn btn-sm btn-success">' . __('Accept') . '</button></form>' .
-                        '<form method="post" action="' . e($reject) . '" class="d-inline me-1">' . $csrf . '<button type="submit" class="btn btn-sm btn-danger">' . __('Reject') . '</button></form>' .
-                        '<a href="' . e($edit) . '" class="btn btn-sm btn-outline-primary">' . __('Edit') . '</a>';
+                        '<form method="post" action="' . e($reject) . '" class="d-inline">' . $csrf . '<button type="submit" class="btn btn-sm btn-danger">' . __('Reject') . '</button></form>';
                 }),
             CreatedAtColumn::make(),
         ];

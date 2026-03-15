@@ -105,7 +105,7 @@
 
                 <!-- NAV Toggle Button -->
                 <button id="mobile-side-drawer" data-target=".header-nav" data-toggle="collapse" type="button"
-                    class="navbar-toggler collapsed">
+                    class="navbar-toggler collapsed mobile-menu-toggle" aria-label="Toggle navigation">
                     <span class="sr-only"><?php echo e(__('Toggle navigation')); ?></span>
                     <span class="icon-bar icon-bar-first"></span>
                     <span class="icon-bar icon-bar-two"></span>
@@ -113,7 +113,7 @@
                 </button>
 
                 <!-- MAIN Nav -->
-                <div class="nav-animation header-nav navbar-collapse collapse d-flex justify-content-end">
+                <div class="nav-animation header-nav navbar-collapse collapse d-flex justify-content-end" id="main-navbar-menu">
                     <ul class="nav navbar-nav">
                         <?php
                             $isJobSeeker = auth('account')->check() && auth('account')->user()->isJobSeeker();
@@ -816,8 +816,119 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* ===== MOBILE MENU TOGGLE STYLES ===== */
+.mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: 2px solid #0073d1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: pointer;
+    z-index: 10001;
+    position: relative;
+}
+
+.mobile-menu-toggle .icon-bar {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background: #0073d1;
+    margin: 4px 0;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.mobile-menu-toggle:not(.collapsed) .icon-bar-first {
+    transform: rotate(45deg) translate(6px, 6px);
+}
+
+.mobile-menu-toggle:not(.collapsed) .icon-bar-two {
+    opacity: 0;
+}
+
+.mobile-menu-toggle:not(.collapsed) .icon-bar-three {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
 /* Mobile Responsive */
 @media (max-width: 991px) {
+    /* Show mobile toggle */
+    .mobile-menu-toggle {
+        display: block;
+        order: 2;
+    }
+    
+    /* Hide desktop nav, show mobile nav */
+    .header-nav {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 280px;
+        height: 100vh;
+        background: #fff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        z-index: 10000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        padding: 80px 20px 20px;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    .header-nav.show,
+    .header-nav:not(.collapse) {
+        left: 0;
+    }
+    
+    .header-nav .navbar-nav {
+        flex-direction: column !important;
+        width: 100%;
+        gap: 0;
+    }
+    
+    .header-nav .nav-item {
+        width: 100%;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .header-nav .nav-link {
+        padding: 15px 10px !important;
+        width: 100%;
+        justify-content: flex-start;
+        color: #1e293b !important;
+    }
+    
+    .header-nav .nav-link:hover {
+        background: #f0f9ff;
+        color: #0073d1 !important;
+    }
+    
+    /* Mobile overlay */
+    .mobile-menu-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+    }
+    
+    .mobile-menu-overlay.show {
+        display: block;
+    }
+    
+    /* Extra nav section mobile */
+    .extra-nav {
+        order: 3;
+        margin-left: auto;
+    }
+    
+    .logo-header {
+        order: 1;
+    }
+    
     .mega-menu {
         position: static !important;
         transform: none !important;
@@ -825,6 +936,8 @@
         width: 100%;
         max-width: 100%;
         margin-top: 10px;
+        box-shadow: none;
+        border-radius: 0;
     }
     
     .mega-menu-tabs-wrapper {
@@ -867,6 +980,34 @@
     
     .mega-menu-grid-count {
         font-size: 11px;
+    }
+    
+    /* Header buttons mobile */
+    .header-nav-btn-section {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        padding: 15px 0;
+    }
+    
+    .twm-nav-sign-up,
+    .twm-nav-post-a-job {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-bar {
+        padding: 10px 15px;
+    }
+    
+    .logo-header img {
+        max-height: 36px;
+    }
+    
+    .header-nav {
+        width: 260px;
     }
 }
 
@@ -1205,6 +1346,64 @@ function switchMegaMenuTab(tabName) {
         selectedButton.classList.add('active');
     }
 }
+
+// Mobile Menu Toggle Functionality
+(function() {
+    function initMobileMenu() {
+        const toggleBtn = document.getElementById('mobile-side-drawer');
+        const navMenu = document.getElementById('main-navbar-menu');
+        const overlay = document.createElement('div');
+        overlay.className = 'mobile-menu-overlay';
+        document.body.appendChild(overlay);
+        
+        if (toggleBtn && navMenu) {
+            toggleBtn.addEventListener('click', function() {
+                const isCollapsed = toggleBtn.classList.contains('collapsed');
+                
+                if (isCollapsed) {
+                    // Open menu
+                    toggleBtn.classList.remove('collapsed');
+                    navMenu.classList.add('show');
+                    overlay.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    // Close menu
+                    toggleBtn.classList.add('collapsed');
+                    navMenu.classList.remove('show');
+                    overlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // Close on overlay click
+            overlay.addEventListener('click', function() {
+                toggleBtn.classList.add('collapsed');
+                navMenu.classList.remove('show');
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            });
+            
+            // Close on menu item click (mobile)
+            const navLinks = navMenu.querySelectorAll('.nav-link');
+            navLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 991) {
+                        toggleBtn.classList.add('collapsed');
+                        navMenu.classList.remove('show');
+                        overlay.classList.remove('show');
+                        document.body.style.overflow = '';
+                    }
+                });
+            });
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMobileMenu);
+    } else {
+        initMobileMenu();
+    }
+})();
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {

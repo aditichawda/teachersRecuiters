@@ -2,6 +2,7 @@
 
 namespace Botble\JobBoard\Http\Controllers;
 
+use Botble\ACL\Models\User;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Supports\Breadcrumb;
 use Botble\JobBoard\Models\CreditConsumption;
@@ -32,31 +33,7 @@ class DedicatedRecruiterRequestController extends BaseController
 
     public function accept(Request $request, int $id)
     {
-        $req = DedicatedRecruiterRequest::query()->where('status', 'pending')->findOrFail($id);
-        $account = $req->account;
-        if (! $account) {
-            $msg = __('Employer account not found.');
-            if ($request->expectsJson()) {
-                return $this->httpResponse()->setError()->setMessage($msg);
-            }
-            return redirect()->route('dedicated-recruiter-requests.index')->with('error_msg', $msg);
-        }
-
-        $credits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_DEDICATED_RECRUITER, 5000);
-        if ($account->credits < $credits) {
-            $msg = __('Employer has insufficient credits.');
-            if ($request->expectsJson()) {
-                return $this->httpResponse()->setError()->setMessage($msg);
-            }
-            return redirect()->route('dedicated-recruiter-requests.index')->with('error_msg', $msg);
-        }
-
-        CreditConsumption::deductForFeature(
-            $account,
-            CreditConsumption::FEATURE_DEDICATED_RECRUITER,
-            $credits,
-            'Dedicated Recruiter – ' . $req->duration_months . ' month(s)'
-        );
+        $req = DedicatedRecruiterRequest::query()->where('status', DedicatedRecruiterRequest::STATUS_PENDING)->findOrFail($id);
 
         $start = Carbon::now();
         $end = Carbon::now()->addMonths($req->duration_months);
@@ -70,9 +47,9 @@ class DedicatedRecruiterRequestController extends BaseController
         ]);
 
         if ($request->expectsJson()) {
-            return $this->httpResponse()->setMessage(__('Request accepted. Credits deducted.'));
+            return $this->httpResponse()->setMessage(__('Request accepted.'));
         }
-        return redirect()->route('dedicated-recruiter-requests.index')->with('success_msg', __('Request accepted. Credits deducted.'));
+        return redirect()->route('dedicated-recruiter-requests.index')->with('success_msg', __('Request accepted.'));
     }
 
     public function reject(Request $request, int $id)
@@ -83,5 +60,42 @@ class DedicatedRecruiterRequestController extends BaseController
             return $this->httpResponse()->setMessage(__('Request rejected.'));
         }
         return redirect()->route('dedicated-recruiter-requests.index')->with('success_msg', __('Request rejected.'));
+    }
+
+    public function edit(int $id)
+    {
+        $item = DedicatedRecruiterRequest::query()->with(['account', 'company', 'staff'])->findOrFail($id);
+        $staffUsers = User::query()
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get(['id', 'first_name', 'last_name', 'email'])
+            ->mapWithKeys(fn (User $u) => [$u->id => trim($u->first_name . ' ' . $u->last_name) ?: $u->email]);
+        $this->pageTitle(__('Edit Dedicated Recruiter Request #:id', ['id' => $item->id]));
+        return view('plugins/job-board::dedicated-recruiter-requests.edit', compact('item', 'staffUsers'));
+    }
+
+    public function update(Request $request, int $id)
+    {
+        $item = DedicatedRecruiterRequest::query()->findOrFail($id);
+        $request->validate([
+            'duration_months' => ['required', 'integer', 'min:1', 'max:24'],
+            'note' => ['nullable', 'string', 'max:2000'],
+            'staff_id' => ['nullable', 'integer', 'exists:users,id'],
+            'status' => ['required', 'string', 'in:pending,accepted,rejected'],
+        ]);
+        $item->update([
+            'duration_months' => $request->input('duration_months'),
+            'note' => $request->input('note'),
+            'staff_id' => $request->input('staff_id') ?: null,
+            'status' => $request->input('status'),
+        ]);
+        return redirect()->route('dedicated-recruiter-requests.index')->with('success_msg', __('Request updated.'));
+    }
+
+    public function destroy(int $id)
+    {
+        $item = DedicatedRecruiterRequest::query()->findOrFail($id);
+        $item->delete();
+        return $this->httpResponse()->setMessage(__('Request deleted.'));
     }
 }

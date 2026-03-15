@@ -69,7 +69,7 @@ class SendCompanyStatusUpdateNotificationJob implements ShouldQueue
                 'status_label' => $statusLabel,
                 'old_status' => $this->oldStatus->getValue(),
                 'old_status_label' => $this->oldStatus->label(),
-                'application_url' => route('public.account.applicants.edit', $this->application->id),
+                'application_url' => route('public.account.applicants.edit', ['applicant' => $this->application->id]),
                 'job_url' => $this->jobModel->url,
             ]);
 

@@ -241,4 +241,16 @@ class PackageContext
 
         return $this->package->hasAdmissionFormOnProfileFeature();
     }
+
+    /**
+     * Whether the employer's package includes Job Posting Assistance (job assistant) – enables the feature in wallet/coin section.
+     */
+    public function hasJobPostingAssistance(): bool
+    {
+        if (! $this->hasPackage() || ! $this->isPeriodValid() || ! $this->package) {
+            return false;
+        }
+
+        return $this->package->hasJobPostingAssistanceFeature();
+    }
 }

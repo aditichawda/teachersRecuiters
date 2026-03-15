@@ -293,13 +293,15 @@
             <div class="cd-hero-info">
                 <h1><?php echo e($company->name); ?> <?php echo $company->badge; ?></h1>
                 <div class="cd-hero-meta">
-                    <?php if($company->full_address): ?>
-                        <span><i class="feather-map-pin"></i> <?php echo e($company->full_address); ?></span>
-                    <?php elseif($company->address): ?>
-                        <span><i class="feather-map-pin"></i> <?php echo e($company->address); ?></span>
-                    <?php endif; ?>
-                    <?php if($company->website && !empty(trim($company->website))): ?>
-                        <a href="<?php echo e($company->website); ?>" target="_blank" rel="noopener"><i class="feather-globe"></i> <?php echo e(Str::limit($company->website, 50)); ?></a>
+                    <?php if($canViewSchoolContactInfo ?? true): ?>
+                        <?php if($company->full_address): ?>
+                            <span><i class="feather-map-pin"></i> <?php echo e($company->full_address); ?></span>
+                        <?php elseif($company->address): ?>
+                            <span><i class="feather-map-pin"></i> <?php echo e($company->address); ?></span>
+                        <?php endif; ?>
+                        <?php if($company->website && !empty(trim($company->website))): ?>
+                            <a href="<?php echo e($company->website); ?>" target="_blank" rel="noopener"><i class="feather-globe"></i> <?php echo e(Str::limit($company->website, 50)); ?></a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
                 <?php if($company->description && !empty(trim($company->description))): ?>
@@ -377,26 +379,36 @@
                             </div>
                         <?php endif; ?>
 
-                        <?php if($company->email): ?>
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Email')); ?>:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->email); ?></span>
-                            </div>
-                        <?php endif; ?>
-
-                        <?php if($company->phone): ?>
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Phone')); ?>:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->phone); ?></span>
-                            </div>
-                        <?php endif; ?>
-
-                        <?php if($company->website): ?>
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Website')); ?>:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
-                                    <a href="<?php echo e($company->website); ?>" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;"><?php echo e($company->website); ?></a>
-                                </span>
+                        <?php if($canViewSchoolContactInfo ?? true): ?>
+                            <?php if($company->email): ?>
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Email')); ?>:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->email); ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <?php if($company->phone): ?>
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Phone')); ?>:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->phone); ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <?php if($company->website): ?>
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Website')); ?>:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                        <a href="<?php echo e($company->website); ?>" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;"><?php echo e($company->website); ?></a>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <div class="company-detail-item p-3 rounded" style="background: #f8fafc; border: 1px dashed #e2e8f0;">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <i class="fas fa-lock text-secondary"></i>
+                                    <span style="color: #475569; font-size: 15px;"><?php echo e(__('plugins/job-board::messages.view_contact_info_locked')); ?></span>
+                                    <?php if(!empty($contactInfoUpgradeUrl)): ?>
+                                        <a href="<?php echo e($contactInfoUpgradeUrl); ?>" class="btn btn-sm btn-primary ms-2"><?php echo e(__('Upgrade')); ?></a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         <?php endif; ?>
 
@@ -442,16 +454,18 @@
                             </div>
                         <?php endif; ?>
 
-                        <?php if($company->full_address): ?>
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Full Address')); ?>:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->full_address); ?></span>
-                            </div>
-                        <?php elseif($company->address): ?>
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Address')); ?>:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->address); ?></span>
-                            </div>
+                        <?php if($canViewSchoolContactInfo ?? true): ?>
+                            <?php if($company->full_address): ?>
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Full Address')); ?>:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->full_address); ?></span>
+                                </div>
+                            <?php elseif($company->address): ?>
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;"><?php echo e(__('Address')); ?>:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;"><?php echo e($company->address); ?></span>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
 
                         <?php if(is_plugin_active('location')): ?>
@@ -695,24 +709,14 @@
                         <i class="fas fa-lock text-secondary me-2"></i><?php echo e(__('Admission Form on Profile')); ?> – <?php echo e(__('Locked')); ?>
 
                     </h4>
-                    <p class="text-muted mb-3"><?php echo e(__('This feature is not included in your current package. Add "Admission Form on Profile" to your package or unlock it with credits to show the admission enquiry form on your institution profile.')); ?></p>
+                    <p class="text-muted mb-3"><?php echo e(__('This feature is not included in your current package. Unlock it with payment (not coins) to show the admission enquiry form on your institution profile.')); ?></p>
                     <?php if(!empty($isOwner)): ?>
-                        <?php if(!empty($canUnlockAdmission)): ?>
-                            <form action="<?php echo e(route('public.account.wallet.unlock_admission_form')); ?>" method="POST" class="d-inline">
-                                <?php echo csrf_field(); ?>
-                                <input type="hidden" name="redirect_url" value="<?php echo e($company->url); ?>">
-                                <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill">
-                                    <i class="fas fa-coins me-2"></i><?php echo e(__('Unlock with :credits credits', ['credits' => $admissionUnlockCredits])); ?>
+                        <p class="mb-0">
+                            <a href="<?php echo e(route('public.account.packages')); ?>#choose-plan" class="btn btn-primary px-4 py-2 rounded-pill">
+                                <i class="fas fa-credit-card me-2"></i><?php echo e(__('Unlock with payment')); ?>
 
-                                </button>
-                            </form>
-                        <?php elseif(isset($admissionUnlockCredits) && $admissionUnlockCredits > 0): ?>
-                            <p class="mb-0">
-                                <a href="<?php echo e(route('public.account.wallet')); ?>" class="btn btn-outline-primary px-4 py-2 rounded-pill">
-                                    <i class="fas fa-wallet me-2"></i><?php echo e(__('Add credits to unlock')); ?> (<?php echo e(__(':credits credits required', ['credits' => $admissionUnlockCredits])); ?>)
-                                </a>
-                            </p>
-                        <?php endif; ?>
+                            </a>
+                        </p>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
@@ -771,7 +775,7 @@
                                         </div>
                                     </li>
                                 <?php endif; ?>
-                                <?php if($company->phone): ?>
+                                <?php if(($canViewSchoolContactInfo ?? true) && $company->phone): ?>
                                     <li>
                                         <span class="cd-info-icon"><i class="fas fa-mobile-alt"></i></span>
                                         <div class="cd-info-text">

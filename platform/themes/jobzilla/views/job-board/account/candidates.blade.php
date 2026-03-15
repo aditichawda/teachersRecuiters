@@ -608,7 +608,12 @@ body.filter-open {
                 </div>
 
                 {{-- Candidates List --}}
-                @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'))
+                <div id="candidates-listing-container" style="position: relative; min-height: 400px;">
+                    {!! Theme::partial('loader', ['containerId' => 'candidates-loader-overlay', 'size' => 'large', 'text' => 'Loading candidates...']) !!}
+                    <div id="candidates-content">
+                        @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'))
+                    </div>
+                </div>
 
                 {{-- Pagination --}}
                 @if($candidates instanceof \Illuminate\Pagination\LengthAwarePaginator)

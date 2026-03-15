@@ -28,6 +28,7 @@ class CreditConsumption extends BaseModel
     /** Job-seeker feature keys (for jb_credit_consumption, account_type = job-seeker) */
     public const FEATURE_JOB_APPLY = 'job_apply';
     public const FEATURE_FEATURED_CANDIDATE_PROFILE = 'featured_candidate_profile';
+    public const FEATURE_BASIC_CV = 'basic_cv';
     public const FEATURE_ADVANCED_CV = 'advanced_cv';
     public const FEATURE_JOB_ALERT_WP_JOBSEEKER = 'job_alert_wp_jobseeker';
 
@@ -105,12 +106,42 @@ class CreditConsumption extends BaseModel
         }
         Transaction::query()->create($data);
 
+        // Check for low balance notification (for job seekers)
+        if (!$account->isEmployer() && $account->credits < 100) {
+            try {
+                $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                // Check if notification already sent in last 24 hours
+                $recentNotification = \Botble\JobBoard\Models\UserNotification::query()
+                    ->where('account_id', $account->id)
+                    ->where('type', \Botble\JobBoard\Services\NotificationService::TYPE_WALLET_LOW)
+                    ->where('created_at', '>', now()->subDay())
+                    ->exists();
+                
+                if (!$recentNotification) {
+                    $notificationService->sendWalletLowBalanceNotification(
+                        $account,
+                        $account->credits
+                    );
+                    \Log::info('[NOTIFICATION] Wallet low balance notification sent', [
+                        'account_id' => $account->id,
+                        'credits' => $account->credits,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('[NOTIFICATION] Failed to send wallet low balance notification', [
+                    'account_id' => $account->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         return true;
     }
 
     /**
-     * Check if account has valid entitlement for a feature (debit exists + package valid or used within 365 days).
-     * Used for one-time features like APPLICATION_ALERT_EMAIL, ADMISSION_ENQUIRY, etc.
+     * Check if account has valid entitlement for a feature.
+     * Credit-purchased features (debit with feature_key) = permanent/unlimited (one-time buy = forever).
+     * Used for: featured_candidate_profile, job_alert_wp_jobseeker, job_apply slot, application_alert_email, etc.
      */
     public static function hasEntitlement(Account $account, string $featureKey): bool
     {
@@ -126,33 +157,7 @@ class CreditConsumption extends BaseModel
                 ->latest()
                 ->first();
 
-            if (! $debit || ! $debit->created_at) {
-                return false;
-            }
-
-            $lastPurchase = Transaction::query()
-                ->where('account_id', $account->getKey())
-                ->where(function ($q): void {
-                    $q->whereNull('type')->orWhere('type', '!=', 'deduct');
-                })
-                ->whereNotNull('payment_id')
-                ->whereNotNull('package_id')
-                ->with('package')
-                ->latest()
-                ->first();
-
-            if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
-                $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
-                if (Carbon::now()->lte($packageExpiryAt)) {
-                    return true;
-                }
-            }
-
-            $debitDate = $debit->created_at instanceof \DateTimeInterface
-                ? Carbon::parse($debit->created_at)
-                : Carbon::parse((string) $debit->created_at);
-
-            return $debitDate->gte(Carbon::now()->subDays(365));
+            return $debit !== null;
         } catch (\Throwable $e) {
             return false;
         }

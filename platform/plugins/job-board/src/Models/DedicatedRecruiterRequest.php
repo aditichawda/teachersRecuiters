@@ -2,6 +2,7 @@
 
 namespace Botble\JobBoard\Models;
 
+use Botble\ACL\Models\User;
 use Botble\Base\Models\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,6 +16,7 @@ class DedicatedRecruiterRequest extends BaseModel
         'company_id',
         'start_date',
         'end_date',
+        'valid_till',
         'note',
         'status',
         'requested_at',
@@ -28,6 +30,7 @@ class DedicatedRecruiterRequest extends BaseModel
         'accepted_at' => 'datetime',
         'start_date' => 'date',
         'end_date' => 'date',
+        'valid_till' => 'date',
     ];
 
     public const STATUS_PENDING = 'pending';
@@ -42,5 +45,10 @@ class DedicatedRecruiterRequest extends BaseModel
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function staff(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_id');
     }
 }

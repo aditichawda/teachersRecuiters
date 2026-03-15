@@ -5,6 +5,8 @@
 
 <?php $__currentLoopData = $candidates; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $candidate): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
     <?php
+        $candidateSeekerCtx = $candidate->isJobSeeker() ? \Botble\JobBoard\Supports\JobSeekerPackageContext::forAccount($candidate) : null;
+        $candidateIsFeatured = $candidateSeekerCtx && $candidateSeekerCtx->hasFeaturedProfile();
         // Auto-create slug if missing but candidate is eligible
         if (! JobBoardHelper::isDisabledPublicProfile() && $candidate->isJobSeeker() && $candidate->is_public_profile) {
             if (! $candidate->relationLoaded('slugable')) {
@@ -207,7 +209,12 @@
         
         <div class="cl-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
             
-            <a href="<?php echo e($canViewCandidates ? $candidate->url : '#'); ?>" class="cl-name <?php echo e(!$canViewCandidates ? 'cl-name-locked' : ''); ?>" <?php if(!$canViewCandidates): ?> data-bs-toggle="modal" data-bs-target="#candidateLockModal" onclick="event.preventDefault();" <?php endif; ?> style="font-size: 16px; font-weight: 600; color: #0073d1; text-decoration: none; display: block; margin-bottom: 4px;"><?php echo e($candidate->name); ?></a>
+            <div class="d-flex align-items-center gap-2 flex-wrap" style="margin-bottom: 4px;">
+                <a href="<?php echo e($canViewCandidates ? $candidate->url : '#'); ?>" class="cl-name <?php echo e(!$canViewCandidates ? 'cl-name-locked' : ''); ?>" <?php if(!$canViewCandidates): ?> data-bs-toggle="modal" data-bs-target="#candidateLockModal" onclick="event.preventDefault();" <?php endif; ?> style="font-size: 16px; font-weight: 600; color: #0073d1; text-decoration: none; display: inline-block;"><?php echo e($candidate->name); ?></a>
+                <?php if($candidateIsFeatured): ?>
+                    <span class="badge bg-warning text-dark" style="font-size: 10px; font-weight: 600;"><?php echo e(__('Featured')); ?></span>
+                <?php endif; ?>
+            </div>
             
             
             <div class="cl-details-list" style="display: flex; flex-direction: column; gap: 6px; flex-wrap: wrap; max-height: 140px;">

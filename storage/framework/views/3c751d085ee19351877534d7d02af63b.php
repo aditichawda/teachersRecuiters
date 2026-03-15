@@ -229,17 +229,17 @@
                     <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
                             <h4 class="footer-title">Social</h4>
-                            <?php ($socialLinks = Theme::getSocialLinks()); ?>
-                            <?php if($socialLinks): ?>
+                            <?php($socialLinks = Theme::getSocialLinks())
+                            @if ($socialLinks)
                                 <ul class="footer-links footer-social-links">
-                                    <?php $__currentLoopData = $socialLinks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $socialLink): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                        <?php if(!$socialLink->getUrl() || !$socialLink->getIconHtml()) continue; ?>
+                                    @foreach ($socialLinks as $socialLink)
+                                        @continue(!$socialLink->getUrl() || !$socialLink->getIconHtml())
                                         <li>
-                                            <a href="<?php echo e($socialLink->getUrl()); ?>" target="_blank" rel="noopener"><?php echo $socialLink->getIconHtml(); ?> <?php echo e($socialLink->getName()); ?></a>
+                                            <a href="{{ $socialLink->getUrl() }}" target="_blank" rel="noopener">{!! $socialLink->getIconHtml() !!} {{ $socialLink->getName() }}</a>
                                         </li>
-                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    @endforeach
                                 </ul>
-                            <?php else: ?>
+                            @else
                                 <ul class="footer-links footer-social-links">
                                     <li><a href="https://www.facebook.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i> Facebook</a></li>
                                     <li><a href="https://www.google.com/search?q=teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-google"></i> Google</a></li>
@@ -247,7 +247,7 @@
                                     <li><a href="https://www.instagram.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-instagram"></i> Instagram</a></li>
                                     <li><a href="https://www.linkedin.com/company/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i> LinkedIn</a></li>
                                 </ul>
-                            <?php endif; ?>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -255,9 +255,9 @@
                 <div class="footer-partners-inner">
                     <span class="footer-partners-label">For You:</span>
                     <div class="footer-partners-list">
-                        <a href="<?php echo e(route('public.for-teachers')); ?>" class="footer-partner-item">For Teachers</a>
-                        <a href="<?php echo e(route('public.for-schools')); ?>" class="footer-partner-item">For Schools</a>
-                        <a href="<?php echo e(route('public.careers')); ?>" class="footer-partner-item">Careers</a>
+                        <a href="{{ route('public.for-teachers') }}" class="footer-partner-item">For Teachers</a>
+                        <a href="{{ route('public.for-schools') }}" class="footer-partner-item">For Schools</a>
+                        <a href="{{ route('public.careers') }}" class="footer-partner-item">Careers</a>
                     </div>
                     <a href="/companies" class="footer-see-all">See All →</a>
                 </div>
@@ -271,8 +271,7 @@
             <div class="footer-bottom">
                 <div class="footer-bottom-inner">
                     <div class="footer-copy-right">
-                        <?php echo Theme::getSiteCopyright() ?: 'Teachers Recruiter &copy; ' . date('Y') . '. All Right Reserved.'; ?>
-
+                        {!! Theme::getSiteCopyright() ?: 'Teachers Recruiter &copy; ' . date('Y') . '. All Right Reserved.' !!}
                     </div>
                     <!-- <div class="footer-legal">
                         <a href="/terms-conditions">Terms</a>
@@ -287,17 +286,56 @@
 
     <!-- WhatsApp Floating Button -->
     <a href="https://wa.me/919876543210" target="_blank" rel="noopener" class="whatsapp-float"
-        style="position: fixed; width: 60px; height: 60px; bottom: 20px; right: 20px; background-color: #25D366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.3s;">
+        style="position: fixed; width: 60px; height: 60px; bottom: 20px; right: 20px; background-color: #25D366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3); z-index: 9998 !important; display: flex !important; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.3s; pointer-events: auto !important;">
         <i class="fab fa-whatsapp" style="color: #fff;"></i>
     </a>
     <style>
+        .whatsapp-float {
+            position: fixed !important;
+            z-index: 9998 !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            width: 60px !important;
+            height: 60px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            pointer-events: auto !important;
+        }
         .whatsapp-float:hover {
             transform: scale(1.1);
         }
+        /* Ensure WhatsApp icon is always visible on scroll */
+        @media (max-width: 768px) {
+            .whatsapp-float {
+                bottom: 15px !important;
+                right: 15px !important;
+                width: 55px !important;
+                height: 55px !important;
+            }
+        }
     </style>
-<?php endif; ?>
+@endunless
 
-<?php if(is_plugin_active('job-board')): ?>
+@if (is_plugin_active('job-board'))
+    @php
+        $jobSeekerCanApply = true;
+        $jobSeekerPackagesUrl = function_exists('route') ? route('public.account.jobseeker.packages') : '#';
+        $jobSeekerApplyMessage = '';
+        if (auth('account')->check()) {
+            $acc = auth('account')->user();
+            if ($acc && method_exists($acc, 'isJobSeeker') && $acc->isJobSeeker()) {
+                $jobSeekerCtxForApply = \Botble\JobBoard\Supports\JobSeekerPackageContext::forAccount($acc);
+                $jobSeekerCanApply = $jobSeekerCtxForApply->canApply();
+                $jobSeekerPackagesUrl = $jobSeekerCtxForApply->packagesUrl();
+                if (!$jobSeekerCanApply) {
+                    $jobSeekerApplyMessage = $jobSeekerCtxForApply->hasPackage() && $jobSeekerCtxForApply->isPeriodValid()
+                        ? trans('plugins/job-board::messages.job_apply_limit_reached')
+                        : trans('plugins/job-board::messages.job_apply_upgrade_required');
+                }
+            }
+        }
+    ?>
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.apply-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">

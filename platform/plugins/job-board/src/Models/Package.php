@@ -34,7 +34,7 @@ class Package extends BaseModel
     ];
 
     protected $casts = [
-        'status' => BaseStatusEnum::class,
+        'status' => \Botble\JobBoard\Casts\PackageStatusCast::class,
         'name' => SafeContent::class,
         'features' => 'json',
     ];
@@ -130,6 +130,7 @@ class Package extends BaseModel
 
     /**
      * Check if this package includes a feature by display text (e.g. "Featured Profile", "Admission Form on Profile").
+     * Excludes negative features like "Advance CV: No" so they do not count as having the feature.
      */
     public function hasFeatureText(string $text): bool
     {
@@ -139,30 +140,38 @@ class Package extends BaseModel
             return false;
         }
         foreach ($features as $feature) {
-            if (is_string($feature) && stripos($feature, $needle) !== false) {
+            if (is_string($feature) && stripos($feature, $needle) !== false && ! $this->isFeatureDenied($feature)) {
                 return true;
             }
         }
         $raw = is_array($this->features) ? $this->features : (array) json_decode($this->features ?: '[]', true);
         foreach ($raw as $item) {
             if (! is_array($item)) {
-                if (is_string($item) && stripos($item, $needle) !== false) {
+                if (is_string($item) && stripos($item, $needle) !== false && ! $this->isFeatureDenied($item)) {
                     return true;
                 }
                 continue;
             }
             $val = $item['text'] ?? $item['title'] ?? $item['value'] ?? ($item['key'] ?? null);
-            if (is_string($val) && stripos($val, $needle) !== false) {
+            if (is_string($val) && stripos($val, $needle) !== false && ! $this->isFeatureDenied($val)) {
                 return true;
             }
             foreach (array_values($item) as $anyVal) {
-                if (is_string($anyVal) && stripos($anyVal, $needle) !== false) {
+                if (is_string($anyVal) && stripos($anyVal, $needle) !== false && ! $this->isFeatureDenied($anyVal)) {
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+    /**
+     * Feature text like "Advance CV: No" or "Featured Profile: No" means the feature is denied, not included.
+     */
+    protected function isFeatureDenied(string $featureText): bool
+    {
+        return (bool) preg_match('/\s*:\s*No\s*$/i', trim($featureText));
     }
 
     /**
@@ -173,6 +182,27 @@ class Package extends BaseModel
         return $this->hasFeatureText('Admission Form on Profile')
             || $this->hasFeatureText('Admission Form on profile')
             || $this->hasFeatureText('Admission Form');
+    }
+
+    /**
+     * Check if package includes "Job Posting Assistance" (job assistant) – used for wallet coin feature unlock.
+     */
+    public function hasJobPostingAssistanceFeature(): bool
+    {
+        return $this->hasFeatureText('Job Posting Assistance')
+            || $this->hasFeatureText('Job Assistant')
+            || $this->hasFeatureText('Job posting assistance');
+    }
+
+    /**
+     * Whether this package is "Admission Form Unlock" only (paid unlock, no credits).
+     * When purchased, we grant admission entitlement via transaction, not credits.
+     */
+    public function isAdmissionUnlockOnly(): bool
+    {
+        $credits = (int) ($this->credits_included ?? $this->number_of_listings ?? 0);
+
+        return $this->hasAdmissionFormOnProfileFeature() && $credits <= 0;
     }
 
     /**

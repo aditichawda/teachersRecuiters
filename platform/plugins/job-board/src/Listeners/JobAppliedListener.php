@@ -17,27 +17,61 @@ class JobAppliedListener
         $jobApplication = $event->jobApplication;
 
         try {
-            // Dispatch queue-based email jobs for better performance
-            // Send employer notification email (with screening answers)
-            SendEmployerApplicationNotificationJob::dispatch($jobApplication, $job);
-
-            // Send job seeker confirmation email
-            SendJobSeekerApplicationConfirmationJob::dispatch($jobApplication, $job);
-
-            Log::info('Job application email jobs dispatched', [
-                'application_id' => $jobApplication->id,
-                'job_id' => $job->id,
-            ]);
+            // Check queue connection - if not 'sync', send emails immediately
+            // This ensures emails are sent even if queue worker is not running
+            $queueConnection = config('queue.default', 'database');
+            
+            if ($queueConnection === 'sync') {
+                // Queue is sync, use regular dispatch (will run immediately)
+                SendEmployerApplicationNotificationJob::dispatch($jobApplication, $job);
+                SendJobSeekerApplicationConfirmationJob::dispatch($jobApplication, $job);
+                
+                Log::info('Job application email jobs dispatched (sync queue)', [
+                    'application_id' => $jobApplication->id,
+                    'job_id' => $job->id,
+                ]);
+            } else {
+                // Queue is not sync, run jobs immediately to ensure emails are sent
+                // This ensures emails are sent even without a queue worker running
+                // Directly instantiate and run the jobs synchronously
+                try {
+                    (new SendEmployerApplicationNotificationJob($jobApplication, $job))->handle();
+                    (new SendJobSeekerApplicationConfirmationJob($jobApplication, $job))->handle();
+                    
+                    Log::info('Job application email jobs executed synchronously (immediate send)', [
+                        'application_id' => $jobApplication->id,
+                        'job_id' => $job->id,
+                        'queue_connection' => $queueConnection,
+                        'note' => 'Emails sent immediately without queue worker',
+                    ]);
+                } catch (\Exception $syncException) {
+                    Log::error('Failed to execute email jobs synchronously', [
+                        'application_id' => $jobApplication->id,
+                        'job_id' => $job->id,
+                        'error' => $syncException->getMessage(),
+                    ]);
+                    throw $syncException; // Re-throw to trigger fallback
+                }
+            }
 
         } catch (\Exception $e) {
             Log::error('Failed to dispatch job application email jobs', [
                 'application_id' => $jobApplication->id,
                 'job_id' => $job->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             // Fallback to old email handler system if queue fails
-            $this->sendLegacyEmails($job, $jobApplication);
+            try {
+                $this->sendLegacyEmails($job, $jobApplication);
+            } catch (\Exception $legacyException) {
+                Log::error('Legacy email sending also failed', [
+                    'application_id' => $jobApplication->id,
+                    'job_id' => $job->id,
+                    'error' => $legacyException->getMessage(),
+                ]);
+            }
         }
     }
 

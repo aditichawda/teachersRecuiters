@@ -190,6 +190,21 @@ class LoginController extends Controller
             }
 
             // 2. Email verified → direct login (WhatsApp OTP redirect nahi; verified email = dashboard)
+            // Store login time for logout summary
+            $request->session()->put('login_time', now());
+            $request->session()->put('session_activities', []);
+            
+            // Send login success notification (only for employers)
+            if ($account && $account->isEmployer()) {
+                try {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $loginTime = Carbon::now()->format('d/M/Y, h:i A');
+                    $notificationService->sendLoginSuccessNotification($account, $loginTime);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send login notification: ' . $e->getMessage());
+                }
+            }
+            
             $this->redirectTo = $this->getDashboardUrlForAccount($account);
             return $this->sendLoginResponse($request);
         }
@@ -254,6 +269,23 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
+        $account = $this->guard()->user();
+        
+        // Calculate session duration for logout summary
+        $sessionStart = $request->session()->get('login_time', now());
+        $sessionDuration = now()->diffInMinutes($sessionStart);
+        $hours = floor($sessionDuration / 60);
+        $minutes = $sessionDuration % 60;
+        $durationText = $hours > 0 ? "{$hours} hour(s) {$minutes} minute(s)" : "{$minutes} minute(s)";
+        
+        // Get session activities (if tracked)
+        $activities = $request->session()->get('session_activities', []);
+        $activitySummary = count($activities) > 0 
+            ? 'Activities: ' . implode(', ', array_slice($activities, 0, 3))
+            : 'No specific activities tracked';
+        
+        $summary = "Session duration: {$durationText}. {$activitySummary}.";
+        
         $activeGuards = 0;
         $this->guard()->logout();
 
@@ -271,9 +303,43 @@ class LoginController extends Controller
             $request->session()->regenerate();
         }
 
+        // Send logout summary notification (only for employers)
+        if ($account && $account->isEmployer()) {
+            try {
+                $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                $notificationService->sendLogoutSummaryNotification($account, $summary);
+            } catch (\Exception $e) {
+                \Log::error('Failed to send logout notification: ' . $e->getMessage());
+            }
+        }
+
         $this->loggedOut($request);
 
         return redirect()->to(route('public.index'));
+    }
+    
+    /**
+     * The user has been authenticated.
+     * Override to send login notification
+     */
+    protected function authenticated(Request $request, $account)
+    {
+        // Store login time for logout summary
+        $request->session()->put('login_time', now());
+        $request->session()->put('session_activities', []);
+        
+        // Send login success notification (only for employers)
+        if ($account && $account->isEmployer()) {
+            try {
+                $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                $loginTime = Carbon::now()->format('d/M/Y, h:i A');
+                $notificationService->sendLoginSuccessNotification($account, $loginTime);
+            } catch (\Exception $e) {
+                \Log::error('Failed to send login notification: ' . $e->getMessage());
+            }
+        }
+        
+        return redirect()->intended($this->redirectPath());
     }
 
     /**

@@ -228,6 +228,29 @@ class ApplicantController extends BaseController
                 'subject' => $emailSubject,
             ]);
 
+            // Send notification to job seeker about enquiry on their application
+            if ($jobApplication->account_id) {
+                try {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $schoolName = $jobApplication->job->company->name ?? 'School';
+                    $notificationService->sendApplicationEnquiryNotification(
+                        $jobApplication->account,
+                        $jobApplication->job->name,
+                        $jobApplication->job->id,
+                        $schoolName
+                    );
+                    Log::info('[NOTIFICATION] Application enquiry notification sent', [
+                        'application_id' => $jobApplication->id,
+                        'account_id' => $jobApplication->account_id,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('[NOTIFICATION] Failed to send application enquiry notification', [
+                        'application_id' => $jobApplication->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             return response()->json([
                 'error' => false,
                 'message' => 'Email sent successfully',

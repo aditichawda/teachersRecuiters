@@ -33,18 +33,7 @@ class PackageTable extends TableAbstract
 
     public function query(): Relation|Builder|QueryBuilder
     {
-        $query = $this
-            ->getModel()
-            ->query()
-            ->select([
-                'id',
-                'name',
-                'package_type',
-                'number_of_listings',
-                'credits_included',
-                'created_at',
-                'status',
-            ]);
+        $query = $this->getModel()->newQuery()->orderBy('id');
 
         return $this->applyScopes($query);
     }
@@ -56,7 +45,12 @@ class PackageTable extends TableAbstract
             NameColumn::make()->route('packages.edit'),
             Column::make('package_type')
                 ->title(trans('plugins/job-board::package.package_type'))
-                ->formatUsing(fn ($value) => $value === 'job-seeker' ? trans('plugins/job-board::package.package_type_job_seeker') : trans('plugins/job-board::package.package_type_employer')),
+                ->formatUsing(function ($value) {
+                    if (empty($value)) return '—';
+                    return str_contains(strtolower((string) $value), 'job-seeker') || str_contains(strtolower((string) $value), 'seeker')
+                        ? trans('plugins/job-board::package.package_type_job_seeker')
+                        : trans('plugins/job-board::package.package_type_employer');
+                }),
             Column::make('number_of_listings')->title(trans('plugins/job-board::package.number_of_listings'))->width(100),
             Column::make('credits_included')->title(trans('plugins/job-board::package.credits_included'))->width(100),
             StatusColumn::make(),

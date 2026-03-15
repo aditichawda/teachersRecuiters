@@ -43,24 +43,38 @@
 </div>
 
 <?php if(!$canViewCandidates): ?>
-<div class="modal fade" id="candidateLockModal" tabindex="-1" aria-labelledby="candidateLockModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title" id="candidateLockModalLabel"><?php echo e(__('Access Candidate Profiles')); ?></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body pt-0">
-                <p class="text-muted mb-4"><?php echo e(trans('plugins/job-board::messages.candidate_profile_locked')); ?></p>
-                <p class="small text-muted"><?php echo e(trans('plugins/job-board::messages.candidate_profile_view_limit_reached')); ?></p>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo e(__('Close')); ?></button>
-                <a href="<?php echo e(route('public.account.wallet')); ?>" class="btn btn-primary"><?php echo e(trans('plugins/job-board::dashboard.wallet_buy_credits')); ?></a>
-            </div>
+
+<div id="candidateLockModal" class="candidate-lock-popup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; margin:20px; box-shadow:0 4px 20px rgba(0,0,0,0.2);" onclick="event.stopPropagation();">
+        <h5 class="mb-3" style="font-size:18px; font-weight:600; color:#333;"><?php echo e(__('Access Candidate Profiles')); ?></h5>
+        <p id="candidate-lock-popup-msg" class="mb-4" style="font-size:15px; color:#333;"><?php echo e(trans('plugins/job-board::messages.candidate_profile_view_limit_reached')); ?></p>
+        <div class="d-flex gap-2 justify-content-end">
+            <button type="button" class="btn btn-secondary" id="candidate-lock-popup-close"><?php echo e(__('Cancel')); ?></button>
+            <a href="<?php echo e(route('public.account.wallet')); ?>" class="btn btn-primary" id="candidate-lock-popup-wallet"><?php echo e(trans('plugins/job-board::dashboard.wallet_buy_credits')); ?></a>
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var popup = document.getElementById('candidateLockModal');
+    var closeBtn = document.getElementById('candidate-lock-popup-close');
+    if (popup) {
+        function showCandidateLockPopup() { popup.style.display = 'flex'; }
+        function hideCandidateLockPopup() { popup.style.display = 'none'; }
+        document.querySelectorAll('[data-bs-target="#candidateLockModal"]').forEach(function(el) {
+            el.addEventListener('click', function(e) {
+                if (el.getAttribute('href') === '#' || el.classList.contains('cl-view-btn-locked') || el.classList.contains('cl-name-locked')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showCandidateLockPopup();
+                }
+            });
+        });
+        if (closeBtn) closeBtn.addEventListener('click', hideCandidateLockPopup);
+        popup.addEventListener('click', function(e) { if (e.target === popup) hideCandidateLockPopup(); });
+    }
+});
+</script>
 <?php endif; ?>
 
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/partials/candidates/index.blade.php ENDPATH**/ ?>

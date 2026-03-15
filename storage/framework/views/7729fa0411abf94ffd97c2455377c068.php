@@ -7,7 +7,12 @@
     Theme::asset()->container('footer')->add('editor-js', 'vendor/core/core/base/js/editor.js');
     Theme::asset()->container('footer')->add('tagify-js', 'vendor/core/core/base/libraries/tagify/tagify.js');
     Theme::asset()->container('footer')->usePath()->add('tags-js', 'js/tagify-select.js');
-    
+
+    $jobSeekerCtx = null;
+    if (auth('account')->check() && ($account ?? null) && $account->isJobSeeker()) {
+        $jobSeekerCtx = \Botble\JobBoard\Supports\JobSeekerPackageContext::forAccount($account);
+    }
+
     // Profile completion with per-field reward points
     $profileFields = [
         ['field' => 'first_name', 'label' => 'Full Name', 'points' => 10, 'filled' => !empty($account->first_name)],
@@ -249,6 +254,110 @@
 }
 @media (min-width: 992px) {
     .js-main-content-wallet .wallet-js-page .col-lg-5 { width: 41.666667% !important; flex: 0 0 41.666667% !important; }
+}
+
+/* ===== RESPONSIVE STYLES FOR ALL SIDEBARS ===== */
+/* Account Sidebar Responsive */
+@media (max-width: 991px) {
+    .side-bar-st-1 {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        background: #fff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        padding: 20px;
+        width: 280px;
+        max-width: 280px;
+    }
+    
+    .side-bar-st-1.show {
+        left: 0;
+    }
+    
+    /* Sidebar Toggle Button */
+    .account-sidebar-toggle {
+        display: flex;
+        position: fixed;
+        top: 90px;
+        left: 15px;
+        z-index: 1001;
+        background: #0073d1;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .account-sidebar-toggle:hover {
+        background: #005bb5;
+        transform: scale(1.05);
+    }
+    
+    .account-sidebar-toggle.active {
+        left: 265px;
+    }
+    
+    /* Sidebar Overlay */
+    .account-sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .account-sidebar-overlay.show {
+        display: block;
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .side-bar-st-1 {
+        width: 260px;
+        max-width: 260px;
+        left: -260px;
+    }
+    
+    .account-sidebar-toggle {
+        top: 70px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .account-sidebar-toggle.active {
+        left: 250px;
+    }
+}
+
+@media (max-width: 576px) {
+    .side-bar-st-1 {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .account-sidebar-toggle.active {
+        left: calc(100% - 50px);
+    }
+}
     .js-main-content-wallet .wallet-js-page .col-lg-6 { width: 50% !important; }
     .js-main-content-wallet .wallet-js-page .col-lg-7 { width: 58.333333% !important; flex: 1 1 58.333333% !important; min-width: 280px !important; }
     .js-main-content-wallet .wallet-js-page .col-xl-4 { width: 33.333333% !important; }
@@ -576,18 +685,80 @@
                         <?php endif; ?>
                     </div>
                     
-                    <!-- Wallet -->
+                    <!-- Wallet (click opens Profile Completion popup with Credits) -->
                     <?php if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()): ?>
-                    <a href="<?php echo e(url(route('public.account.jobseeker.wallet'))); ?>" target="_self" class="js-wallet-badge text-decoration-none d-block" style="cursor: pointer">
+                    <div class="js-wallet-badge js-wallet-open-profile-modal" style="cursor: pointer" onclick="document.getElementById('profileModal').style.display='flex'" title="<?php echo e(__('View credits & profile completion')); ?>">
                         <i class="fa fa-wallet"></i>
                         <span><?php echo e(__('Available Coins')); ?>:</span>
                         <span class="js-wallet-points"><?php echo e(format_credits_short($account->credits ?? 0)); ?></span>
-                    </a>
+                    </div>
                     <?php else: ?>
                     <div class="js-wallet-badge" onclick="document.getElementById('profileModal').style.display='flex'">
                         <i class="fa fa-wallet"></i>
                         <span>Reward Points:</span>
                         <span class="js-wallet-points"><?php echo e($walletPoints); ?></span>
+                    </div>
+                    <?php endif; ?>
+
+                    
+                    <?php if($jobSeekerCtx && $jobSeekerCtx->hasPackage()): ?>
+                    <div class="js-plan-features-card mb-3 p-3 rounded" style="background: #f8f9fa; border: 1px solid #e9ecef;">
+                        <h6 class="mb-2 small text-uppercase text-muted"><?php echo e(__('Your Plan')); ?></h6>
+                        <div class="js-plan-features-list small">
+                            <?php
+                                $used = $jobSeekerCtx->jobApplicationsUsed;
+                                $limit = $jobSeekerCtx->jobApplyLimit;
+                            ?>
+                            <div class="d-flex justify-content-between align-items-center py-1">
+                                <span><i class="fa fa-briefcase me-1"></i> <?php echo e(__('Job applications')); ?></span>
+                                <?php if($limit === null): ?>
+                                    <span class="text-success"><?php echo e(__('Unlimited')); ?></span>
+                                <?php else: ?>
+                                    <span><?php echo e($used); ?>/<?php echo e($limit); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1">
+                                <span><i class="fa fa-star me-1"></i> <?php echo e(__('Featured Profile')); ?></span>
+                                <?php if($jobSeekerCtx->hasFeaturedProfile()): ?>
+                                    <span class="text-success"><i class="fa fa-check"></i></span>
+                                <?php else: ?>
+                                    <a href="<?php echo e($jobSeekerCtx->packagesUrl()); ?>" class="btn btn-sm btn-outline-primary py-0 px-2"><?php echo e(__('Upgrade')); ?></a>
+                                <?php endif; ?>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1">
+                                <span><i class="fa fa-address-card me-1"></i> <?php echo e(__('View contact info')); ?></span>
+                                <?php if($jobSeekerCtx->hasViewContactInfo()): ?>
+                                    <span class="text-success"><i class="fa fa-check"></i></span>
+                                <?php else: ?>
+                                    <a href="<?php echo e($jobSeekerCtx->packagesUrl()); ?>" class="btn btn-sm btn-outline-primary py-0 px-2"><?php echo e(__('Upgrade')); ?></a>
+                                <?php endif; ?>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1">
+                                <span><i class="fa fa-whatsapp me-1"></i> <?php echo e(__('Job alerts on WhatsApp')); ?></span>
+                                <?php if($jobSeekerCtx->hasJobAlertsWhatsapp()): ?>
+                                    <span class="text-success"><i class="fa fa-check"></i></span>
+                                <?php else: ?>
+                                    <a href="<?php echo e($jobSeekerCtx->packagesUrl()); ?>" class="btn btn-sm btn-outline-primary py-0 px-2"><?php echo e(__('Upgrade')); ?></a>
+                                <?php endif; ?>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1">
+                                <span><i class="fa fa-file-alt me-1"></i> <?php echo e(__('Basic CV')); ?></span>
+                                <?php if($jobSeekerCtx->hasBasicCv()): ?>
+                                    <span class="text-success"><i class="fa fa-check"></i></span>
+                                <?php else: ?>
+                                    <a href="<?php echo e($jobSeekerCtx->packagesUrl()); ?>" class="btn btn-sm btn-outline-primary py-0 px-2"><?php echo e(__('Upgrade')); ?></a>
+                                <?php endif; ?>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1">
+                                <span><i class="fa fa-file-pdf me-1"></i> <?php echo e(__('Advance CV')); ?></span>
+                                <?php if($jobSeekerCtx->hasAdvanceCv()): ?>
+                                    <span class="text-success"><i class="fa fa-check"></i></span>
+                                <?php else: ?>
+                                    <a href="<?php echo e($jobSeekerCtx->packagesUrl()); ?>" class="btn btn-sm btn-outline-primary py-0 px-2"><?php echo e(__('Upgrade')); ?></a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <a href="<?php echo e($jobSeekerCtx->packagesUrl()); ?>" class="btn btn-sm btn-primary w-100 mt-2"><?php echo e(__('View plans & Upgrade')); ?></a>
                     </div>
                     <?php endif; ?>
 
@@ -663,28 +834,36 @@
     </div>
 </div>
 
-<!-- Profile Modal -->
+<!-- Profile Completion + Credits Modal (same style as image: Credits header, progress, checklist with Done/Pending) -->
 <div id="profileModal" class="pm-overlay" style="display:none;">
     <div class="pm-modal">
         <button type="button" class="pm-close" onclick="document.getElementById('profileModal').style.display='none'">&times;</button>
         
-        <!-- Reward Points Badge -->
+        <!-- Credits / Reward Points Badge (orange bar like image) -->
+        <?php if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()): ?>
+        <div class="pm-reward-badge pm-credits-badge">
+            <i class="fa fa-coins"></i>
+            <span><?php echo e(__('Credits')); ?>:</span>
+            <span class="pm-reward-points"><?php echo e(format_credits_short($account->credits ?? 0)); ?></span>
+        </div>
+        <?php else: ?>
         <div class="pm-reward-badge">
             <i class="fa fa-wallet"></i>
-            <span>Reward Points:</span>
+            <span><?php echo e(__('Reward Points')); ?>:</span>
             <span class="pm-reward-points"><?php echo e($walletPoints); ?></span>
         </div>
+        <?php endif; ?>
 
         <!-- Profile Completion -->
         <div class="pm-completion-section">
-            <h6 class="pm-completion-title">Profile Completion</h6>
+            <h6 class="pm-completion-title"><?php echo e(__('Profile Completion')); ?></h6>
             <div class="pm-progress-bar">
                 <div class="pm-progress-fill" style="width: <?php echo e($completion); ?>%"></div>
             </div>
-            <span class="pm-completion-text"><?php echo e($completion); ?>% Complete</span>
+            <span class="pm-completion-text"><?php echo e($completion); ?>% <?php echo e(__('Complete')); ?></span>
         </div>
 
-        <!-- Per-field Progress -->
+        <!-- Per-field checklist (Done / Pending like image) -->
         <div class="pm-field-list">
             <?php $__currentLoopData = $profileFields; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pf): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="pm-field-item">
@@ -694,7 +873,8 @@
 
                     </span>
                     <span class="pm-field-points <?php echo e($pf['filled'] ? 'pm-earned' : 'pm-pending'); ?>">
-                        +<?php echo e($pf['points']); ?> pts
+                        <?php echo e($pf['filled'] ? __('Done') : __('Pending')); ?>
+
                     </span>
                 </div>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -702,13 +882,21 @@
 
         <?php if($completion < 100): ?>
             <a href="<?php echo e(url(route('public.account.settings'))); ?>" target="_self" class="pm-complete-btn">
-                <i class="fa fa-user-edit"></i> Complete Your Profile
+                <i class="fa fa-user-edit"></i> <?php echo e(__('Complete Your Profile')); ?>
+
             </a>
         <?php else: ?>
             <div class="pm-congrats">
                 <i class="fa fa-trophy" style="color: #f59e0b; font-size: 20px;"></i>
-                <span>Congratulations! Your profile is 100% complete.</span>
+                <span><?php echo e(__('Congratulations! Your profile is 100% complete.')); ?></span>
             </div>
+        <?php endif; ?>
+
+        <?php if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()): ?>
+        <a href="<?php echo e(url(route('public.account.jobseeker.wallet'))); ?>" target="_self" class="pm-wallet-link mt-2 d-block text-center small">
+            <i class="fa fa-wallet"></i> <?php echo e(__('Go to Wallet')); ?>
+
+        </a>
         <?php endif; ?>
     </div>
 </div>
@@ -755,6 +943,10 @@
 }
 .pm-reward-badge i { font-size: 18px; }
 .pm-reward-points { font-size: 18px; font-weight: 600; }
+.pm-credits-badge { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.pm-credits-badge i { font-size: 18px; }
+.pm-wallet-link { color: #0073d1 !important; font-weight: 500; text-decoration: none !important; }
+.pm-wallet-link:hover { text-decoration: underline !important; color: #005bb5 !important; }
 .pm-completion-section { margin-bottom: 18px; }
 .pm-completion-title { font-size: 15px; font-weight: 700; color: #333; margin-bottom: 8px; }
 .pm-progress-bar { height: 10px; background: #e9ecef; border-radius: 10px; overflow: hidden; margin-bottom: 6px; }

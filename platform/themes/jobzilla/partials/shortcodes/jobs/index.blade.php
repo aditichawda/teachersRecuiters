@@ -4,6 +4,17 @@
     use Botble\Base\Enums\BaseStatusEnum;
     use Botble\JobBoard\Repositories\Interfaces\JobTypeInterface;
     
+    // Get cities for location dropdown
+    $cities = collect();
+    if (is_plugin_active('location')) {
+        $cities = app(\Botble\Location\Repositories\Interfaces\CityInterface::class)->advancedGet([
+            'condition' => ['status' => BaseStatusEnum::PUBLISHED],
+            'order_by' => ['order' => 'ASC', 'name' => 'ASC'],
+            'take' => 500, // Get all cities from database
+            'with' => ['state', 'country'],
+        ]);
+    }
+    
     Theme::asset()->usePath()->add('leaflet-markercluster-css', 'plugins/leaflet.markercluster/MarkerCluster.css');
     Theme::asset()->usePath()->add('leaflet-css', 'plugins/leaflet/leaflet.css');
     Theme::asset()->container('footer')->usePath()->add('leaflet-js', 'plugins/leaflet/leaflet.js');
@@ -20,8 +31,12 @@
     // Get institution types (root categories or specific parent)
     $institutionTypes = $allCategories->where('parent_id', 0)->take(20);
     
-    // Get job roles (categories - can be filtered by parent)
-    $jobRoles = $allCategories->take(50);
+    // Get job roles (categories - fetch all published categories from database)
+    $jobRoles = app(CategoryInterface::class)->advancedGet([
+        'condition' => ['status' => BaseStatusEnum::PUBLISHED],
+        'order_by' => ['order' => 'ASC', 'name' => 'ASC'],
+        'take' => 500, // Get all job roles from database
+    ]);
     
     // Get job types
     $jobTypes = app(JobTypeInterface::class)->advancedGet([
@@ -145,24 +160,77 @@
 }
 
 .jobs-top-filter .filter-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 0;
     position: relative;
     z-index: 1;
+    flex-wrap: wrap;
+}
+
+@media(max-width: 991px) {
+    .jobs-top-filter .filter-row {
+        flex-wrap: wrap;
+    }
 }
 
 @media(max-width: 767px) {
     .jobs-top-filter .filter-row {
-        grid-template-columns: 1fr;
-        gap: 20px;
+        flex-direction: column;
+        gap: 16px;
     }
 }
 
 .jobs-top-filter .filter-group {
     position: relative;
     animation: fadeInUp 0.5s ease-out both;
+    flex: 0 0 auto;
+}
+
+.jobs-top-filter .filter-row .filter-group {
+    min-width: 180px;
+    flex: 1 1 0;
+    max-width: 250px;
+}
+
+.jobs-top-filter .filter-row .filter-actions {
+    flex: 0 0 auto;
+    min-width: auto;
+    max-width: none;
+    margin-left: auto;
+}
+
+@media(max-width: 991px) {
+    .jobs-top-filter .filter-row .filter-group {
+        min-width: 160px;
+        max-width: 220px;
+    }
+}
+
+@media(max-width: 767px) {
+    .jobs-top-filter .filter-row .filter-group {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    .jobs-top-filter .filter-row .filter-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .jobs-top-filter .filter-row .filter-actions > div {
+        width: 100%;
+        display: flex;
+        gap: 12px;
+    }
+    
+    .clear-filter-btn,
+    .search-btn {
+        flex: 1;
+        justify-content: center;
+    }
 }
 
 .jobs-top-filter .filter-group:nth-child(1) { animation-delay: 0.1s; }
@@ -639,13 +707,27 @@
 .filter-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-top: 30px;
-    padding-top: 28px;
-    border-top: 2px solid #e2e8f0;
-    gap: 20px;
+    justify-content: flex-end;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    gap: 12px;
     position: relative;
     z-index: 1;
+    flex: 0 0 auto;
+}
+
+.jobs-top-filter .filter-row .filter-actions {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+@media(max-width: 767px) {
+    .filter-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
 .advance-search-link {
@@ -702,20 +784,21 @@
     background-size: 200% 100%;
     color: #fff;
     border: none;
-    padding: 12px 28px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(0, 115, 209, 0.35), 0 2px 6px rgba(0, 115, 209, 0.2);
+    box-shadow: 0 3px 10px rgba(0, 115, 209, 0.3), 0 2px 5px rgba(0, 115, 209, 0.2);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     position: relative;
     overflow: hidden;
+    white-space: nowrap;
 }
 
 .search-btn::before {
@@ -751,9 +834,9 @@
     background: #fff;
     color: #64748b;
     border: 2px solid #e2e8f0;
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -779,7 +862,19 @@
 }
 
 .clear-filter-btn i {
-    font-size: 14px;
+    font-size: 12px;
+}
+
+.search-btn i {
+    font-size: 13px;
+}
+
+@media(max-width: 767px) {
+    .clear-filter-btn,
+    .search-btn {
+        flex: 1;
+        justify-content: center;
+    }
 }
 
 /* Enhanced Layout Toggle Button - Small version for sidebar */
@@ -926,7 +1021,7 @@ html {
     display: none;
     align-items: center !important;
     justify-content: center !important;
-    z-index: 9999 !important;
+    z-index: 100 !important; /* Lower than navbar (999) but still visible in container */
     border-radius: 8px;
     margin: 0 !important;
     padding: 0 !important;
@@ -1505,8 +1600,163 @@ html {
 
 /* Job Role Search Suggestions */
 /* Home Category Search (Same as Homepage) */
-.home-category-search-wrapper {
+.jobs-top-filter .filter-group {
     position: relative;
+    z-index: 1;
+}
+.jobs-top-filter .filter-group:has(.home-category-search-wrapper) {
+    z-index: 1001 !important;
+}
+.home-category-search-wrapper {
+    position: relative !important;
+    z-index: 1001 !important;
+}
+.home-category-dropdown-arrow {
+    position: absolute !important;
+    right: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none !important;
+    color: #64748b !important;
+    font-size: 18px !important;
+    transition: all 0.2s ease !important;
+    z-index: 10 !important;
+}
+.home-category-search-wrapper:focus-within .home-category-dropdown-arrow,
+.home-category-search-wrapper.active .home-category-dropdown-arrow {
+    color: #003d82 !important;
+    transform: translateY(-50%) rotate(180deg) !important;
+}
+/* Keyword Select Dropdown Styling */
+.keyword-select-dropdown {
+    width: 100% !important;
+    height: 44px !important;
+    padding: 10px 45px 10px 16px !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    color: #1e293b !important;
+    background: #fff !important;
+    transition: all 0.2s ease !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    cursor: pointer !important;
+}
+
+.keyword-select-dropdown:focus {
+    border-color: #0073d1 !important;
+    box-shadow: 0 0 0 3px rgba(0,115,209,.1) !important;
+    outline: none !important;
+}
+
+.keyword-select-dropdown option {
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+    color: #1e293b !important;
+    background: #fff !important;
+}
+
+.keyword-select-dropdown option:hover {
+    background: #f0f7ff !important;
+}
+
+/* Bootstrap Select styling for keyword dropdown */
+.keyword-select-dropdown.selectpicker {
+    width: 100% !important;
+}
+
+.keyword-select-dropdown.selectpicker + .dropdown-toggle {
+    height: 44px !important;
+    line-height: 44px !important;
+    padding: 0 45px 0 16px !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    color: #1e293b !important;
+    font-size: 14px !important;
+}
+
+.keyword-select-dropdown.selectpicker + .dropdown-toggle:focus,
+.keyword-select-dropdown.selectpicker + .dropdown-toggle:hover {
+    border-color: #0073d1 !important;
+    box-shadow: 0 0 0 3px rgba(0,115,209,.1) !important;
+}
+
+.keyword-select-dropdown.selectpicker + .dropdown-toggle .filter-option {
+    text-align: left !important;
+    padding-right: 30px !important;
+}
+
+.keyword-select-dropdown.selectpicker + .dropdown-toggle .bs-caret {
+    right: 18px !important;
+}
+
+.keyword-select-dropdown.selectpicker + .dropdown-toggle .bs-caret .caret {
+    border-top-color: #64748b !important;
+    border-width: 5px 5px 0 !important;
+}
+
+/* Location Select Dropdown Styling (Same as Keyword) */
+.location-select-dropdown {
+    width: 100% !important;
+    height: 44px !important;
+    padding: 10px 45px 10px 16px !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    color: #1e293b !important;
+    background: #fff !important;
+    transition: all 0.2s ease !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    cursor: pointer !important;
+}
+
+.location-select-dropdown:focus {
+    border-color: #0073d1 !important;
+    box-shadow: 0 0 0 3px rgba(0,115,209,.1) !important;
+    outline: none !important;
+}
+
+.location-select-dropdown.selectpicker {
+    width: 100% !important;
+}
+
+.location-select-dropdown.selectpicker + .dropdown-toggle {
+    height: 44px !important;
+    line-height: 44px !important;
+    padding: 0 45px 0 16px !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    color: #1e293b !important;
+    font-size: 14px !important;
+}
+
+.location-select-dropdown.selectpicker + .dropdown-toggle:focus,
+.location-select-dropdown.selectpicker + .dropdown-toggle:hover {
+    border-color: #0073d1 !important;
+    box-shadow: 0 0 0 3px rgba(0,115,209,.1) !important;
+}
+
+.location-select-dropdown.selectpicker + .dropdown-toggle .filter-option {
+    text-align: left !important;
+    padding-right: 30px !important;
+}
+
+.location-select-dropdown.selectpicker + .dropdown-toggle .bs-caret {
+    right: 18px !important;
+}
+
+.location-select-dropdown.selectpicker + .dropdown-toggle .bs-caret .caret {
+    border-top-color: #64748b !important;
+    border-width: 5px 5px 0 !important;
+}
+
+#home_category_search {
+    padding-right: 45px !important;
 }
 .home-category-suggestions {
     position: absolute !important;
@@ -1514,23 +1764,53 @@ html {
     left: 0 !important;
     right: 0 !important;
     background: #ffffff !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e2e8f0 !important;
     border-top: none !important;
-    border-radius: 0 0 8px 8px !important;
-    max-height: 300px !important;
+    border-radius: 0 0 14px 14px !important;
+    max-height: 400px !important;
     overflow-y: auto !important;
-    z-index: 1000 !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    overflow-x: hidden !important;
+    z-index: 10000 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
     margin-top: 0 !important;
+    display: none !important;
+    padding: 8px 0 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+.home-category-suggestions[style*="display: block"],
+.home-category-suggestions.show {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+/* Custom scrollbar for dropdown */
+.home-category-suggestions::-webkit-scrollbar {
+    width: 6px !important;
+}
+.home-category-suggestions::-webkit-scrollbar-track {
+    background: #f1f5f9 !important;
+    border-radius: 10px !important;
+}
+.home-category-suggestions::-webkit-scrollbar-thumb {
+    background: #003d82 !important;
+    border-radius: 10px !important;
+}
+.home-category-suggestions::-webkit-scrollbar-thumb:hover {
+    background: #002d5f !important;
 }
 .home-category-suggestion-item {
-    padding: 12px 16px !important;
+    padding: 10px 16px !important;
     cursor: pointer !important;
-    font-size: 14px !important;
-    color: #000000 !important;
+    font-size: 13px !important;
+    color: #475569 !important;
     border-bottom: 1px solid #f1f5f9 !important;
-    transition: background 0.15s ease !important;
+    transition: all 0.2s ease !important;
     background: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    min-height: 40px !important;
+    margin: 0 !important;
 }
 .home-category-suggestion-item:last-child {
     border-bottom: none !important;
@@ -1538,16 +1818,20 @@ html {
 .home-category-suggestion-item:hover,
 .home-category-suggestion-item.active {
     background: #f0f7ff !important;
-    color: #000000 !important;
+    color: #003d82 !important;
 }
 .home-category-suggestion-item .city-name {
     font-weight: 500 !important;
-    color: #000000 !important;
-    margin-bottom: 2px !important;
+    color: inherit !important;
+    margin: 0 !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    width: 100% !important;
 }
 .home-category-suggestion-item:hover .city-name,
 .home-category-suggestion-item.active .city-name {
-    color: #000000 !important;
+    color: #003d82 !important;
+    font-weight: 600 !important;
 }
 .home-category-loading,
 .home-category-no-results {
@@ -1738,6 +2022,189 @@ html {
         </div>
         
         <!-- Top Filter Section -->
+        <script>
+            // Define clearAllFiltersNow function BEFORE buttons are rendered
+            // This ensures it's available when onclick handlers are called
+            window.clearAllFiltersNow = function() {
+                console.log('[CLEAR_FILTERS] clearAllFiltersNow() called - INLINE HANDLER');
+                
+                // Show loader
+                const loader = document.getElementById('jobs-loader-overlay');
+                if (loader) {
+                    loader.setAttribute('style', 'display: flex !important; visibility: visible !important; opacity: 1 !important;');
+                    loader.classList.add('show');
+                } else {
+                    const jobsListContainer = document.getElementById('jobs-listing-container');
+                    if (jobsListContainer) {
+                        const loaderHtml = '<div class="blue-loader-overlay" id="jobs-loader-overlay" style="display: flex !important; visibility: visible !important; opacity: 1 !important;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div><p class="blue-loader-text">Loading jobs...</p></div></div>';
+                        jobsListContainer.insertAdjacentHTML('afterbegin', loaderHtml);
+                    }
+                }
+                
+                // Clear all form inputs using jQuery
+                if (typeof jQuery !== 'undefined') {
+                    console.log('[CLEAR_FILTERS] jQuery available, clearing forms');
+                    
+                    // Clear top filter form
+                    const $topForm = jQuery('#jobs-top-filter-form');
+                    if ($topForm.length) {
+                        console.log('[CLEAR_FILTERS] Clearing top form');
+                        $topForm.find('input[type="text"], input[type="search"], input[type="number"]').val('');
+                        $topForm.find('input[type="checkbox"]').prop('checked', false);
+                        $topForm.find('input[type="radio"]').prop('checked', false);
+                        $topForm.find('input[type="hidden"]').each(function() {
+                            const name = jQuery(this).attr('name');
+                            if (name && name !== 'layout' && name !== 'per_page' && name !== 'page' && name !== 'sort_by') {
+                                jQuery(this).val('');
+                            }
+                        });
+                        
+                                // Clear all selects
+                                $topForm.find('select').each(function() {
+                                    const $select = jQuery(this);
+                                    const name = $select.attr('name');
+                                    if (name && name !== 'layout' && name !== 'per_page' && name !== 'page' && name !== 'sort_by') {
+                                        // Check if selectpicker is available and initialized
+                                        if ($select.hasClass('selectpicker') && typeof jQuery.fn.selectpicker !== 'undefined') {
+                                            try {
+                                                if (this.multiple) {
+                                                    $select.selectpicker('deselectAll');
+                                                } else {
+                                                    $select.selectpicker('val', '');
+                                                }
+                                                $select.selectpicker('refresh');
+                                                console.log('[CLEAR_FILTERS] Cleared selectpicker:', name);
+                                            } catch (e) {
+                                                console.log('[CLEAR_FILTERS] Error clearing selectpicker:', name, e);
+                                                // Fallback: clear normally
+                                                if (this.multiple) {
+                                                    $select.val([]);
+                                                } else {
+                                                    $select.val('').trigger('change');
+                                                }
+                                            }
+                                        } else {
+                                            // Regular select - clear normally
+                                            if (this.multiple) {
+                                                $select.val([]);
+                                            } else {
+                                                $select.val('').trigger('change');
+                                            }
+                                        }
+                                    }
+                                });
+                    }
+                    
+                    // Clear sidebar form
+                    const $sidebarForm = jQuery('#jobs-filter-form');
+                    if ($sidebarForm.length) {
+                        console.log('[CLEAR_FILTERS] Clearing sidebar form');
+                        $sidebarForm.find('input[type="text"], input[type="search"], input[type="number"]').val('');
+                        $sidebarForm.find('input[type="checkbox"]').prop('checked', false);
+                        $sidebarForm.find('input[type="radio"]').prop('checked', false);
+                        $sidebarForm.find('select').each(function() {
+                            const $select = jQuery(this);
+                            // Check if selectpicker is available and initialized
+                            if ($select.hasClass('selectpicker') && typeof jQuery.fn.selectpicker !== 'undefined') {
+                                try {
+                                    if (this.multiple) {
+                                        $select.selectpicker('deselectAll');
+                                    } else {
+                                        $select.selectpicker('val', '');
+                                    }
+                                    $select.selectpicker('refresh');
+                                } catch (e) {
+                                    console.log('[CLEAR_FILTERS] Error clearing sidebar selectpicker:', e);
+                                    // Fallback: clear normally
+                                    if (this.multiple) {
+                                        $select.val([]);
+                                    } else {
+                                        $select.val('').trigger('change');
+                                    }
+                                }
+                            } else {
+                                // Regular select - clear normally
+                                if (this.multiple) {
+                                    $select.val([]);
+                                } else {
+                                    $select.val('').trigger('change');
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Clear specific search inputs
+                    jQuery('#job_city_search, #job_city_id, #job_role_search, #job_role_id').val('');
+                    jQuery('#job-city-suggestions, #job-role-suggestions').hide().empty();
+                    
+                    // Reset radius slider
+                    const radiusSlider = document.getElementById('radius-slider');
+                    if (radiusSlider) {
+                        radiusSlider.value = 0;
+                        const radiusValue = document.getElementById('radius-value');
+                        if (radiusValue) {
+                            radiusValue.textContent = '0';
+                        }
+                        jQuery(radiusSlider).trigger('change');
+                    }
+                    
+                    // Refresh selectpickers after a delay
+                    setTimeout(function() {
+                        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.selectpicker !== 'undefined') {
+                            jQuery('#home_category_search, #home_city_search').each(function() {
+                                const $select = jQuery(this);
+                                if ($select.hasClass('selectpicker')) {
+                                    try {
+                                        const oldVal = $select.selectpicker('val');
+                                        $select.selectpicker('val', '');
+                                        $select.selectpicker('refresh');
+                                        const newVal = $select.selectpicker('val');
+                                        console.log('[CLEAR_FILTERS] Selectpicker', $select.attr('id'), '- old:', oldVal, 'new:', newVal);
+                                    } catch (e) {
+                                        console.log('[CLEAR_FILTERS] Error refreshing selectpicker', $select.attr('id'), e);
+                                        // Fallback: clear normally
+                                        $select.val('').trigger('change');
+                                    }
+                                } else {
+                                    // Not a selectpicker, clear normally
+                                    $select.val('').trigger('change');
+                                }
+                            });
+                        } else {
+                            console.log('[CLEAR_FILTERS] Selectpicker not available, clearing selects normally');
+                            // Fallback: clear normally
+                            jQuery('#home_category_search, #home_city_search').each(function() {
+                                jQuery(this).val('').trigger('change');
+                            });
+                        }
+                    }, 100);
+                    
+                    // Update URL and submit form
+                    setTimeout(function() {
+                        const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
+                        const cleanUrl = baseUrl.split('?')[0];
+                        console.log('[CLEAR_FILTERS] Updating URL to:', cleanUrl);
+                        window.history.pushState({}, '', cleanUrl);
+                        
+                        const $topForm = jQuery('#jobs-top-filter-form');
+                        if ($topForm.length) {
+                            console.log('[CLEAR_FILTERS] Submitting form');
+                            $topForm.trigger('submit');
+                        } else {
+                            console.log('[CLEAR_FILTERS] Form not found, redirecting');
+                            window.location.href = cleanUrl;
+                        }
+                    }, 200);
+                } else {
+                    console.log('[CLEAR_FILTERS] jQuery not available, redirecting');
+                    // Fallback: redirect to base URL
+                    const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
+                    window.location.href = baseUrl.split('?')[0];
+                }
+            };
+            console.log('[CLEAR_FILTERS] clearAllFiltersNow function defined');
+        </script>
+        
         <form action="{{ JobBoardHelper::getJobsPageURL() }}" method="get" id="jobs-top-filter-form" class="jobs-top-filter">
             <input type="hidden" name="layout" value="{{ $layout }}" id="layout-input">
             <div class="filter-row">
@@ -1747,9 +2214,12 @@ html {
                         <span>{{ __('Keyword') }}</span>
                     </label>
                     <div class="home-category-search-wrapper" style="position: relative;">
-                        <input type="text" id="home_category_search" name="keyword" value="{{ BaseHelper::stringify(request()->query('keyword')) }}" placeholder="{{ __('Type to search...') }}" autocomplete="off" class="wt-search-bar-select">
-                        <input type="hidden" id="home_keyword_id" name="job_categories[]" value="{{ BaseHelper::stringify(request()->query('job_categories.0')) }}">
-                        <div id="home-category-suggestions" class="home-category-suggestions" style="display: none;"></div>
+                        <select id="home_category_search" name="job_categories[]" class="wt-search-bar-select keyword-select-dropdown selectpicker" data-live-search="true">
+                            <option value="">{{ __('Select keyword') }}</option>
+                            @foreach($jobRoles as $category)
+                                <option value="{{ $category->id }}" @selected($category->id == request()->query('job_categories.0'))>{{ $category->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 
@@ -1759,9 +2229,36 @@ html {
                         <span>{{ __('Location') }}</span>
                     </label>
                     <div class="home-city-search-wrapper" style="position: relative;">
-                        <input type="text" name="city_search" id="home_city_search" class="wt-search-bar-select home-city-search-input" placeholder="{{ __('Select Your Location') }}" autocomplete="off" value="{{ request('city_search', BaseHelper::stringify(request()->query('location'))) }}" />
-                        <input type="hidden" name="city_id" id="home_city_id" value="{{ request('city_id', BaseHelper::stringify(request()->query('city_id'))) }}" />
-                        <div class="home-city-suggestions" id="home-city-suggestions" style="display: none;"></div>
+                        <select id="home_city_search" name="city_id" class="wt-search-bar-select location-select-dropdown selectpicker" data-live-search="true">
+                            <option value="">{{ __('Select Your Location') }}</option>
+                            @if(is_plugin_active('location') && $cities->count() > 0)
+                                @foreach($cities as $city)
+                                    @php
+                                        $cityLabel = $city->name;
+                                        if ($city->state && $city->state->name) {
+                                            $cityLabel .= ', ' . $city->state->name;
+                                        }
+                                        if ($city->country && $city->country->name) {
+                                            $cityLabel .= ', ' . $city->country->name;
+                                        }
+                                    @endphp
+                                    <option value="{{ $city->id }}" @selected($city->id == request()->query('city_id'))>{{ $cityLabel }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button type="button" class="clear-filter-btn" id="clear-top-filters" onclick="clearAllFiltersNow(); return false;">
+                            <i class="feather-x-circle"></i>
+                            {{ __('Clear Filters') }}
+                        </button>
+                        <button type="submit" class="search-btn">
+                            <i class="feather-search"></i>
+                            {{ __('Find Job') }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1814,23 +2311,6 @@ html {
                     </select>
                 </div>
             </div>
-            
-            <div class="filter-actions">
-                <!-- <a href="#" class="advance-search-link" id="toggle-advance-search">
-                    <i class="feather-plus"></i>
-                    {{ __('Advance Search') }}
-                </a> -->
-                <div style="display: flex; gap: 12px; align-items: center;">
-                    <button type="button" class="clear-filter-btn" id="clear-top-filters">
-                        <i class="feather-x-circle"></i>
-                        {{ __('Clear Filters') }}
-                    </button>
-                <button type="submit" class="search-btn">
-                    <i class="feather-search"></i>
-                    {{ __('Find Job') }}
-                </button>
-                </div>
-            </div>
         </form>
         
         <div class="row">
@@ -1849,7 +2329,7 @@ html {
                                     <i class="feather-filter"></i>
                                         {{ __('Filters') }}
                                     </h4>
-                                <button type="button" class="btn-clear-filters" id="clear-all-job-filters">
+                                <button type="button" class="btn-clear-filters" id="clear-all-job-filters" onclick="clearAllFiltersNow(); return false;">
                                     <i class="feather-x-circle"></i>
                                         {{ __('Clear All') }}
                                     </button>
@@ -1939,99 +2419,251 @@ html {
                             initializeFiltersFromURL();
                         }, 800);
                         
-                        // Clear all filters - matching candidates page functionality
-                        $('#clear-all-job-filters, .btn-clear-filters').on('click', function(e) {
+                        // Clear all filters - comprehensive clearing
+                        // Use event delegation to ensure it works even if button is added dynamically
+                        console.log('[CLEAR_FILTERS] Setting up event handlers');
+                        
+                        // Test if buttons exist
+                        const clearAllBtn = $('#clear-all-job-filters');
+                        const clearTopBtn = $('#clear-top-filters');
+                        console.log('[CLEAR_FILTERS] Clear All button found:', clearAllBtn.length > 0);
+                        console.log('[CLEAR_FILTERS] Clear Top button found:', clearTopBtn.length > 0);
+                        
+                        $(document).off('click', '#clear-all-job-filters, .btn-clear-filters, #clear-top-filters').on('click', '#clear-all-job-filters, .btn-clear-filters, #clear-top-filters', function(e) {
                             e.preventDefault();
+                            e.stopPropagation();
+                            const buttonId = this.id || 'unknown';
+                            console.log('[CLEAR_FILTERS] ===== BUTTON CLICKED =====', buttonId);
+                            console.log('[CLEAR_FILTERS] Event object:', e);
                             
-                            // Clear sidebar form (#jobs-filter-form)
-                            const sidebarFormInputs = $('#jobs-filter-form').find('input, select, textarea');
-                            sidebarFormInputs.each(function() {
+                            // Show loader - force show
+                            const loader = $('#jobs-loader-overlay');
+                            if (loader.length) {
+                                loader.attr('style', 'display: flex !important; visibility: visible !important; opacity: 1 !important;').addClass('show');
+                                        } else {
+                                // Create loader if it doesn't exist
+                                const loaderHtml = '<div class="blue-loader-overlay" id="jobs-loader-overlay" style="display: flex !important; visibility: visible !important; opacity: 1 !important;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div><p class="blue-loader-text">Loading jobs...</p></div></div>';
+                                $('#jobs-listing-container').prepend(loaderHtml);
+                            }
+                            
+                            // Function to clear all inputs in a form
+                            function clearForm(formSelector) {
+                                const form = $(formSelector);
+                                if (!form.length) {
+                                    console.log('[CLEAR_FILTERS] Form not found:', formSelector);
+                                    return;
+                                }
+                                console.log('[CLEAR_FILTERS] Clearing form:', formSelector);
+                                
+                                // Clear all text inputs, search inputs
+                                let textInputsCleared = 0;
+                                form.find('input[type="text"], input[type="search"], input[type="number"]').each(function() {
                                 const $input = $(this);
-                                if ($input.attr('type') === 'checkbox') {
-                                    $input.prop('checked', false);
-                                } else if ($input.attr('type') === 'radio') {
-                                    $input.prop('checked', false);
-                                } else if ($input.attr('type') === 'text' || $input.attr('type') === 'number' || $input.attr('type') === 'search' || $input.attr('type') === 'hidden') {
-                                    if ($input.attr('name') !== 'layout' && $input.attr('name') !== 'per_page' && $input.attr('name') !== 'page' && $input.attr('name') !== 'sort_by') {
+                                    const name = $input.attr('name');
+                                    if (name && name !== 'layout' && name !== 'per_page' && name !== 'page' && name !== 'sort_by') {
+                                        const oldVal = $input.val();
                                         $input.val('');
+                                        textInputsCleared++;
+                                        if (oldVal) console.log('[CLEAR_FILTERS] Cleared text input:', name, 'old value:', oldVal);
                                     }
-                                } else if ($input.is('select')) {
-                                    // Handle Bootstrap Select (selectpicker)
-                                    if ($input.hasClass('selectpicker')) {
-                                        if ($input.prop('multiple')) {
-                                            $input.selectpicker('deselectAll');
+                                });
+                                console.log('[CLEAR_FILTERS] Cleared', textInputsCleared, 'text inputs');
+                                
+                                // Clear all checkboxes
+                                const checkboxesCleared = form.find('input[type="checkbox"]:checked').length;
+                                form.find('input[type="checkbox"]').prop('checked', false);
+                                if (checkboxesCleared > 0) console.log('[CLEAR_FILTERS] Cleared', checkboxesCleared, 'checkboxes');
+                                
+                                // Clear all radio buttons
+                                const radiosCleared = form.find('input[type="radio"]:checked').length;
+                                form.find('input[type="radio"]').prop('checked', false);
+                                if (radiosCleared > 0) console.log('[CLEAR_FILTERS] Cleared', radiosCleared, 'radio buttons');
+                                
+                                // Clear all hidden inputs (except system ones)
+                                let hiddenInputsCleared = 0;
+                                form.find('input[type="hidden"]').each(function() {
+                                const $input = $(this);
+                                    const name = $input.attr('name');
+                                    if (name && name !== 'layout' && name !== 'per_page' && name !== 'page' && name !== 'sort_by') {
+                                        const oldVal = $input.val();
+                                        $input.val('');
+                                        hiddenInputsCleared++;
+                                        if (oldVal) console.log('[CLEAR_FILTERS] Cleared hidden input:', name, 'old value:', oldVal);
+                        }
+                                });
+                                if (hiddenInputsCleared > 0) console.log('[CLEAR_FILTERS] Cleared', hiddenInputsCleared, 'hidden inputs');
+                                
+                                // Clear all selects (Bootstrap Select, Select2, regular)
+                                let selectsCleared = 0;
+                                form.find('select').each(function() {
+                                    const $select = $(this);
+                                    const name = $select.attr('name');
+                                    if (name && name !== 'layout' && name !== 'per_page' && name !== 'page' && name !== 'sort_by') {
+                                        const oldVal = $select.val();
+                                        // Bootstrap Select
+                                        if ($select.hasClass('selectpicker')) {
+                                            if ($select.prop('multiple')) {
+                                                $select.selectpicker('deselectAll');
                                         } else {
-                                            $input.selectpicker('val', '');
+                                                $select.selectpicker('val', '');
+                                            }
+                                            $select.selectpicker('refresh');
+                                            selectsCleared++;
+                                            if (oldVal) console.log('[CLEAR_FILTERS] Cleared selectpicker:', name, 'old value:', oldVal, 'new value:', $select.selectpicker('val'));
                                         }
-                                        $input.selectpicker('refresh');
-                                    } else {
+                                        // Select2
+                                        else if ($select.hasClass('select2-hidden-accessible') || $select.hasClass('selectpicker-location')) {
+                                            $select.val(null).trigger('change');
+                                            selectsCleared++;
+                                            if (oldVal) console.log('[CLEAR_FILTERS] Cleared Select2:', name, 'old value:', oldVal);
+                                        }
                                         // Regular select
-                                        if ($input.prop('multiple')) {
-                                            $input.val([]);
+                                        else {
+                                            if ($select.prop('multiple')) {
+                                                $select.val([]);
                                         } else {
-                                            $input.val('').trigger('change');
-                                        }
+                                                $select.val('').trigger('change');
+                        }
+                                            selectsCleared++;
+                                            if (oldVal) console.log('[CLEAR_FILTERS] Cleared regular select:', name, 'old value:', oldVal);
                                     }
                                 }
                             });
+                                if (selectsCleared > 0) console.log('[CLEAR_FILTERS] Cleared', selectsCleared, 'selects');
+                            }
                             
-                            // Clear top filter form (#jobs-top-filter-form)
-                            const topFormInputs = $('#jobs-top-filter-form').find('input, select, textarea');
-                            topFormInputs.each(function() {
-                                const $input = $(this);
-                                if ($input.attr('type') === 'checkbox') {
-                                    $input.prop('checked', false);
-                                } else if ($input.attr('type') === 'radio') {
-                                    $input.prop('checked', false);
-                                } else if ($input.attr('type') === 'text' || $input.attr('type') === 'number' || $input.attr('type') === 'search') {
-                                    if ($input.attr('name') !== 'layout') {
-                                        $input.val('');
-                        }
-                                } else if ($input.is('select')) {
-                                    // Handle Bootstrap Select (selectpicker)
-                                    if ($input.hasClass('selectpicker')) {
-                                        if ($input.prop('multiple')) {
-                                            $input.selectpicker('deselectAll');
-                                        } else {
-                                            $input.selectpicker('val', '');
-                                        }
-                                        $input.selectpicker('refresh');
-                                    } else {
-                                        // Regular select
-                                        if ($input.prop('multiple')) {
-                                            $input.val([]);
-                                        } else {
-                                            $input.val('').trigger('change');
-                        }
-                                    }
-                                }
-                            });
+                            // Clear sidebar form
+                            console.log('[CLEAR_FILTERS] ===== CLEARING SIDEBAR FORM =====');
+                            clearForm('#jobs-filter-form');
+                            
+                            // Clear top filter form
+                            console.log('[CLEAR_FILTERS] ===== CLEARING TOP FILTER FORM =====');
+                            clearForm('#jobs-top-filter-form');
+                            
+                            // Clear job city search inputs (sidebar)
+                            const jobCitySearch = $('#job_city_search');
+                            const jobCityId = $('#job_city_id');
+                            if (jobCitySearch.length && jobCitySearch.val()) {
+                                console.log('[CLEAR_FILTERS] Clearing job_city_search, old value:', jobCitySearch.val());
+                                jobCitySearch.val('');
+                            }
+                            if (jobCityId.length && jobCityId.val()) {
+                                console.log('[CLEAR_FILTERS] Clearing job_city_id, old value:', jobCityId.val());
+                                jobCityId.val('');
+                            }
+                            $('#job-city-suggestions').hide().empty();
+                            
+                            // Clear job role search inputs (sidebar)
+                            const jobRoleSearch = $('#job_role_search');
+                            const jobRoleId = $('#job_role_id');
+                            if (jobRoleSearch.length && jobRoleSearch.val()) {
+                                console.log('[CLEAR_FILTERS] Clearing job_role_search, old value:', jobRoleSearch.val());
+                                jobRoleSearch.val('');
+                            }
+                            if (jobRoleId.length && jobRoleId.val()) {
+                                console.log('[CLEAR_FILTERS] Clearing job_role_id, old value:', jobRoleId.val());
+                                jobRoleId.val('');
+                            }
+                            $('#job-role-suggestions').hide().empty();
+                            
+                            // Clear job location search inputs
+                            $('#job_location_search, #job_location_city_id').val('');
+                            $('#job-location-suggestions').hide().empty();
                             
                             // Reset radius slider
                             const radiusSlider = document.getElementById('radius-slider');
                             if (radiusSlider) {
+                                const oldRadius = radiusSlider.value;
                                 radiusSlider.value = 0;
                                 const radiusValue = document.getElementById('radius-value');
                                 if (radiusValue) {
                                     radiusValue.textContent = '0';
                                 }
+                                // Trigger change event to update display
+                                $(radiusSlider).trigger('change');
+                                if (oldRadius !== '0') console.log('[CLEAR_FILTERS] Reset radius slider from', oldRadius, 'to 0');
                             }
                             
-                            // Clear Select2 (city filter)
-                            if (typeof $ !== 'undefined' && $.fn.select2) {
-                                $('#jobs-filter-form .selectpicker-location, #jobs-top-filter-form .selectpicker-location').each(function() {
-                                    const $select = $(this);
-                                    if ($select.hasClass('select2-hidden-accessible')) {
-                                        $select.val(null).trigger('change');
+                            // Force refresh all selectpickers after clearing (keyword and location dropdowns)
+                            setTimeout(function() {
+                                console.log('[CLEAR_FILTERS] ===== REFRESHING SELECTPICKERS =====');
+                                if (typeof $ !== 'undefined' && $.fn.selectpicker) {
+                                    // Refresh keyword dropdown
+                                    const $keywordSelect = $('#home_category_search');
+                                    if ($keywordSelect.length && $keywordSelect.hasClass('selectpicker')) {
+                                        const oldKeywordVal = $keywordSelect.selectpicker('val');
+                                        $keywordSelect.selectpicker('val', '');
+                                        $keywordSelect.selectpicker('refresh');
+                                        const newKeywordVal = $keywordSelect.selectpicker('val');
+                                        console.log('[CLEAR_FILTERS] Keyword dropdown - old:', oldKeywordVal, 'new:', newKeywordVal);
                                     } else {
-                                        $select.val('');
+                                        console.log('[CLEAR_FILTERS] Keyword dropdown not found or not selectpicker');
                                     }
-                                });
-                            }
+                                    
+                                    // Refresh location dropdown
+                                    const $locationSelect = $('#home_city_search');
+                                    if ($locationSelect.length && $locationSelect.hasClass('selectpicker')) {
+                                        const oldLocationVal = $locationSelect.selectpicker('val');
+                                        $locationSelect.selectpicker('val', '');
+                                        $locationSelect.selectpicker('refresh');
+                                        const newLocationVal = $locationSelect.selectpicker('val');
+                                        console.log('[CLEAR_FILTERS] Location dropdown - old:', oldLocationVal, 'new:', newLocationVal);
+                                    } else {
+                                        console.log('[CLEAR_FILTERS] Location dropdown not found or not selectpicker');
+                                    }
+                                    
+                                    // Refresh all other selectpickers in the form
+                                    $('#jobs-top-filter-form .selectpicker, #jobs-filter-form .selectpicker').each(function() {
+                                    const $select = $(this);
+                                        const name = $select.attr('name');
+                                        const oldVal = $select.selectpicker('val');
+                                        if ($select.prop('multiple')) {
+                                            $select.selectpicker('deselectAll');
+                                    } else {
+                                            $select.selectpicker('val', '');
+                                        }
+                                        $select.selectpicker('refresh');
+                                        const newVal = $select.selectpicker('val');
+                                        if (oldVal && oldVal !== '') {
+                                            console.log('[CLEAR_FILTERS] Selectpicker', name, '- old:', oldVal, 'new:', newVal);
+                                        }
+                                    });
+                                } else {
+                                    console.log('[CLEAR_FILTERS] jQuery or selectpicker not available');
+                                }
+                            }, 150);
                             
-                            // Clear URL parameters and reload to initial state
+                            // Submit the form to refresh results with cleared filters
+                            setTimeout(function() {
+                                console.log('[CLEAR_FILTERS] ===== SUBMITTING FORM =====');
+                                const topForm = $('#jobs-top-filter-form');
+                                if (topForm.length) {
+                                    // Update URL to remove all query parameters
+                                    const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
+                                    const cleanUrl = baseUrl.split('?')[0];
+                                    console.log('[CLEAR_FILTERS] Updating URL to:', cleanUrl);
+                                    window.history.pushState({}, '', cleanUrl);
+                                    
+                                    // Check form values before submission
+                                    const formData = new FormData(topForm[0]);
+                                    const formValues = {};
+                                    for (let [key, value] of formData.entries()) {
+                                        if (value && value !== '') {
+                                            formValues[key] = value;
+                                        }
+                                    }
+                                    console.log('[CLEAR_FILTERS] Form values before submit:', formValues);
+                                    
+                                    // Trigger form submission via AJAX (jobs.js handles this)
+                                    console.log('[CLEAR_FILTERS] Triggering form submit');
+                                    topForm.trigger('submit');
+                                } else {
+                                    console.log('[CLEAR_FILTERS] Form not found, redirecting');
+                                    // Fallback: redirect to base URL
                             const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
                             window.location.href = baseUrl.split('?')[0];
+                                }
+                            }, 300);
                         });
                     </script>
                 </div>
@@ -2061,16 +2693,85 @@ html {
                     
                 </div>
 
-                <div class="twm-jobs-list-wrap jobs-listing" id="jobs-listing-container" style="position: relative;">
-                    {{-- Common Loader Component --}}
-                    @include(Theme::getThemeNamespace('partials.loader'), [
-                        'size' => 'large',
-                        'overlay' => true,
-                        'containerId' => 'jobs-loader-overlay',
-                        'show' => false
-                    ])
+                <div class="twm-jobs-list-wrap jobs-listing" id="jobs-listing-container" style="position: relative; min-height: 400px;">
+                    {{-- Blue Loader Component --}}
+                    <div class="blue-loader-overlay" id="jobs-loader-overlay" style="display: none !important;">
+                        <div class="blue-loader-wrapper">
+                            <div class="blue-loader large"></div>
+                            <p class="blue-loader-text">Loading jobs...</p>
+                        </div>
+                    </div>
                     {!! Theme::partial("jobs.$layout", ['jobs' => $jobs, 'style' => 2]) !!}
                 </div>
+                
+                {{-- Ensure Blue Loader Styles are Available --}}
+                <style>
+                /* Blue Loader Styles for Jobs Page */
+                #jobs-listing-container {
+                    position: relative !important;
+                    min-height: 400px !important;
+                }
+                
+                .blue-loader-overlay {
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    min-height: 400px !important;
+                    background: rgba(255, 255, 255, 0.98) !important;
+                    backdrop-filter: blur(5px);
+                    -webkit-backdrop-filter: blur(5px);
+                    display: none !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    z-index: 99999 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    pointer-events: all !important;
+                }
+                
+                .blue-loader-overlay[style*="display: flex"],
+                .blue-loader-overlay[style*="display:flex"],
+                .blue-loader-overlay.show {
+                    display: flex !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                }
+                
+                .blue-loader {
+                    width: 60px;
+                    height: 60px;
+                    border: 5px solid rgba(0, 115, 209, 0.2);
+                    border-top-color: #0073d1;
+                    border-radius: 50%;
+                    animation: blue-spin 0.8s linear infinite;
+                    flex-shrink: 0;
+                }
+                
+                @keyframes blue-spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                
+                .blue-loader-wrapper {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 15px;
+                }
+                
+                .blue-loader-text {
+                    color: #0073d1;
+                    font-size: 14px;
+                    font-weight: 500;
+                    margin: 0;
+                    text-align: center;
+                }
+                </style>
 
                 <div id="map" style="display: none" data-center="{{ json_encode(JobBoardHelper::getMapCenterLatLng()) }}"></div>
 
@@ -2214,28 +2915,126 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Advance search toggle - show/hide advanced filters
-    // Clear Top Filters Button
+    // Clear Top Filters Button - Comprehensive clearing
+    // Use both jQuery and vanilla JS to ensure it works
+    function attachClearTopFiltersHandler() {
+        console.log('[CLEAR_TOP_FILTERS] Attempting to attach handler');
+        
+        // Try jQuery first (more reliable with event delegation)
+        if (typeof jQuery !== 'undefined') {
+            jQuery(document).off('click', '#clear-top-filters').on('click', '#clear-top-filters', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[CLEAR_TOP_FILTERS] Clear Top Filters button clicked (jQuery handler)');
+                
+                // Trigger the same logic as clear-all button
+                jQuery('#clear-all-job-filters').trigger('click');
+            });
+            console.log('[CLEAR_TOP_FILTERS] jQuery handler attached');
+        }
+        
+        // Also try vanilla JS
     const clearTopFiltersBtn = document.getElementById('clear-top-filters');
     if (clearTopFiltersBtn) {
-        clearTopFiltersBtn.addEventListener('click', function(e) {
+            // Remove existing listeners
+            const newBtn = clearTopFiltersBtn.cloneNode(true);
+            clearTopFiltersBtn.parentNode.replaceChild(newBtn, clearTopFiltersBtn);
+            
+            newBtn.addEventListener('click', function(e) {
             e.preventDefault();
+                e.stopPropagation();
+                console.log('[CLEAR_TOP_FILTERS] Clear Top Filters button clicked (vanilla JS handler)');
+                
+                // Trigger the same logic as clear-all button
+                if (typeof jQuery !== 'undefined') {
+                    jQuery('#clear-all-job-filters').trigger('click');
+                } else {
+                    const clearAllBtn = document.getElementById('clear-all-job-filters');
+                    if (clearAllBtn) {
+                        clearAllBtn.click();
+                    }
+                }
+            });
+            console.log('[CLEAR_TOP_FILTERS] Vanilla JS handler attached');
+        } else {
+            console.log('[CLEAR_TOP_FILTERS] Button not found, will retry');
+            setTimeout(attachClearTopFiltersHandler, 500);
+        }
+    }
+    
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachClearTopFiltersHandler);
+    } else {
+        attachClearTopFiltersHandler();
+    }
+    
+    // Also try with jQuery ready
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function() {
+            attachClearTopFiltersHandler();
+        });
+    }
+    
+    // Old handler (keeping for compatibility but will be overridden)
+    const clearTopFiltersBtnOld = document.getElementById('clear-top-filters');
+    if (clearTopFiltersBtnOld) {
+        clearTopFiltersBtnOld.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('[CLEAR_TOP_FILTERS] Clear Top Filters button clicked (OLD handler - should not see this)');
             
-            // Get the form
-            const form = document.getElementById('jobs-top-filter-form');
-            if (!form) return;
+            // Show loader - force show with setAttribute
+            const loader = document.getElementById('jobs-loader-overlay');
+            if (loader) {
+                loader.setAttribute('style', 'display: flex !important; visibility: visible !important; opacity: 1 !important;');
+                loader.classList.add('show');
+            } else {
+                // Create loader if it doesn't exist
+                const jobsListContainer = document.getElementById('jobs-listing-container');
+                if (jobsListContainer) {
+                    const loaderHtml = '<div class="blue-loader-overlay" id="jobs-loader-overlay" style="display: flex !important; visibility: visible !important; opacity: 1 !important;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div><p class="blue-loader-text">Loading jobs...</p></div></div>';
+                    jobsListContainer.insertAdjacentHTML('afterbegin', loaderHtml);
+                }
+            }
             
-            // Reset all input fields (except layout)
-            const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="search"]');
-            inputs.forEach(function(input) {
-                if (input.name !== 'layout') {
+            // Function to clear all inputs in a form
+            function clearForm(formSelector) {
+                const form = document.querySelector(formSelector);
+            if (!form) {
+                console.log('[CLEAR_TOP_FILTERS] Form not found:', formSelector);
+                return;
+            }
+            console.log('[CLEAR_TOP_FILTERS] Clearing form:', formSelector);
+            
+                // Clear all text inputs, search inputs
+                form.querySelectorAll('input[type="text"], input[type="search"], input[type="number"]').forEach(function(input) {
+                    if (input.name && input.name !== 'layout' && input.name !== 'per_page' && input.name !== 'page' && input.name !== 'sort_by') {
                     input.value = '';
                 }
             });
             
-            // Reset all select dropdowns - Clear Bootstrap Select first
-            const selects = form.querySelectorAll('select');
-            selects.forEach(function(select) {
+                // Clear all checkboxes
+                form.querySelectorAll('input[type="checkbox"]').forEach(function(input) {
+                    input.checked = false;
+                });
+                
+                // Clear all radio buttons
+                form.querySelectorAll('input[type="radio"]').forEach(function(input) {
+                    input.checked = false;
+                });
+                
+                // Clear all hidden inputs (except system ones)
+                form.querySelectorAll('input[type="hidden"]').forEach(function(input) {
+                    if (input.name && input.name !== 'layout' && input.name !== 'per_page' && input.name !== 'page' && input.name !== 'sort_by') {
+                        input.value = '';
+                    }
+                });
+                
+                // Clear all selects
+                form.querySelectorAll('select').forEach(function(select) {
+                    if (select.name && select.name !== 'layout' && select.name !== 'per_page' && select.name !== 'page' && select.name !== 'sort_by') {
                 const $select = $(select);
+                        // Bootstrap Select
                 if ($select.hasClass('selectpicker')) {
                     if (select.multiple) {
                         $select.selectpicker('deselectAll');
@@ -2243,17 +3042,109 @@ document.addEventListener('DOMContentLoaded', function() {
                         $select.selectpicker('val', '');
                     }
                     $select.selectpicker('refresh');
-                } else {
-                    // Fallback if selectpicker not initialized
+                        }
+                        // Select2
+                        else if ($select.hasClass('select2-hidden-accessible') || $select.hasClass('selectpicker-location')) {
+                            $select.val(null).trigger('change');
+                        }
+                        // Regular select
+                        else {
                     if (select.multiple) {
-                        Array.from(select.options).forEach(function(option) {
-                            option.selected = false;
-                        });
+                                select.value = [];
                     } else {
-                        select.selectedIndex = 0;
+                                select.value = '';
+                                select.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
                     }
                 }
             });
+            }
+            
+            // Clear top filter form
+            console.log('[CLEAR_TOP_FILTERS] ===== CLEARING TOP FILTER FORM =====');
+            clearForm('#jobs-top-filter-form');
+            
+            // Clear sidebar form
+            console.log('[CLEAR_TOP_FILTERS] ===== CLEARING SIDEBAR FORM =====');
+            clearForm('#jobs-filter-form');
+            
+            // Clear job city search inputs (sidebar)
+            const citySearch = document.getElementById('job_city_search');
+            const cityId = document.getElementById('job_city_id');
+            const citySuggestions = document.getElementById('job-city-suggestions');
+            if (citySearch && citySearch.value) {
+                console.log('[CLEAR_TOP_FILTERS] Clearing job_city_search, old value:', citySearch.value);
+                citySearch.value = '';
+            }
+            if (cityId && cityId.value) {
+                console.log('[CLEAR_TOP_FILTERS] Clearing job_city_id, old value:', cityId.value);
+                cityId.value = '';
+            }
+            if (citySuggestions) {
+                citySuggestions.style.display = 'none';
+                citySuggestions.innerHTML = '';
+            }
+            
+            // Clear job role search inputs (sidebar)
+            const roleSearch = document.getElementById('job_role_search');
+            const roleId = document.getElementById('job_role_id');
+            const roleSuggestions = document.getElementById('job-role-suggestions');
+            if (roleSearch && roleSearch.value) {
+                console.log('[CLEAR_TOP_FILTERS] Clearing job_role_search, old value:', roleSearch.value);
+                roleSearch.value = '';
+            }
+            if (roleId && roleId.value) {
+                console.log('[CLEAR_TOP_FILTERS] Clearing job_role_id, old value:', roleId.value);
+                roleId.value = '';
+            }
+            if (roleSuggestions) {
+                roleSuggestions.style.display = 'none';
+                roleSuggestions.innerHTML = '';
+            }
+            
+            // Clear keyword and location select dropdowns (top filter) - do this AFTER clearForm
+            // Use setTimeout to ensure selectpicker is ready
+            setTimeout(function() {
+                console.log('[CLEAR_TOP_FILTERS] ===== REFRESHING SELECTPICKERS =====');
+                if (typeof jQuery !== 'undefined' && jQuery.fn.selectpicker) {
+                    // Clear keyword dropdown
+                    const $keywordSelect = jQuery('#home_category_search');
+                    if ($keywordSelect.length && $keywordSelect.hasClass('selectpicker')) {
+                        const oldKeywordVal = $keywordSelect.selectpicker('val');
+                        $keywordSelect.selectpicker('val', '');
+                        $keywordSelect.selectpicker('refresh');
+                        const newKeywordVal = $keywordSelect.selectpicker('val');
+                        console.log('[CLEAR_TOP_FILTERS] Keyword dropdown - old:', oldKeywordVal, 'new:', newKeywordVal);
+                    } else {
+                        console.log('[CLEAR_TOP_FILTERS] Keyword dropdown not found or not selectpicker');
+                    }
+                    
+                    // Clear location dropdown
+                    const $locationSelect = jQuery('#home_city_search');
+                    if ($locationSelect.length && $locationSelect.hasClass('selectpicker')) {
+                        const oldLocationVal = $locationSelect.selectpicker('val');
+                        $locationSelect.selectpicker('val', '');
+                        $locationSelect.selectpicker('refresh');
+                        const newLocationVal = $locationSelect.selectpicker('val');
+                        console.log('[CLEAR_TOP_FILTERS] Location dropdown - old:', oldLocationVal, 'new:', newLocationVal);
+                            } else {
+                        console.log('[CLEAR_TOP_FILTERS] Location dropdown not found or not selectpicker');
+                            }
+                        } else {
+                    console.log('[CLEAR_TOP_FILTERS] jQuery or selectpicker not available');
+                }
+            }, 100);
+            
+            // Clear job location search inputs
+            const locationSearch = document.getElementById('job_location_search');
+            const locationCityId = document.getElementById('job_location_city_id');
+            const locationSuggestions = document.getElementById('job-location-suggestions');
+            if (locationSearch) locationSearch.value = '';
+            if (locationCityId) locationCityId.value = '';
+            if (locationSuggestions) {
+                locationSuggestions.style.display = 'none';
+                locationSuggestions.innerHTML = '';
+            }
             
             // Reset radius slider
             const radiusSlider = document.getElementById('radius-slider');
@@ -2263,61 +3154,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (radiusValue) {
                     radiusValue.textContent = '0';
                 }
+                // Trigger change event to update display
+                radiusSlider.dispatchEvent(new Event('change', { bubbles: true }));
             }
             
-            // Clear Select2 if it exists
-            if (typeof $ !== 'undefined' && $.fn.select2) {
-                $('#jobs-top-filter-form .select2, #jobs-top-filter-form .selectpicker-location').each(function() {
-                    const $select = $(this);
-                    if ($select.hasClass('select2-hidden-accessible')) {
-                        $select.val(null).trigger('change');
-                    }
-                });
+            // Clear home city search (top filter)
+            const homeCitySearch = document.getElementById('home_city_search');
+            const homeCityId = document.getElementById('home_city_id');
+            const homeCitySuggestions = document.getElementById('home-city-suggestions');
+            if (homeCitySearch) homeCitySearch.value = '';
+            if (homeCityId) homeCityId.value = '';
+            if (homeCitySuggestions) {
+                homeCitySuggestions.style.display = 'none';
+                homeCitySuggestions.innerHTML = '';
             }
             
-            // Also clear sidebar filters
-            const sidebarForm = document.getElementById('jobs-filter-form');
-            if (sidebarForm) {
-                const sidebarInputs = sidebarForm.querySelectorAll('input, select, textarea');
-                sidebarInputs.forEach(function(input) {
-                    const $input = $(input);
-                    if (input.type === 'checkbox') {
-                        input.checked = false;
-                    } else if (input.type === 'radio') {
-                        input.checked = false;
-                    } else if (input.type === 'text' || input.type === 'number' || input.type === 'search') {
-                        if (input.name !== 'layout' && input.name !== 'per_page' && input.name !== 'page' && input.name !== 'sort_by') {
-                            input.value = '';
-                        }
-                    } else if (input.tagName === 'SELECT') {
-                        const $select = $(input);
-                        if ($select.hasClass('selectpicker')) {
-                            if (input.multiple) {
-                                $select.selectpicker('deselectAll');
+            // Submit the form to refresh results with cleared filters
+            // Use jQuery to trigger form submission which will handle AJAX properly
+            if (typeof jQuery !== 'undefined') {
+                const $topForm = jQuery('#jobs-top-filter-form');
+                if ($topForm.length) {
+                    // Update URL to remove all query parameters
+            const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
+                    const cleanUrl = baseUrl.split('?')[0];
+                    window.history.pushState({}, '', cleanUrl);
+            
+                    // Trigger form submission via AJAX (jobs.js handles this)
+                    $topForm.trigger('submit');
                             } else {
-                                $select.selectpicker('val', '');
+                    // Fallback: redirect to base URL
+            const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
+            window.location.href = baseUrl.split('?')[0];
                             }
-                            $select.selectpicker('refresh');
-                        } else if ($select.hasClass('selectpicker-location') || $select.hasClass('select2-hidden-accessible')) {
-                            $select.val(null).trigger('change');
                         } else {
-                            if (input.multiple) {
-                                input.value = [];
-                            } else {
-                                input.value = '';
-                            }
-                        }
-                    }
-                });
+                // Fallback: redirect to base URL
+            const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
+            window.location.href = baseUrl.split('?')[0];
             }
-            
-            // Clear URL parameters and reload
-            const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
-            window.location.href = baseUrl.split('?')[0];
-            
-            // Clear URL parameters and reload to initial state (like page start)
-            const baseUrl = '{{ JobBoardHelper::getJobsPageURL() }}';
-            window.location.href = baseUrl.split('?')[0];
         });
     }
     
@@ -2392,135 +3265,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Handle top filter form submission with AJAX and loader
-    const topFilterForm = document.getElementById('jobs-top-filter-form');
-    const jobsListingContainer = document.querySelector('.jobs-listing');
-    const overlay = document.querySelector('.jobs-listing .overlay');
-    
-    if (topFilterForm && overlay) {
-        topFilterForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Handle institution_type to job_categories mapping
-            const institutionType = this.querySelector('[name="institution_type"]');
-            if (institutionType && institutionType.value) {
-                // Convert institution_type to job_categories
-                const jobCategories = this.querySelectorAll('[name="job_categories[]"]');
-                let found = false;
-                jobCategories.forEach(function(cat) {
-                    if (cat.value === institutionType.value) {
-                        cat.selected = true;
-                        found = true;
-                    }
-                });
-                
-                // If not found in existing selects, add as hidden input
-                if (!found) {
-                    const hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.name = 'job_categories[]';
-                    hiddenInput.value = institutionType.value;
-                    this.appendChild(hiddenInput);
-                }
-            }
-            
-            // Show loader
-            if (overlay) {
-                overlay.style.display = 'flex';
-                overlay.classList.add('show');
-            }
-            
-            // Build form data
-            const formData = new FormData(this);
-            const params = new URLSearchParams();
-            
-            for (const [key, value] of formData.entries()) {
-                if (value) {
-                    if (key.includes('[]')) {
-                        params.append(key, value);
-                    } else {
-                        params.set(key, value);
-                    }
-                }
-            }
-            
-            // Handle multiple selects
-            const selects = this.querySelectorAll('select[name*="[]"]');
-            selects.forEach(function(select) {
-                const selectedOptions = Array.from(select.selectedOptions);
-                selectedOptions.forEach(function(option) {
-                    params.append(select.name, option.value);
-                });
-            });
-            
-            // Get AJAX URL
-            const ajaxUrl = '{{ route("public.ajax.jobs") }}';
-            const url = params.toString() ? `${ajaxUrl}?${params.toString()}` : ajaxUrl;
-            
-            // Update URL
-            const actionUrl = this.getAttribute('action');
-            const newUrl = params.toString() ? `${actionUrl}?${params.toString()}` : actionUrl;
-            window.history.pushState({}, '', newUrl);
-            
-            // Make AJAX request
-            if (typeof $ !== 'undefined') {
-                const $jobsList = $('#jobs-listing-container');
-                
-                $.ajax({
-                    method: 'GET',
-                    url: url,
-                    beforeSend: function() {
-                        // Show loader using LoaderHelper or fallback
-                        if (typeof window.LoaderHelper !== 'undefined') {
-                            LoaderHelper.show('jobs-loader-overlay');
-                        } else {
-                            $('#jobs-loader-overlay').css('display', 'flex').addClass('show');
-                        }
-                        // Scroll to top
-                        $('html, body').animate({
-                            scrollTop: $('.jobs-container').offset().top - 130
-                        }, 0);
-                    },
-                    success: function(response) {
-                        if (response.data) {
-                            // Update jobs listing content
-                            $jobsList.html(response.data);
-                            
-                            // Re-add loader component if not present
-                            if (!$jobsList.find('#jobs-loader-overlay').length) {
-                                const loaderHtml = '<div class="blue-loader-overlay" id="jobs-loader-overlay" style="display: none;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div></div></div>';
-                                $jobsList.prepend(loaderHtml);
-                            }
-                        }
-                        if (response.message) {
-                            $('.woocommerce-result-count-left').text(response.message);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Filter error:', error);
-                    },
-                    complete: function() {
-                        // Hide loader using LoaderHelper or fallback
-                        if (typeof window.LoaderHelper !== 'undefined') {
-                            LoaderHelper.hide('jobs-loader-overlay');
-                        } else {
-                            $('#jobs-loader-overlay').css('display', 'none').removeClass('show');
-                        }
-                    }
-                });
-            } else {
-                // Fallback: submit normally if jQuery not available
-                this.submit();
-            }
-        });
-    }
+    {{-- Top filter form is now handled by JobFilter class in jobs.js --}}
+    {{-- This ensures consistent behavior with sidebar filters --}}
 });
 
-// Load job categories for jobs page (like homepage)
+// Load job categories for jobs page (like homepage) - use same data as sidebar job roles
 @php
-    $jobCategories = app(\Botble\JobBoard\Repositories\Interfaces\CategoryInterface::class)
-        ->allBy(['status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED])
-        ->map(function($category) {
+    // Use the same $jobRoles that are displayed in the sidebar
+    $jobCategories = $jobRoles->map(function($category) {
             return [
                 'id' => $category->id,
                 'name' => $category->name,
@@ -2531,15 +3283,99 @@ document.addEventListener('DOMContentLoaded', function() {
 @endphp
 <script>
 // Set window.jobCategories for jobs page (required by home_category_search)
+// This uses the same data as the sidebar job roles dropdown
 window.jobCategories = @json($jobCategories);
+console.log('[JOB_ROLES] window.jobCategories set with', window.jobCategories.length, 'roles');
+
+// Initialize keyword and location select dropdowns using Bootstrap Select
+(function($) {
+    $(document).ready(function() {
+        // Initialize Keyword Dropdown
+        const $keywordSelect = $('#home_category_search');
+        
+        if ($keywordSelect.length) {
+            // Initialize Bootstrap Select if available
+            if (typeof $.fn.selectpicker !== 'undefined') {
+                $keywordSelect.selectpicker({
+                    liveSearch: true,
+                    liveSearchPlaceholder: 'Search job roles...',
+                    noneSelectedText: 'Select keyword',
+                    noneResultsText: 'No job roles found',
+                    style: 'btn-default',
+                    size: false
+                });
+                
+                console.log('[KEYWORD_DROPDOWN] Bootstrap Select initialized');
+                
+                // Handle change event to submit form
+                $keywordSelect.on('changed.bs.select', function() {
+                    console.log('[KEYWORD_DROPDOWN] Selection changed:', $(this).val());
+                    const $form = $('#jobs-top-filter-form');
+                    if ($form.length) {
+                        $form.trigger('submit');
+                    }
+                });
+                } else {
+                // Fallback: Handle change event for native select
+                $keywordSelect.on('change', function() {
+                    const $form = $('#jobs-top-filter-form');
+                    if ($form.length) {
+                        $form.trigger('submit');
+                    }
+                });
+            }
+        }
+        
+        // Initialize Location Dropdown
+        const $locationSelect = $('#home_city_search');
+        
+        if ($locationSelect.length) {
+            // Initialize Bootstrap Select if available
+            if (typeof $.fn.selectpicker !== 'undefined') {
+                $locationSelect.selectpicker({
+                    liveSearch: true,
+                    liveSearchPlaceholder: 'Search cities...',
+                    noneSelectedText: 'Select Your Location',
+                    noneResultsText: 'No cities found',
+                    style: 'btn-default',
+                    size: false
+                });
+                
+                console.log('[LOCATION_DROPDOWN] Bootstrap Select initialized');
+                
+                // Handle change event to submit form
+                $locationSelect.on('changed.bs.select', function() {
+                    console.log('[LOCATION_DROPDOWN] Selection changed:', $(this).val());
+                    const $form = $('#jobs-top-filter-form');
+                    if ($form.length) {
+                        $form.trigger('submit');
+                    }
+                });
+            } else {
+                // Fallback: Handle change event for native select
+                $locationSelect.on('change', function() {
+                    const $form = $('#jobs-top-filter-form');
+                    if ($form.length) {
+                        $form.trigger('submit');
+                    }
+                });
+            }
+        }
+    });
+})(window.jQuery || window.$);
 
 // Use homepage functions for jobs page filters
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('[JOB_ROLES] DOMContentLoaded - initializing search functions');
     // Wait a bit for window.jobCategories to be set
     setTimeout(function() {
+        console.log('[JOB_ROLES] Initializing search functions, jobCategories count:', window.jobCategories ? window.jobCategories.length : 0);
         // Initialize homepage category search if element exists
         if (typeof home_category_search === 'function') {
+            console.log('[JOB_ROLES] Calling home_category_search()');
             home_category_search();
+        } else {
+            console.warn('[JOB_ROLES] home_category_search function not found');
         }
         
         // Initialize homepage city search if element exists
@@ -2551,261 +3387,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// Fallback: Initialize Job Role Search (Like Homepage - Show dropdown on focus/click)
-document.addEventListener('DOMContentLoaded', function() {
-    const roleInput = document.getElementById('home_category_search');
-    const roleId = document.getElementById('home_keyword_id');
-    const suggestions = document.getElementById('home-category-suggestions');
-    let allRoles = [];
-    let activeSuggestionIndex = -1;
-    let searchTimeout = null;
-
-    if (!roleInput || !suggestions) return;
-
-    // Function to show job roles (like homepage)
-    function showRoles(keyword) {
-        keyword = (keyword || '').trim().toLowerCase();
-        activeSuggestionIndex = -1;
-
-        let filtered;
-        if (keyword.length === 0) {
-            // Show all job roles when no keyword
-            filtered = allRoles;
-        } else {
-            // Filter job roles locally
-            filtered = allRoles.filter(function(role) {
-                return role.name.toLowerCase().includes(keyword);
-            });
-        }
-
-        if (filtered.length === 0) {
-            suggestions.innerHTML = '<div class="job-role-no-results">No job roles found</div>';
-            suggestions.style.display = 'block';
-            return;
-        }
-
-        let html = '';
-        filtered.forEach(function(role) {
-            html += '<div class="job-role-suggestion-item" data-id="' + role.id + '" data-name="' + role.name + '">' +
-                '<div class="role-name">' + role.name + '</div>' +
-                '</div>';
-        });
-
-        suggestions.innerHTML = html;
-        suggestions.style.display = 'block';
-    }
-
-    // Load all job roles first
-    const apiUrl = (window.siteUrl || window.location.origin) + '/ajax/job-roles';
-    fetch(apiUrl + '?k=')
-        .then(response => response.json())
-        .then(data => {
-            allRoles = data.data || [];
-            
-            // Show all roles on focus or click (like homepage)
-            roleInput.addEventListener('focus', function() {
-                const currentVal = this.value;
-                if (!currentVal) {
-                    showRoles('');
-                } else {
-                    showRoles(currentVal);
-                }
-            });
-
-            roleInput.addEventListener('click', function() {
-                const currentVal = this.value;
-                if (!currentVal) {
-                    showRoles('');
-                } else {
-                    showRoles(currentVal);
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Job role load error:', error);
-        });
-
-    // Filter roles on input (like homepage)
-    roleInput.addEventListener('input', function() {
-        const keyword = this.value.trim().toLowerCase();
-
-        // Clear role selection when user types
-        if (keyword.length > 0) {
-            if (roleId) roleId.value = '';
-        }
-
-        if (searchTimeout) clearTimeout(searchTimeout);
-
-        searchTimeout = setTimeout(function() {
-            showRoles(keyword);
-        }, 100);
-    });
-
-    // Keyboard navigation
-    roleInput.addEventListener('keydown', function(e) {
-        const items = Array.from(suggestions.querySelectorAll('.job-role-suggestion-item:not([style*="display: none"])'));
-        
-        if (suggestions.style.display === 'none' || items.length === 0) {
-            if (e.key !== 'Escape' && e.key !== 'Tab') {
-                roleInput.click();
-            }
-            return;
-        }
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, items.length - 1);
-            items.forEach(item => item.classList.remove('active'));
-            if (items[activeSuggestionIndex]) {
-                items[activeSuggestionIndex].classList.add('active');
-                items[activeSuggestionIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            }
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
-            items.forEach(item => item.classList.remove('active'));
-            if (activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
-                items[activeSuggestionIndex].classList.add('active');
-                items[activeSuggestionIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            }
-        } else if (e.key === 'Enter' && activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
-            e.preventDefault();
-            items[activeSuggestionIndex].click();
-        } else if (e.key === 'Escape') {
-            suggestions.style.display = 'none';
-        }
-    });
-
-    // Click on suggestion (like homepage)
-    suggestions.addEventListener('click', function(e) {
-        const item = e.target.closest('.job-role-suggestion-item');
-        if (item) {
-            const roleName = item.getAttribute('data-name');
-            
-            // Set job role as keyword (like homepage)
-            roleInput.value = roleName;
-            if (roleId) roleId.value = roleName;
-            suggestions.style.display = 'none';
-        }
-    });
-
-    // Hide suggestions when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.home-category-search-wrapper')) {
-            suggestions.style.display = 'none';
-        }
-    });
-});
-
-// Fallback: Initialize Job Location Search (City autocomplete like homepage)
-document.addEventListener('DOMContentLoaded', function() {
-    const locationInput = document.getElementById('home_city_search');
-    const cityId = document.getElementById('home_city_id');
-    const suggestions = document.getElementById('home-city-suggestions');
-    let searchTimeout = null;
-    let activeSuggestionIndex = -1;
-
-    if (!locationInput || !suggestions) return;
-
-    locationInput.addEventListener('input', function() {
-        const keyword = this.value.trim();
-        activeSuggestionIndex = -1;
-
-        if (cityId) cityId.value = '';
-
-        if (searchTimeout) clearTimeout(searchTimeout);
-
-        if (keyword.length < 2) {
-            suggestions.style.display = 'none';
-            suggestions.innerHTML = '';
-            return;
-        }
-
-        suggestions.innerHTML = '<div class="job-location-loading">Searching...</div>';
-        suggestions.style.display = 'block';
-
-        searchTimeout = setTimeout(function() {
-            const apiUrl = (window.siteUrl || window.location.origin) + '/ajax/search-cities';
-            
-            fetch(apiUrl + '?k=' + encodeURIComponent(keyword))
-                .then(response => response.json())
-                .then(data => {
-                    const cities = data.data || [];
-                    
-                    if (cities.length === 0) {
-                        suggestions.innerHTML = '<div class="job-location-no-results">No cities found</div>';
-                        return;
-                    }
-
-                    let html = '';
-                    cities.forEach(function(city) {
-                        const locationParts = [];
-                        if (city.state_name) locationParts.push(city.state_name);
-                        if (city.country_name) locationParts.push(city.country_name);
-                        
-                        html += '<div class="job-location-suggestion-item" data-id="' + city.id + '" data-name="' + city.name + '">' +
-                            '<div class="city-name">' + city.name + '</div>' +
-                            (locationParts.length ? '<div class="city-location">' + locationParts.join(', ') + '</div>' : '') +
-                            '</div>';
-                    });
-
-                    suggestions.innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('City search error:', error);
-                    suggestions.innerHTML = '<div class="job-location-no-results">Error searching cities</div>';
-                });
-        }, 300);
-    });
-
-    // Keyboard navigation
-    locationInput.addEventListener('keydown', function(e) {
-        const items = Array.from(suggestions.querySelectorAll('.job-location-suggestion-item'));
-        
-        if (suggestions.style.display === 'none' || items.length === 0) return;
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, items.length - 1);
-            items.forEach(item => item.classList.remove('active'));
-            if (items[activeSuggestionIndex]) {
-                items[activeSuggestionIndex].classList.add('active');
-                items[activeSuggestionIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            }
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
-            items.forEach(item => item.classList.remove('active'));
-            if (activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
-                items[activeSuggestionIndex].classList.add('active');
-                items[activeSuggestionIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            }
-        } else if (e.key === 'Enter' && activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
-            e.preventDefault();
-            items[activeSuggestionIndex].click();
-        } else if (e.key === 'Escape') {
-            suggestions.style.display = 'none';
-        }
-    });
-
-    // Click on suggestion
-    suggestions.addEventListener('click', function(e) {
-        const item = e.target.closest('.job-location-suggestion-item');
-        if (item) {
-            const cityIdValue = item.getAttribute('data-id');
-            const cityName = item.getAttribute('data-name');
-            
-            if (cityId) cityId.value = cityIdValue;
-            locationInput.value = cityName;
-            suggestions.style.display = 'none';
-        }
-    });
-
-    // Hide suggestions when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.home-city-search-wrapper')) {
-            suggestions.style.display = 'none';
-        }
-    });
-});
+// Note: home_category_search is now a select dropdown, not a text input
+// The select dropdown is initialized above using Bootstrap Select
+// Old text input handler code removed - select dropdown works directly
 </script>
+
+{{-- Old location search code removed - now using select dropdown --}}

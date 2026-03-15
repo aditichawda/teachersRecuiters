@@ -656,9 +656,12 @@
             <?php if($creditsEnabled && $additionalEmailCredits > 0): ?>
             <small class="form-text text-muted d-block" style="margin-bottom:8px;"><?php echo e(trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits])); ?></small>
             <?php endif; ?>
+            <?php if($creditsEnabled && $additionalEmailCredits > 0): ?>
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;"><?php echo e(trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits])); ?></small>
+            <?php endif; ?>
             <div id="internal-emails-list">
                 <?php
-                    $internalEmails = old('apply_internal_emails', optional($job)->apply_internal_emails ?? []);
+                    $internalEmails = $isEdit ? old('apply_internal_emails', $job->apply_internal_emails ?? []) : (old('apply_internal_emails') ?? []);
                     if (!is_array($internalEmails)) $internalEmails = $internalEmails ? [$internalEmails] : [];
                     $internalEmails = array_slice($internalEmails, 0, 3);
                 ?>
@@ -680,9 +683,12 @@
             <?php if($creditsEnabled && $whatsappCreditsPerAlert > 0): ?>
             <small class="form-text text-muted d-block" style="margin-bottom:8px;"><?php echo e(trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert])); ?></small>
             <?php endif; ?>
+            <?php if($creditsEnabled && $whatsappCreditsPerAlert > 0): ?>
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;"><?php echo e(trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert])); ?></small>
+            <?php endif; ?>
             <div id="internal-phones-list">
                 <?php
-                    $internalPhones = old('apply_internal_phones', optional($job)->apply_internal_phones ?? []);
+                    $internalPhones = $isEdit ? old('apply_internal_phones', $job->apply_internal_phones ?? []) : (old('apply_internal_phones') ?? []);
                     if (!is_array($internalPhones)) $internalPhones = $internalPhones ? [$internalPhones] : [];
                     $internalPhones = array_slice($internalPhones, 0, 3);
                 ?>
@@ -717,6 +723,12 @@
                     <?php echo e(__('You will receive WhatsApp notifications on your phone numbers when a candidate applies for this job')); ?>
 
                 </small>
+                <?php if($creditsEnabled && $whatsappCreditsPerAlert > 0): ?>
+                <small class="form-text d-block" style="margin-top: 6px; margin-left: 25px; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
+                    <?php echo e(trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert])); ?>
+
+                </small>
+                <?php endif; ?>
                 <?php if($creditsEnabled && $whatsappCreditsPerAlert > 0): ?>
                 <small class="form-text d-block" style="margin-top: 6px; margin-left: 25px; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
                     <?php echo e(trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert])); ?>
@@ -892,8 +904,41 @@
     </div>
 </form>
 
+
+<div id="buy-credits-popup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; margin:20px; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <p id="buy-credits-popup-msg" class="mb-4" style="font-size:15px; color:#333;">Insufficient credits. Please buy credits to use this feature.</p>
+        <div class="d-flex gap-2 justify-content-end">
+            <button type="button" class="btn btn-secondary" id="buy-credits-popup-close">Cancel</button>
+            <a href="<?php echo e($walletUrl ?? route('public.account.wallet')); ?>" class="btn btn-primary" id="buy-credits-popup-wallet">Buy credits</a>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var walletUrl = '<?php echo e($walletUrl ?? route("public.account.wallet")); ?>';
+    var creditsEnabled = <?php echo e(($creditsEnabled ?? false) ? 'true' : 'false'); ?>;
+    var accountCredits = <?php echo e((int) ($accountCredits ?? (isset($account) ? (int)($account->credits ?? 0) : 0))); ?>;
+    var emailCreditsRequired = <?php echo e((int) ($emailCreditsRequired ?? 100)); ?>;
+    var wpCreditsRequired = <?php echo e((int) ($wpCreditsRequired ?? 10)); ?>;
+    if (window.jobCreateCredits && window.jobCreateCredits.enabled) {
+        creditsEnabled = true;
+        accountCredits = window.jobCreateCredits.accountCredits || 0;
+        emailCreditsRequired = window.jobCreateCredits.additionalEmailCredits || 100;
+        wpCreditsRequired = window.jobCreateCredits.whatsappCreditsPerAlert || 10;
+    }
+    function showBuyCreditsPopup(msg) {
+        var el = document.getElementById('buy-credits-popup');
+        var msgEl = document.getElementById('buy-credits-popup-msg');
+        if (el && msgEl) { msgEl.textContent = msg || 'Insufficient credits. Please buy credits from Wallet.'; el.style.display = 'flex'; }
+    }
+    function hideBuyCreditsPopup() {
+        var el = document.getElementById('buy-credits-popup');
+        if (el) el.style.display = 'none';
+    }
+    document.getElementById('buy-credits-popup-close')?.addEventListener('click', hideBuyCreditsPopup);
+    document.getElementById('buy-credits-popup')?.addEventListener('click', function(e) { if (e.target === this) hideBuyCreditsPopup(); });
 
     // ===== JOB TITLES DATABASE =====
     const jobTitles = [
@@ -1236,25 +1281,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ===== INTERNAL EMAILS (up to 3) - Add email button: credit check + popup =====
+    // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits (valid till package) =====
     var addEmailBtn = document.getElementById('add-internal-email-btn');
     var internalEmailsList = document.getElementById('internal-emails-list');
     if (addEmailBtn && internalEmailsList) {
-        addEmailBtn.addEventListener('click', function() {
+        addEmailBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
             var rows = internalEmailsList.querySelectorAll('.jp-internal-email-row');
             if (rows.length >= 3) return;
-            var c = window.jobCreateCredits;
-            if (c && c.enabled && rows.length === 0 && c.accountCredits < c.additionalEmailCredits) {
-                alert(c.msgAdditionalEmail || ('You need ' + c.additionalEmailCredits + ' credits to add additional email. Current balance: ' + c.accountCredits));
+            if (creditsEnabled && accountCredits < emailCreditsRequired) {
+                showBuyCreditsPopup('Insufficient credits. Need 100 credits (one-time) for additional email. Please buy credits from Wallet.');
                 return;
             }
-            var row = document.createElement('div');
-            row.className = 'jp-internal-email-row';
-            row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
-            row.innerHTML = '<input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" style="flex:1;">' +
-                '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
-            internalEmailsList.appendChild(row);
-            row.querySelector('.jp-remove-internal-email').addEventListener('click', function() { row.remove(); });
+            var btn = this;
+            var deductUrl = '<?php echo e(route("public.account.jobs.deduct-additional-email")); ?>';
+            if (!deductUrl) { showBuyCreditsPopup('Action not available.'); return; }
+            btn.disabled = true;
+            var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            fetch(deductUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json().catch(function() { return { success: false, message: 'Invalid response' }; }); })
+            .then(function(data) {
+                if (data && data.success === true) {
+                    var row = document.createElement('div');
+                    row.className = 'jp-internal-email-row';
+                    row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
+                    row.innerHTML = '<input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" style="flex:1;">' +
+                        '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
+                    internalEmailsList.appendChild(row);
+                    row.querySelector('.jp-remove-internal-email').addEventListener('click', function() { row.remove(); });
+                } else {
+                    showBuyCreditsPopup(data && data.message ? data.message : 'Insufficient credits. Please buy credits from Wallet.');
+                }
+            })
+            .catch(function() { showBuyCreditsPopup('Request failed. Please try again or buy credits from Wallet.'); })
+            .finally(function() { btn.disabled = false; });
         });
         internalEmailsList.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.jp-remove-internal-email');
@@ -1262,25 +1328,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== INTERNAL PHONES (up to 3) - Add phone button: credit check + popup =====
+    // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
     var addPhoneBtn = document.getElementById('add-internal-phone-btn');
     var internalPhonesList = document.getElementById('internal-phones-list');
     if (addPhoneBtn && internalPhonesList) {
-        addPhoneBtn.addEventListener('click', function() {
+        addPhoneBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
             var rows = internalPhonesList.querySelectorAll('.jp-internal-phone-row');
             if (rows.length >= 3) return;
-            var c = window.jobCreateCredits;
-            if (c && c.enabled && c.accountCredits < c.whatsappCreditsPerAlert) {
-                alert(c.msgWhatsAppPhone || ('You need at least ' + c.whatsappCreditsPerAlert + ' credits to add phone for WhatsApp alerts. Current balance: ' + c.accountCredits));
+            if (accountCredits < wpCreditsRequired) {
+                showBuyCreditsPopup('Insufficient credits. Need 10 credits per number for WhatsApp alerts. Please buy credits from Wallet.');
                 return;
             }
-            var row = document.createElement('div');
-            row.className = 'jp-internal-phone-row';
-            row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
-            row.innerHTML = '<input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" style="flex:1;">' +
-                '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
-            internalPhonesList.appendChild(row);
-            row.querySelector('.jp-remove-internal-phone').addEventListener('click', function() { row.remove(); });
+            var btn = this;
+            var deductUrl = '<?php echo e(route("public.account.jobs.deduct-whatsapp-number")); ?>';
+            if (!deductUrl) { showBuyCreditsPopup('Action not available.'); return; }
+            btn.disabled = true;
+            var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            fetch(deductUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json().catch(function() { return { success: false, message: 'Invalid response' }; }); })
+            .then(function(data) {
+                if (data && data.success === true) {
+                    var row = document.createElement('div');
+                    row.className = 'jp-internal-phone-row';
+                    row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
+                    row.innerHTML = '<input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" style="flex:1;">' +
+                        '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
+                    internalPhonesList.appendChild(row);
+                    row.querySelector('.jp-remove-internal-phone').addEventListener('click', function() { row.remove(); });
+                } else {
+                    showBuyCreditsPopup(data && data.message ? data.message : 'Insufficient credits. Please buy credits from Wallet.');
+                }
+            })
+            .catch(function() { showBuyCreditsPopup('Request failed. Please try again or buy credits from Wallet.'); })
+            .finally(function() { btn.disabled = false; });
         });
         internalPhonesList.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.jp-remove-internal-phone');

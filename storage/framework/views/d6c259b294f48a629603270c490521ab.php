@@ -105,6 +105,51 @@
 
 
 <?php $__env->startSection('content'); ?>
+    <?php if(request()->route() && request()->route()->getName() === 'public.account.companies.index' && \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()): ?>
+        <?php
+            $account = auth('account')->user();
+            $additionalProfileCredits = \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADDITIONAL_EMPLOYER_PROFILE, 500);
+            $companyCount = $account && method_exists($account, 'companies') ? $account->companies()->count() : 0;
+            $institutionLocked = $companyCount >= 1 && (int) ($account->credits ?? 0) < $additionalProfileCredits;
+        ?>
+        <?php if($institutionLocked): ?>
+            <div class="alert alert-warning mb-3 d-flex align-items-center flex-wrap" role="alert" style="border-radius: 8px;">
+                <i class="fa fa-lock me-2"></i>
+                <span class="me-2"><?php echo e(__('Adding another institution is locked. You need :credits credits per new institution.', ['credits' => $additionalProfileCredits])); ?></span>
+                <a href="<?php echo e(route('public.account.wallet')); ?>" class="btn btn-sm btn-primary"><?php echo e(__('Get credits / Wallet')); ?></a>
+            </div>
+        <?php else: ?>
+            <div class="alert alert-info mb-3" role="alert" style="border-radius: 8px;">
+                <i class="fa fa-info-circle me-2"></i>
+                <?php echo e(trans('plugins/job-board::dashboard.hint_additional_institution_credits', ['credits' => $additionalProfileCredits])); ?>
+
+            </div>
+        <?php endif; ?>
+        <?php if($institutionLocked): ?>
+            <?php $__env->startPush('footer'); ?>
+            <script>
+            (function() {
+                var walletUrl = <?php echo e(json_encode(route('public.account.wallet'))); ?>;
+                var msg = <?php echo e(json_encode(__('Insufficient credits. You need :credits credits to add another institution. Redirecting to Wallet.', ['credits' => $additionalProfileCredits]))); ?>;
+                document.addEventListener('click', function(e) {
+                    var btn = e.target.closest('.action-item');
+                    if (!btn) return;
+                    var span = btn.querySelector('span[data-href]');
+                    if (!span || !span.getAttribute('data-href')) return;
+                    var href = (span.getAttribute('data-href') || '').toLowerCase();
+                    if (href.indexOf('companies/create') === -1) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    alert(msg);
+                    window.location.href = walletUrl;
+                    return false;
+                }, true);
+            })();
+            </script>
+            <?php $__env->stopPush(); ?>
+        <?php endif; ?>
+    <?php endif; ?>
     <div class="table-wrapper">
         <?php echo \Illuminate\View\Factory::parentPlaceholder('content'); ?>
     </div>

@@ -941,4 +941,27 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 <?php endif; ?>
+
+
+<?php if(is_plugin_active('job-board') && isset($jobSeekerCanApply) && $jobSeekerCanApply === false && !empty($jobSeekerApplyMessage ?? '')): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var packagesUrl = <?php echo json_encode($jobSeekerPackagesUrl ?? '#'); ?>;
+    var msg = <?php echo json_encode($jobSeekerApplyMessage ?? ''); ?>;
+    var upgradeText = <?php echo json_encode(__('Upgrade')); ?>;
+    var title = <?php echo json_encode(__('Cannot Apply')); ?>;
+    document.body.addEventListener('click', function(e) {
+        var a = e.target.closest('a[href="#applyNow"], a[href="#applyExternalJob"]');
+        if (!a) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('warning', msg + ' <br><a href="' + packagesUrl + '" class="btn btn-primary btn-sm mt-2">' + upgradeText + '</a>', title);
+        } else {
+            if (confirm(msg + '\n\n' + upgradeText + '?')) window.location.href = packagesUrl;
+        }
+    }, true);
+});
+</script>
+<?php endif; ?>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/partials/apply-modal.blade.php ENDPATH**/ ?>
