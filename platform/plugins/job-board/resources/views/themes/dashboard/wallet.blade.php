@@ -235,7 +235,7 @@
                                 <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
                                     <span>{{ is_array($item) ? ($item['label'] ?? $key) : $key }}</span>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="text-muted small">{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }}</span>
+                                        <span class="text-muted small">@if($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY) {{ __('Paid') }} @else{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }} @endif</span>
                                         @if($account->isEmployer() && is_array($item) && !empty($item['credits']))
                                             @php $featureActiveWithPackage = in_array($key, $activePackageFeatureKeys ?? []); @endphp
                                             @if($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING && isset($jobPostCreditsRequired) && $jobPostCreditsRequired > 0)

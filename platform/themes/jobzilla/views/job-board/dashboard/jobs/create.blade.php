@@ -660,8 +660,12 @@
             @if($creditsEnabled && $additionalEmailCredits > 0)
             <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
             @endif
+            @if($creditsEnabled && $additionalEmailCredits > 0)
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
+            @endif
             <div id="internal-emails-list">
                 @php
+                    $internalEmails = $isEdit ? old('apply_internal_emails', $job->apply_internal_emails ?? []) : (old('apply_internal_emails') ?? []);
                     $internalEmails = $isEdit ? old('apply_internal_emails', $job->apply_internal_emails ?? []) : (old('apply_internal_emails') ?? []);
                     if (!is_array($internalEmails)) $internalEmails = $internalEmails ? [$internalEmails] : [];
                     $internalEmails = array_slice($internalEmails, 0, 3);
@@ -683,8 +687,12 @@
             @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
             <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
             @endif
+            @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
+            @endif
             <div id="internal-phones-list">
                 @php
+                    $internalPhones = $isEdit ? old('apply_internal_phones', $job->apply_internal_phones ?? []) : (old('apply_internal_phones') ?? []);
                     $internalPhones = $isEdit ? old('apply_internal_phones', $job->apply_internal_phones ?? []) : (old('apply_internal_phones') ?? []);
                     if (!is_array($internalPhones)) $internalPhones = $internalPhones ? [$internalPhones] : [];
                     $internalPhones = array_slice($internalPhones, 0, 3);
@@ -722,7 +730,11 @@
                     {{ trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert]) }}
                 </small>
                 @endif
-               
+                @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
+                <small class="form-text d-block" style="margin-top: 6px; margin-left: 25px; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
+                    {{ trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert]) }}
+                </small>
+                @endif
             </div>
         </div>
         @endif
@@ -894,47 +906,6 @@
 <div id="buy-credits-popup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; margin:20px; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
         <p id="buy-credits-popup-msg" class="mb-4" style="font-size:15px; color:#333;">Insufficient credits. Please buy credits to use this feature.</p>
-        @php
-            $creditsEnabledPopup = (bool) ($creditsEnabled ?? \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem());
-            $canRechargeWallet = $creditsEnabledPopup && (bool) ($canPost ?? false) && ((int) ($accountCredits ?? 0) <= 0);
-        @endphp
-        @if($creditsEnabledPopup)
-            <div class="border rounded p-3 mb-3" style="background:#f8fafc;">
-                <div class="mb-2" style="font-weight:600;">{{ __('Recharge Wallet') }}</div>
-                <div class="d-flex gap-2 align-items-center">
-                    <input
-                        type="number"
-                        min="100"
-                        step="1"
-                        class="form-control"
-                        id="wallet-recharge-amount"
-                        placeholder="{{ __('Enter amount (min ₹100)') }}"
-                        style="max-width: 180px;"
-                        @disabled(! $canRechargeWallet)
-                    >
-                    <form method="post" action="{{ route('public.account.wallet.recharge.start') }}" id="wallet-recharge-form" style="margin:0;">
-                        @csrf
-                        <input type="hidden" name="amount_inr" id="wallet-recharge-amount-hidden" value="">
-                        <button type="submit" class="btn btn-success" id="wallet-recharge-btn" @disabled(! $canRechargeWallet)>
-                            {{ __('Continue') }}
-                        </button>
-                    </form>
-                </div>
-                <div class="small mt-2" id="wallet-recharge-hint" style="color:#6b7280;">
-                    @if(! $canPost)
-                        {{ __('Wallet recharge is available only with an active hiring plan.') }}
-                    @elseif(((int) ($accountCredits ?? 0)) > 0)
-                        {{ __('Recharge is available when your wallet credits are exhausted.') }}
-                    @else
-                        {{ __('You will be redirected to Razorpay to complete the payment.') }}
-                    @endif
-                </div>
-                <div class="small mt-1" style="color:#6b7280;">
-                    {{ __('Wallet credits have unlimited validity and can be used with any active hiring plan.') }}
-                </div>
-                <div class="text-danger small mt-2" id="wallet-recharge-error" style="display:none;"></div>
-            </div>
-        @endif
         <div class="d-flex gap-2 justify-content-end">
             <button type="button" class="btn btn-secondary" id="buy-credits-popup-close">Cancel</button>
             <a href="{{ $walletUrl ?? route('public.account.wallet') }}" class="btn btn-primary" id="buy-credits-popup-wallet">Buy credits</a>
@@ -966,30 +937,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     document.getElementById('buy-credits-popup-close')?.addEventListener('click', hideBuyCreditsPopup);
     document.getElementById('buy-credits-popup')?.addEventListener('click', function(e) { if (e.target === this) hideBuyCreditsPopup(); });
-
-// Wallet recharge validation (min ₹100) and submit.
-var canRechargeWallet = {{ ($creditsEnabledPopup ?? false) && ($canPost ?? false) && ((int) ($accountCredits ?? 0) <= 0) ? 'true' : 'false' }};
-var rechargeForm = document.getElementById('wallet-recharge-form');
-var rechargeAmount = document.getElementById('wallet-recharge-amount');
-var rechargeHidden = document.getElementById('wallet-recharge-amount-hidden');
-var rechargeError = document.getElementById('wallet-recharge-error');
-if (rechargeForm && rechargeAmount && rechargeHidden) {
-    rechargeForm.addEventListener('submit', function(e) {
-        if (!canRechargeWallet) return;
-        var val = parseInt(rechargeAmount.value || '0', 10);
-        if (!val || val < 100) {
-            e.preventDefault();
-            if (rechargeError) {
-                rechargeError.textContent = '{{ __("Minimum recharge amount is ₹100.") }}';
-                rechargeError.style.display = 'block';
-            }
-            rechargeAmount.focus();
-            return;
-        }
-        if (rechargeError) rechargeError.style.display = 'none';
-        rechargeHidden.value = String(val);
-    });
-}
 
     // ===== JOB TITLES DATABASE =====
     const jobTitles = [
@@ -1333,9 +1280,14 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
     });
 
     // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits (valid till package) =====
+    // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits (valid till package) =====
     var addEmailBtn = document.getElementById('add-internal-email-btn');
     var internalEmailsList = document.getElementById('internal-emails-list');
     if (addEmailBtn && internalEmailsList) {
+        addEmailBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
         addEmailBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1344,8 +1296,36 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
             if (rows.length >= 3) return;
             if (creditsEnabled && accountCredits < emailCreditsRequired) {
                 showBuyCreditsPopup('Insufficient credits. Need 100 credits (one-time) for additional email. Please buy credits from Wallet.');
+            if (creditsEnabled && accountCredits < emailCreditsRequired) {
+                showBuyCreditsPopup('Insufficient credits. Need 100 credits (one-time) for additional email. Please buy credits from Wallet.');
                 return;
             }
+            var btn = this;
+            var deductUrl = '{{ route("public.account.jobs.deduct-additional-email") }}';
+            if (!deductUrl) { showBuyCreditsPopup('Action not available.'); return; }
+            btn.disabled = true;
+            var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            fetch(deductUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json().catch(function() { return { success: false, message: 'Invalid response' }; }); })
+            .then(function(data) {
+                if (data && data.success === true) {
+                    var row = document.createElement('div');
+                    row.className = 'jp-internal-email-row';
+                    row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
+                    row.innerHTML = '<input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" style="flex:1;">' +
+                        '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
+                    internalEmailsList.appendChild(row);
+                    row.querySelector('.jp-remove-internal-email').addEventListener('click', function() { row.remove(); });
+                } else {
+                    showBuyCreditsPopup(data && data.message ? data.message : 'Insufficient credits. Please buy credits from Wallet.');
+                }
+            })
+            .catch(function() { showBuyCreditsPopup('Request failed. Please try again or buy credits from Wallet.'); })
+            .finally(function() { btn.disabled = false; });
             var btn = this;
             var deductUrl = '{{ route("public.account.jobs.deduct-additional-email") }}';
             if (!deductUrl) { showBuyCreditsPopup('Action not available.'); return; }
@@ -1380,9 +1360,14 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
     }
 
     // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
+    // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
     var addPhoneBtn = document.getElementById('add-internal-phone-btn');
     var internalPhonesList = document.getElementById('internal-phones-list');
     if (addPhoneBtn && internalPhonesList) {
+        addPhoneBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
         addPhoneBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1391,8 +1376,36 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
             if (rows.length >= 3) return;
             if (accountCredits < wpCreditsRequired) {
                 showBuyCreditsPopup('Insufficient credits. Need 10 credits per number for WhatsApp alerts. Please buy credits from Wallet.');
+            if (accountCredits < wpCreditsRequired) {
+                showBuyCreditsPopup('Insufficient credits. Need 10 credits per number for WhatsApp alerts. Please buy credits from Wallet.');
                 return;
             }
+            var btn = this;
+            var deductUrl = '{{ route("public.account.jobs.deduct-whatsapp-number") }}';
+            if (!deductUrl) { showBuyCreditsPopup('Action not available.'); return; }
+            btn.disabled = true;
+            var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            fetch(deductUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json().catch(function() { return { success: false, message: 'Invalid response' }; }); })
+            .then(function(data) {
+                if (data && data.success === true) {
+                    var row = document.createElement('div');
+                    row.className = 'jp-internal-phone-row';
+                    row.setAttribute('style', 'display:flex; gap:8px; margin-bottom:8px; align-items:center;');
+                    row.innerHTML = '<input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" style="flex:1;">' +
+                        '<button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>';
+                    internalPhonesList.appendChild(row);
+                    row.querySelector('.jp-remove-internal-phone').addEventListener('click', function() { row.remove(); });
+                } else {
+                    showBuyCreditsPopup(data && data.message ? data.message : 'Insufficient credits. Please buy credits from Wallet.');
+                }
+            })
+            .catch(function() { showBuyCreditsPopup('Request failed. Please try again or buy credits from Wallet.'); })
+            .finally(function() { btn.disabled = false; });
             var btn = this;
             var deductUrl = '{{ route("public.account.jobs.deduct-whatsapp-number") }}';
             if (!deductUrl) { showBuyCreditsPopup('Action not available.'); return; }
