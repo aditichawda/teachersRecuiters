@@ -136,9 +136,7 @@ class AccountController extends BaseController
         }
         if (Schema::hasTable('jb_specializations')) {
             // Use BaseStatusEnum::PUBLISHED to ensure correct enum value
-            // Use BaseStatusEnum::PUBLISHED to ensure correct enum value
             $specializationsList = Specialization::query()
-                ->where('status', BaseStatusEnum::PUBLISHED)
                 ->where('status', BaseStatusEnum::PUBLISHED)
                 ->orderBy('order')
                 ->orderBy('name')

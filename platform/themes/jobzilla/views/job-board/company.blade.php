@@ -692,23 +692,13 @@
                     <h4 class="cd-section-title mb-3">
                         <i class="fas fa-lock text-secondary me-2"></i>{{ __('Admission Form on Profile') }} – {{ __('Locked') }}
                     </h4>
-                    <p class="text-muted mb-3">{{ __('This feature is not included in your current package. Add "Admission Form on Profile" to your package or unlock it with credits to show the admission enquiry form on your institution profile.') }}</p>
+                    <p class="text-muted mb-3">{{ __('This feature is not included in your current package. Unlock it with payment (not coins) to show the admission enquiry form on your institution profile.') }}</p>
                     @if (!empty($isOwner))
-                        @if (!empty($canUnlockAdmission))
-                            <form action="{{ route('public.account.wallet.unlock_admission_form') }}" method="POST" class="d-inline">
-                                @csrf
-                                <input type="hidden" name="redirect_url" value="{{ $company->url }}">
-                                <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill">
-                                    <i class="fas fa-coins me-2"></i>{{ __('Unlock with :credits credits', ['credits' => $admissionUnlockCredits]) }}
-                                </button>
-                            </form>
-                        @elseif (isset($admissionUnlockCredits) && $admissionUnlockCredits > 0)
-                            <p class="mb-0">
-                                <a href="{{ route('public.account.wallet') }}" class="btn btn-outline-primary px-4 py-2 rounded-pill">
-                                    <i class="fas fa-wallet me-2"></i>{{ __('Add credits to unlock') }} ({{ __(':credits credits required', ['credits' => $admissionUnlockCredits]) }})
-                                </a>
-                            </p>
-                        @endif
+                        <p class="mb-0">
+                            <a href="{{ route('public.account.packages') }}#choose-plan" class="btn btn-primary px-4 py-2 rounded-pill">
+                                <i class="fas fa-credit-card me-2"></i>{{ __('Unlock with payment') }}
+                            </a>
+                        </p>
                     @endif
                 </div>
                 @endif

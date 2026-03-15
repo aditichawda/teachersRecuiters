@@ -1359,13 +1359,8 @@
 }
 
 .section-full.p-t120.p-b90 {
-<<<<<<< HEAD
     padding-top: 20px !important;
     padding-bottom: 1-px !important;
-=======
-    padding-top: 100px !important;
-    padding-bottom: 50px !important;
->>>>>>> 37fac6c5 (10 march)
 }
 
 /* Section Content Spacing */

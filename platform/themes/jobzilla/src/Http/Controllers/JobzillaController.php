@@ -231,8 +231,15 @@ class JobzillaController extends PublicController
         }
 
         try {
-            $cities = $cityRepository->filters($keyword, 20, ['state', 'country']);
-            
+            // Use direct City model lookup so we don't require country_id/state_id to be present
+            // and avoid over-filtering by published countries when importing large datasets.
+            $cities = \Botble\Location\Models\City::query()
+                ->with('state')
+                ->where('name', 'LIKE', '%' . $keyword . '%')
+                ->orderBy('name')
+                ->limit(20)
+                ->get();
+
             // Log for debugging
             \Log::info('[CITY_SEARCH] Search performed', [
                 'keyword' => $keyword,

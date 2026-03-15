@@ -655,6 +655,7 @@
 <div id="buy-credits-popup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; margin:20px; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
         <p id="buy-credits-popup-msg" class="mb-4" style="font-size:15px; color:#333;">{{ __('Insufficient credits. Please buy credits to use this feature.') }}</p>
+<<<<<<< HEAD
         @php
             $creditsEnabledPopup = (bool) ($creditsEnabled ?? \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem());
             $canRechargeWallet = $creditsEnabledPopup && (bool) ($canPost ?? false) && ((int) ($accountCredits ?? 0) <= 0);
@@ -696,6 +697,8 @@
                 <div class="text-danger small mt-2" id="wallet-recharge-error" style="display:none;"></div>
             </div>
         @endif
+=======
+>>>>>>> f0f58692 (16 march)
         <div class="d-flex gap-2 justify-content-end">
             <button type="button" class="btn btn-secondary" id="buy-credits-popup-close">{{ __('Cancel') }}</button>
             <a href="{{ $walletUrl ?? route('public.account.wallet') }}" class="btn btn-primary" id="buy-credits-popup-wallet">{{ __('Buy credits') }}</a>
@@ -709,7 +712,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var accountCredits = {{ (int) ($accountCredits ?? 0) }};
     var emailCreditsRequired = {{ (int) ($emailCreditsRequired ?? 100) }};
     var wpCreditsRequired = {{ (int) ($wpCreditsRequired ?? 10) }};
+<<<<<<< HEAD
     var canRechargeWallet = {{ ($creditsEnabledPopup ?? false) && ($canPost ?? false) && ((int) ($accountCredits ?? 0) <= 0) ? 'true' : 'false' }};
+=======
+>>>>>>> f0f58692 (16 march)
 
     function showBuyCreditsPopup(msg) {
         var el = document.getElementById('buy-credits-popup');
@@ -727,6 +733,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('buy-credits-popup')?.addEventListener('click', function(e) {
         if (e.target === this) hideBuyCreditsPopup();
     });
+<<<<<<< HEAD
 
     // Wallet recharge validation (min ₹100) and submit.
     var rechargeForm = document.getElementById('wallet-recharge-form');
@@ -750,6 +757,8 @@ document.addEventListener('DOMContentLoaded', function() {
             rechargeHidden.value = String(val);
         });
     }
+=======
+>>>>>>> f0f58692 (16 march)
 
     // ===== JOB TITLES DATABASE =====
     const jobTitles = [
@@ -1015,7 +1024,11 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits; else show Buy credits popup =====
+<<<<<<< HEAD
     document.getElementById('add-internal-email-btn')?.addEventListener('click', function(e) {
+=======
+    document.getElementById('add-internal-email-btn').addEventListener('click', function(e) {
+>>>>>>> f0f58692 (16 march)
         e.preventDefault();
         e.stopPropagation();
         const list = document.getElementById('internal-emails-list');
@@ -1057,7 +1070,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
+<<<<<<< HEAD
     document.getElementById('add-internal-phone-btn')?.addEventListener('click', function(e) {
+=======
+    document.getElementById('add-internal-phone-btn').addEventListener('click', function(e) {
+>>>>>>> f0f58692 (16 march)
         e.preventDefault();
         e.stopPropagation();
         const list = document.getElementById('internal-phones-list');

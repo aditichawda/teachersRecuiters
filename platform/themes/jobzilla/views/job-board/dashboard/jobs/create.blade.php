@@ -664,6 +664,9 @@
             @if($creditsEnabled && $additionalEmailCredits > 0)
             <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
             @endif
+            @if($creditsEnabled && $additionalEmailCredits > 0)
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
+            @endif
             <div id="internal-emails-list">
                 @php
                     $internalEmails = $isEdit ? old('apply_internal_emails', $job->apply_internal_emails ?? []) : (old('apply_internal_emails') ?? []);
@@ -684,6 +687,9 @@
 
         <div class="jp-group" id="internal-phones-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
             <label class="jp-label">{{ __('Additional phone numbers to receive applications') }} <span class="hint">({{ __('optional, up to 3') }})</span></label>
+            @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
+            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
+            @endif
             @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
             <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
             @endif
@@ -1338,7 +1344,6 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
     });
 
     // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits (valid till package) =====
-
     var addEmailBtn = document.getElementById('add-internal-email-btn');
     var internalEmailsList = document.getElementById('internal-emails-list');
     if (addEmailBtn && internalEmailsList) {
@@ -1348,7 +1353,6 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
             e.stopImmediatePropagation();
             var rows = internalEmailsList.querySelectorAll('.jp-internal-email-row');
             if (rows.length >= 3) return;
-
             if (creditsEnabled && accountCredits < emailCreditsRequired) {
                 showBuyCreditsPopup('Insufficient credits. Need 100 credits (one-time) for additional email. Please buy credits from Wallet.');
                 return;
@@ -1379,7 +1383,6 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
             })
             .catch(function() { showBuyCreditsPopup('Request failed. Please try again or buy credits from Wallet.'); })
             .finally(function() { btn.disabled = false; });
-
         });
         internalEmailsList.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.jp-remove-internal-email');
@@ -1388,7 +1391,6 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
     }
 
     // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
-
     var addPhoneBtn = document.getElementById('add-internal-phone-btn');
     var internalPhonesList = document.getElementById('internal-phones-list');
     if (addPhoneBtn && internalPhonesList) {
