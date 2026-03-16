@@ -89,6 +89,38 @@
                                     <x-core::icon name="ti ti-coin" />
                                     {{ trans('plugins/job-board::dashboard.wallet_purchased') }} {{ format_credits_short($purchasedCredits ?? 0) }}
                                 </div>
+                                @if(isset($jobSeekerCtx) && $jobSeekerCtx && $jobSeekerCtx->hasPackage())
+                                    @php
+                                        $currentPlanName = $jobSeekerCtx->package->name ?? __('Basic Profile Plan');
+                                        $used = $jobSeekerCtx->jobApplicationsUsed;
+                                        $limit = $jobSeekerCtx->jobApplyLimit;
+                                    @endphp
+                                    <hr class="my-2 border-light border-opacity-50" />
+                                    <div class="wallet-js-coins-row">
+                                        <span class="small opacity-95">{{ __('Current plan') }}:</span>
+                                        <span class="small fw-semibold ms-1">{{ $currentPlanName }}</span>
+                                    </div>
+                                    <div class="wallet-js-coins-row">
+                                        <span class="small opacity-95">{{ __('Validity') }}:</span>
+                                        <span class="small ms-1">
+                                            @if(isset($packageExpiryAt) && $packageExpiryAt)
+                                                {{ $packageExpiryAt->format('M d, Y') }}
+                                            @else
+                                                {{ __('Unlimited') }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="wallet-js-coins-row">
+                                        <span class="small opacity-95">{{ __('Job applications') }}:</span>
+                                        <span class="small ms-1">
+                                            @if($limit === null)
+                                                {{ __('Unlimited') }}
+                                            @else
+                                                {{ $used }}/{{ $limit }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endif
                             </x-core::card.body>
                             <x-core::card.footer class="py-2">
                                 @if(isset($packageExpiryAt) && $packageExpiryAt)

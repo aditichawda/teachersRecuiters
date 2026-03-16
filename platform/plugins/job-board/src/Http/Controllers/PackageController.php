@@ -23,35 +23,31 @@ class PackageController extends BaseController
     private function mergePackageFeatures(PackageRequest $request): array
     {
         $type = $request->input('package_type', 'employer');
-        $standardTexts = [];
+
+        // Map of standard feature labels to their toggle booleans
+        $standardMap = [];
 
         if ($type === 'employer') {
-            if ($request->boolean('feature_featured_profile')) {
-                $standardTexts[] = 'Featured Profile';
-            }
-            if ($request->boolean('feature_admission_form_on_profile')) {
-                $standardTexts[] = 'Admission Form on Profile';
-            }
+            $standardMap['Featured Profile'] = $request->boolean('feature_featured_profile');
+            $standardMap['Admission Form on Profile'] = $request->boolean('feature_admission_form_on_profile');
         }
 
         if ($type === 'job-seeker') {
-            if ($request->boolean('feature_featured_profile_js')) {
-                $standardTexts[] = 'Featured Profile';
-            }
-            if ($request->boolean('feature_resume_builder')) {
-                $standardTexts[] = 'Resume Builder';
-            }
-            if ($request->boolean('feature_basic_cv')) {
-                $standardTexts[] = 'Basic CV';
-            }
-            if ($request->boolean('feature_advance_cv')) {
-                $standardTexts[] = 'Advance CV';
-            }
-            if ($request->boolean('feature_view_school_contact_info')) {
-                $standardTexts[] = 'View School Contact Info';
-            }
-            if ($request->boolean('feature_job_alerts_whatsapp')) {
-                $standardTexts[] = 'Job Alerts on WhatsApp';
+            $standardMap['Featured Profile'] = $request->boolean('feature_featured_profile_js');
+            $standardMap['Resume Builder'] = $request->boolean('feature_resume_builder');
+            $standardMap['Basic CV'] = $request->boolean('feature_basic_cv');
+            $standardMap['Advance CV'] = $request->boolean('feature_advance_cv');
+            $standardMap['View School Contact Info'] = $request->boolean('feature_view_school_contact_info');
+            $standardMap['Job Alerts on WhatsApp'] = $request->boolean('feature_job_alerts_whatsapp');
+        }
+
+        $enabledStandard = [];
+        $disabledStandard = [];
+        foreach ($standardMap as $label => $enabled) {
+            if ($enabled) {
+                $enabledStandard[] = $label;
+            } else {
+                $disabledStandard[] = $label;
             }
         }
 
@@ -63,13 +59,24 @@ class PackageController extends BaseController
                     continue;
                 }
                 $text = $row['text'] ?? $row['title'] ?? $row['value'] ?? $row['key'] ?? null;
-                if (is_string($text) && trim($text) !== '') {
-                    $repeaterItems[] = ['text' => trim($text)];
+                if (! is_string($text)) {
+                    continue;
                 }
+                $text = trim($text);
+                if ($text === '') {
+                    continue;
+                }
+
+                // If this text is one of the standard labels whose toggle is OFF, skip it
+                if (in_array($text, $disabledStandard, true)) {
+                    continue;
+                }
+
+                $repeaterItems[] = ['text' => $text];
             }
         }
 
-        $allTexts = array_unique(array_merge($standardTexts, array_column($repeaterItems, 'text')));
+        $allTexts = array_unique(array_merge($enabledStandard, array_column($repeaterItems, 'text')));
 
         return array_values(array_map(fn ($t) => ['text' => $t], $allTexts));
     }
@@ -139,12 +146,13 @@ class PackageController extends BaseController
         $package->job_apply_limit = $request->input('job_apply_limit');
         $package->save();
 
-        // Sync translatable fields (name, description, features) to current locale so edit form shows saved data
+        // Sync translatable fields (name, description) to current locale so edit form shows saved data.
+        // NOTE: We intentionally skip "features" here because it can be a large JSON payload,
+        // which makes LanguageAdvanced sync very slow and can hit max_execution_time.
         if (is_plugin_active('language-advanced') && LanguageAdvancedManager::isSupported($package)) {
             $request->merge([
                 'name' => $package->name,
                 'description' => $package->description,
-                'features' => $package->features,
             ]);
             if (! $request->has('language')) {
                 $request->merge(['language' => \Botble\Language\Facades\Language::getCurrentAdminLocaleCode() ?: \Botble\Language\Facades\Language::getDefaultLocaleCode()]);
