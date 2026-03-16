@@ -55,10 +55,32 @@ class ReviewController extends BaseController
                 ->setMessage(trans('plugins/job-board::messages.already_reviewed_item'));
         }
 
-        Review::query()->create(array_merge($formData, [
+        $review = Review::query()->create(array_merge($formData, [
             'star' => $request->input('star'),
             'review' => $request->input('review'),
         ]));
+
+        // Send notification to job seeker when their profile is reviewed
+        if ($reviewable instanceof Account && $reviewable->isJobSeeker() && $account->isEmployer()) {
+            try {
+                $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                $reviewerName = $account->companies()->first()->name ?? $account->name ?? 'School';
+                $notificationService->sendNewReviewNotification(
+                    $reviewable,
+                    $reviewerName
+                );
+                \Log::info('[NOTIFICATION] New review notification sent', [
+                    'review_id' => $review->id,
+                    'reviewable_id' => $reviewable->id,
+                    'reviewer_name' => $reviewerName,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('[NOTIFICATION] Failed to send new review notification', [
+                    'review_id' => $review->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return $this
             ->httpResponse()->setMessage(trans('plugins/job-board::messages.added_review_successfully'));

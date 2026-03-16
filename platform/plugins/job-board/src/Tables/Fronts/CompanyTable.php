@@ -92,10 +92,14 @@ class CompanyTable extends TableAbstract
 
     public function buttons(): array
     {
-        if (! JobBoardHelper::employerCreateMultiplecompanies() && auth('account')->user()->companies()->exists()) {
+        $account = auth('account')->user();
+        if (! $account instanceof Account) {
             return parent::buttons();
         }
-
+        if (! JobBoardHelper::employerCreateMultiplecompanies() && $account->companies()->exists()) {
+            return parent::buttons();
+        }
+        // Create button always shown; click is intercepted on frontend to check credits and show popup + redirect if locked
         return $this->addCreateButton(route('public.account.companies.create'));
     }
 }

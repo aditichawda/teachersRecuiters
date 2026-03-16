@@ -11,8 +11,10 @@ use Botble\JobBoard\Models\Invoice;
 use Botble\JobBoard\Models\Job;
 use Botble\JobBoard\Models\Package;
 use Botble\JobBoard\Models\DedicatedRecruiterRequest;
+use Botble\JobBoard\Models\JobPostingAssistanceRequest;
 use Botble\JobBoard\Models\SocialPromotionRequest;
 use Botble\JobBoard\Models\Transaction;
+use Botble\JobBoard\Models\WalkinDriveAdRequest;
 use Botble\JobBoard\Supports\PackageContext;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
@@ -22,6 +24,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class WalletController extends BaseController
 {
@@ -34,11 +37,43 @@ class WalletController extends BaseController
         Theme::breadcrumb()->add(trans('plugins/job-board::dashboard.menu.wallet'));
         SeoHelper::setTitle(trans('plugins/job-board::dashboard.menu.wallet'));
 
-        $transactions = Transaction::query()
+        // Get all transaction IDs first (unique by ID only)
+        $allTransactionIds = Transaction::query()
             ->where('account_id', $account->getKey())
+            ->select('id')
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->pluck('id')
+            ->unique()
+            ->values()
+            ->toArray();
+        
+        // Manual pagination for unique IDs
+        $perPage = 15;
+        $currentPage = request()->get('page', 1);
+        $total = count($allTransactionIds);
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedIds = array_slice($allTransactionIds, $offset, $perPage);
+        
+        // Load full transactions for paginated IDs with relationships
+        $transactionItems = Transaction::query()
+            ->whereIn('id', $paginatedIds)
             ->with(['payment', 'user'])
-            ->latest()
-            ->paginate(15);
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->sortByDesc('created_at')
+            ->sortByDesc('id')
+            ->values();
+        
+        // Create paginator
+        $transactions = new \Illuminate\Pagination\LengthAwarePaginator(
+            $transactionItems,
+            $total,
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         $paymentIds = $transactions->pluck('payment_id')->filter()->unique()->values()->all();
         $invoiceByPaymentId = Invoice::query()
@@ -144,11 +179,17 @@ class WalletController extends BaseController
             if ($packageContext && $packageContext->hasAdmissionFormOnProfile() && ! in_array(CreditConsumption::FEATURE_ADMISSION_ENQUIRY, $activePackageFeatureKeys)) {
                 $activePackageFeatureKeys[] = CreditConsumption::FEATURE_ADMISSION_ENQUIRY;
             }
+            // Job Posting Assistance: also active when current package includes "Job Posting Assistance" / "Job Assistant" (enabled in coin features)
+            if ($packageContext && $packageContext->hasJobPostingAssistance() && ! in_array(CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE, $activePackageFeatureKeys)) {
+                $activePackageFeatureKeys[] = CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE;
+            }
         }
 
         $socialPromotionRequests = [];
         $dedicatedRecruiterRequests = [];
+        $dedicatedRecruiterValidTill = null;
         $companies = [];
+        $transactionStatusMap = []; // transaction_id => 'pending'|'approved'|'rejected' from admin
         if ($account->isEmployer()) {
             $socialPromotionRequests = SocialPromotionRequest::query()
                 ->where('account_id', $account->getKey())
@@ -160,7 +201,81 @@ class WalletController extends BaseController
                 ->with('company')
                 ->latest('requested_at')
                 ->get();
+            $activeDedicated = DedicatedRecruiterRequest::query()
+                ->where('account_id', $account->getKey())
+                ->whereNotNull('valid_till')
+                ->where('valid_till', '>=', now()->toDateString())
+                ->orderByDesc('valid_till')
+                ->first();
+            if ($activeDedicated && $activeDedicated->valid_till) {
+                $dedicatedRecruiterValidTill = $activeDedicated->valid_till;
+            }
             $companies = $account->companies()->orderBy('name')->get(['id', 'name']);
+
+            // Build transaction -> admin status map: Social, Walk-in, Dedicated Recruiter, Job Assistant – report table me admin wala status dikhao
+            $adminFeatureKeys = [
+                CreditConsumption::FEATURE_SOCIAL_PROMOTION,
+                CreditConsumption::FEATURE_DEDICATED_RECRUITER,
+                CreditConsumption::FEATURE_WALKIN_DRIVE_AD,
+                CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE,
+            ];
+            foreach ($transactions as $txn) {
+                if (! $txn->isDebit() || empty($txn->feature_key) || ! in_array($txn->feature_key, $adminFeatureKeys)) {
+                    continue;
+                }
+                $txnTime = $txn->created_at;
+                $req = null;
+                $aid = $account->getKey();
+                if ($txn->feature_key === CreditConsumption::FEATURE_SOCIAL_PROMOTION) {
+                    $req = SocialPromotionRequest::query()
+                        ->where('account_id', $aid)
+                        ->whereNotNull('requested_at')
+                        ->where('requested_at', '<=', $txnTime->copy()->addHour())
+                        ->where('requested_at', '>=', $txnTime->copy()->subHours(2))
+                        ->orderByDesc('requested_at')
+                        ->first();
+                    if (! $req) {
+                        $req = SocialPromotionRequest::query()->where('account_id', $aid)->whereNotNull('requested_at')->orderByDesc('requested_at')->first();
+                    }
+                } elseif ($txn->feature_key === CreditConsumption::FEATURE_DEDICATED_RECRUITER) {
+                    $req = DedicatedRecruiterRequest::query()
+                        ->where('account_id', $aid)
+                        ->whereNotNull('requested_at')
+                        ->where('requested_at', '<=', $txnTime->copy()->addHour())
+                        ->where('requested_at', '>=', $txnTime->copy()->subHours(2))
+                        ->orderByDesc('requested_at')
+                        ->first();
+                    if (! $req) {
+                        $req = DedicatedRecruiterRequest::query()->where('account_id', $aid)->whereNotNull('requested_at')->orderByDesc('requested_at')->first();
+                    }
+                } elseif ($txn->feature_key === CreditConsumption::FEATURE_WALKIN_DRIVE_AD) {
+                    $req = WalkinDriveAdRequest::query()
+                        ->where('account_id', $aid)
+                        ->whereNotNull('requested_at')
+                        ->where('requested_at', '<=', $txnTime->copy()->addHour())
+                        ->where('requested_at', '>=', $txnTime->copy()->subHours(2))
+                        ->orderByDesc('requested_at')
+                        ->first();
+                    if (! $req) {
+                        $req = WalkinDriveAdRequest::query()->where('account_id', $aid)->whereNotNull('requested_at')->orderByDesc('requested_at')->first();
+                    }
+                } elseif ($txn->feature_key === CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE) {
+                    $req = JobPostingAssistanceRequest::query()
+                        ->where('account_id', $aid)
+                        ->whereNotNull('requested_at')
+                        ->where('requested_at', '<=', $txnTime->copy()->addHour())
+                        ->where('requested_at', '>=', $txnTime->copy()->subHours(2))
+                        ->orderByDesc('requested_at')
+                        ->first();
+                    if (! $req) {
+                        $req = JobPostingAssistanceRequest::query()->where('account_id', $aid)->whereNotNull('requested_at')->orderByDesc('requested_at')->first();
+                    }
+                }
+                if ($req) {
+                    $status = $req->status;
+                    $transactionStatusMap[$txn->id] = in_array($status, ['accepted', 'approved'], true) ? 'approved' : (strtolower((string) $status) === 'rejected' ? 'rejected' : 'pending');
+                }
+            }
         }
 
         $viewData = compact(
@@ -188,7 +303,9 @@ class WalletController extends BaseController
             'activePackageFeatureKeys',
             'socialPromotionRequests',
             'dedicatedRecruiterRequests',
-            'companies'
+            'dedicatedRecruiterValidTill',
+            'companies',
+            'transactionStatusMap'
         );
 
         if ($account->isEmployer()) {
@@ -379,49 +496,80 @@ class WalletController extends BaseController
     }
 
     /**
-     * Unlock Admission Form on Profile with credits (redirect back to company page).
+     * Job seeker: purchase feature with credits (wallet deduct, feature applied).
+     * Same flow as employer "Use credits" – deduct from wallet and apply (e.g. +1 job apply slot).
      */
-    public function unlockAdmissionForm(Request $request): RedirectResponse
+    public function purchaseFeatureJobSeeker(Request $request): JsonResponse
     {
         abort_unless(JobBoardHelper::isEnabledCreditsSystem(), 404);
 
         $account = auth('account')->user();
-        if (! $account->isEmployer()) {
-            return redirect()->back()->with('error_msg', __('Unauthorized.'));
+        if (! $account->isJobSeeker()) {
+            return response()->json(['success' => false, 'message' => __('Unauthorized.')], 403);
         }
 
-        $company = $account->companies()->first();
-        if (! $company) {
-            return redirect()->back()->with('error_msg', __('Please add an institution first.'));
+        $featureKey = (string) $request->input('feature_key', '');
+        if ($featureKey === '') {
+            return response()->json(['success' => false, 'message' => __('Invalid feature.')], 422);
         }
 
-        $creditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_ADMISSION_ENQUIRY, 500);
+        $creditConsumption = CreditConsumption::getForAccountType('job-seeker');
+        $item = $creditConsumption[$featureKey] ?? null;
+        $creditsRequired = (int) Arr::get($item, 'credits', 0);
+        $label = (string) Arr::get($item, 'label', $featureKey);
+
         if ($creditsRequired <= 0) {
-            return redirect()->back()->with('error_msg', __('Feature not available.'));
-        }
-        if ($account->credits < $creditsRequired) {
-            return redirect()
-                ->back()
-                ->with('error_msg', trans('plugins/job-board::messages.insufficient_credits'));
+            return response()->json(['success' => false, 'message' => __('Invalid feature.')], 422);
         }
 
-        $consumption = CreditConsumption::getForAccountType('employer');
-        $label = (string) Arr::get($consumption[CreditConsumption::FEATURE_ADMISSION_ENQUIRY] ?? [], 'label', 'Admission Form on Profile');
+        if ($account->credits < $creditsRequired) {
+            return response()->json([
+                'success' => false,
+                'message' => trans('plugins/job-board::messages.insufficient_credits'),
+            ], 422);
+        }
 
         $ok = CreditConsumption::deductForFeature(
             $account,
-            CreditConsumption::FEATURE_ADMISSION_ENQUIRY,
+            $featureKey,
             $creditsRequired,
             trans('plugins/job-board::messages.credits_used', ['credits' => $creditsRequired]) . ' (' . $label . ')',
-            ['source' => 'unlock_admission_form', 'feature_label' => $label]
+            [
+                'source' => 'wallet',
+                'feature_label' => $label,
+            ]
         );
 
         if (! $ok) {
-            return redirect()->back()->with('error_msg', trans('plugins/job-board::messages.insufficient_credits'));
+            return response()->json(['success' => false, 'message' => trans('plugins/job-board::messages.insufficient_credits')], 422);
         }
 
-        $redirectUrl = $request->input('redirect_url', $company->url);
+        $jobApplyCreditsBalance = null;
+        if ($featureKey === CreditConsumption::FEATURE_JOB_APPLY && \Illuminate\Support\Facades\Schema::hasColumn('jb_accounts', 'job_apply_credits_balance')) {
+            $account->job_apply_credits_balance = (int) ($account->getAttribute('job_apply_credits_balance') ?? 0) + 1;
+            $account->save();
+            $jobApplyCreditsBalance = (int) $account->job_apply_credits_balance;
+        }
 
-        return redirect()->to($redirectUrl)->with('success_msg', __('Admission form on profile has been unlocked.'));
+        $data = [
+            'success' => true,
+            'message' => __('Credits used successfully. Feature applied.'),
+            'credits' => (int) $account->credits,
+        ];
+        if ($jobApplyCreditsBalance !== null) {
+            $data['job_apply_credits_balance'] = $jobApplyCreditsBalance;
+        }
+
+        return response()->json($data);
+    }
+
+    /**
+     * Admission Form is unlocked by payment only (not coins). Redirect to packages to purchase.
+     */
+    public function unlockAdmissionForm(Request $request): RedirectResponse
+    {
+        return redirect()
+            ->to(route('public.account.packages') . '#choose-plan')
+            ->with('info_msg', __('Admission Form on Profile is unlocked by payment only, not coins. Please choose a package that includes it or purchase the add-on from Packages.'));
     }
 }

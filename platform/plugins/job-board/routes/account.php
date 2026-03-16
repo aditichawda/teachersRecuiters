@@ -385,6 +385,16 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     'as' => 'jobseeker.wallet',
                     'uses' => 'WalletController@index',
                 ])->middleware(['account:' . AccountTypeEnum::JOB_SEEKER, 'enable-credits', LocaleMiddleware::class]);
+                Route::post('jobseeker/wallet/purchase-feature', [
+                    'as' => 'jobseeker.wallet.purchase_feature',
+                    'uses' => 'WalletController@purchaseFeatureJobSeeker',
+                ])->middleware(['account:' . AccountTypeEnum::JOB_SEEKER, 'enable-credits', LocaleMiddleware::class]);
+
+                // Job seeker packages (upgrade / buy) – same view as employer packages, filtered by job-seeker type
+                Route::get('jobseeker/packages', [
+                    'as' => 'jobseeker.packages',
+                    'uses' => 'DashboardController@getPackages',
+                ])->middleware(['account:' . AccountTypeEnum::JOB_SEEKER, 'enable-credits', LocaleMiddleware::class]);
             });
         });
     });
@@ -453,6 +463,8 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 // Explicit routes first to avoid 404 - edit/update use {job} with whereNumber
                 Route::get('create', ['as' => 'create', 'uses' => 'AccountJobController@create']);
                 Route::post('generate-description', ['as' => 'generate-description', 'uses' => 'AccountJobController@generateDescription']);
+                Route::post('deduct-additional-email', ['as' => 'deduct-additional-email', 'uses' => 'AccountJobController@deductAdditionalEmail']);
+                Route::post('deduct-whatsapp-number', ['as' => 'deduct-whatsapp-number', 'uses' => 'AccountJobController@deductWhatsAppNumber']);
                 Route::get('tags/all', ['as' => 'tags.all', 'uses' => 'AccountJobController@getAllTags']);
                 Route::post('renew/{id}', ['as' => 'renew', 'uses' => 'AccountJobController@renew'])->whereNumber('id');
                 Route::get('{id}/analytics', ['as' => 'analytics', 'uses' => 'AccountJobController@analytics'])->whereNumber('id');
@@ -530,17 +542,49 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             Route::group([
                 'middleware' => ['enable-credits', LocaleMiddleware::class],
             ], function (): void {
+                Route::get('team-members', [
+                    'as' => 'team-members.index',
+                    'uses' => 'EmployerCreditFeatureController@indexTeamMembers',
+                ]);
+                Route::post('wallet/deduct-multiple-login', [
+                    'as' => 'wallet.deduct_multiple_login',
+                    'uses' => 'EmployerCreditFeatureController@deductMultipleLogin',
+                ]);
                 Route::post('team-members', [
                     'as' => 'team-members.store',
                     'uses' => 'EmployerCreditFeatureController@storeSubAccount',
+                ]);
+                Route::post('job-posting-assistance-request', [
+                    'as' => 'job-posting-assistance-request.store',
+                    'uses' => 'EmployerCreditFeatureController@storeJobPostingAssistanceRequest',
+                ]);
+                Route::post('dedicated-recruiter-deduct', [
+                    'as' => 'dedicated-recruiter.deduct',
+                    'uses' => 'EmployerCreditFeatureController@deductDedicatedRecruiter',
                 ]);
                 Route::post('dedicated-recruiter-request', [
                     'as' => 'dedicated-recruiter-request.store',
                     'uses' => 'EmployerCreditFeatureController@storeDedicatedRecruiterRequest',
                 ]);
+                Route::post('social-promotion-deduct', [
+                    'as' => 'social-promotion.deduct',
+                    'uses' => 'EmployerCreditFeatureController@deductSocialPromotion',
+                ]);
                 Route::post('social-promotion-request', [
                     'as' => 'social-promotion-request.store',
                     'uses' => 'EmployerCreditFeatureController@storeSocialPromotionRequest',
+                ]);
+                Route::post('walkin-drive-ad-deduct', [
+                    'as' => 'walkin-drive-ad.deduct',
+                    'uses' => 'EmployerCreditFeatureController@deductWalkinDriveAd',
+                ]);
+                Route::post('walkin-drive-ad-request', [
+                    'as' => 'walkin-drive-ad-request.store',
+                    'uses' => 'EmployerCreditFeatureController@storeWalkinDriveAdRequest',
+                ]);
+                Route::post('additional-employer-profile-deduct', [
+                    'as' => 'additional-employer-profile.deduct',
+                    'uses' => 'EmployerCreditFeatureController@deductAdditionalEmployerProfile',
                 ]);
                 Route::post('invite-candidate', [
                     'as' => 'invite-candidate.store',

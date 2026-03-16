@@ -1,7 +1,40 @@
 (function ($) {
     const companies = $('.companies')
 
-    const Loading = $('#company-loading');
+    // Blue Loader System (same as jobs page)
+    const $companiesContainer = $('.companies-container');
+    const $companiesList = $companiesContainer.find('.companies-content');
+    let $companiesLoader = $companiesContainer.find('#companies-loader-overlay');
+
+    // Create loader if it doesn't exist
+    if (!$companiesLoader.length && $companiesList.length) {
+        const loaderHtml = '<div class="blue-loader-overlay" id="companies-loader-overlay" style="display: none !important; z-index: 100 !important;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div><p class="blue-loader-text">Loading companies...</p></div></div>';
+        $companiesList.before(loaderHtml);
+        $companiesLoader = $('#companies-loader-overlay');
+    }
+
+    function showCompaniesLoader() {
+        if ($companiesLoader.length) {
+            $companiesLoader.attr('style', 'display: flex !important; visibility: visible !important; opacity: 1 !important; z-index: 100 !important;').addClass('show');
+        } else {
+            // Create loader if it doesn't exist
+            const loaderHtml = '<div class="blue-loader-overlay" id="companies-loader-overlay" style="display: flex !important; visibility: visible !important; opacity: 1 !important; z-index: 100 !important;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div><p class="blue-loader-text">Loading companies...</p></div></div>';
+            $companiesList.before(loaderHtml);
+            $companiesLoader = $('#companies-loader-overlay');
+        }
+    }
+
+    function hideCompaniesLoader() {
+        if ($companiesLoader.length) {
+            setTimeout(() => {
+                $companiesLoader.css({
+                    'display': 'none',
+                    'visibility': 'hidden',
+                    'opacity': '0'
+                }).removeClass('show');
+            }, 300);
+        }
+    }
 
     let filterAjax = null
 
@@ -15,12 +48,16 @@
             filterAjax.abort();
         }
 
+        // Show loader IMMEDIATELY
+        showCompaniesLoader();
+
         filterAjax = $.ajax({
             url: action,
             method: 'GET',
             data: formData,
             beforeSend: () => {
-                Loading.show()
+                // Ensure loader is visible
+                showCompaniesLoader();
                 window.history.pushState(
                     formData,
                     null,
@@ -30,13 +67,24 @@
             success: (response) => {
                 $('.companies-content').html(response.data)
                 $('.woocommerce-result-count-left').text($('.info-pagination').text())
+                
+                // Re-add loader component if not present after HTML update
+                if (!$companiesList.find('#companies-loader-overlay').length) {
+                    const loaderHtml = '<div class="blue-loader-overlay" id="companies-loader-overlay" style="display: none !important; z-index: 100 !important;"><div class="blue-loader-wrapper"><div class="blue-loader large"></div><p class="blue-loader-text">Loading companies...</p></div></div>';
+                    $companiesList.before(loaderHtml);
+                }
+                $companiesLoader = $('#companies-loader-overlay');
+                
                 // Reinitialize city search after AJAX update
                 setTimeout(function() {
                     initCompanyCitySearch();
                 }, 100);
             },
+            error: () => {
+                hideCompaniesLoader();
+            },
             complete: function () {
-                Loading.hide()
+                hideCompaniesLoader();
             }
         })
     }
@@ -47,6 +95,7 @@
 
     companies.on('change', '.select-per-page', function (e) {
         e.preventDefault();
+        showCompaniesLoader();
         companies.find('input[name="per_page"]').val($(this).val());
         setCurrentPage(1)
         getcompanies();
@@ -54,12 +103,14 @@
 
     companies.on('change', '.select-sort-by', function (e) {
         e.preventDefault();
+        showCompaniesLoader();
         companies.find('input[name="sort_by"]').val($(this).val());
         getcompanies();
     })
 
     companies.on('change', '.select-layout', function (e) {
         e.preventDefault();
+        showCompaniesLoader();
         companies.find('input[name="layout"]').val($(this).val());
         getcompanies();
     })
@@ -67,6 +118,10 @@
     // Handle filter form submission
     companies.on('submit', '#companies-filter-form', function (e) {
         e.preventDefault();
+        
+        // Show loader IMMEDIATELY when button is clicked
+        showCompaniesLoader();
+        
         const form = $('form#company-filter-form');
         const filterForm = $(this);
         
@@ -182,6 +237,7 @@
 
     // Handle sort, per page, and layout changes
     companies.on('change', '#company-sort-by, #company-per-page, #company-layout', function() {
+        showCompaniesLoader();
         const form = $('form#company-filter-form');
         form.find('input[name="sort_by"]').val($('#company-sort-by').val());
         form.find('input[name="per_page"]').val($('#company-per-page').val());
@@ -192,6 +248,7 @@
 
     companies.on('click', 'a.pagination-button', function (e) {
         e.preventDefault();
+        showCompaniesLoader();
         setCurrentPage($(this).data('page'))
         getcompanies();
     })
@@ -342,6 +399,7 @@
             $suggestions.hide();
             
             // Trigger filter update
+            showCompaniesLoader();
             setCurrentPage(1);
             getcompanies();
         });

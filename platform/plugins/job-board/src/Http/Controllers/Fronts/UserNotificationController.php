@@ -10,6 +10,30 @@ use Illuminate\Support\Facades\Auth;
 
 class UserNotificationController extends BaseController
 {
+    public function read(Request $request, $id, BaseHttpResponse $response)
+    {
+        $account = Auth::guard('account')->user();
+        
+        if (!$account) {
+            return $response->setError()->setMessage('Unauthorized');
+        }
+
+        $notification = UserNotification::where('id', $id)
+            ->where('account_id', $account->id)
+            ->firstOrFail();
+
+        if (!$notification->isRead()) {
+            $notification->markAsRead();
+        }
+
+        // If notification has action_url, redirect there
+        if ($notification->action_url && $notification->action_url !== '#') {
+            return redirect()->to(url($notification->action_url));
+        }
+
+        return $response->setMessage('Notification marked as read');
+    }
+
     public function markAsRead(Request $request, $id, BaseHttpResponse $response)
     {
         $account = Auth::guard('account')->user();
@@ -70,5 +94,20 @@ class UserNotificationController extends BaseController
         UserNotification::where('account_id', $account->id)->delete();
 
         return $response->setMessage('All notifications deleted');
+    }
+
+    public function countUnread(BaseHttpResponse $response)
+    {
+        $account = Auth::guard('account')->user();
+        
+        if (!$account) {
+            return $response->setData(0);
+        }
+
+        $count = UserNotification::where('account_id', $account->id)
+            ->whereNull('read_at')
+            ->count();
+
+        return $response->setData($count);
     }
 }

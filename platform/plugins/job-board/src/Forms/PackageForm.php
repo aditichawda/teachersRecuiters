@@ -27,8 +27,13 @@ class PackageForm extends FormAbstract
 
         $currencies = Currency::query()->pluck('title', 'id')->all();
 
+        $model = $this->getModel();
+        if (! $model || ! $model->getKey()) {
+            $this->setupModel(new Package());
+        }
+        $model = $this->getModel();
+
         $this
-            ->setupModel(new Package())
             ->setValidatorClass(PackageRequest::class)
             ->add('name', TextField::class, NameFieldOption::make()->required())
             ->add('description', TextareaField::class, DescriptionFieldOption::make())
@@ -241,5 +246,12 @@ document.addEventListener("DOMContentLoaded", function() {
             ->add('order', NumberField::class, SortOrderFieldOption::make())
             ->add('status', SelectField::class, StatusFieldOption::make())
             ->setBreakFieldPoint('status');
+
+        if ($model && $model->getKey()) {
+            $this->setUrl(route('packages.update', $model));
+            $this->setMethod('PUT');
+        } else {
+            $this->setUrl(route('packages.store'));
+        }
     }
 }

@@ -162,7 +162,7 @@
                                         <span class="badge {{ $badgeClass }} text-white">{{ $statusLabel }}</span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('public.account.applicants.edit', $application->id) }}" class="btn btn-sm btn-primary" title="{{ trans('plugins/job-board::messages.view') }}">
+                                        <a href="{{ route('public.account.applicants.edit', ['applicant' => $application->id]) }}" class="btn btn-sm btn-primary" title="{{ trans('plugins/job-board::messages.view') }}">
                                             <i class="fa fa-eye"></i>
                                         </a>
                                     </td>

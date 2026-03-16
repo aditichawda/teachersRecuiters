@@ -451,6 +451,24 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => route('social-promotion-requests.index'),
                     'permissions' => ['social-promotion-requests.index'],
                 ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-job-posting-assistance-requests',
+                    'priority' => 5.75,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Job Posting Assistance Requests'),
+                    'icon' => 'ti ti-briefcase',
+                    'url' => route('job-posting-assistance-requests.index'),
+                    'permissions' => ['job-posting-assistance-requests.index'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-walkin-drive-ad-requests',
+                    'priority' => 5.78,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Walk-in Drive Ad Requests'),
+                    'icon' => 'ti ti-photo',
+                    'url' => route('walkin-drive-ad-requests.index'),
+                    'permissions' => ['walkin-drive-ad-requests.index'],
+                ])
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), static function (DashboardMenuSupport $dashboardMenu): void {
                     $dashboardMenu
                         ->registerItem([
@@ -696,6 +714,14 @@ class JobBoardServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-wallet',
                 ]))
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
+                    'id' => 'cms-account-staff',
+                    'priority' => 6.5,
+                    'parent_id' => null,
+                    'name' => 'plugins/job-board::dashboard.menu.staff',
+                    'url' => fn () => route('public.account.team-members.index'),
+                    'icon' => 'ti ti-users-group',
+                ]))
+                ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
                     'id' => 'cms-account-invoices',
                     'priority' => 7,
                     'parent_id' => null,
@@ -911,6 +937,19 @@ class JobBoardServiceProvider extends ServiceProvider
                             }
                         }
 
+                        break;
+                    case Package::class:
+                        // When saving Package translation for default locale, sync main table so edit form shows saved data
+                        $lang = $request->input('language') ?: $request->header('X-LANGUAGE') ?: \Botble\Language\Facades\Language::getDefaultLocaleCode();
+                        if ($lang === \Botble\Language\Facades\Language::getDefaultLocaleCode()) {
+                            $data->name = $request->input('name', $data->name);
+                            $data->description = $request->input('description', $data->description);
+                            $features = $request->input('features');
+                            if ($features !== null) {
+                                $data->features = is_array($features) ? $features : (array) json_decode($features ?: '[]', true);
+                            }
+                            $data->save();
+                        }
                         break;
                 }
             }, 1234, 2);

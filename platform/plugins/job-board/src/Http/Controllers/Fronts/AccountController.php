@@ -2,6 +2,7 @@
 
 namespace Botble\JobBoard\Http\Controllers\Fronts;
 
+use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\JobBoard\Facades\JobBoardHelper;
 use Botble\JobBoard\Forms\Fronts\AccountLanguageForm;
@@ -19,6 +20,8 @@ use Botble\JobBoard\Models\JobSkill;
 use Botble\JobBoard\Models\Language;
 use Botble\JobBoard\Models\Specialization;
 use Botble\JobBoard\Models\Tag;
+use Botble\JobBoard\Models\Transaction;
+use Botble\JobBoard\Supports\JobSeekerPackageContext;
 use Illuminate\Support\Facades\Schema;
 use Botble\Media\Facades\RvMedia;
 use Botble\Media\Models\MediaFile;
@@ -132,9 +135,9 @@ class AccountController extends BaseController
             $languagesList = $rows->map(fn ($r) => (object) ['id' => $r->lang_id, 'name' => $r->lang_name]);
         }
         if (Schema::hasTable('jb_specializations')) {
-            // Include both 'published' and 1 so dropdown gets data (DB may store status as 1)
+            // Use BaseStatusEnum::PUBLISHED to ensure correct enum value
             $specializationsList = Specialization::query()
-                ->whereIn('status', ['published', 1])
+                ->where('status', BaseStatusEnum::PUBLISHED)
                 ->orderBy('order')
                 ->orderBy('name')
                 ->get(['id', 'name']);
@@ -316,6 +319,85 @@ class AccountController extends BaseController
         }
 
         AccountActivityLog::query()->create(['action' => 'update_setting']);
+
+        // Check profile completion and send notification if 100%
+        if (!$account->isEmployer()) {
+            try {
+                // Calculate profile completion percentage
+                $profileFields = [
+                    ['field' => 'first_name', 'points' => 10, 'filled' => !empty($account->first_name)],
+                    ['field' => 'phone', 'points' => 10, 'filled' => !empty($account->phone)],
+                    ['field' => 'avatar', 'points' => 15, 'filled' => !empty($account->avatar_id)],
+                    ['field' => 'bio', 'points' => 10, 'filled' => !empty($account->bio)],
+                    ['field' => 'resume', 'points' => 20, 'filled' => !empty($account->resume)],
+                    ['field' => 'address', 'points' => 10, 'filled' => !empty($account->address)],
+                    ['field' => 'dob', 'points' => 5, 'filled' => !empty($account->dob)],
+                    ['field' => 'gender', 'points' => 5, 'filled' => !empty($account->gender)],
+                    ['field' => 'total_experience', 'points' => 10, 'filled' => !empty($account->total_experience)],
+                    ['field' => 'current_salary', 'points' => 5, 'filled' => !empty($account->current_salary)],
+                ];
+                $totalPoints = array_sum(array_column($profileFields, 'points'));
+                $earnedPoints = 0;
+                foreach ($profileFields as $pf) {
+                    if ($pf['filled']) $earnedPoints += $pf['points'];
+                }
+                $completion = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100) : 0;
+                
+                // Send notification if profile is 100% complete (check if not already sent recently)
+                if ($completion >= 100) {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    // Check if notification already sent in last 24 hours
+                    $recentNotification = \Botble\JobBoard\Models\UserNotification::query()
+                        ->where('account_id', $account->id)
+                        ->where('type', \Botble\JobBoard\Services\NotificationService::TYPE_PROFILE_COMPLETED)
+                        ->where('created_at', '>', now()->subDay())
+                        ->exists();
+                    
+                    if (!$recentNotification) {
+                        $notificationService->sendProfileCompletedNotification($account);
+                        \Log::info('[NOTIFICATION] Profile completed notification sent', [
+                            'account_id' => $account->id,
+                            'completion' => $completion,
+                        ]);
+                    }
+
+                    // One-time 500 credits reward for profile completion (when credits system is enabled)
+                    if (JobBoardHelper::isEnabledCreditsSystem() && Schema::hasColumn('jb_accounts', 'credits')) {
+                        $profileCompleteBonusKey = 'profile_complete_bonus';
+                        $alreadyGranted = Transaction::query()
+                            ->where('account_id', $account->getKey())
+                            ->where('feature_key', $profileCompleteBonusKey)
+                            ->exists();
+                        if (!$alreadyGranted) {
+                            $rewardCredits = 500;
+                            $account->credits = ($account->credits ?? 0) + $rewardCredits;
+                            $account->save();
+                            Transaction::query()->create([
+                                'account_id' => $account->getKey(),
+                                'account_type' => 'job_seeker',
+                                'credits' => $rewardCredits,
+                                'type' => Transaction::TYPE_CREDIT,
+                                'feature_key' => $profileCompleteBonusKey,
+                                'description' => __('Profile completion reward'),
+                                'user_details' => [
+                                    'name' => $account->name,
+                                    'email' => $account->email,
+                                ],
+                            ]);
+                            \Log::info('[CREDITS] Profile completion reward granted', [
+                                'account_id' => $account->id,
+                                'credits' => $rewardCredits,
+                            ]);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('[NOTIFICATION] Failed to check profile completion', [
+                    'account_id' => $account->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return $this
             ->httpResponse()
@@ -545,9 +627,13 @@ class AccountController extends BaseController
 
         $skills = $account->favoriteSkills()->pluck('name')->all();
 
+        $jobSeekerCtx = $account->isJobSeeker()
+            ? JobSeekerPackageContext::forAccount($account)
+            : null;
+
         return JobBoardHelper::scope(
             'account.resume-builder',
-            compact('account', 'educations', 'experiences', 'skills')
+            compact('account', 'educations', 'experiences', 'skills', 'jobSeekerCtx')
         );
     }
 

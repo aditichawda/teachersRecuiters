@@ -194,19 +194,6 @@ class AdsForm extends FormAbstract
             ])
             ->addCloseCollapsible('banner_type', 'double')
             ->addOpenCollapsible('banner_type', 'multiple', $currentBannerType)
-            ->add('image_2', MediaImageField::class, [
-                'label' => 'Banner Image 2',
-                'help_block' => [
-                    'text' => 'Second banner image (for multiple banners)',
-                ],
-            ])
-            ->add('url_2', TextField::class, [
-                'label' => 'Banner 2 URL',
-                'attr' => [
-                    'placeholder' => 'URL for second banner',
-                    'data-counter' => 255,
-                ],
-            ])
             ->add('image_3', MediaImageField::class, [
                 'label' => 'Banner Image 3',
                 'help_block' => [

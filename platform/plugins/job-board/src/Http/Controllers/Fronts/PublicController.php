@@ -30,6 +30,7 @@ use Botble\JobBoard\Models\Tag;
 use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Repositories\Interfaces\JobInterface;
+use Botble\JobBoard\Supports\JobSeekerPackageContext;
 use Botble\JobBoard\Supports\PackageContext;
 use Botble\Language\Facades\Language;
 use Botble\Location\Facades\Location;
@@ -37,6 +38,7 @@ use Botble\Media\Facades\RvMedia;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\SeoHelper\SeoOpenGraph;
 use Botble\Slug\Facades\SlugHelper;
+use Botble\Slug\Models\Slug as SlugModel;
 use Botble\Theme\Facades\Theme;
 use Exception;
 use GeoIp2\Database\Reader;
@@ -153,11 +155,80 @@ class PublicController extends BaseController
 
     public function getJob(string $slug)
     {
-        $slug = SlugHelper::getSlug($slug, SlugHelper::getPrefix(JobModel::class));
+        // Get prefix - use 'jobs' as default to match route definition
+        $prefix = SlugHelper::getPrefix(JobModel::class, 'jobs');
+        
+        // Try to get slug with prefix
+        $slugModel = SlugHelper::getSlug($slug, $prefix, JobModel::class);
 
-        abort_unless($slug, 404);
+        // If slug not found with prefix, try without prefix (in case prefix setting changed)
+        if (! $slugModel) {
+            $slugModel = SlugHelper::getSlug($slug, null, JobModel::class);
+        }
 
-        $condition = ['jb_jobs.id' => $slug->reference_id];
+        // If still not found, try to find job by slug key in slugable relationship
+        if (! $slugModel) {
+            $job = JobModel::query()
+                ->whereHas('slugable', function ($query) use ($slug) {
+                    $query->where('key', $slug);
+                })
+                ->first();
+            
+            if ($job && $job->slugable) {
+                $slugModel = $job->slugable;
+            }
+        }
+
+        // Last resort: try to find job by matching the slug to job name
+        if (! $slugModel) {
+            // Convert slug back to potential job name patterns
+            $slugParts = explode('-', $slug);
+            $searchTerm = implode(' ', $slugParts);
+            
+            // Try to find job by name (case-insensitive, partial match)
+            $job = JobModel::query()
+                ->where(function($query) use ($searchTerm) {
+                    $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                          ->orWhereRaw('LOWER(name) = ?', [strtolower($searchTerm)]);
+                })
+                ->first();
+            
+            if ($job) {
+                // Load or create slug for this job
+                if (! $job->slugable) {
+                    try {
+                        SlugHelper::createSlug($job);
+                        $job->refresh();
+                        $job->load('slugable');
+                    } catch (\Exception $e) {
+                        // If slug creation fails, continue without it
+                    }
+                }
+                
+                if ($job->slugable && $job->slugable->key === $slug) {
+                    $slugModel = $job->slugable;
+                } elseif ($job->slugable) {
+                    // If slug exists but doesn't match, use it anyway (might be updated slug)
+                    $slugModel = $job->slugable;
+                }
+            }
+        }
+
+        // If still no slug model found, try to find by all slugs table directly
+        if (! $slugModel) {
+            $slugRecord = SlugModel::query()
+                ->where('key', $slug)
+                ->where('reference_type', JobModel::class)
+                ->first();
+            
+            if ($slugRecord) {
+                $slugModel = $slugRecord;
+            }
+        }
+
+        abort_unless($slugModel, 404);
+
+        $condition = ['jb_jobs.id' => $slugModel->reference_id];
 
         if (AdminHelper::isPreviewing()) {
             Arr::forget($condition, 'status');
@@ -172,17 +243,17 @@ class PublicController extends BaseController
 
         if (! $job) {
             $expiredJob = JobModel::query()
-                ->where('id', $slug->reference_id)
+                ->where('id', $slugModel->reference_id)
                 ->first();
 
             if ($expiredJob && $expiredJob->is_expired) {
-                return $this->showExpiredJob($expiredJob, $slug);
+                return $this->showExpiredJob($expiredJob, $slugModel);
             }
 
             abort(404);
         }
 
-        $job->setRelation('slugable', $slug);
+        $job->setRelation('slugable', $slugModel);
 
         SeoHelper::setTitle($job->name)->setDescription($job->description);
 
@@ -585,6 +656,20 @@ class PublicController extends BaseController
                             trans('plugins/job-board::messages.already_applied')
                         );
                 }
+
+                // Job seeker package: enforce apply limit; if exceeded, ask to upgrade
+                $jsCtx = JobSeekerPackageContext::forAccount($account);
+                if (! $jsCtx->canApply()) {
+                    $message = $jsCtx->hasPackage() && $jsCtx->isPeriodValid()
+                        ? trans('plugins/job-board::messages.job_apply_limit_reached')
+                        : trans('plugins/job-board::messages.job_apply_upgrade_required');
+
+                    return $this
+                        ->httpResponse()
+                        ->setError()
+                        ->setMessage($message)
+                        ->setData(['upgrade_url' => $jsCtx->packagesUrl()]);
+                }
             }
 
             $jobApplication = new JobApplication();
@@ -735,6 +820,18 @@ class PublicController extends BaseController
             $jobApplication->fill($fillableData);
             $jobApplication->save();
 
+            if ($account && $account->isJobSeeker()) {
+                // Used wallet-purchased job apply slot when package limit was already reached
+                if (Schema::hasColumn('jb_accounts', 'job_apply_credits_balance')) {
+                    $bal = (int) ($account->getAttribute('job_apply_credits_balance') ?? 0);
+                    if ($bal > 0 && $jsCtx->jobApplyLimit !== null && $jsCtx->jobApplicationsUsed >= $jsCtx->jobApplyLimit) {
+                        $account->job_apply_credits_balance = $bal - 1;
+                        $account->save();
+                    }
+                }
+                JobSeekerPackageContext::clearCache((int) $account->getKey());
+            }
+
             \Log::info('[JOB_APPLICATION] Application saved successfully', [
                 'application_id' => $jobApplication->id,
                 'job_id' => $job->id,
@@ -745,6 +842,36 @@ class PublicController extends BaseController
             ]);
 
             $job::withoutEvents(fn () => $job::withoutTimestamps(fn () => $job->increment('number_of_applied')));
+
+            // Send notification to job seeker if logged in
+            if ($account && !$account->isEmployer()) {
+                try {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $notificationService->sendJobAppliedNotification($account, $job->name, $job->id);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send job applied notification: ' . $e->getMessage());
+                }
+            }
+
+            // Send notification to employer
+            if ($job->author) {
+                try {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $candidateName = ($jobApplication->first_name ?? '') . ' ' . ($jobApplication->last_name ?? '');
+                    if (empty(trim($candidateName))) {
+                        $candidateName = $jobApplication->email ?? 'A candidate';
+                    }
+                    $notificationService->sendNewApplicationNotification(
+                        $job->author,
+                        $job->name,
+                        $job->id,
+                        $candidateName,
+                        $jobApplication->id
+                    );
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send new application notification to employer: ' . $e->getMessage());
+                }
+            }
             
             \Log::debug('[JOB_APPLICATION] Job application count incremented', [
                 'job_id' => $job->id,
@@ -1323,6 +1450,20 @@ class PublicController extends BaseController
             $canUnlockAdmission = $isOwner && $currentAccount->credits >= $admissionUnlockCredits && $admissionUnlockCredits > 0;
         }
 
+        // Job seeker package: "View School Contact Info" – gate email, phone, address, website for job seekers without feature
+        $canViewSchoolContactInfo = true;
+        $contactInfoUpgradeUrl = null;
+        if (Auth::guard('account')->check() && JobBoardHelper::isEnabledCreditsSystem()) {
+            $viewerAccount = Auth::guard('account')->user();
+            if ($viewerAccount->isJobSeeker()) {
+                $jsCtx = JobSeekerPackageContext::forAccount($viewerAccount);
+                $canViewSchoolContactInfo = $jsCtx->hasViewContactInfo();
+                if (! $canViewSchoolContactInfo) {
+                    $contactInfoUpgradeUrl = $jsCtx->packagesUrl();
+                }
+            }
+        }
+
         return Theme::scope(
             'job-board.company',
             compact(
@@ -1335,6 +1476,8 @@ class PublicController extends BaseController
                 'admissionUnlockCredits',
                 'isOwner',
                 'canUnlockAdmission',
+                'canViewSchoolContactInfo',
+                'contactInfoUpgradeUrl',
             ),
             'plugins/job-board::themes.company'
         )->render();
@@ -1447,12 +1590,34 @@ class PublicController extends BaseController
                     }
                 }
             }
-            DB::table('jb_account_candidate_views')->insertOrIgnore([
+            $viewInserted = DB::table('jb_account_candidate_views')->insertOrIgnore([
                 'account_id' => $account->getKey(),
                 'candidate_id' => $candidate->getKey(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            
+            // Send notification to job seeker when their profile is viewed (only for new views, not repeat views)
+            if ($viewInserted && $candidate->id) {
+                try {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $schoolName = $account->companies()->first()->name ?? $account->name ?? 'School';
+                    $notificationService->sendProfileViewedNotification(
+                        $candidate,
+                        $schoolName
+                    );
+                    Log::info('[NOTIFICATION] Profile viewed notification sent', [
+                        'candidate_id' => $candidate->id,
+                        'viewer_id' => $account->id,
+                        'school_name' => $schoolName,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('[NOTIFICATION] Failed to send profile viewed notification', [
+                        'candidate_id' => $candidate->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
 
         SeoHelper::setTitle($candidate->name)->setDescription($candidate->description);
@@ -1502,9 +1667,13 @@ class PublicController extends BaseController
                 ->get(['id', 'name']);
         }
 
+        $candidateIsFeatured = $candidate->isJobSeeker()
+            ? JobSeekerPackageContext::forAccount($candidate)->hasFeaturedProfile()
+            : false;
+
         return Theme::scope(
             'job-board.candidate',
-            compact('candidate', 'experiences', 'educations', 'account', 'canReview', 'profileLocked', 'employerJobs'),
+            compact('candidate', 'experiences', 'educations', 'account', 'canReview', 'profileLocked', 'employerJobs', 'candidateIsFeatured'),
             'plugins/job-board::themes.candidate'
         )->render();
     }

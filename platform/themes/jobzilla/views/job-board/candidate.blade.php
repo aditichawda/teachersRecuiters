@@ -5,6 +5,7 @@
     Theme::layout('default');
     $formatLabel = function($v) { return ucwords(str_replace('_', ' ', (string)$v)); };
     $profileLocked = $profileLocked ?? false;
+    $candidateIsFeatured = $candidateIsFeatured ?? false;
 @endphp
 
 {!! Theme::partial('candidate-card-styles') !!}
@@ -590,7 +591,12 @@
                 <img src="{{ $candidate->avatar_url ?? '' }}" alt="{{ $candidate->name ?? 'Candidate' }}">
             </div>
             <div class="cdt-hero-info">
-                <h1>{{ $candidate->name ?? 'Candidate' }}</h1>
+                <h1 class="d-flex align-items-center gap-2 flex-wrap">
+                    {{ $candidate->name ?? 'Candidate' }}
+                    @if($candidateIsFeatured)
+                        <span class="badge bg-warning text-dark" style="font-size: 12px; font-weight: 600;">{{ __('Featured') }}</span>
+                    @endif
+                </h1>
                 @if(!$profileLocked && ($candidate->description ?? null))
                     <p class="cdt-hero-desc">{!! BaseHelper::clean($candidate->description) !!}</p>
                 @endif

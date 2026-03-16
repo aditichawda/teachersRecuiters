@@ -76,7 +76,7 @@
                     <div class="wallet-js-col-blue">
                         <x-core::card class="border-0 wallet-js-card-blue">
                             <x-core::card.body class="p-0">
-                                <h6 class="wallet-js-coins-title mb-0">{{ trans('plugins/job-board::dashboard.wallet_available_coins') }}</h6>
+                                <h6 class="wallet-js-coins-title mb-0 text-uppercase">{{ trans('plugins/job-board::dashboard.wallet_available_coins') }}</h6>
                                 <div class="wallet-js-coins-value">
                                     <x-core::icon name="ti ti-coin" class="d-block" style="font-size:1.25rem;" />
                                     {{ format_credits_short($account->credits ?? 0) }}
@@ -97,7 +97,71 @@
                             </x-core::card.footer>
                         </x-core::card>
                     </div>
-                    
+                    {{-- YOUR PLAN card (same content as sidebar, used/limit for job applications) --}}
+                    @if(isset($jobSeekerCtx) && $jobSeekerCtx && $jobSeekerCtx->hasPackage())
+                    <div class="wallet-js-col-blue">
+                        <div class="card border-0 h-100 shadow-sm rounded-3 overflow-hidden" style="background: #fff; border: 1px solid #e9ecef !important; min-height: 265px;">
+                            <div class="card-body p-3 d-flex flex-column">
+                                <h6 class="mb-2 small text-uppercase text-muted fw-bold">{{ __('Your Plan') }}</h6>
+                                <div class="small flex-grow-1">
+                                    @php
+                                        $used = $jobSeekerCtx->jobApplicationsUsed;
+                                        $limit = $jobSeekerCtx->jobApplyLimit;
+                                    @endphp
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+                                        <span><i class="fa fa-briefcase me-1"></i> {{ __('Job applications') }}</span>
+                                        @if($limit === null)
+                                            <span class="text-success">{{ __('Unlimited') }}</span>
+                                        @else
+                                            <span>{{ $used }}/{{ $limit }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+                                        <span><i class="fa fa-star me-1"></i> {{ __('Featured Profile') }}</span>
+                                        @if($jobSeekerCtx->hasFeaturedProfile())
+                                            <span class="text-success"><i class="fa fa-check"></i></span>
+                                        @else
+                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
+                                        @endif
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+                                        <span><i class="fa fa-address-card me-1"></i> {{ __('View contact info') }}</span>
+                                        @if($jobSeekerCtx->hasViewContactInfo())
+                                            <span class="text-success"><i class="fa fa-check"></i></span>
+                                        @else
+                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
+                                        @endif
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+                                        <span><i class="fa fa-whatsapp me-1"></i> {{ __('Job alerts on WhatsApp') }}</span>
+                                        @if($jobSeekerCtx->hasJobAlertsWhatsapp())
+                                            <span class="text-success"><i class="fa fa-check"></i></span>
+                                        @else
+                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
+                                        @endif
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+                                        <span><i class="fa fa-file-alt me-1"></i> {{ __('Basic CV') }}</span>
+                                        @if($jobSeekerCtx->hasBasicCv())
+                                            <span class="text-success"><i class="fa fa-check"></i></span>
+                                        @else
+                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
+                                        @endif
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+                                        <span><i class="fa fa-file-pdf me-1"></i> {{ __('Advance CV') }}</span>
+                                        @if($jobSeekerCtx->hasAdvanceCv())
+                                            <span class="text-success"><i class="fa fa-check"></i></span>
+                                        @else
+                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
+                                        @endif
+                                    </div>
+                                </div>
+                                <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-primary w-100 mt-2">{{ __('View plans & Upgrade') }}</a>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
             <div class="col-lg-9 col-xl-9">
@@ -184,7 +248,12 @@
                                 @foreach($consumptionList as $key => $item)
                                     <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
                                         <span>{{ is_array($item) ? ($item['label'] ?? $key) : $key }}</span>
-                                        <span class="text-muted small">{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }}</span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="text-muted small">{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }}</span>
+                                            @if(is_array($item) && isset($item['credits']))
+                                            <button type="button" class="btn btn-xs btn-outline-primary js-wallet-feature-btn" data-feature-key="{{ $key }}" data-feature-label="{{ $item['label'] ?? $key }}" data-credits="{{ (int)($item['credits'] ?? 0) }}">{{ __('Use credits') }}</button>
+                                            @endif
+                                        </div>
                                     </li>
                                 @endforeach
                             @else
@@ -201,6 +270,121 @@
             </div>
             
         </div>
+
+        {{-- Modal: Use credits (jobseeker) – show feature & credits, redirect to Packages to buy --}}
+        <div class="modal fade" id="walletJsFeatureModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ __('Features & Coins Consumption') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-1 fw-medium" id="walletJsFeatureModalName"></p>
+                        <p class="mb-1 text-danger fw-medium" id="walletJsFeatureModalInsufficient" style="display: none;"></p>
+                        <p class="mb-0 text-muted small" id="walletJsFeatureModalMsg"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        {{-- One primary button: balance enough = "Use credits" (deduct + apply); else "Buy credits" (go to packages) – same as employer --}}
+                        <button type="button" class="btn btn-primary" id="walletJsFeatureModalConfirmBtn">{{ __('Buy credits') }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var currentBalance = {{ (int)($account->credits ?? 0) }};
+            var msgInsufficient = @json(trans('plugins/job-board::dashboard.wallet_insufficient_coins'));
+            var msgInsufficientDetail = @json(trans('plugins/job-board::dashboard.wallet_insufficient_coins_message'));
+            var creditsLabel = @json(trans('plugins/job-board::credit-consumption.credits'));
+            var msgRequiredBuy = @json(__('required for this feature. Buy credits from Packages to use it.'));
+            var purchaseUrl = @json(route('public.account.jobseeker.wallet.purchase_feature'));
+            var packagesUrl = @json(route('public.account.jobseeker.packages') . '#choose-plan');
+            var msgSuccess = @json(__('Credits used successfully. Feature applied.'));
+            var msgError = @json(__('Something went wrong. Please try again.'));
+            var lblUseCredits = @json(__('Use credits'));
+            var lblBuyCredits = @json(__('Buy credits'));
+
+            var modalFeatureKey = '';
+            var modalCredits = 0;
+            var modalHasEnoughBalance = false;
+            var modalInstance = null;
+
+            document.querySelectorAll('.js-wallet-feature-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    modalFeatureKey = btn.getAttribute('data-feature-key') || '';
+                    var label = btn.getAttribute('data-feature-label') || '';
+                    modalCredits = parseInt(btn.getAttribute('data-credits') || '0', 10) || 0;
+                    modalHasEnoughBalance = currentBalance >= modalCredits;
+                    var nameEl = document.getElementById('walletJsFeatureModalName');
+                    var insufficientEl = document.getElementById('walletJsFeatureModalInsufficient');
+                    var msgEl = document.getElementById('walletJsFeatureModalMsg');
+                    var confirmBtn = document.getElementById('walletJsFeatureModalConfirmBtn');
+                    if (nameEl) nameEl.textContent = label;
+                    if (insufficientEl) {
+                        insufficientEl.style.display = 'none';
+                        insufficientEl.textContent = '';
+                    }
+                    if (!modalHasEnoughBalance) {
+                        if (insufficientEl) {
+                            insufficientEl.textContent = msgInsufficient;
+                            insufficientEl.style.display = 'block';
+                        }
+                        if (msgEl) {
+                            msgEl.textContent = msgInsufficientDetail
+                                .replace(':balance', currentBalance)
+                                .replace(':required', modalCredits);
+                        }
+                        if (confirmBtn) { confirmBtn.textContent = lblBuyCredits; confirmBtn.disabled = false; }
+                    } else {
+                        if (msgEl) msgEl.textContent = modalCredits + ' ' + creditsLabel + ' ' + msgRequiredBuy;
+                        if (confirmBtn) { confirmBtn.textContent = lblUseCredits; confirmBtn.disabled = false; }
+                    }
+                    var modalEl = document.getElementById('walletJsFeatureModal');
+                    if (modalEl && typeof bootstrap !== 'undefined') {
+                        modalInstance = new bootstrap.Modal(modalEl);
+                        modalInstance.show();
+                    }
+                });
+            });
+
+            var confirmBtn = document.getElementById('walletJsFeatureModalConfirmBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    if (modalHasEnoughBalance && modalFeatureKey) {
+                        confirmBtn.disabled = true;
+                        var formData = new URLSearchParams();
+                        formData.append('feature_key', modalFeatureKey);
+                        formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+                        fetch(purchaseUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: formData.toString()
+                        }).then(function(r) { return r.json(); }).then(function(data) {
+                            if (data.success) {
+                                if (modalInstance) modalInstance.hide();
+                                alert(data.message || msgSuccess);
+                                window.location.reload();
+                            } else {
+                                alert(data.message || msgError);
+                                confirmBtn.disabled = false;
+                            }
+                        }).catch(function() {
+                            alert(msgError);
+                            confirmBtn.disabled = false;
+                        });
+                    } else {
+                        window.location.href = packagesUrl;
+                    }
+                });
+            }
+        });
+        </script>
 
         {{-- Coin consumption report: 12 col --}}
         <div class="row mb-4">

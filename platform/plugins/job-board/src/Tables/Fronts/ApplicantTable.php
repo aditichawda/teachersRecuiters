@@ -261,7 +261,7 @@ class ApplicantTable extends TableAbstract
                         $name = $jobApplication->full_name ?: '&mdash;';
 
                         if ($jobApplication->is_external_apply) {
-                            $url = route('public.account.applicants.edit', $jobApplication->id);
+                            $url = route('public.account.applicants.edit', ['applicant' => $jobApplication->id]);
                             return '<a href="' . e($url) . '" class="text-primary text-decoration-none">' . e($name) . '</a>';
                         }
 
