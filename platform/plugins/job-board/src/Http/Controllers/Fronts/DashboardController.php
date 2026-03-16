@@ -114,6 +114,10 @@ class DashboardController extends BaseController
 
         $data = compact('totalJobs', 'totalcompanies', 'totalApplicants', 'expiredJobs', 'newApplicants', 'activities');
 
+        if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+            return JobBoardHelper::view('dashboard.index-consultant', $data);
+        }
+
         return JobBoardHelper::view('dashboard.index', $data);
     }
 
