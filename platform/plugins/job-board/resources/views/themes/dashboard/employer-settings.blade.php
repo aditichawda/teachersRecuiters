@@ -210,9 +210,15 @@
     } 
 </style>
 
+@php
+    /** @var \Botble\JobBoard\Models\Account $account */
+    $account = auth('account')->user();
+    $isConsultancy = $account && method_exists($account, 'isConsultancy') ? $account->isConsultancy() : (($account->registration_type ?? null) === 'consultancy');
+@endphp
+
 <!-- Page header - same as dashboard -->
 <div class="emp-settings-header">
-    <h2>{{ __('School/Institution Profile') }}</h2>
+    <h2>{{ $isConsultancy ? __('Consultant Profile') : __('School/Institution Profile') }}</h2>
     <a href="{{ route('public.account.dashboard') }}">{{ __('Dashboard') }} &rarr;</a>
 </div>
 
@@ -318,6 +324,7 @@
                     <input type="text" name="name" class="form-control" value="{{ old('name', $company->name ?? $account->institution_name ?? '') }}" required placeholder="{{ __('Enter institution name') }}">
                 </div>
                 
+                @if(! $isConsultancy)
                 <!-- Institution Type -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Type of Institution') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the category/affiliations that best describes your institution.') }}"><i class="fa fa-question-circle"></i></span></label>
@@ -362,6 +369,7 @@
                         </optgroup>
                     </select>
                 </div>
+                @endif
                 
                 <!-- About Us -->
                 <div class="col-12 mb-3">
@@ -405,6 +413,7 @@
     </div>
 
     {{-- ===== SECTION 3: Campus & Facilities ===== --}}
+    @if(false)
     <div class="emp-section mb-4">
         <div class="emp-section-header">
             <span class="emp-section-icon blue"><i class="fa fa-school"></i></span>
@@ -505,6 +514,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     {{-- ===== SECTION 4: Location ===== --}}
     <div class="emp-section mb-4">
@@ -587,6 +597,7 @@
         </div>
     </div>
 
+    @if(! $isConsultancy)
     {{-- ===== SECTION 6: Awards ===== --}}
     <div class="emp-section mb-4">
         <div class="emp-section-header">
@@ -630,84 +641,9 @@
             <small class="form-text text-muted ms-2" id="award-count">{{ is_array($awards) ? count($awards) : 0 }}/5</small>
         </div>
     </div>
+    @endif
 
-    {{-- ===== SECTION 7: Affiliations ===== --}}
-    <div class="emp-section mb-4">
-        <div class="emp-section-header">
-            <span class="emp-section-icon blue"><i class="fa fa-handshake"></i></span>
-            <h5>{{ __('Affiliations') }}</h5>
-            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Mention your official board affiliations and accreditations.') }}"><i class="fa fa-question-circle"></i></span>
-        </div>
-        <div class="emp-section-body">
-            <p class="text-muted mb-3" style="font-size: 13px;">{{ __('Add affiliations and accreditations') }}</p>
-            <div id="affiliations-container">
-                @php $affiliations = old('affiliations', $company->affiliations ?? []); @endphp
-                @if(is_array($affiliations) && count($affiliations) > 0)
-                    @foreach($affiliations as $i => $aff)
-                    <div class="dynamic-entry affiliation-entry">
-                        <button type="button" class="btn-remove-entry" onclick="this.closest('.affiliation-entry').remove();">✕</button>
-                        <div class="row">
-                            <div class="col-md-6 mb-2">
-                                <label class="form-label">{{ __('Affiliation Title') }}</label>
-                                <input type="text" name="affiliations[{{ $i }}][title]" class="form-control" value="{{ $aff['title'] ?? '' }}" placeholder="{{ __('e.g. CBSE Affiliated') }}">
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <label class="form-label">{{ __('Certificate/Photo') }}</label>
-                                <input type="file" name="affiliations_photos[{{ $i }}]" class="form-control" accept="image/*">
-                                @if(!empty($aff['photo']))
-                                    <small class="text-success">{{ __('Photo uploaded') }}</small>
-                                    <input type="hidden" name="affiliations[{{ $i }}][photo]" value="{{ $aff['photo'] }}">
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                @endif
-            </div>
-            <button type="button" class="btn-add-entry mt-2" onclick="addAffiliation()">
-                <i class="fa fa-plus me-1"></i> {{ __('Add Affiliation') }}
-            </button>
-        </div>
-    </div>
-
-    {{-- ===== SECTION 8: Team Members ===== --}}
-    <div class="emp-section mb-4">
-        <div class="emp-section-header">
-            <span class="emp-section-icon blue"><i class="fa fa-users"></i></span>
-            <h5>{{ __('Team Members') }}</h5>
-            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Introduce key members of your institution to build transparency and trust with potential candidates.') }}"><i class="fa fa-question-circle"></i></span>
-        </div>
-        <div class="emp-section-body">
-            <p class="text-muted mb-3" style="font-size: 13px;">{{ __('Add key team members with their details') }}</p>
-            <div id="team-container">
-                @php $teamMembers = old('team_members', $company->team_members ?? []); @endphp
-                @if(is_array($teamMembers) && count($teamMembers) > 0)
-                    @foreach($teamMembers as $i => $member)
-                    <div class="dynamic-entry team-entry">
-                        <button type="button" class="btn-remove-entry" onclick="this.closest('.team-entry').remove();">✕</button>
-                        <div class="row">
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">{{ __('Name') }}</label>
-                                <input type="text" name="team_members[{{ $i }}][name]" class="form-control" value="{{ $member['name'] ?? '' }}" placeholder="{{ __('Full Name') }}">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">{{ __('Designation') }}</label>
-                                <input type="text" name="team_members[{{ $i }}][designation]" class="form-control" value="{{ $member['designation'] ?? '' }}" placeholder="{{ __('e.g. Vice Principal') }}">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">{{ __('LinkedIn') }}</label>
-                                <input type="url" name="team_members[{{ $i }}][linkedin]" class="form-control" value="{{ $member['linkedin'] ?? '' }}" placeholder="https://linkedin.com/in/...">
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                @endif
-            </div>
-            <button type="button" class="btn-add-entry mt-2" onclick="addTeamMember()">
-                <i class="fa fa-plus me-1"></i> {{ __('Add Team Member') }}
-            </button>
-        </div>
-    </div>
+    @endif
 
     {{-- ===== Save Button ===== --}}
     <div class="text-end mb-4">
@@ -871,10 +807,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+@if(! $isConsultancy)
 // Dynamic Awards
-let awardIndex = {{ is_array($awards) ? count($awards) : 0 }};
+let awardIndex = {{ isset($awards) && is_array($awards) ? count($awards) : 0 }};
 function addAward() {
     const container = document.getElementById('awards-container');
+    if (!container) return;
     if (container.querySelectorAll('.award-entry').length >= 5) {
         alert('Maximum 5 awards allowed');
         return;
@@ -903,11 +841,18 @@ function addAward() {
     updateAwardCount();
 }
 function updateAwardCount() {
-    const count = document.querySelectorAll('.award-entry').length;
-    document.getElementById('award-count').textContent = count + '/5';
-    if (count >= 5) document.getElementById('btn-add-award').style.display = 'none';
-    else document.getElementById('btn-add-award').style.display = '';
+    const container = document.getElementById('awards-container');
+    if (!container) return;
+    const count = container.querySelectorAll('.award-entry').length;
+    const countEl = document.getElementById('award-count');
+    const btn = document.getElementById('btn-add-award');
+    if (countEl) countEl.textContent = count + '/5';
+    if (btn) {
+        if (count >= 5) btn.style.display = 'none';
+        else btn.style.display = '';
+    }
 }
+@endif
 
 // Dynamic Campus Photos
 let campusPhotoIndex = {{ is_array($campusPhotos ?? []) ? count($campusPhotos ?? []) : 0 }};
@@ -947,8 +892,8 @@ function updateCampusPhotoCount() {
     }
 }
 
-// Dynamic Affiliations
-let affIndex = {{ is_array($affiliations) ? count($affiliations) : 0 }};
+// Dynamic Affiliations (section is disabled; start from 0 to avoid Blade variable errors)
+let affIndex = 0;
 function addAffiliation() {
     const container = document.getElementById('affiliations-container');
     const html = `
@@ -970,8 +915,8 @@ function addAffiliation() {
     affIndex++;
 }
 
-// Dynamic Team Members
-let teamIndex = {{ is_array($teamMembers) ? count($teamMembers) : 0 }};
+// Dynamic Team Members (section is disabled; start from 0 to avoid Blade variable errors)
+let teamIndex = 0;
 function addTeamMember() {
     const container = document.getElementById('team-container');
     const html = `

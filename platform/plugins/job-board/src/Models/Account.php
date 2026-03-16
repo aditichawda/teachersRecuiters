@@ -387,6 +387,16 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         return $this->type == AccountTypeEnum::JOB_SEEKER;
     }
 
+    public function isConsultancy(): bool
+    {
+        return $this->isEmployer() && $this->registration_type === 'consultancy';
+    }
+
+    public function isSchoolInstitution(): bool
+    {
+        return $this->isEmployer() && ($this->registration_type === null || $this->registration_type === 'school_institution');
+    }
+
     public function companies(): BelongsToMany
     {
         return $this->belongsToMany(Company::class, 'jb_companies_accounts', 'account_id', 'company_id');

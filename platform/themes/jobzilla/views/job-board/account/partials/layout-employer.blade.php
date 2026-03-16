@@ -524,23 +524,34 @@
                                 $jobPostCreditsRequired = 600;
                             }
                         }
+                        $isConsultancy = method_exists($account, 'isConsultancy') ? $account->isConsultancy() : ($account->registration_type ?? null) === 'consultancy';
                     @endphp
                     <ul class="emp-sidebar-nav">
                         <li><a href="{{ route('public.account.dashboard') }}" @class(['active' => $currentUrl == route('public.account.dashboard')])><i class="fa fa-home"></i> {{ __('Dashboard') }}</a></li>
-                        <li><a href="#" @class(['emp-postjob-choice-trigger' => true, 'emp-nav-locked' => !$canPost, 'active' => $currentUrl == route('public.account.jobs.create')]) data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" data-credits-required="{{ $jobPostCreditsRequired }}" data-can-post="{{ $canPost ? '1' : '0' }}" title="{{ __('Choose how to post job') }}">@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-plus-circle"></i>@endif {{ __('Post Job') }}</a></li>
+                        <li>
+                            @if($isConsultancy)
+                                <a href="{{ route('public.account.jobs.create') }}" @class(['active' => $currentUrl == route('public.account.jobs.create')])>
+                                    <i class="fa fa-plus-circle"></i> {{ __('Post Job') }}
+                                </a>
+                            @else
+                                <a href="#" @class(['emp-postjob-choice-trigger' => true, 'emp-nav-locked' => !$canPost, 'active' => $currentUrl == route('public.account.jobs.create')]) data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" data-credits-required="{{ $jobPostCreditsRequired }}" data-can-post="{{ $canPost ? '1' : '0' }}" title="{{ __('Choose how to post job') }}">@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-plus-circle"></i>@endif {{ __('Post Job') }}</a>
+                            @endif
+                        </li>
                         <li><a href="{{ route('public.account.employer.settings.edit') }}" @class(['active' => $currentUrl == route('public.account.employer.settings.edit')])><i class="fa fa-building"></i> {{ __('Settings') }}</a></li>
                         <li><a href="{{ route('public.account.jobs.index') }}" @class(['active' => str_contains($currentUrl, '/jobs') && !str_contains($currentUrl, '/create')])><i class="fa fa-briefcase"></i> {{ __('Jobs') }}</a></li>
-                        <li><a href="{{ $canPost ? route('public.account.admission.edit') : route('public.account.wallet') }}" @class(['active' => $canPost && str_contains($currentUrl, 'admission'), 'emp-nav-locked' => !$canPost]) @if(!$canPost) title="{{ trans('plugins/job-board::messages.insufficient_credits') }}" @endif>@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-graduation-cap"></i>@endif {{ __('Admission') }}</a></li>
-                        <li><a href="{{ route('public.account.companies.index') }}" @class(['active' => str_contains($currentUrl, 'companies')])><i class="fa fa-university"></i> {{ __('Institution') }}</a></li>
+                        @if(!$isConsultancy)
+                            <li><a href="{{ $canPost ? route('public.account.admission.edit') : route('public.account.wallet') }}" @class(['active' => $canPost && str_contains($currentUrl, 'admission'), 'emp-nav-locked' => !$canPost]) @if(!$canPost) title="{{ trans('plugins/job-board::messages.insufficient_credits') }}" @endif>@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-graduation-cap"></i>@endif {{ __('Admission') }}</a></li>
+                            <li><a href="{{ route('public.account.companies.index') }}" @class(['active' => str_contains($currentUrl, 'companies')])><i class="fa fa-university"></i> {{ __('Institution') }}</a></li>
+                        @endif
                         @if(JobBoardHelper::isEnabledReview())
                         <li><a href="{{ route('public.account.reviews.index') }}" @class(['active' => str_contains($currentUrl, 'reviews')])><i class="fa fa-star"></i> {{ __('Reviews') }}</a></li>
                         @endif
                         <li><a href="{{ route('public.account.applicants.index') }}" @class(['active' => str_contains($currentUrl, 'applicants')])><i class="fa fa-users"></i> {{ __('Applicants') }}</a></li>
                         <li><a href="/candidates" @class(['active' => str_contains($currentUrl, 'candidates')])><i class="fa fa-user-circle"></i> {{ __('All Candidates') }}</a></li>
-                        @if(JobBoardHelper::isEnabledCreditsSystem())
-                        <li><a href="{{ route('public.account.packages') }}" @class(['active' => str_contains($currentUrl, 'packages')])><i class="fa fa-box"></i> {{ __('Packages') }} <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $account->credits ?? 0 }}</span></a></li>
-                        <li><a href="{{ route('public.account.wallet') }}" @class(['active' => str_contains($currentUrl, 'wallet')])><i class="fa fa-wallet"></i> {{ __('Wallet') }}</a></li>
-                        <li><a href="{{ route('public.account.team-members.index') }}" @class(['active' => str_contains($currentUrl, 'team-members')])><i class="fa fa-users-cog"></i> {{ __('Team / Staff') }}</a></li>
+                        @if(JobBoardHelper::isEnabledCreditsSystem() && !$isConsultancy)
+                            <li><a href="{{ route('public.account.packages') }}" @class(['active' => str_contains($currentUrl, 'packages')])><i class="fa fa-box"></i> {{ __('Packages') }} <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $account->credits ?? 0 }}</span></a></li>
+                            <li><a href="{{ route('public.account.wallet') }}" @class(['active' => str_contains($currentUrl, 'wallet')])><i class="fa fa-wallet"></i> {{ __('Wallet') }}</a></li>
+                            <li><a href="{{ route('public.account.team-members.index') }}" @class(['active' => str_contains($currentUrl, 'team-members')])><i class="fa fa-users-cog"></i> {{ __('Team / Staff') }}</a></li>
                         @endif
                         <li><a href="{{ route('public.account.invoices.index') }}" @class(['active' => str_contains($currentUrl, 'invoices')])><i class="fa fa-file-invoice"></i> {{ __('Invoices') }}</a></li>
                         <li><a href="{{ route('public.account.security') }}" @class(['active' => $currentUrl == route('public.account.security')])><i class="fa fa-lock"></i> {{ __('Security') }}</a></li>

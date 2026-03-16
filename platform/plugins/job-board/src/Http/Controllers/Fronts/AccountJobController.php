@@ -338,7 +338,12 @@ class AccountJobController extends BaseController
         $emailCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100);
         $wpCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
 
-        return JobBoardHelper::view('dashboard.jobs.create', compact(
+        $view = 'dashboard.jobs.create';
+        if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+            $view = 'dashboard.jobs.create-consultant';
+        }
+
+        return JobBoardHelper::view($view, compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
             'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData', 'defaultCompanyId',
