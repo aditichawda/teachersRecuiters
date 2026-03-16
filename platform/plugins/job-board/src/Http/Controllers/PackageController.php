@@ -183,7 +183,6 @@ class PackageController extends BaseController
             $request->merge([
                 'name' => $package->name,
                 'description' => $package->description,
-                'features' => $package->features,
             ]);
             if (! $request->has('language')) {
                 $request->merge(['language' => \Botble\Language\Facades\Language::getCurrentAdminLocaleCode() ?: \Botble\Language\Facades\Language::getDefaultLocaleCode()]);
