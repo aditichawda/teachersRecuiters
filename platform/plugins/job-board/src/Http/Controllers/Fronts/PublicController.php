@@ -235,10 +235,33 @@ class PublicController extends BaseController
             Arr::forget($condition, 'moderation_status');
         }
 
+        // Load all necessary relationships for job details
+        $with = [
+            'slugable',
+            'tags',
+            'tags.slugable',
+            'jobTypes',
+            'jobExperience',
+            'jobShift',
+            'functionalArea',
+            'degreeLevel',
+            'careerLevel',
+            'categories',
+            'skills',
+            'customFields',
+            'company',
+            'company.slugable',
+            'currency',
+        ];
+
+        if (is_plugin_active('location')) {
+            $with = array_merge($with, ['state', 'city', 'country']);
+        }
+
         $job = $this->jobRepository->getJobs([], [
             'condition' => $condition,
             'take' => 1,
-            'with' => [],
+            'with' => $with,
         ]);
 
         if (! $job) {

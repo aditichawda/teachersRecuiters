@@ -8,6 +8,7 @@
     
     $account = auth('account')->user();
     $company = $account ? $account->companies()->with('slugable')->first() : null;
+    $company = $account ? $account->companies()->with('slugable')->first() : null;
     $employerPublicProfileUrl = null;
     if ($account->isEmployer() && $company) {
         $companySlugKey = $company->slugable?->key ?? null;
@@ -32,7 +33,19 @@
     }
     
     // Profile completion (use null-safe: $company can be null when employer has no company yet)
+    // Profile completion (use null-safe: $company can be null when employer has no company yet)
     $profileFields = [
+        ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company?->name)],
+        ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company?->email)],
+        ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company?->phone)],
+        ['field' => 'logo', 'label' => 'Institution Logo', 'filled' => !empty($company?->logo)],
+        ['field' => 'description', 'label' => 'About Us', 'filled' => !empty($company?->description)],
+        ['field' => 'address', 'label' => 'Address', 'filled' => !empty($company?->address)],
+        ['field' => 'institution_type', 'label' => 'Institution Type', 'filled' => !empty($company?->institution_type)],
+        ['field' => 'year_founded', 'label' => 'Established Year', 'filled' => !empty($company?->year_founded)],
+        ['field' => 'campus_type', 'label' => 'Campus Type', 'filled' => !empty($company?->campus_type)],
+        ['field' => 'standard_level', 'label' => 'Standard Level', 'filled' => !empty($company?->standard_level)],
+        ['field' => 'staff_facilities', 'label' => 'Staff Facilities', 'filled' => !empty($company?->staff_facilities)],
         ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company?->name)],
         ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company?->email)],
         ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company?->phone)],
@@ -1172,6 +1185,9 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
                     <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
                     <a href="<?php echo e($admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit')); ?>" class="enl-postjob <?php echo e($admissionLocked ? 'enl-postjob-locked' : ''); ?>" style="<?php echo e($admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;'); ?>" title="<?php echo e($admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : ''); ?>">
                         <?php if($admissionLocked): ?>
+                    <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
+                    <a href="<?php echo e($admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit')); ?>" class="enl-postjob <?php echo e($admissionLocked ? 'enl-postjob-locked' : ''); ?>" style="<?php echo e($admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;'); ?>" title="<?php echo e($admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : ''); ?>">
+                        <?php if($admissionLocked): ?>
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
                             <span><?php echo e(__('Admission')); ?></span>
                         <?php else: ?>
@@ -1859,6 +1875,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Use native alert for now (except employer dashboard)
+        if (confirm('Do you want to logout?')) {
+            logoutForm.submit();
+        }
         // Use native alert for now (except employer dashboard)
         if (confirm('Do you want to logout?')) {
             logoutForm.submit();

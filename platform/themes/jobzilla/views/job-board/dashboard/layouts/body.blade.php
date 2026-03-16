@@ -8,6 +8,7 @@
     
     $account = auth('account')->user();
     $company = $account ? $account->companies()->with('slugable')->first() : null;
+    $company = $account ? $account->companies()->with('slugable')->first() : null;
     $employerPublicProfileUrl = null;
     if ($account->isEmployer() && $company) {
         $companySlugKey = $company->slugable?->key ?? null;
@@ -32,7 +33,19 @@
     }
     
     // Profile completion (use null-safe: $company can be null when employer has no company yet)
+    // Profile completion (use null-safe: $company can be null when employer has no company yet)
     $profileFields = [
+        ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company?->name)],
+        ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company?->email)],
+        ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company?->phone)],
+        ['field' => 'logo', 'label' => 'Institution Logo', 'filled' => !empty($company?->logo)],
+        ['field' => 'description', 'label' => 'About Us', 'filled' => !empty($company?->description)],
+        ['field' => 'address', 'label' => 'Address', 'filled' => !empty($company?->address)],
+        ['field' => 'institution_type', 'label' => 'Institution Type', 'filled' => !empty($company?->institution_type)],
+        ['field' => 'year_founded', 'label' => 'Established Year', 'filled' => !empty($company?->year_founded)],
+        ['field' => 'campus_type', 'label' => 'Campus Type', 'filled' => !empty($company?->campus_type)],
+        ['field' => 'standard_level', 'label' => 'Standard Level', 'filled' => !empty($company?->standard_level)],
+        ['field' => 'staff_facilities', 'label' => 'Staff Facilities', 'filled' => !empty($company?->staff_facilities)],
         ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company?->name)],
         ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company?->email)],
         ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company?->phone)],
@@ -621,6 +634,55 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     opacity: 1;
 }
 
+/* Sidebar Toggle Button */
+.enl-sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 90px;
+    left: 15px;
+    z-index: 1001;
+    background: #0073d1;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+    align-items: center;
+    justify-content: center;
+}
+
+.enl-sidebar-toggle:hover {
+    background: #005bb5;
+    transform: scale(1.05);
+}
+
+.enl-sidebar-toggle.active {
+    left: 265px;
+}
+
+/* Sidebar Overlay */
+.enl-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.enl-sidebar-overlay.show {
+    display: block;
+    opacity: 1;
+}
+
 /* Profile Sidebar */
 .enl-sidebar {
     background: #fff;
@@ -630,6 +692,7 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     margin-bottom: 20px;
     position: sticky;
     top: 20px;
+    transition: transform 0.3s ease;
     transition: transform 0.3s ease;
 }
 
@@ -866,6 +929,44 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     }
 }
 
+    
+    /* Show sidebar toggle on tablet */
+    .enl-sidebar-toggle {
+        display: flex;
+    }
+    
+    .enl-sidebar-col {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        background: #fff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        padding: 20px;
+        width: 280px;
+        max-width: 280px;
+    }
+    
+    .enl-sidebar-col.show {
+        left: 0;
+    }
+    
+    .enl-sidebar {
+        position: relative;
+        top: 0;
+        margin-bottom: 0;
+        box-shadow: none;
+    }
+    
+    .enl-main-col {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
 @media (max-width: 768px) {
     .enl-row { flex-direction: column; }
     
@@ -893,8 +994,61 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
         left: 0;
     }
     
+    
+    /* Show sidebar toggle on mobile */
+    .enl-sidebar-toggle {
+        display: flex;
+        top: 70px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .enl-sidebar-toggle.active {
+        left: 250px;
+    }
+    
+    .enl-sidebar-col {
+        width: 260px;
+        max-width: 260px;
+        left: -260px;
+    }
+    
+    .enl-sidebar-col.show {
+        left: 0;
+    }
+    
     .enl-mobile-header { display: flex; }
     .enl-main { padding: 15px 0; }
+    
+    .emp-new-layout .container {
+        padding: 15px 10px;
+    }
+    
+    .enl-header-inner {
+        padding: 0 10px;
+        height: 60px;
+    }
+    
+    .enl-header-nav {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .enl-sidebar-col {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .enl-sidebar-toggle.active {
+        left: calc(100% - 50px);
+    }
+    
+    .enl-main {
+        padding: 10px 0;
+    }
     
     .emp-new-layout .container {
         padding: 15px 10px;
@@ -1105,7 +1259,83 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
 })();
 </script>
 
+<script>
+// Dashboard Sidebar Toggle Functionality
+(function() {
+    function initDashboardSidebar() {
+        const toggleBtn = document.getElementById('dashboard-sidebar-toggle');
+        const sidebar = document.getElementById('dashboard-sidebar');
+        const overlay = document.getElementById('dashboard-sidebar-overlay');
+        
+        if (toggleBtn && sidebar && overlay) {
+            toggleBtn.addEventListener('click', function() {
+                const isOpen = sidebar.classList.contains('show');
+                
+                if (isOpen) {
+                    // Close sidebar
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                    toggleBtn.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Open sidebar
+                    sidebar.classList.add('show');
+                    overlay.classList.add('show');
+                    toggleBtn.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            });
+            
+            // Close on overlay click
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+                toggleBtn.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+            
+            // Close on sidebar link click (mobile/tablet)
+            const sidebarLinks = sidebar.querySelectorAll('a');
+            sidebarLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 991) {
+                        sidebar.classList.remove('show');
+                        overlay.classList.remove('show');
+                        toggleBtn.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            });
+            
+            // Close on window resize if desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 991) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                    toggleBtn.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDashboardSidebar);
+    } else {
+        initDashboardSidebar();
+    }
+})();
+</script>
+
 <div class="emp-new-layout">
+    <!-- Mobile Sidebar Toggle Button -->
+    <button class="enl-sidebar-toggle" id="dashboard-sidebar-toggle" aria-label="Toggle sidebar">
+        <i class="fa fa-bars"></i>
+    </button>
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div class="enl-sidebar-overlay" id="dashboard-sidebar-overlay"></div>
+    
     <!-- Mobile Sidebar Toggle Button -->
     <button class="enl-sidebar-toggle" id="dashboard-sidebar-toggle" aria-label="Toggle sidebar">
         <i class="fa fa-bars"></i>
@@ -1117,6 +1347,7 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     <div class="container">
         <div class="enl-row">
             <!-- Sidebar -->
+            <div class="enl-sidebar-col" id="dashboard-sidebar">
             <div class="enl-sidebar-col" id="dashboard-sidebar">
                 <div class="enl-sidebar">
                     <div class="text-center">
@@ -1167,6 +1398,9 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
                         @endif
                     </a>
 
+                    <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
+                    <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
+                        @if($admissionLocked)
                     <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
                     <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
                         @if($admissionLocked)

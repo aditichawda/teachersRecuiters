@@ -358,6 +358,65 @@
     color: #1e293b;
 }
 
+/* Open Positions - Mobile & Tablet Horizontal Scroll */
+.positions-scroll-wrapper {
+    position: relative;
+}
+
+@media (max-width: 992px) {
+    .positions-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        gap: 20px;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .positions-grid::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .positions-grid::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .positions-grid::-webkit-scrollbar-thumb {
+        background: #cbd5f5;
+        border-radius: 999px;
+    }
+
+    .position-card {
+        min-width: 80%;
+        max-width: 80%;
+        scroll-snap-align: start;
+        flex-shrink: 0;
+    }
+}
+
+.positions-view-all-wrapper {
+    margin-top: 24px;
+    text-align: right;
+}
+
+.positions-view-all-btn {
+    padding: 12px 30px;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .positions-view-all-wrapper {
+        text-align: center;
+    }
+
+    .positions-view-all-btn {
+        display: inline-block;
+        width: auto;
+        min-width: 60%;
+    }
+}
+
 /* Culture Section */
 .culture-section {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -767,7 +826,8 @@
                 <h2>Open Positions</h2>
                 <p>Explore current job opportunities at Teachers Recruiter</p>
             </div>
-            <div class="positions-grid">
+            <div class="positions-scroll-wrapper">
+                <div class="positions-grid">
                 <div class="position-card">
                     <div class="position-header">
                         <div class="position-title">
@@ -862,6 +922,12 @@
                         <span class="position-salary">Competitive</span>
                         <a href="/contact" class="btn-apply">Apply Now</a>
                     </div>
+                </div>
+                </div>
+                <div class="positions-view-all-wrapper">
+                    <a href="{{ JobBoardHelper::getJobsPageURL() }}" class="btn-primary-custom positions-view-all-btn">
+                        {{ __('View All Jobs') }}
+                    </a>
                 </div>
             </div>
         </div>
