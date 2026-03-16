@@ -140,8 +140,10 @@ class CreditConsumption extends BaseModel
 
     /**
      * Check if account has valid entitlement for a feature.
-     * Credit-purchased features (debit with feature_key) = permanent/unlimited (one-time buy = forever).
-     * Used for: featured_candidate_profile, job_alert_wp_jobseeker, job_apply slot, application_alert_email, etc.
+     *
+     * Rules:
+     * - featured_candidate_profile (job seeker): valid for 30 days from last debit (coins purchase)
+     * - others: permanent/unlimited (any debit with feature_key grants entitlement)
      */
     public static function hasEntitlement(Account $account, string $featureKey): bool
     {
@@ -157,7 +159,21 @@ class CreditConsumption extends BaseModel
                 ->latest()
                 ->first();
 
-            return $debit !== null;
+            if (! $debit) {
+                return false;
+            }
+
+            // For featured candidate profile (job seeker), limit entitlement to 30 days from last purchase
+            if ($featureKey === self::FEATURE_FEATURED_CANDIDATE_PROFILE && $debit->created_at) {
+                $debitDate = $debit->created_at instanceof \DateTimeInterface
+                    ? Carbon::parse($debit->created_at)
+                    : Carbon::parse((string) $debit->created_at);
+
+                return $debitDate->gte(Carbon::now()->subDays(30));
+            }
+
+            // All other features: any debit means entitlement (no expiry)
+            return true;
         } catch (\Throwable $e) {
             return false;
         }
