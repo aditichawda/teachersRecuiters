@@ -5,7 +5,6 @@ namespace Botble\JobBoard\Models;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Models\BaseModel;
 use Carbon\Carbon;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 
 class CreditConsumption extends BaseModel
