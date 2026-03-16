@@ -25,7 +25,7 @@
     display: none;
     align-items: center !important;
     justify-content: center !important;
-    z-index: 9999 !important;
+    z-index: 100 !important; /* Lower than navbar (999) but still visible in container */
     border-radius: 8px;
     margin: 0 !important;
     padding: 0 !important;

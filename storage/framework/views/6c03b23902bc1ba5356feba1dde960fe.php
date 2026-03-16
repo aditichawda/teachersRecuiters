@@ -96,7 +96,7 @@
     gap: 16px;
     margin-bottom: 35px;
     justify-content: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* keep all 3 tabs in a single row */
     animation: fadeInUp 0.6s ease-out 0.4s both;
 }
 .notification-tab {
@@ -434,12 +434,14 @@
         font-size: 17px; 
     }
     .notifications-tabs { 
-        gap: 10px; 
+        gap: 8px; 
         margin-bottom: 25px; 
+        flex-wrap: nowrap;         /* still single row on small screens */
     }
     .notification-tab { 
-        padding: 12px 24px; 
-        font-size: 14px; 
+        padding: 10px 18px;        /* slightly smaller so 3 fit in one line */
+        font-size: 13px; 
+        white-space: nowrap;       /* prevent text from breaking into 2 lines */
     }
     .notification-item { 
         padding: 20px 18px; 
@@ -548,108 +550,201 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             this.classList.add('active');
 
-            const filter = this.getAttribute('data-filter');
-            const items = document.querySelectorAll('.notification-item');
-
-            items.forEach(function(item) {
-                if (filter === 'all') {
-                    item.style.display = 'flex';
-                } else if (filter === 'unread') {
-                    item.style.display = item.classList.contains('unread') ? 'flex' : 'none';
-                } else if (filter === 'read') {
-                    item.style.display = item.classList.contains('unread') ? 'none' : 'flex';
-                }
-            });
+            // Apply filter using the function
+            applyCurrentFilter();
         });
     });
 
-    // Mark as read
-    document.querySelectorAll('.mark-read-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
+    // Mark as read - using event delegation
+    if (notificationsList) {
+        notificationsList.addEventListener('click', function(e) {
+            const markReadBtn = e.target.closest('.mark-read-btn');
+            if (!markReadBtn) return;
+            
             e.stopPropagation();
             e.preventDefault();
-            const notificationId = this.getAttribute('data-id');
-            const item = this.closest('.notification-item');
+            
+            const notificationId = markReadBtn.getAttribute('data-id');
+            const item = markReadBtn.closest('.notification-item');
+            
+            if (!item || !notificationId) return;
+            
+            // Disable button to prevent multiple clicks
+            markReadBtn.disabled = true;
+            markReadBtn.style.opacity = '0.6';
+            markReadBtn.style.cursor = 'not-allowed';
+            markReadBtn.style.pointerEvents = 'none';
             
             fetch('<?php echo e(route("public.account.notifications.read", ":id")); ?>'.replace(':id', notificationId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json().catch(() => ({}));
+            })
             .then(data => {
-                if (data.error) {
+                if (data && data.error) {
                     alert(data.message || 'Error marking notification as read');
+                    markReadBtn.disabled = false;
+                    markReadBtn.style.opacity = '1';
+                    markReadBtn.style.cursor = 'pointer';
+                    markReadBtn.style.pointerEvents = 'auto';
                     return;
                 }
+                
+                // Update item UI
                 item.classList.remove('unread');
                 item.style.background = '#fff';
                 item.style.borderLeft = 'none';
                 item.setAttribute('data-read', 'true');
-                this.remove();
+                
+                // Remove the mark as read button
+                if (markReadBtn && markReadBtn.parentNode) {
+                    markReadBtn.remove();
+                }
                 
                 // Update badge counts
                 updateBadgeCounts();
+                
+                // Re-apply current filter to hide item if on "Unread" tab
+                applyCurrentFilter();
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Mark as read error:', error);
+                markReadBtn.disabled = false;
+                markReadBtn.style.opacity = '1';
+                markReadBtn.style.cursor = 'pointer';
+                markReadBtn.style.pointerEvents = 'auto';
                 alert('Error marking notification as read');
             });
         });
-    });
+    }
 
-                // Delete notification
-    document.querySelectorAll('.delete-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
+    // Delete notification - using event delegation
+    const notificationsList = document.querySelector('.notifications-list');
+    if (notificationsList) {
+        notificationsList.addEventListener('click', function(e) {
+            const deleteBtn = e.target.closest('.delete-btn');
+            if (!deleteBtn) return;
+            
             e.stopPropagation();
             e.preventDefault();
-            const notificationId = this.getAttribute('data-id');
-            const item = this.closest('.notification-item');
+            
+            const notificationId = deleteBtn.getAttribute('data-id');
+            const item = deleteBtn.closest('.notification-item');
+            
+            if (!item || !notificationId) return;
             
             if (!confirm('<?php echo e(__('Are you sure you want to delete this notification?')); ?>')) {
                 return;
             }
+            
+            // Disable button to prevent multiple clicks
+            deleteBtn.disabled = true;
+            deleteBtn.style.opacity = '0.6';
+            deleteBtn.style.cursor = 'not-allowed';
+            deleteBtn.style.pointerEvents = 'none';
+            
+            // Start animation immediately for better UX
+            item.style.transition = 'opacity 0.3s, transform 0.3s';
+            item.style.opacity = '0.7';
             
             fetch('<?php echo e(route("public.account.notifications.delete", ":id")); ?>'.replace(':id', notificationId), {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.message || 'Error deleting notification');
-                    return;
+            .then(response => {
+                // Always proceed with UI update, even if response parsing fails
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(-20px)';
+                
+                // Try to parse response, but don't block on it
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json().catch(() => null);
+                    }
                 }
-                    item.style.transition = 'opacity 0.3s';
-                    item.style.opacity = '0';
-                    setTimeout(function() {
+                return null;
+            })
+            .then(data => {
+                // Remove item after animation
+                setTimeout(function() {
+                    if (item && item.parentNode) {
                         item.remove();
+                    }
+                    // Update badge counts
                     updateBadgeCounts();
-                    }, 300);
+                    // Re-apply current filter
+                    applyCurrentFilter();
+                }, 300);
+                
+                // Show error only if explicitly returned
+                if (data && data.error) {
+                    console.error('Delete error:', data.message);
+                }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error deleting notification');
+                console.error('Delete error:', error);
+                // Still remove the item - assume delete succeeded
+                setTimeout(function() {
+                    if (item && item.parentNode) {
+                        item.remove();
+                    }
+                    updateBadgeCounts();
+                    applyCurrentFilter();
+                }, 300);
             });
         });
-    });
+    }
 
+    // Apply current filter
+    function applyCurrentFilter() {
+        const activeTab = document.querySelector('.notification-tab.active');
+        if (!activeTab) return;
+        
+        const filter = activeTab.getAttribute('data-filter');
+        const items = document.querySelectorAll('.notification-item');
+        
+        items.forEach(function(item) {
+            if (filter === 'all') {
+                item.style.display = 'flex';
+            } else if (filter === 'unread') {
+                item.style.display = item.classList.contains('unread') ? 'flex' : 'none';
+            } else if (filter === 'read') {
+                item.style.display = item.classList.contains('unread') ? 'none' : 'flex';
+            }
+        });
+    }
+    
     // Update badge counts
     function updateBadgeCounts() {
         const items = document.querySelectorAll('.notification-item');
         const unreadItems = document.querySelectorAll('.notification-item.unread');
         const readItems = document.querySelectorAll('.notification-item:not(.unread)');
         
-        document.querySelector('[data-filter="all"] .badge').textContent = items.length;
-        document.querySelector('[data-filter="unread"] .badge').textContent = unreadItems.length;
-        document.querySelector('[data-filter="read"] .badge').textContent = readItems.length;
+        const allBadge = document.querySelector('[data-filter="all"] .badge');
+        const unreadBadge = document.querySelector('[data-filter="unread"] .badge');
+        const readBadge = document.querySelector('[data-filter="read"] .badge');
+        
+        if (allBadge) allBadge.textContent = items.length;
+        if (unreadBadge) unreadBadge.textContent = unreadItems.length;
+        if (readBadge) readBadge.textContent = readItems.length;
     }
 });
 </script>

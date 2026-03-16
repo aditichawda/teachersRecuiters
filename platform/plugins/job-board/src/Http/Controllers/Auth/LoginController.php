@@ -461,74 +461,126 @@ class LoginController extends Controller
      */
     public function verifyOtpLogin(Request $request)
     {
-        $request->validate([
-            'otp' => 'required|string|size:6',
-        ]);
-
-        $otpData = $request->session()->get('login_otp');
-
-        if (!$otpData) {
-            return response()->json([
-                'error' => true,
-                'message' => __('OTP session expired. Please request a new OTP.'),
+        try {
+            $request->validate([
+                'otp' => 'required|string|size:6',
             ]);
-        }
 
-        // Check if OTP expired
-        if (Carbon::now()->isAfter($otpData['expires_at'])) {
+            $otpData = $request->session()->get('login_otp');
+
+            if (!$otpData) {
+                return response()->json([
+                    'error' => true,
+                    'message' => __('OTP session expired. Please request a new OTP.'),
+                ]);
+            }
+
+            // Validate required session data
+            if (!isset($otpData['otp']) || !isset($otpData['type']) || !isset($otpData['expires_at'])) {
+                \Log::error('Invalid OTP session data', ['otpData' => $otpData]);
+                $request->session()->forget('login_otp');
+                return response()->json([
+                    'error' => true,
+                    'message' => __('Invalid OTP session. Please request a new OTP.'),
+                ]);
+            }
+
+            // Convert expires_at to Carbon if it's a string (session serialization issue)
+            $expiresAt = $otpData['expires_at'];
+            if (is_string($expiresAt)) {
+                $expiresAt = Carbon::parse($expiresAt);
+            } elseif (!$expiresAt instanceof Carbon) {
+                $expiresAt = Carbon::parse($expiresAt);
+            }
+
+            // Check if OTP expired
+            if (Carbon::now()->isAfter($expiresAt)) {
+                $request->session()->forget('login_otp');
+                return response()->json([
+                    'error' => true,
+                    'message' => __('OTP has expired. Please request a new one.'),
+                ]);
+            }
+
+            // Verify OTP
+            if ($otpData['otp'] !== $request->input('otp')) {
+                return response()->json([
+                    'error' => true,
+                    'message' => __('Invalid OTP. Please try again.'),
+                ]);
+            }
+
+            // Find account
+            $account = null;
+            if ($otpData['type'] === 'email') {
+                if (!isset($otpData['email'])) {
+                    \Log::error('Email missing in OTP session data', ['otpData' => $otpData]);
+                    return response()->json([
+                        'error' => true,
+                        'message' => __('Invalid OTP session. Please request a new OTP.'),
+                    ]);
+                }
+                $account = Account::where('email', $otpData['email'])->first();
+            } else if ($otpData['type'] === 'whatsapp') {
+                if (!isset($otpData['account_id'])) {
+                    \Log::error('Account ID missing in WhatsApp OTP session data', ['otpData' => $otpData]);
+                    return response()->json([
+                        'error' => true,
+                        'message' => __('Invalid OTP session. Please request a new OTP.'),
+                    ]);
+                }
+                $account = Account::find($otpData['account_id']);
+            } else {
+                \Log::error('Invalid OTP type', ['type' => $otpData['type'] ?? 'missing']);
+                return response()->json([
+                    'error' => true,
+                    'message' => __('Invalid OTP type. Please request a new OTP.'),
+                ]);
+            }
+
+            if (!$account) {
+                \Log::error('Account not found for OTP verification', ['otpData' => $otpData]);
+                $request->session()->forget('login_otp');
+                return response()->json([
+                    'error' => true,
+                    'message' => __('Account not found.'),
+                ]);
+            }
+
+            // If email was not verified, set email_verified_at now (verify via OTP = verified)
+            if ($account->email_verified_at === null) {
+                $account->email_verified_at = Carbon::now();
+                $account->confirmed_at = $account->confirmed_at ?? $account->email_verified_at;
+                $account->save();
+            }
+            // If WhatsApp OTP used, set phone_verified_at
+            if ($otpData['type'] === 'whatsapp') {
+                $account->phone_verified_at = Carbon::now();
+                $account->save();
+            }
+
+            // Clear OTP session
             $request->session()->forget('login_otp');
+
+            // Login the user
+            $this->guard()->login($account, true);
+
+            return response()->json([
+                'error' => false,
+                'message' => __('Login successful!'),
+                'redirect' => $this->getDashboardUrlForAccount($account),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('OTP verification error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'otpData' => $request->session()->get('login_otp'),
+            ]);
+            
             return response()->json([
                 'error' => true,
-                'message' => __('OTP has expired. Please request a new one.'),
-            ]);
+                'message' => __('An error occurred during OTP verification. Please try again.'),
+            ], 500);
         }
-
-        // Verify OTP
-        if ($otpData['otp'] !== $request->input('otp')) {
-            return response()->json([
-                'error' => true,
-                'message' => __('Invalid OTP. Please try again.'),
-            ]);
-        }
-
-        // Find account
-        $account = null;
-        if ($otpData['type'] === 'email') {
-            $account = Account::where('email', $otpData['email'])->first();
-        } else if ($otpData['type'] === 'whatsapp') {
-            $account = Account::find($otpData['account_id']);
-        }
-
-        if (!$account) {
-            return response()->json([
-                'error' => true,
-                'message' => __('Account not found.'),
-            ]);
-        }
-
-        // If email was not verified, set email_verified_at now (verify via OTP = verified)
-        if ($account->email_verified_at === null) {
-            $account->email_verified_at = Carbon::now();
-            $account->confirmed_at = $account->confirmed_at ?? $account->email_verified_at;
-            $account->save();
-        }
-        // If WhatsApp OTP used, set phone_verified_at
-        if ($otpData['type'] === 'whatsapp') {
-            $account->phone_verified_at = Carbon::now();
-            $account->save();
-        }
-
-        // Clear OTP session
-        $request->session()->forget('login_otp');
-
-        // Login the user
-        $this->guard()->login($account, true);
-
-        return response()->json([
-            'error' => false,
-            'message' => __('Login successful!'),
-            'redirect' => $this->getDashboardUrlForAccount($account),
-        ]);
     }
 
     /**

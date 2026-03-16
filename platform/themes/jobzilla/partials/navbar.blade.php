@@ -100,8 +100,8 @@
                 @endif
 
                 <!-- NAV Toggle Button -->
-                <button id="mobile-side-drawer" data-target=".header-nav" data-toggle="collapse" type="button"
-                    class="navbar-toggler collapsed mobile-menu-toggle" aria-label="Toggle navigation">
+                <button id="mobile-side-drawer" type="button"
+                    class="navbar-toggler collapsed mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
                     <span class="sr-only">{{ __('Toggle navigation') }}</span>
                     <span class="icon-bar icon-bar-first"></span>
                     <span class="icon-bar icon-bar-two"></span>
@@ -109,7 +109,17 @@
                 </button>
 
                 <!-- MAIN Nav -->
-                <div class="nav-animation header-nav navbar-collapse collapse d-flex justify-content-end" id="main-navbar-menu">
+                <div class="nav-animation header-nav navbar-collapse d-flex justify-content-end" id="main-navbar-menu">
+                    <!-- Mobile Menu Close Button -->
+                    <button
+                        type="button"
+                        class="mobile-menu-close"
+                        id="mobile-menu-close-btn"
+                        aria-label="Close menu"
+                        style="display: none;"
+                        onclick="var t = document.getElementById('mobile-side-drawer'); if (t) { t.click(); }">
+                        <i class="feather-x"></i>
+                    </button>
                     <ul class="nav navbar-nav">
                         @php
                             $isJobSeeker = auth('account')->check() && auth('account')->user()->isJobSeeker();
@@ -120,6 +130,7 @@
                         <li class="nav-item">
                             <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="{{ BaseHelper::getHomepageUrl() }}" title="{{ __('Home') }}">
                                 <i class="feather-home" style="font-size: 20px !important;"></i>
+                                <span>{{ __('Home') }}</span>
                             </a>
                         </li>
 
@@ -147,7 +158,12 @@
                             </li>
                             <li class="nav-item" style="position: relative;">
                                 <a class="nav-link" style="color: black; font-size: 20px; !important" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
-                                    <i class="feather-bell" style="font-size: 20px !important"></i>
+                                    {{-- Desktop icon --}}
+                                    <i class="feather-bell notification-icon-desktop" style="font-size: 20px !important"></i>
+
+                                    {{-- Mobile text --}}
+                                    <span class="notification-text-mobile">{{ __('Notifications') }}</span>
+
                                     @if($notificationBadge)
                                         <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;">{{ $notificationBadge }}</span>
                                     @endif
@@ -811,11 +827,30 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* Notifications text/icon responsive behaviour */
+/* Desktop / large screens: show only icon, hide text */
+.header-nav .nav-link .notification-text-mobile {
+    display: none;
+}
+
+/* Mobile: show text, hide icon */
+@media (max-width: 991px) {
+    .header-nav .nav-link .notification-text-mobile {
+        display: inline-block;
+        margin-left: 0;
+        font-size: 15px;
+    }
+
+    .header-nav .nav-link .notification-icon-desktop {
+        display: none !important;
+    }
+}
+
 /* ===== MOBILE MENU TOGGLE STYLES ===== */
 .mobile-menu-toggle {
     display: none;
     background: transparent;
-    border: 2px solid #0073d1;
+    border: 2px solid #000000; /* black border for better visibility */
     border-radius: 6px;
     padding: 8px 10px;
     cursor: pointer;
@@ -823,11 +858,29 @@
     position: relative;
 }
 
+/* Desktop: Ensure menu is visible */
+@media (min-width: 992px) {
+    .header-nav {
+        display: flex !important;
+        position: relative !important;
+        left: auto !important;
+        width: auto !important;
+        height: auto !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    
+    .header-style-3 .header-nav .nav li i {
+        float:inhert !important;
+}
+}
+
 .mobile-menu-toggle .icon-bar {
     display: block;
     width: 25px;
     height: 3px;
-    background: #0073d1;
+    background: #000000; /* black bars for better visibility */
     margin: 4px 0;
     transition: all 0.3s ease;
     border-radius: 2px;
@@ -849,53 +902,179 @@
 @media (max-width: 991px) {
     /* Show mobile toggle */
     .mobile-menu-toggle {
-        display: block;
+        display: block !important;
         order: 2;
     }
     
-    /* Hide desktop nav, show mobile nav */
+    /* Base mobile nav (we'll override theme defaults to use RIGHT SIDE DRAWER) */
     .header-nav {
-        position: fixed;
+        position: fixed !important;
         top: 0;
-        left: -100%;
-        width: 280px;
-        height: 100vh;
-        background: #fff;
-        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        z-index: 10000;
-        transition: left 0.3s ease;
+        width: 300px !important;
+        max-width: 85vw !important;
+        height: 100vh !important;
+        background: #ffffff !important;
+        z-index: 10001 !important;
         overflow-y: auto;
-        padding: 80px 20px 20px;
+        overflow-x: hidden;
+        padding: 0;
+        margin: 0;
         flex-direction: column !important;
         align-items: flex-start !important;
+        display: block !important;
+    }
+
+    /* Force RIGHT-SIDE drawer for mobile header, override SCSS left-side rules */
+    .mobile-sider-drawer-menu .header-nav {
+        right: -340px !important;  /* off-screen to the right */
+        left: auto !important;
+        box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+        transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     
-    .header-nav.show,
-    .header-nav:not(.collapse) {
-        left: 0;
+    .mobile-sider-drawer-menu.active .header-nav,
+    .mobile-sider-drawer-menu .header-nav.show {
+        right: 0 !important;       /* slide in from right */
+        left: auto !important;
+        box-shadow: -4px 0 25px rgba(0,0,0,0.2);
+    }
+    
+    /* Mobile menu header with close button */
+    .header-nav::before {
+        content: '';
+        display: block;
+        height: 60px;
+        background: linear-gradient(135deg, #0073d1 0%, #0056b3 100%);
+        width: 100%;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Ensure sidebar content is above overlay */
+    .header-nav * {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Close button in mobile menu */
+    .mobile-menu-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 36px;
+        margin: 0px 12px;
+        height: 36px;
+        background: rgba(255,255,255,0.25);
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        z-index: 11;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    
+    .mobile-menu-close:hover,
+    .mobile-menu-close:active {
+        background: rgba(255,255,255,0.4);
+        transform: rotate(90deg) scale(1.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    /* Hide close button on desktop */
+    @media (min-width: 992px) {
+        .mobile-menu-close {
+            display: none !important;
+        }
+    }
+    
+    /* Show menu when active class is on header or show class is on nav (RIGHT SIDE) */
+    .mobile-sider-drawer-menu.active .header-nav,
+    .mobile-sider-drawer-menu .header-nav.show {
+        right: 0 !important;
+        left: auto !important;
+        box-shadow: -4px 0 25px rgba(0,0,0,0.2);
     }
     
     .header-nav .navbar-nav {
         flex-direction: column !important;
         width: 100%;
         gap: 0;
+        padding: 0;
+        margin: 0;
+        margin-top: 60px;
+        position: relative;
+        z-index: 10002 !important;
     }
     
     .header-nav .nav-item {
         width: 100%;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid #f1f5f9;
+        margin: 0;
+        position: relative;
+        z-index: 10002 !important;
+    }
+    
+    .header-nav .nav-item:last-child {
+        border-bottom: none;
     }
     
     .header-nav .nav-link {
-        padding: 15px 10px !important;
+        padding: 16px 20px !important;
         width: 100%;
         justify-content: flex-start;
         color: #1e293b !important;
+        font-size: 15px !important;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        position: relative;
+        z-index: 10003 !important;
+        cursor: pointer;
     }
     
-    .header-nav .nav-link:hover {
-        background: #f0f9ff;
+    .header-nav .nav-link:visited {
+        color: #1e293b !important;
+    }
+    
+    .header-nav .nav-link i {
+        font-size: 20px !important;
+        width: 24px;
+        text-align: center;
+        color: #0073d1;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 10004 !important;
+        display: none !important; /* hide icons on mobile (responsive) */
+    }
+    
+    /* Home icon specific styling */
+    .header-nav .nav-link:has(.feather-home) {
+        padding: 16px 20px !important;
+    }
+    
+    .header-nav .nav-link:has(.feather-home) i {
+        margin-right: 0;
+    }
+    
+    .header-nav .nav-link:hover,
+    .header-nav .nav-link:active {
+        background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%);
         color: #0073d1 !important;
+        padding-left: 24px !important;
+    }
+    
+    .header-nav .nav-link span {
+        flex: 1;
     }
     
     /* Mobile overlay */
@@ -907,11 +1086,18 @@
         right: 0;
         bottom: 0;
         background: rgba(0,0,0,0.5);
-        z-index: 9999;
+        /* z-index: 10000; */
+        transition: opacity 0.3s ease;
     }
     
     .mobile-menu-overlay.show {
         display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
     
     /* Extra nav section mobile */
@@ -930,34 +1116,47 @@
         left: auto !important;
         width: 100%;
         max-width: 100%;
-        margin-top: 10px;
+        margin-top: 0;
+        margin-left: 0;
+        margin-right: 0;
         box-shadow: none;
         border-radius: 0;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
     }
     
     .mega-menu-tabs-wrapper {
         flex-wrap: wrap;
-        padding: 12px 15px;
-        gap: 8px;
+        padding: 15px;
+        gap: 10px;
+        background: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
     }
     
     .mega-menu-tab-btn {
-        padding: 6px 12px;
-        font-size: 11px;
+        padding: 10px 16px;
+        font-size: 12px;
+        border-radius: 8px;
+        font-weight: 600;
     }
     
     .mega-menu-content-wrapper {
         padding: 15px;
-        max-height: 350px;
+        max-height: 400px;
+        overflow-y: auto;
     }
     
     .mega-menu-grid {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 12px;
     }
     
     .mega-menu-grid-item {
-        padding: 10px;
+        padding: 14px;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     .mega-menu-grid-icon {
@@ -1078,6 +1277,7 @@
     display: inline-block;
     vertical-align: middle;
     line-height: 1.5;
+    font-size: 16px;
 }
 
 /* Ensure consistent alignment for all nav items */
@@ -1188,8 +1388,6 @@
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.35);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     z-index: 99999;
     align-items: center;
     justify-content: center;
@@ -1342,62 +1540,191 @@ function switchMegaMenuTab(tabName) {
     }
 }
 
-// Mobile Menu Toggle Functionality
+// Mobile Menu Toggle Functionality - Enhanced to work with existing system
 (function() {
     function initMobileMenu() {
         const toggleBtn = document.getElementById('mobile-side-drawer');
+        const header = document.querySelector('.mobile-sider-drawer-menu');
         const navMenu = document.getElementById('main-navbar-menu');
-        const overlay = document.createElement('div');
+        
+        // Check if overlay already exists
+        let overlay = document.querySelector('.mobile-menu-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
         overlay.className = 'mobile-menu-overlay';
         document.body.appendChild(overlay);
+        }
         
-        if (toggleBtn && navMenu) {
-            toggleBtn.addEventListener('click', function() {
+        // Get close button
+        const closeBtn = document.getElementById('mobile-menu-close-btn');
+        
+        // Function to close menu
+        function closeMobileMenu() {
+            header.classList.remove('active');
+            toggleBtn.classList.add('collapsed');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            navMenu.classList.remove('show');
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+            document.body.style.overflow = '';
+            // Hide close button
+            if (closeBtn) {
+                closeBtn.style.display = 'none';
+            }
+        }
+        
+        // Function to open menu
+        function openMobileMenu() {
+            header.classList.add('active');
+                    toggleBtn.classList.remove('collapsed');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+                    navMenu.classList.add('show');
+            if (overlay) {
+                    overlay.classList.add('show');
+            }
+                    document.body.style.overflow = 'hidden';
+            // Show close button on mobile
+            if (closeBtn && window.innerWidth <= 991) {
+                closeBtn.style.display = 'flex';
+            }
+        }
+        
+        if (toggleBtn && header) {
+            // Prevent multiple event listeners
+            if (toggleBtn.dataset.initialized === 'true') {
+                return;
+            }
+            toggleBtn.dataset.initialized = 'true';
+            
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const isActive = header.classList.contains('active');
                 const isCollapsed = toggleBtn.classList.contains('collapsed');
                 
-                if (isCollapsed) {
-                    // Open menu
-                    toggleBtn.classList.remove('collapsed');
-                    navMenu.classList.add('show');
-                    overlay.classList.add('show');
-                    document.body.style.overflow = 'hidden';
+                if (isActive || !isCollapsed) {
+                    closeMobileMenu();
                 } else {
-                    // Close menu
-                    toggleBtn.classList.add('collapsed');
-                    navMenu.classList.remove('show');
-                    overlay.classList.remove('show');
-                    document.body.style.overflow = '';
+                    openMobileMenu();
                 }
             });
             
-            // Close on overlay click
-            overlay.addEventListener('click', function() {
-                toggleBtn.classList.add('collapsed');
-                navMenu.classList.remove('show');
-                overlay.classList.remove('show');
-                document.body.style.overflow = '';
-            });
+            // Close button functionality
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('navbar closed'); // for debugging in console
+                    closeMobileMenu();
+                });
+            }
             
-            // Close on menu item click (mobile)
-            const navLinks = navMenu.querySelectorAll('.nav-link');
-            navLinks.forEach(function(link) {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth <= 991) {
-                        toggleBtn.classList.add('collapsed');
-                        navMenu.classList.remove('show');
-                        overlay.classList.remove('show');
-                        document.body.style.overflow = '';
+            // Close on overlay click - but NOT if clicking inside sidebar
+            if (overlay) {
+                overlay.addEventListener('click', function(e) {
+                    // Only close if clicking directly on overlay, not on sidebar
+                    if (e.target === overlay) {
+                        closeMobileMenu();
                     }
                 });
+            }
+            
+            // Close on menu item click (mobile) - but only for actual navigation links, not dropdowns
+            if (navMenu) {
+                // Prevent clicks inside sidebar from bubbling to overlay (but allow navigation)
+                navMenu.addEventListener('click', function(e) {
+                    const target = e.target;
+                    const link = target.closest('a');
+                    
+                    // Only stop propagation if it's NOT a navigation link
+                    // This allows navigation links to work normally
+                    if (!link || !link.getAttribute('href') || link.getAttribute('href') === '#' || link.getAttribute('href') === 'javascript:void(0)') {
+                        e.stopPropagation(); // Prevent overlay click handler from firing
+                    }
+                    // For navigation links, let the event bubble so navigation can happen
+                }, true); // Use capture phase to run before overlay handler
+                
+                // Use event delegation for better performance and to handle dynamically added elements
+                navMenu.addEventListener('click', function(e) {
+                    if (window.innerWidth > 991) {
+                        return; // Not mobile view
+                    }
+                    
+                    // Get the clicked element
+                    const target = e.target;
+                    const link = target.closest('a');
+                    
+                    // Don't close if clicking on buttons (like mega menu tab buttons)
+                    if (target.tagName === 'BUTTON' || target.closest('button')) {
+                        return; // Don't close menu for buttons
+                    }
+                    
+                    // Only handle clicks on actual navigation links
+                    if (link) {
+                        // Don't close if it's the mega menu dropdown toggle (Jobs link)
+                        if (link.id === 'jobs-dropdown') {
+                            return; // Don't close menu for mega menu toggle
+                        }
+                        
+                        // Don't close if it's any other dropdown toggle
+                        if (link.hasAttribute('data-bs-toggle') && link.getAttribute('data-bs-toggle') === 'dropdown') {
+                            return; // Don't close menu for dropdown toggles
+                        }
+                        
+                        // Don't close if it's a dropdown toggle without a real href
+                        if (link.classList.contains('dropdown-toggle') && 
+                            (!link.getAttribute('href') || link.getAttribute('href') === '#')) {
+                            return; // Don't close menu for dropdown toggles
+                        }
+                        
+                        // Close menu for actual navigation links (including mega menu grid items)
+                        const href = link.getAttribute('href');
+                        if (href && href !== '#' && href !== 'javascript:void(0)') {
+                            // Allow navigation to happen first, then close menu
+                            // Don't prevent default - let browser handle navigation
+                            setTimeout(function() {
+                                closeMobileMenu();
+                            }, 50); // Small delay to allow navigation to start
+                        }
+                    } else {
+                        // Don't close if clicking inside mega menu structure (but not on a link)
+                        if (target.closest('.mega-menu')) {
+                            return; // Don't close menu when clicking on mega menu structure
+                        }
+                    }
+                }, false); // Use bubble phase instead of capture to allow toggleMegaMenu to work first
+            }
+            
+            // Close on window resize if menu is open and window becomes larger
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 991 && header.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+                // Hide/show close button based on screen size
+                if (closeBtn) {
+                    if (window.innerWidth <= 991 && header.classList.contains('active')) {
+                        closeBtn.style.display = 'flex';
+                    } else {
+                        closeBtn.style.display = 'none';
+                    }
+                }
             });
         }
     }
     
+    // Wait for DOM and ensure it runs after other scripts
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initMobileMenu);
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initMobileMenu, 100);
+        });
     } else {
-        initMobileMenu();
+        setTimeout(initMobileMenu, 100);
     }
+    
+    // Also run after a delay to ensure other scripts have loaded
+    setTimeout(initMobileMenu, 500);
 })();
 
 // Initialize on page load

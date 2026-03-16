@@ -244,12 +244,52 @@
     margin-top: 20px;
 }
 
+/* Mobile top nav (below main navbar) for Employer */
+.emp-mobile-top-nav {
+    display: none;
+}
+
 @media (max-width: 991px) {
     .emp-stats-row {
         grid-template-columns: 1fr;
     }
     .emp-content-row {
         grid-template-columns: 1fr;
+    }
+
+    .emp-mobile-top-nav {
+        display: block;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        position: sticky;
+        top: 80px; /* little more space below main navbar on mobile */
+        z-index: 20;
+    }
+
+    .emp-mobile-top-nav-inner {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding: 10px 16px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .emp-mobile-top-nav-link {
+        white-space: nowrap;
+        font-size: 13px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        color: #4b5563;
+        text-decoration: none;
+        flex-shrink: 0;
+        background: #f9fafb;
+    }
+
+    .emp-mobile-top-nav-link.active {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
     }
 }
 
@@ -261,6 +301,21 @@
     }
 }
 </style>
+
+<!-- Mobile Top Nav (Employer) -->
+<div class="emp-mobile-top-nav d-block d-md-none">
+    <div class="container-fluid">
+        <div class="emp-mobile-top-nav-inner">
+            <a href="{{ route('public.account.dashboard') }}" class="emp-mobile-top-nav-link active">{{ __('Dashboard') }}</a>
+            <a href="{{ route('public.account.employer.settings.edit') }}" class="emp-mobile-top-nav-link">{{ __('Company Profile') }}</a>
+            <a href="{{ route('public.account.jobs.index') }}" class="emp-mobile-top-nav-link">{{ __('Jobs') }}</a>
+            <a href="{{ route('public.account.applicants.index') }}" class="emp-mobile-top-nav-link">{{ __('Applicants') }}</a>
+            @if(JobBoardHelper::isEnabledCreditsSystem())
+                <a href="{{ route('public.account.packages') }}" class="emp-mobile-top-nav-link">{{ __('Credits / Packages') }}</a>
+            @endif
+        </div>
+    </div>
+</div>
 
 <!-- Header -->
 <div class="emp-dash-header">

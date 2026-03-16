@@ -4,6 +4,7 @@ namespace Botble\JobBoard\Listeners;
 
 use Botble\Base\Facades\EmailHandler;
 use Botble\JobBoard\Enums\AccountTypeEnum;
+use Botble\JobBoard\Enums\ModerationStatusEnum;
 use Botble\JobBoard\Events\JobPublishedEvent;
 use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\JobAlert;
@@ -30,12 +31,25 @@ class SendJobAlertListener
         try {
         $job = $event->job;
             
+            // CRITICAL: Check if job is approved before sending notifications
+            if (!$job->moderation_status || $job->moderation_status->getValue() !== ModerationStatusEnum::APPROVED) {
+                $moderationStatus = $job->moderation_status ? $job->moderation_status->getValue() : 'null';
+                error_log('[JOB_ALERT] ⚠️ Job alert notifications SKIPPED - Job is not approved. Job ID: ' . $job->id . ', Moderation Status: ' . $moderationStatus);
+                \Log::info('Job alert notifications skipped - Job is not approved', [
+                    'job_id' => $job->id,
+                    'job_name' => $job->name,
+                    'moderation_status' => $moderationStatus
+                ]);
+                return; // Exit early if job is not approved
+            }
+            
             // CRITICAL: Log that listener is being called with job details
             error_log('[JOB_ALERT] ============================================');
             error_log('[JOB_ALERT] 🎯🎯🎯 SendJobAlertListener::handle() CALLED! 🎯🎯🎯');
             error_log('[JOB_ALERT] Job ID: ' . $job->id);
             error_log('[JOB_ALERT] Job Name: ' . $job->name);
             error_log('[JOB_ALERT] Job URL: ' . ($job->url ?? 'N/A'));
+            error_log('[JOB_ALERT] Moderation Status: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'N/A'));
             error_log('[JOB_ALERT] ============================================');
             
             // Log summary for this job - clearly identifies which job
@@ -43,6 +57,7 @@ class SendJobAlertListener
                 'job_id' => $job->id,
                 'job_name' => $job->name,
                 'job_url' => $job->url ?? 'N/A',
+                'moderation_status' => $job->moderation_status ? $job->moderation_status->getValue() : 'N/A',
                 'timestamp' => now()->toDateTimeString()
             ]);
             
