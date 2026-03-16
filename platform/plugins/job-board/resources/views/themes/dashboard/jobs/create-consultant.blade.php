@@ -681,96 +681,13 @@
             <input type="url" name="apply_url" id="apply_url" class="jp-input" placeholder="https://example.com/apply" value="{{ old('apply_url', optional($job)->apply_url ?? '') }}">
         </div>
 
-<<<<<<<< HEAD:platform/plugins/job-board/resources/views/themes/dashboard/jobs/create-consultant.blade.php
+
         <div class="jp-group" id="internal-emails-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
             @php $registeredEmail = $account->email ?? auth('account')->user()->email ?? ''; @endphp
             <div class="jp-registered-email-info" style="margin-bottom:16px; padding:12px 14px; background:#f0f7ff; border-radius:8px; border:1px solid #cce5ff;">
                 <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i>{{ __('Your registered email') }}</label>
                 <p class="mb-0" style="font-size:14px; color:#333;"><strong>{{ $registeredEmail }}</strong> — {{ __('Applications will always be sent to this email.') }}</p>
-========
-        <div class="jp-group" id="internal-emails-wrap" style="display: <?php echo e($applyType === 'internal' ? 'block' : 'none'); ?>;">
-            <?php
-                $registeredEmail = $account->email ?? auth('account')->user()->email ?? '';
-                $creditsEnabled = \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem();
-                $additionalEmailCredits = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100) : 0;
-                $whatsappCreditsPerAlert = $creditsEnabled ? \Botble\JobBoard\Models\CreditConsumption::getCreditsForFeature('employer', \Botble\JobBoard\Models\CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10) : 0;
-            ?>
-            <div class="jp-registered-email-info" style="margin-bottom:16px; padding:12px 14px; background:#f0f7ff; border-radius:8px; border:1px solid #cce5ff;">
-                <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i><?php echo e(__('Your registered email')); ?></label>
-                <p class="mb-0" style="font-size:14px; color:#333;"><strong><?php echo e($registeredEmail); ?></strong> — <?php echo e(__('Applications will always be sent to this email.')); ?></p>
-            </div>
-            <label class="jp-label"><?php echo e(__('Additional emails to receive applications')); ?> <span class="hint">(<?php echo e(__('optional, up to 3')); ?>)</span></label>
-            <?php if($creditsEnabled && $additionalEmailCredits > 0): ?>
-            <small class="form-text text-muted d-block" style="margin-bottom:8px;"><?php echo e(trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits])); ?></small>
-            <?php endif; ?>
-            <div id="internal-emails-list">
-                <?php
-                    $internalEmails = old('apply_internal_emails', optional($job)->apply_internal_emails ?? []);
-                    if (!is_array($internalEmails)) $internalEmails = $internalEmails ? [$internalEmails] : [];
-                    $internalEmails = array_slice($internalEmails, 0, 3);
-                ?>
-                <?php $__currentLoopData = $internalEmails; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $email): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <div class="jp-internal-email-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
-                    <input type="email" name="apply_internal_emails[]" class="jp-input" placeholder="hiring@example.com" value="<?php echo e(is_string($email) ? $email : ''); ?>" style="flex:1;">
-                    <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-email" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>
-                </div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </div>
-            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-email-btn" style="border-radius:8px;">
-                <i class="fa fa-plus"></i> <?php echo e(__('Add email')); ?>
 
-            </button>
-        </div>
-
-        <div class="jp-group" id="internal-phones-wrap" style="display: <?php echo e($applyType === 'internal' ? 'block' : 'none'); ?>;">
-            <label class="jp-label"><?php echo e(__('Additional phone numbers to receive applications')); ?> <span class="hint">(<?php echo e(__('optional, up to 3')); ?>)</span></label>
-            <?php if($creditsEnabled && $whatsappCreditsPerAlert > 0): ?>
-            <small class="form-text text-muted d-block" style="margin-bottom:8px;"><?php echo e(trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert])); ?></small>
-            <?php endif; ?>
-            <div id="internal-phones-list">
-                <?php
-                    $internalPhones = old('apply_internal_phones', optional($job)->apply_internal_phones ?? []);
-                    if (!is_array($internalPhones)) $internalPhones = $internalPhones ? [$internalPhones] : [];
-                    $internalPhones = array_slice($internalPhones, 0, 3);
-                ?>
-                <?php $__currentLoopData = $internalPhones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $phone): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <div class="jp-internal-phone-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
-                    <input type="tel" name="apply_internal_phones[]" class="jp-input" placeholder="+91 9876543210" value="<?php echo e(is_string($phone) ? $phone : ''); ?>" style="flex:1;">
-                    <button type="button" class="btn btn-outline-danger btn-sm jp-remove-internal-phone" style="flex-shrink:0;" title="Remove"><i class="fa fa-times"></i></button>
-                </div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </div>
-            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-internal-phone-btn" style="border-radius:8px;">
-                <i class="fa fa-plus"></i> <?php echo e(__('Add phone')); ?>
-
-            </button>
-        </div>
-
-        
-        <?php
-            $whatsappColumnExists = \Illuminate\Support\Facades\Schema::hasColumn('jb_jobs', 'enable_whatsapp_notifications');
-        ?>
-        <?php if($whatsappColumnExists): ?>
-        <div class="jp-group" id="whatsapp-notification-wrap" style="display: <?php echo e($applyType === 'internal' ? 'block' : 'none'); ?>;">
-            <div class="form-check" style="margin-top: 15px;">
-                <input type="checkbox" name="enable_whatsapp_notifications" value="1" class="form-check-input" id="enable_whatsapp_notifications" 
-                    <?php echo e(old('enable_whatsapp_notifications', optional($job)->enable_whatsapp_notifications ?? false) ? 'checked' : ''); ?>>
-                <label class="form-check-label jp-label" for="enable_whatsapp_notifications" style="cursor: pointer;">
-                    <i class="fa fa-whatsapp" style="color: #25D366; margin-right: 5px;"></i>
-                    <?php echo e(__('Send WhatsApp notifications when candidates apply')); ?>
-
-                </label>
-                <small class="form-text text-muted d-block" style="margin-top: 5px; margin-left: 25px;">
-                    <?php echo e(__('You will receive WhatsApp notifications on your phone numbers when a candidate applies for this job')); ?>
-
-                </small>
-                <?php if($creditsEnabled && $whatsappCreditsPerAlert > 0): ?>
-                <small class="form-text d-block" style="margin-top: 6px; margin-left: 25px; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
-                    <?php echo e(trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert])); ?>
-
-                </small>
-                <?php endif; ?>
->>>>>>>> 37fac6c5 (10 march):platform/plugins/job-board/resources/views/themes/dashboard/jobs/2798c24e4461d79c09da3254955fddb0.php
             </div>
         </div>
 
@@ -1610,10 +1527,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-<<<<<<<< HEAD:platform/plugins/job-board/resources/views/themes/dashboard/jobs/create-consultant.blade.php
-@endsection
-========
-<?php $__env->stopSection(); ?>
 
-<?php echo $__env->make($layout, array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/views/job-board/dashboard/jobs/create.blade.php ENDPATH**/ ?>
->>>>>>>> 37fac6c5 (10 march):platform/plugins/job-board/resources/views/themes/dashboard/jobs/2798c24e4461d79c09da3254955fddb0.php
+@endsection
+
