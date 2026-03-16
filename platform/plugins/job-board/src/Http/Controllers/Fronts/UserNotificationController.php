@@ -26,8 +26,9 @@ class UserNotificationController extends BaseController
             $notification->markAsRead();
         }
 
-        // If notification has action_url, redirect there
-        if ($notification->action_url && $notification->action_url !== '#') {
+        // Only redirect if it's not an AJAX request
+        // For AJAX requests, just return JSON response to update UI without reload
+        if (!$request->ajax() && !$request->wantsJson() && $notification->action_url && $notification->action_url !== '#') {
             return redirect()->to(url($notification->action_url));
         }
 

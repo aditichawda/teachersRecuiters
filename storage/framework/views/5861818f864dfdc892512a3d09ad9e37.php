@@ -863,7 +863,67 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Mobile top nav (below main navbar) */
+.js-mobile-top-nav {
+    display: none;
+}
+
+@media (max-width: 991px) {
+    .js-mobile-top-nav {
+        display: block;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        position: sticky;
+        top: 80px; /* little more space below main navbar on mobile */
+        z-index: 20;
+    }
+
+    .js-mobile-top-nav-inner {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding: 10px 16px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .js-mobile-top-nav-link {
+        white-space: nowrap;
+        font-size: 13px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        color: #4b5563;
+        text-decoration: none;
+        flex-shrink: 0;
+        background: #f9fafb;
+    }
+
+    .js-mobile-top-nav-link.active {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+    }
+}
 </style>
+
+<!-- Mobile Top Nav (Jobseeker) -->
+<div class="js-mobile-top-nav d-block d-md-none">
+    <div class="container">
+        <div class="js-mobile-top-nav-inner">
+            <a href="<?php echo e(url(route('public.account.jobseeker.dashboard'))); ?>" class="js-mobile-top-nav-link active"><?php echo e(__('Dashboard')); ?></a>
+            <a href="<?php echo e(url(route('public.account.settings'))); ?>" class="js-mobile-top-nav-link"><?php echo e(__('My Profile')); ?></a>
+            <a href="<?php echo e(url(route('public.account.jobs.saved'))); ?>" class="js-mobile-top-nav-link"><?php echo e(__('Saved Jobs')); ?></a>
+            <a href="<?php echo e(url(route('public.account.jobs.applied-jobs'))); ?>" class="js-mobile-top-nav-link"><?php echo e(__('Applied Jobs')); ?></a>
+            <a href="<?php echo e(url(route('public.account.experiences.index'))); ?>" class="js-mobile-top-nav-link"><?php echo e(__('Experience')); ?></a>
+            <a href="<?php echo e(url(route('public.account.educations.index'))); ?>" class="js-mobile-top-nav-link"><?php echo e(__('Education')); ?></a>
+            <a href="<?php echo e(url(route('public.account.interests-achievements'))); ?>" class="js-mobile-top-nav-link"><?php echo e(__('Interests & Achievements')); ?></a>
+            <a href="<?php if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem()): ?><?php echo e(url(route('public.account.jobseeker.wallet'))); ?><?php else: ?>#<?php endif; ?>" class="js-mobile-top-nav-link"><?php echo e(__('Wallet')); ?></a>
+            <a href="<?php echo e(url(route('public.account.resume-builder'))); ?>" class="js-mobile-top-nav-link"><?php echo e(__('Resume Builder')); ?></a>
+            <a href="<?php echo e(url(route('public.account.security'))); ?>" class="js-mobile-top-nav-link"><?php echo e(__('Security')); ?></a>
+        </div>
+    </div>
+</div>
 
 <div class="js-dashboard">
     <div class="container">

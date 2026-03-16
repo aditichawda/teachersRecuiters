@@ -543,13 +543,13 @@ class AccountJobController extends BaseController
         
         // Job alert notifications ENABLED - sending email and WhatsApp to matching candidates
         // Trigger event after all relationships are synced
-        // Trigger if job is published (even if moderation is pending - approval might be disabled)
-        if ($job->status == JobStatusEnum::PUBLISHED) {
+        // IMPORTANT: Only trigger if job is published AND approved by admin
+        if ($job->status == JobStatusEnum::PUBLISHED && $job->moderation_status == ModerationStatusEnum::APPROVED) {
             // Reload job with relationships before triggering event
             try {
                 $job->load(['categories', 'jobTypes', 'skills', 'company', 'city', 'state', 'country', 'currency']);
-                \Log::info('Triggering JobPublishedEvent for job: ' . $job->id);
-                error_log('[JOB_CREATE] Triggering JobPublishedEvent for job: ' . $job->id . ' - ' . $job->name);
+                \Log::info('Triggering JobPublishedEvent for job: ' . $job->id . ' (Approved)');
+                error_log('[JOB_CREATE] Triggering JobPublishedEvent for job: ' . $job->id . ' - ' . $job->name . ' (Status: APPROVED)');
                 
                 event(new JobPublishedEvent($job));
             } catch (\Exception $e) {
@@ -559,8 +559,10 @@ class AccountJobController extends BaseController
                 // Continue even if event fails
             }
         } else {
-            \Log::info('JobPublishedEvent NOT triggered - Job status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
-            error_log('[JOB_CREATE] JobPublishedEvent NOT triggered - Status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
+            $status = $job->status ? $job->status->getValue() : 'null';
+            $moderation = $job->moderation_status ? $job->moderation_status->getValue() : 'null';
+            \Log::info('JobPublishedEvent NOT triggered - Job status: ' . $status . ', Moderation: ' . $moderation);
+            error_log('[JOB_CREATE] JobPublishedEvent NOT triggered - Status: ' . $status . ', Moderation: ' . $moderation . ' (Job must be PUBLISHED and APPROVED)');
         }
 
         // Sync screening questions (from admin pool) with is_required, overrides, correct_answer per job

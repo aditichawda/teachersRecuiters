@@ -1,8 +1,8 @@
-@php
+<?php
     Theme::set('header_css_class', '');
     Theme::set('withPageHeader', false);
     Theme::set('bodyClass', 'hide-page-banner careers-page');
-@endphp
+?>
 
 <style>
 .careers-section {
@@ -925,8 +925,9 @@
                 </div>
                 </div>
                 <div class="positions-view-all-wrapper">
-                    <a href="{{ JobBoardHelper::getJobsPageURL() }}" class="btn-primary-custom positions-view-all-btn">
-                        {{ __('View All Jobs') }}
+                    <a href="<?php echo e(JobBoardHelper::getJobsPageURL()); ?>" class="btn-primary-custom positions-view-all-btn">
+                        <?php echo e(__('View All Jobs')); ?>
+
                     </a>
                 </div>
             </div>
@@ -1007,3 +1008,4 @@
         </div>
     </div>
 </section>
+<?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/teachersRecuiters/platform/themes/jobzilla/views/careers.blade.php ENDPATH**/ ?>
