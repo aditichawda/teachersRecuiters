@@ -208,9 +208,15 @@
     } 
 </style>
 
+<?php
+    /** @var \Botble\JobBoard\Models\Account $account */
+    $account = auth('account')->user();
+    $isConsultancy = $account && method_exists($account, 'isConsultancy') ? $account->isConsultancy() : (($account->registration_type ?? null) === 'consultancy');
+?>
+
 <!-- Page header - same as dashboard -->
 <div class="emp-settings-header">
-    <h2><?php echo e(__('School/Institution Profile')); ?></h2>
+    <h2><?php echo e($isConsultancy ? __('Consultant Profile') : __('School/Institution Profile')); ?></h2>
     <a href="<?php echo e(route('public.account.dashboard')); ?>"><?php echo e(__('Dashboard')); ?> &rarr;</a>
 </div>
 
@@ -317,6 +323,7 @@
                     <input type="text" name="name" class="form-control" value="<?php echo e(old('name', $company->name ?? $account->institution_name ?? '')); ?>" required placeholder="<?php echo e(__('Enter institution name')); ?>">
                 </div>
                 
+                <?php if(! $isConsultancy): ?>
                 <!-- Institution Type -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label"><?php echo e(__('Type of Institution')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Select the category/affiliations that best describes your institution.')); ?>"><i class="fa fa-question-circle"></i></span></label>
@@ -361,6 +368,7 @@
                         </optgroup>
                     </select>
                 </div>
+                <?php endif; ?>
                 
                 <!-- About Us -->
                 <div class="col-12 mb-3">
@@ -404,6 +412,7 @@
     </div>
 
     
+    <?php if(false): ?>
     <div class="emp-section mb-4">
         <div class="emp-section-header">
             <span class="emp-section-icon blue"><i class="fa fa-school"></i></span>
@@ -505,6 +514,7 @@
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     
     <div class="emp-section mb-4">
@@ -587,6 +597,7 @@
         </div>
     </div>
 
+    <?php if(! $isConsultancy): ?>
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
@@ -631,8 +642,10 @@
             <small class="form-text text-muted ms-2" id="award-count"><?php echo e(is_array($awards) ? count($awards) : 0); ?>/5</small>
         </div>
     </div>
+    <?php endif; ?>
 
     
+    <?php if(false): ?>
     <div class="emp-section mb-4">
         <div class="emp-section-header">
             <span class="emp-section-icon blue"><i class="fa fa-handshake"></i></span>
@@ -671,8 +684,10 @@
             </button>
         </div>
     </div>
+    <?php endif; ?>
 
     
+    <?php if(false): ?>
     <div class="emp-section mb-4">
         <div class="emp-section-header">
             <span class="emp-section-icon blue"><i class="fa fa-users"></i></span>
@@ -711,6 +726,8 @@
             </button>
         </div>
     </div>
+    <?php endif; ?>
+    <?php endif; ?>
 
     
     <div class="text-end mb-4">
@@ -875,10 +892,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+<?php if(! $isConsultancy): ?>
 // Dynamic Awards
-let awardIndex = <?php echo e(is_array($awards) ? count($awards) : 0); ?>;
+let awardIndex = <?php echo e(isset($awards) && is_array($awards) ? count($awards) : 0); ?>;
 function addAward() {
     const container = document.getElementById('awards-container');
+    if (!container) return;
     if (container.querySelectorAll('.award-entry').length >= 5) {
         alert('Maximum 5 awards allowed');
         return;
@@ -907,11 +926,18 @@ function addAward() {
     updateAwardCount();
 }
 function updateAwardCount() {
-    const count = document.querySelectorAll('.award-entry').length;
-    document.getElementById('award-count').textContent = count + '/5';
-    if (count >= 5) document.getElementById('btn-add-award').style.display = 'none';
-    else document.getElementById('btn-add-award').style.display = '';
+    const container = document.getElementById('awards-container');
+    if (!container) return;
+    const count = container.querySelectorAll('.award-entry').length;
+    const countEl = document.getElementById('award-count');
+    const btn = document.getElementById('btn-add-award');
+    if (countEl) countEl.textContent = count + '/5';
+    if (btn) {
+        if (count >= 5) btn.style.display = 'none';
+        else btn.style.display = '';
+    }
 }
+<?php endif; ?>
 
 // Dynamic Campus Photos
 let campusPhotoIndex = <?php echo e(is_array($campusPhotos ?? []) ? count($campusPhotos ?? []) : 0); ?>;
@@ -951,8 +977,8 @@ function updateCampusPhotoCount() {
     }
 }
 
-// Dynamic Affiliations
-let affIndex = <?php echo e(is_array($affiliations) ? count($affiliations) : 0); ?>;
+// Dynamic Affiliations (section is disabled; start from 0 to avoid Blade variable errors)
+let affIndex = 0;
 function addAffiliation() {
     const container = document.getElementById('affiliations-container');
     const html = `
@@ -974,8 +1000,8 @@ function addAffiliation() {
     affIndex++;
 }
 
-// Dynamic Team Members
-let teamIndex = <?php echo e(is_array($teamMembers) ? count($teamMembers) : 0); ?>;
+// Dynamic Team Members (section is disabled; start from 0 to avoid Blade variable errors)
+let teamIndex = 0;
 function addTeamMember() {
     const container = document.getElementById('team-container');
     const html = `
