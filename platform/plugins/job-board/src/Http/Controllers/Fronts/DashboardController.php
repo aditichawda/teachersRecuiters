@@ -33,6 +33,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
@@ -136,16 +137,31 @@ class DashboardController extends BaseController
 
         $account->load(['packages']);
         $packageType = $account->isEmployer() ? 'employer' : 'job-seeker';
-        $packages = Package::query()
+        $packagesQuery = Package::query()
             ->wherePublished()
             ->where('package_type', $packageType)
+            ->when($packageType === 'employer' && Schema::hasColumn('jb_packages', 'show_for_consultancy'), function ($query) use ($account) {
+                if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+                    $query->where('show_for_consultancy', true);
+                } else {
+                    $query->where('show_for_school_institution', true);
+                }
+            })
+            ->when($packageType === 'employer' && Schema::hasColumn('jb_packages', 'visible_for_account_ids'), function ($query) use ($account) {
+                $query->where(function ($sub) use ($account) {
+                    $sub->whereNull('visible_for_account_ids')
+                        ->orWhereJsonContains('visible_for_account_ids', (int) $account->getKey());
+                });
+            })
             ->latest('order')
             ->withCount([
                 'accounts' => function ($query) use ($account): void {
                     $query->where('account_id', $account->getKey());
                 },
             ])
-            ->get();
+            ;
+
+        $packages = $packagesQuery->get();
 
         try {
             if (is_plugin_active('language') && is_plugin_active('language-advanced')) {
@@ -179,10 +195,26 @@ class DashboardController extends BaseController
             ->findOrFail(auth('account')->id());
 
         $packageType = $account->isEmployer() ? 'employer' : 'job-seeker';
-        $packages = Package::query()
+        $packagesQuery = Package::query()
             ->wherePublished()
             ->where('package_type', $packageType)
-            ->get();
+            ->when($packageType === 'employer' && Schema::hasColumn('jb_packages', 'show_for_consultancy'), function ($query) use ($account) {
+                if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+                    $query->where('show_for_consultancy', true);
+                } else {
+                    $query->where('show_for_school_institution', true);
+                }
+            });
+
+        $packagesQuery
+            ->when($packageType === 'employer' && Schema::hasColumn('jb_packages', 'visible_for_account_ids'), function ($query) use ($account) {
+                $query->where(function ($sub) use ($account) {
+                    $sub->whereNull('visible_for_account_ids')
+                        ->orWhereJsonContains('visible_for_account_ids', (int) $account->getKey());
+                });
+            });
+
+        $packages = $packagesQuery->get();
 
         if (is_plugin_active('language') && is_plugin_active('language-advanced')) {
             Language::setCurrentAdminLocale(App::getLocale());
@@ -266,6 +298,30 @@ class DashboardController extends BaseController
         if ($package->account_limit) {
             $accountLimit = $account->packages()->where('package_id', $package->getKey())->count();
             abort_if($accountLimit >= $package->account_limit, 403);
+        }
+
+        // Enforce employer visibility rules (School/Institution vs Consultancy + specific employers)
+        if (
+            $account->isEmployer()
+            && $package->package_type === 'employer'
+            && Schema::hasColumn('jb_packages', 'show_for_consultancy')
+        ) {
+            if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+                abort_if(! (bool) $package->show_for_consultancy, 403);
+            } else {
+                abort_if(! (bool) $package->show_for_school_institution, 403);
+            }
+        }
+
+        if (
+            $account->isEmployer()
+            && $package->package_type === 'employer'
+            && Schema::hasColumn('jb_packages', 'visible_for_account_ids')
+        ) {
+            $visibleFor = $package->visible_for_account_ids;
+            if (is_array($visibleFor) && count(array_filter($visibleFor)) > 0) {
+                abort_if(! in_array((int) $account->getKey(), array_map('intval', $visibleFor), true), 403);
+            }
         }
 
         return $package;

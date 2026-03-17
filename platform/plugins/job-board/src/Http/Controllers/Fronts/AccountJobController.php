@@ -435,8 +435,19 @@ class AccountJobController extends BaseController
             }
         }
 
+        $jobValidityDays = null;
+        if ($account->isEmployer() && class_exists(\Botble\JobBoard\Supports\PackageContext::class)) {
+            $ctx = \Botble\JobBoard\Supports\PackageContext::forAccount($account);
+            if ($ctx->hasPackage() && $ctx->isPeriodValid() && $ctx->package && \Illuminate\Support\Facades\Schema::hasColumn('jb_packages', 'job_validity_days')) {
+                $val = (int) ($ctx->package->job_validity_days ?? 0);
+                if ($val > 0) {
+                    $jobValidityDays = $val;
+                }
+            }
+        }
+
         $request->merge([
-            'expire_date' => Carbon::now()->addDays(JobBoardHelper::jobExpiredDays()),
+            'expire_date' => Carbon::now()->addDays($jobValidityDays ?? JobBoardHelper::jobExpiredDays($account)),
             'author_id' => $account->getAuthIdentifier(),
             'author_type' => Account::class,
         ]);
@@ -454,6 +465,9 @@ class AccountJobController extends BaseController
         }
         if (! $request->has('is_remote')) {
             $request->merge(['is_remote' => 0]);
+        }
+        if (! $request->has('hide_hiring_school_name')) {
+            $request->merge(['hide_hiring_school_name' => 0]);
         }
 
         // Ensure job can be stored: set defaults for optional fields if empty
@@ -811,10 +825,16 @@ class AccountJobController extends BaseController
         $emailCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100);
         $wpCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
 
-        return JobBoardHelper::view('dashboard.jobs.create', compact(
+        $view = 'dashboard.jobs.create';
+        if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+            $view = 'dashboard.jobs.create-consultant';
+        }
+        $defaultCompanyId = $job->company_id ?? (count($companies) === 1 ? array_key_first($companies) : null);
+
+        return JobBoardHelper::view($view, compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
-            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData',
+            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData', 'defaultCompanyId',
             'walletUrl', 'accountCredits', 'emailCreditsRequired', 'wpCreditsRequired', 'creditsEnabled'
         ));
     }
@@ -913,6 +933,9 @@ if ($request->has('enable_whatsapp_notifications')) {
 
 if (! $request->has('employer_colleagues')) {
     $request->merge(['employer_colleagues' => []]);
+}
+if (! $request->has('hide_hiring_school_name')) {
+    $request->merge(['hide_hiring_school_name' => 0]);
 }
 
 // Handle enable_whatsapp_notifications checkbox (same logic as store)
@@ -1146,7 +1169,18 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
                 ->httpResponse()->setError()->setMessage(trans('plugins/job-board::messages.not_enough_credit_renew'));
         }
 
-        $job->expire_date = $job->expire_date->addDays(JobBoardHelper::jobExpiredDays());
+        $days = null;
+        if ($account->isEmployer() && class_exists(\Botble\JobBoard\Supports\PackageContext::class)) {
+            $ctx = \Botble\JobBoard\Supports\PackageContext::forAccount($account);
+            if ($ctx->hasPackage() && $ctx->isPeriodValid() && $ctx->package && \Illuminate\Support\Facades\Schema::hasColumn('jb_packages', 'job_validity_days')) {
+                $val = (int) ($ctx->package->job_validity_days ?? 0);
+                if ($val > 0) {
+                    $days = $val;
+                }
+            }
+        }
+
+        $job->expire_date = $job->expire_date->addDays($days ?? JobBoardHelper::jobExpiredDays($account));
         $job->save();
 
         if (JobBoardHelper::isEnabledCreditsSystem() && $account->credits > 0) {

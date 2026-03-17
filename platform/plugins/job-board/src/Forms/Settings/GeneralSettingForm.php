@@ -125,6 +125,22 @@ class GeneralSettingForm extends SettingForm
                     ->helperText(trans('plugins/job-board::settings.general.job_expired_after_days_helper'))
             )
             ->add(
+                'job_expired_after_days_school_institution',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(trans('plugins/job-board::settings.general.job_expired_after_days_school_institution'))
+                    ->value((int) setting('job_expired_after_days_school_institution', 0))
+                    ->helperText(trans('plugins/job-board::settings.general.job_expired_after_days_school_institution_helper'))
+            )
+            ->add(
+                'job_expired_after_days_consultancy',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(trans('plugins/job-board::settings.general.job_expired_after_days_consultancy'))
+                    ->value((int) setting('job_expired_after_days_consultancy', 0))
+                    ->helperText(trans('plugins/job-board::settings.general.job_expired_after_days_consultancy_helper'))
+            )
+            ->add(
                 'job_board_job_expiration_warning_days',
                 NumberField::class,
                 NumberFieldOption::make()

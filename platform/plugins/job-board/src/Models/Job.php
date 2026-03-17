@@ -61,6 +61,9 @@ class Job extends BaseModel
         'gender_preference',
         'application_location_type',
         'application_locations',
+        'hiring_institution_type',
+        'hiring_school_name',
+        'hide_hiring_school_name',
         'marital_status_preference',
         'language_proficiency',
         'expire_date',
@@ -103,6 +106,7 @@ class Job extends BaseModel
         'apply_internal_emails' => 'array',
         'apply_internal_phones' => 'array',
         'enable_whatsapp_notifications' => 'boolean',
+        'hide_hiring_school_name' => 'boolean',
     ];
 
     public function skills(): BelongsToMany

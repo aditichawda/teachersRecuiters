@@ -14,6 +14,8 @@ use Botble\JobBoard\Models\Package;
 use Botble\JobBoard\Tables\PackageTable;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class PackageController extends BaseController
 {
@@ -117,6 +119,20 @@ class PackageController extends BaseController
 
         $package = Package::query()->create($input);
 
+        // Ensure package name is editable/persisted even when translations table is used
+        if (Schema::hasTable('jb_packages_translations')) {
+            $langCode = function_exists('is_plugin_active') && is_plugin_active('language')
+                ? \Botble\Language\Facades\Language::getCurrentAdminLocaleCode()
+                : app()->getLocale();
+
+            $langCode = $langCode ?: app()->getLocale();
+
+            DB::table('jb_packages_translations')->updateOrInsert(
+                ['lang_code' => $langCode, 'jb_packages_id' => $package->getKey()],
+                ['name' => $package->getAttribute('name')]
+            );
+        }
+
         event(new CreatedContentEvent(PACKAGE_MODULE_SCREEN_NAME, $request, $package));
 
         return $this
@@ -145,6 +161,20 @@ class PackageController extends BaseController
         $package->features = $this->mergePackageFeatures($request);
         $package->job_apply_limit = $request->input('job_apply_limit');
         $package->save();
+
+        // Ensure package name is editable/persisted even when translations table is used
+        if (Schema::hasTable('jb_packages_translations')) {
+            $langCode = function_exists('is_plugin_active') && is_plugin_active('language')
+                ? \Botble\Language\Facades\Language::getCurrentAdminLocaleCode()
+                : app()->getLocale();
+
+            $langCode = $langCode ?: app()->getLocale();
+
+            DB::table('jb_packages_translations')->updateOrInsert(
+                ['lang_code' => $langCode, 'jb_packages_id' => $package->getKey()],
+                ['name' => $package->getAttribute('name')]
+            );
+        }
 
         // Sync translatable fields (name, description) to current locale so edit form shows saved data.
         // NOTE: We intentionally skip "features" here because it can be a large JSON payload,

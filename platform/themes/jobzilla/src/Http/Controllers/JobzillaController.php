@@ -136,6 +136,19 @@ class JobzillaController extends PublicController
         $packages = Package::query()
             ->wherePublished()
             ->where('package_type', $packageType)
+            ->when($packageType === 'employer' && $account && Schema::hasColumn('jb_packages', 'show_for_consultancy'), function ($query) use ($account) {
+                if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+                    $query->where('show_for_consultancy', true);
+                } else {
+                    $query->where('show_for_school_institution', true);
+                }
+            })
+            ->when($packageType === 'employer' && $account && Schema::hasColumn('jb_packages', 'visible_for_account_ids'), function ($query) use ($account) {
+                $query->where(function ($sub) use ($account) {
+                    $sub->whereNull('visible_for_account_ids')
+                        ->orWhereJsonContains('visible_for_account_ids', (int) $account->getKey());
+                });
+            })
             ->with('currency')
             ->orderBy('order')
             ->orderBy('id')

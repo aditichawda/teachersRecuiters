@@ -16,8 +16,8 @@
 .wallet-em-page .wallet-js-two-cols { display: flex !important; flex-wrap: wrap !important; gap: 0.75rem !important; width: 100% !important; }
 .wallet-em-page .wallet-js-two-cols .wallet-js-col-blue,
 .wallet-em-page .wallet-js-two-cols .wallet-js-col-orange { flex: 1 1 calc(50% - 0.375rem) !important; min-width: 140px; max-width: none; }
-.wallet-em-page .wallet-js-packages-row { display: flex !important; flex-wrap: wrap !important; align-items: stretch !important; }
-.wallet-em-page .wallet-js-packages-row > .wallet-js-package-col { flex: 1 1 0 !important; min-width: 200px; display: flex !important; }
+.wallet-em-page .wallet-js-packages-row { align-items: stretch !important; }
+.wallet-em-page .wallet-js-packages-row > .wallet-js-package-col { display: flex !important; }
 .wallet-em-page .wallet-js-packages-row .wallet-package-card { display: flex !important; flex-direction: column !important; flex: 1 1 100% !important; min-height: 200px !important; background: #fff !important; border-radius: 12px !important; box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important; border: 1px solid rgba(0,0,0,0.06) !important; }
 .wallet-em-page .wallet-js-packages-row .wallet-package-card .card-body { flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; padding: 1rem 1.25rem !important; }
 .wallet-em-page .wallet-js-packages-row .wallet-package-card .card-body .wallet-package-card-actions { margin-top: auto !important; padding-top: 0.75rem !important; }
@@ -26,11 +26,7 @@
 .wallet-em-page .wallet-js-packages-row .wallet-package-price { font-size: 0.75rem !important; font-weight: 500 !important; color: #1a1a2e !important; margin-bottom: 0.5rem !important; }
 .wallet-em-page .wallet-js-packages-row .wallet-package-main-desc { font-size: 0.77rem !important; color: #6c757d !important; line-height: 1.5 !important; margin-bottom: 0 !important; }
 .wallet-em-page .wallet-js-packages-row .btn { border-radius: 8px !important; font-weight: 600 !important; }
-@media (max-width: 991px) {
-    .wallet-em-page .wallet-js-packages-row > .wallet-js-package-col { flex: 0 0 calc(50% - 1rem) !important; min-width: 180px; }
-}
 @media (max-width: 575px) {
-    .wallet-em-page .wallet-js-packages-row > .wallet-js-package-col { flex: 0 0 100% !important; min-width: 0; }
     .wallet-em-page .wallet-js-packages-row .wallet-package-card { min-height: 180px !important; }
 }
 .wallet-em-page .wallet-package-card-current { border: 2px solid #198754 !important; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.2); position: relative; }
@@ -69,6 +65,16 @@
 @section('content')
     {{-- Employer wallet page (same card layout as job seeker) --}}
     <div class="wallet-em-page">
+    @php
+        $packagesList = $packages ?? collect();
+        $packagesCount = is_countable($packagesList) ? count($packagesList) : 0;
+        $packagesRight = $packagesList;
+        $packageLeft = null;
+        if ($packagesCount === 4) {
+            $packagesRight = $packagesList->take(3);
+            $packageLeft = $packagesList->skip(3)->first();
+        }
+    @endphp
     <div class="row mb-4">
         <div class="col-lg-3 col-xl-3 mb-4 mb-lg-0">
             <div class="wallet-js-two-cols">
@@ -102,8 +108,43 @@
                         </x-core::card.footer>
                     </x-core::card>
                 </div>
-               
             </div>
+
+            @if($packageLeft)
+                @php $isCurrentPackage = in_array($packageLeft->id, $currentPackageIds ?? []); @endphp
+                <div class="row wallet-js-packages-row g-3 mt-0 pt-2">
+                    <div class="col-12 wallet-js-package-col">
+                        <div @class(['card wallet-package-card', 'border-warning' => $packageLeft->is_default, 'wallet-package-card-current' => $isCurrentPackage])>
+                            @if($isCurrentPackage)
+                                <span class="wallet-current-badge">{{ __('Current') }}</span>
+                            @endif
+                            @if($packageLeft->percent_save)
+                                <div class="card-header py-1 bg-success text-white small text-center">
+                                    {{ $packageLeft->percent_save_text }}
+                                </div>
+                            @endif
+                            <x-core::card.body class="pb-2">
+                                <h6 class="text-uppercase">{{ $packageLeft->name }}</h6>
+                                <p class="wallet-em-credits-validity">{{ format_credits_short($packageLeft->credits_included ?? $packageLeft->number_of_listings) }} {{ trans('plugins/job-board::dashboard.credits') }}@if($packageLeft->validity_days) · {{ trans('plugins/job-board::dashboard.package_validity_days', ['days' => $packageLeft->validity_days]) }}@endif</p>
+                                <p class="wallet-package-price">{{ $packageLeft->price_text }}</p>
+                                @if(trim((string) $packageLeft->description) !== '')
+                                    <p class="wallet-package-main-desc">{{ $packageLeft->description }}</p>
+                                @elseif($packageFeatures = $packageLeft->formatted_features)
+                                    <p class="wallet-package-main-desc">{{ is_array($packageFeatures) ? implode(' ', $packageFeatures) : $packageFeatures }}</p>
+                                @endif
+                                <div class="wallet-package-card-actions">
+                                    <x-core::form :url="route('public.account.package.subscribe.put')" method="put">
+                                        <input type="hidden" name="id" value="{{ $packageLeft->id }}">
+                                        <x-core::button type="submit" class="w-100 btn-sm" color="{{ $packageLeft->is_default ? 'warning' : 'primary' }}" :disabled="$packageLeft->isPurchased()">
+                                            {{ $packageLeft->isPurchased() ? trans('plugins/job-board::dashboard.purchased_label') : trans('plugins/job-board::dashboard.wallet_buy_now') }}
+                                        </x-core::button>
+                                    </x-core::form>
+                                </div>
+                            </x-core::card.body>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
         <div class="col-lg-9 col-xl-9">
             <div class="d-flex justify-content-between align-items-center mb-2" id="choose-plan">
@@ -111,9 +152,9 @@
                 <small class="text-muted">{{ trans('plugins/job-board::dashboard.wallet_all_prices_gst') }}</small>
             </div>
             <div class="row wallet-js-packages-row g-3">
-                @foreach($packages ?? [] as $package)
+                @foreach($packagesRight ?? [] as $package)
                     @php $isCurrentPackage = in_array($package->id, $currentPackageIds ?? []); @endphp
-                    <div class="col wallet-js-package-col">
+                    <div class="col-12 col-md-6 col-lg-4 wallet-js-package-col">
                         <div @class(['card wallet-package-card', 'border-warning' => $package->is_default, 'wallet-package-card-current' => $isCurrentPackage])>
                             @if($isCurrentPackage)
                                 <span class="wallet-current-badge">{{ __('Current') }}</span>
@@ -169,6 +210,8 @@
                 </x-core::card.body>
             </x-core::card>
         </div>
+        @php $isConsultancy = $account && method_exists($account, 'isConsultancy') && $account->isConsultancy(); @endphp
+        @unless($isConsultancy)
         <div class="col-lg-12 col-md-12">
             <x-core::card class="h-100">
                 <x-core::card.header>
@@ -294,10 +337,11 @@
                 </x-core::card.body>
             </x-core::card>
         </div>
+        @endunless
     </div>
 
     {{-- Modal: Use credits for a feature (generic) – like Features & Coins list, confirm before deduct --}}
-    @if($account->isEmployer())
+    @if($account->isEmployer() && !(method_exists($account, 'isConsultancy') && $account->isConsultancy()))
         <div class="modal fade" id="walletFeaturePurchaseModal" tabindex="-1" aria-labelledby="walletFeaturePurchaseModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">

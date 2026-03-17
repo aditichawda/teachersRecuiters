@@ -542,6 +542,10 @@
                     <input type="radio" name="application_location_type" value="specific" {{ $appLocType === 'specific' ? 'checked' : '' }}>
                     <i class="fa fa-list"></i> Specific Locations (up to 3)
                 </label>
+                <label class="jp-option-card {{ $appLocType === 'anywhere' ? 'selected' : '' }}" onclick="selectOption(this, 'application_location_type')">
+                    <input type="radio" name="application_location_type" value="anywhere" {{ $appLocType === 'anywhere' ? 'checked' : '' }}>
+                    <i class="fa fa-globe"></i> Anywhere India
+                </label>
             </div>
         </div>
 
@@ -656,9 +660,6 @@
             @if($creditsEnabled && $additionalEmailCredits > 0)
             <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
             @endif
-            @if($creditsEnabled && $additionalEmailCredits > 0)
-            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_additional_email_credits', ['credits' => $additionalEmailCredits]) }}</small>
-            @endif
             <div id="internal-emails-list">
                 @php
                     $internalEmails = $isEdit ? old('apply_internal_emails', $job->apply_internal_emails ?? []) : (old('apply_internal_emails') ?? []);
@@ -679,9 +680,6 @@
 
         <div class="jp-group" id="internal-phones-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
             <label class="jp-label">{{ __('Additional phone numbers to receive applications') }} <span class="hint">({{ __('optional, up to 3') }})</span></label>
-            @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
-            <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
-            @endif
             @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
             <small class="form-text text-muted d-block" style="margin-bottom:8px;">{{ trans('plugins/job-board::dashboard.hint_whatsapp_phones_credits', ['credits' => $whatsappCreditsPerAlert]) }}</small>
             @endif
@@ -724,11 +722,7 @@
                     {{ trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert]) }}
                 </small>
                 @endif
-                @if($creditsEnabled && $whatsappCreditsPerAlert > 0)
-                <small class="form-text d-block" style="margin-top: 6px; margin-left: 25px; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
-                    {{ trans('plugins/job-board::dashboard.hint_whatsapp_checkbox_credits', ['credits' => $whatsappCreditsPerAlert]) }}
-                </small>
-                @endif
+               
             </div>
         </div>
         @endif
@@ -900,6 +894,47 @@
 <div id="buy-credits-popup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; margin:20px; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
         <p id="buy-credits-popup-msg" class="mb-4" style="font-size:15px; color:#333;">Insufficient credits. Please buy credits to use this feature.</p>
+        @php
+            $creditsEnabledPopup = (bool) ($creditsEnabled ?? \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem());
+            $canRechargeWallet = $creditsEnabledPopup && (bool) ($canPost ?? false) && ((int) ($accountCredits ?? 0) <= 0);
+        @endphp
+        @if($creditsEnabledPopup)
+            <div class="border rounded p-3 mb-3" style="background:#f8fafc;">
+                <div class="mb-2" style="font-weight:600;">{{ __('Recharge Wallet') }}</div>
+                <div class="d-flex gap-2 align-items-center">
+                    <input
+                        type="number"
+                        min="100"
+                        step="1"
+                        class="form-control"
+                        id="wallet-recharge-amount"
+                        placeholder="{{ __('Enter amount (min ₹100)') }}"
+                        style="max-width: 180px;"
+                        @disabled(! $canRechargeWallet)
+                    >
+                    <form method="post" action="{{ route('public.account.wallet.recharge.start') }}" id="wallet-recharge-form" style="margin:0;">
+                        @csrf
+                        <input type="hidden" name="amount_inr" id="wallet-recharge-amount-hidden" value="">
+                        <button type="submit" class="btn btn-success" id="wallet-recharge-btn" @disabled(! $canRechargeWallet)>
+                            {{ __('Continue') }}
+                        </button>
+                    </form>
+                </div>
+                <div class="small mt-2" id="wallet-recharge-hint" style="color:#6b7280;">
+                    @if(! $canPost)
+                        {{ __('Wallet recharge is available only with an active hiring plan.') }}
+                    @elseif(((int) ($accountCredits ?? 0)) > 0)
+                        {{ __('Recharge is available when your wallet credits are exhausted.') }}
+                    @else
+                        {{ __('You will be redirected to Razorpay to complete the payment.') }}
+                    @endif
+                </div>
+                <div class="small mt-1" style="color:#6b7280;">
+                    {{ __('Wallet credits have unlimited validity and can be used with any active hiring plan.') }}
+                </div>
+                <div class="text-danger small mt-2" id="wallet-recharge-error" style="display:none;"></div>
+            </div>
+        @endif
         <div class="d-flex gap-2 justify-content-end">
             <button type="button" class="btn btn-secondary" id="buy-credits-popup-close">Cancel</button>
             <a href="{{ $walletUrl ?? route('public.account.wallet') }}" class="btn btn-primary" id="buy-credits-popup-wallet">Buy credits</a>
@@ -931,6 +966,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     document.getElementById('buy-credits-popup-close')?.addEventListener('click', hideBuyCreditsPopup);
     document.getElementById('buy-credits-popup')?.addEventListener('click', function(e) { if (e.target === this) hideBuyCreditsPopup(); });
+
+// Wallet recharge validation (min ₹100) and submit.
+var canRechargeWallet = {{ ($creditsEnabledPopup ?? false) && ($canPost ?? false) && ((int) ($accountCredits ?? 0) <= 0) ? 'true' : 'false' }};
+var rechargeForm = document.getElementById('wallet-recharge-form');
+var rechargeAmount = document.getElementById('wallet-recharge-amount');
+var rechargeHidden = document.getElementById('wallet-recharge-amount-hidden');
+var rechargeError = document.getElementById('wallet-recharge-error');
+if (rechargeForm && rechargeAmount && rechargeHidden) {
+    rechargeForm.addEventListener('submit', function(e) {
+        if (!canRechargeWallet) return;
+        var val = parseInt(rechargeAmount.value || '0', 10);
+        if (!val || val < 100) {
+            e.preventDefault();
+            if (rechargeError) {
+                rechargeError.textContent = '{{ __("Minimum recharge amount is ₹100.") }}';
+                rechargeError.style.display = 'block';
+            }
+            rechargeAmount.focus();
+            return;
+        }
+        if (rechargeError) rechargeError.style.display = 'none';
+        rechargeHidden.value = String(val);
+    });
+}
 
     // ===== JOB TITLES DATABASE =====
     const jobTitles = [
