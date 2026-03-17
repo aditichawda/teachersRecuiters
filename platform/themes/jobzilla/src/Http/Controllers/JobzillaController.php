@@ -370,7 +370,7 @@ class JobzillaController extends PublicController
         $packages = Package::query()
             ->wherePublished()
             ->where('package_type', $packageType)
-            ->when($packageType === 'employer' && $account && Schema::hasColumn('jb_packages', 'show_for_consultancy'), function ($query) use ($account) {
+            ->when($packageType === 'employer' && $account && Schema::hasColumn('jb_packages', 'show_for_consultancy') && Schema::hasColumn('jb_packages', 'show_for_school_institution'), function ($query) use ($account) {
                 if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
                     $query->where('show_for_consultancy', true);
                 } else {

@@ -26,9 +26,6 @@ class EmployerSettingController extends BaseController
 
         /** @var Account $account */
         $account = auth('account')->user();
-        $isConsultancy = $account && method_exists($account, 'isConsultancy')
-            ? (bool) $account->isConsultancy()
-            : (($account->registration_type ?? null) === 'consultancy');
 
         // Get or create the company for this employer
         $company = $account->companies()->first();
@@ -154,9 +151,6 @@ class EmployerSettingController extends BaseController
     {
         /** @var Account $account */
         $account = auth('account')->user();
-        $isConsultancy = $account && method_exists($account, 'isConsultancy')
-            ? (bool) $account->isConsultancy()
-            : (($account->registration_type ?? null) === 'consultancy');
 
         // Normalize empty location IDs to null so validation (nullable|integer) passes when city is changed/cleared
         $request->merge([

@@ -26,7 +26,11 @@
 }
 .v-testimonial-wrap {
     position: relative;
+<<<<<<< HEAD
     padding: 15px 0;
+=======
+    padding: 20px 0;
+>>>>>>> fb5c60a2 (evening updates)
     display: flex;
     flex-direction: column;
     align-items: center;

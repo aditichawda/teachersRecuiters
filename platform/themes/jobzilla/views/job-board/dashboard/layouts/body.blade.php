@@ -1322,7 +1322,12 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
 
                     @unless($isConsultancy)
                     <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
-                    <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
+                    <a
+                        href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}"
+                        class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}"
+                        style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}"
+                        title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}"
+                    >
                         @if($admissionLocked)
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
                             <span>{{ __('Admission') }}</span>

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 <?php if (! $__env->hasRenderedOnce('4702a557-6100-41a6-b3ea-eaa9e077e6b6')): $__env->markAsRenderedOnce('4702a557-6100-41a6-b3ea-eaa9e077e6b6'); ?>
+=======
+<?php if (! $__env->hasRenderedOnce('ec3b862f-51bc-4258-b854-5f25a9937913')): $__env->markAsRenderedOnce('ec3b862f-51bc-4258-b854-5f25a9937913'); ?>
+>>>>>>> fb5c60a2 (evening updates)
     <script src="<?php echo e(asset('vendor/core/packages/theme/js/toast.js')); ?>?v=<?php echo e(get_cms_version()); ?>"></script>
 
     <?php if(session()->has('success_msg') ||

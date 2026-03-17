@@ -704,8 +704,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var emailCreditsRequired = {{ (int) ($emailCreditsRequired ?? 100) }};
     var wpCreditsRequired = {{ (int) ($wpCreditsRequired ?? 10) }};
 
-    var canRechargeWallet = {{ ($creditsEnabledPopup ?? false) && ($canPost ?? false) && ((int) ($accountCredits ?? 0) <= 0) ? 'true' : 'false' }};
-
     function showBuyCreditsPopup(msg) {
         var el = document.getElementById('buy-credits-popup');
         var msgEl = document.getElementById('buy-credits-popup-msg');
@@ -722,29 +720,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('buy-credits-popup')?.addEventListener('click', function(e) {
         if (e.target === this) hideBuyCreditsPopup();
     });
-
-    // Wallet recharge validation (min ₹100) and submit.
-    var rechargeForm = document.getElementById('wallet-recharge-form');
-    var rechargeAmount = document.getElementById('wallet-recharge-amount');
-    var rechargeHidden = document.getElementById('wallet-recharge-amount-hidden');
-    var rechargeError = document.getElementById('wallet-recharge-error');
-    if (rechargeForm && rechargeAmount && rechargeHidden) {
-        rechargeForm.addEventListener('submit', function(e) {
-            if (!canRechargeWallet) return;
-            var val = parseInt(rechargeAmount.value || '0', 10);
-            if (!val || val < 100) {
-                e.preventDefault();
-                if (rechargeError) {
-                    rechargeError.textContent = '{{ __("Minimum recharge amount is ₹100.") }}';
-                    rechargeError.style.display = 'block';
-                }
-                rechargeAmount.focus();
-                return;
-            }
-            if (rechargeError) rechargeError.style.display = 'none';
-            rechargeHidden.value = String(val);
-        });
-    }
 
     // ===== JOB TITLES DATABASE =====
     const jobTitles = [
@@ -1010,9 +985,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits; else show Buy credits popup =====
-
-    document.getElementById('add-internal-email-btn')?.addEventListener('click', function(e) {
-
+    document.getElementById('add-internal-email-btn').addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         const list = document.getElementById('internal-emails-list');
@@ -1054,9 +1027,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
-
-    document.getElementById('add-internal-phone-btn')?.addEventListener('click', function(e) {
-
+    document.getElementById('add-internal-phone-btn').addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         const list = document.getElementById('internal-phones-list');

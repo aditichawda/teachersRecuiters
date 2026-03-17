@@ -4,7 +4,6 @@ namespace Botble\JobBoard\Models;
 
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Models\BaseModel;
-use Botble\JobBoard\Supports\PackageContext;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 
