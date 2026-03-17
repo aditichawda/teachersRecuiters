@@ -9,7 +9,7 @@
 
 
 <!-- Featured Schools SECTION START -->
-<div class="section-full p-t120 p-b90 site-bg-white twm-featured-schools-wrap" style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
+<div class="section-full pt10 pb-10 site-bg-white twm-featured-schools-wrap" style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
     <div class="container">
         <div class="wt-separator-two-part">
             <div class="row wt-separator-two-part-row">

@@ -6,7 +6,7 @@
 ?>
 
 <!-- JOBS BY CATEGORIES SECTION START -->
-<div class="section-full p-t80 p-b80 site-bg-light" style="background-color: <?php echo e($bgColor); ?>;">
+<div class="section-full pt-2 pb-2 site-bg-light" style="background-color: <?php echo e($bgColor); ?>;">
     <div class="container">
         <?php if($shortcode->title || $shortcode->subtitle): ?>
             <div class="section-head center wt-small-separator-outer text-center">
