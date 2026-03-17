@@ -129,14 +129,26 @@ class JobzillaController extends PublicController
 
         $account = Auth::guard('account')->user();
         $packageType = 'job-seeker'; // default when guest or job seeker
+        $employerPackageLabel = null; // 'consultancy' or 'school_institution' when employer
+        $premiumDebug = [
+            'accountId' => $account?->getKey(),
+            'isLoggedIn' => (bool) $account,
+            'isEmployer' => $account ? (bool) $account->isEmployer() : false,
+            'registrationType' => $account->registration_type ?? null,
+            'isConsultancy' => $account && method_exists($account, 'isConsultancy') ? (bool) $account->isConsultancy() : false,
+        ];
+
         if ($account && $account->isEmployer()) {
             $packageType = 'employer';
+            $employerPackageLabel = (method_exists($account, 'isConsultancy') && $account->isConsultancy())
+                ? 'consultancy'
+                : 'school_institution';
         }
 
         $packages = Package::query()
             ->wherePublished()
             ->where('package_type', $packageType)
-            ->when($packageType === 'employer' && $account && Schema::hasColumn('jb_packages', 'show_for_consultancy'), function ($query) use ($account) {
+            ->when($packageType === 'employer' && $account && Schema::hasColumn('jb_packages', 'show_for_consultancy') && Schema::hasColumn('jb_packages', 'show_for_school_institution'), function ($query) use ($account) {
                 if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
                     $query->where('show_for_consultancy', true);
                 } else {
@@ -154,7 +166,11 @@ class JobzillaController extends PublicController
             ->orderBy('id')
             ->get();
 
-        return Theme::scope('premium-service', compact('packages', 'packageType'))->render();
+        $premiumDebug['packageType'] = $packageType;
+        $premiumDebug['employerPackageLabel'] = $employerPackageLabel;
+        $premiumDebug['packagesCount'] = $packages->count();
+
+        return Theme::scope('premium-service', compact('packages', 'packageType', 'employerPackageLabel', 'premiumDebug'))->render();
     }
 
     public function forTeachers()

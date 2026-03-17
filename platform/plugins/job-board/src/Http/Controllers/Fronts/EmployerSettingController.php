@@ -26,6 +26,9 @@ class EmployerSettingController extends BaseController
 
         /** @var Account $account */
         $account = auth('account')->user();
+        if ($account && $account->getKey()) {
+            $account = Account::find($account->getKey()) ?? $account;
+        }
         $isConsultancy = $account && method_exists($account, 'isConsultancy')
             ? (bool) $account->isConsultancy()
             : (($account->registration_type ?? null) === 'consultancy');
@@ -154,6 +157,9 @@ class EmployerSettingController extends BaseController
     {
         /** @var Account $account */
         $account = auth('account')->user();
+        if ($account && $account->getKey()) {
+            $account = Account::find($account->getKey()) ?? $account;
+        }
         $isConsultancy = $account && method_exists($account, 'isConsultancy')
             ? (bool) $account->isConsultancy()
             : (($account->registration_type ?? null) === 'consultancy');

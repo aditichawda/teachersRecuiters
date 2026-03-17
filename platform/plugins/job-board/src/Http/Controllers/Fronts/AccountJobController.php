@@ -206,6 +206,9 @@ class AccountJobController extends BaseController
          * @var Account $account
          */
         $account = auth('account')->user();
+        if ($account && $account->getKey()) {
+            $account = Account::find($account->getKey()) ?? $account;
+        }
 
         // Lock job post: no package ever purchased OR (package period invalid and no credits) OR no slot and no credits
         $packageContext = PackageContext::forAccount($account);
