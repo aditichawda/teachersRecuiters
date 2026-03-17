@@ -440,6 +440,17 @@ class AccountJobController extends BaseController
             }
         }
 
+        $jobValidityDays = null;
+        if ($account->isEmployer() && class_exists(\Botble\JobBoard\Supports\PackageContext::class)) {
+            $ctx = \Botble\JobBoard\Supports\PackageContext::forAccount($account);
+            if ($ctx->hasPackage() && $ctx->isPeriodValid() && $ctx->package && \Illuminate\Support\Facades\Schema::hasColumn('jb_packages', 'job_validity_days')) {
+                $val = (int) ($ctx->package->job_validity_days ?? 0);
+                if ($val > 0) {
+                    $jobValidityDays = $val;
+                }
+            }
+        }
+
         $request->merge([
             'expire_date' => Carbon::now()->addDays($jobValidityDays ?? JobBoardHelper::jobExpiredDays($account)),
             'author_id' => $account->getAuthIdentifier(),
@@ -819,10 +830,16 @@ class AccountJobController extends BaseController
         $emailCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100);
         $wpCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
 
-        return JobBoardHelper::view('dashboard.jobs.create', compact(
+        $view = 'dashboard.jobs.create';
+        if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+            $view = 'dashboard.jobs.create-consultant';
+        }
+        $defaultCompanyId = $job->company_id ?? (count($companies) === 1 ? array_key_first($companies) : null);
+
+        return JobBoardHelper::view($view, compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
-            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData',
+            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData', 'defaultCompanyId',
             'walletUrl', 'accountCredits', 'emailCreditsRequired', 'wpCreditsRequired', 'creditsEnabled'
         ));
     }

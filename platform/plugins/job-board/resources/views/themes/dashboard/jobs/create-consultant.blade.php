@@ -681,13 +681,11 @@
             <input type="url" name="apply_url" id="apply_url" class="jp-input" placeholder="https://example.com/apply" value="{{ old('apply_url', optional($job)->apply_url ?? '') }}">
         </div>
 
-
         <div class="jp-group" id="internal-emails-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
             @php $registeredEmail = $account->email ?? auth('account')->user()->email ?? ''; @endphp
             <div class="jp-registered-email-info" style="margin-bottom:16px; padding:12px 14px; background:#f0f7ff; border-radius:8px; border:1px solid #cce5ff;">
                 <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i>{{ __('Your registered email') }}</label>
                 <p class="mb-0" style="font-size:14px; color:#333;"><strong>{{ $registeredEmail }}</strong> — {{ __('Applications will always be sent to this email.') }}</p>
-
             </div>
         </div>
 
@@ -1530,3 +1528,633 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @endsection
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ===== JOB TITLES DATABASE =====
+    const jobTitles = [
+        'Primary English Teacher', 'Secondary Mathematics Teacher', 'School Principal',
+        'Academic Coordinator', 'Higher Secondary Commerce Teacher', 'Primary Hindi Teacher',
+        'Secondary Science Teacher', 'Secondary Social Studies Teacher', 'Physical Education Teacher',
+        'Music Teacher', 'Art Teacher', 'Computer Science Teacher', 'Special Education Teacher',
+        'Nursery Teacher', 'KG Teacher', 'Montessori Teacher', 'Librarian', 'Lab Assistant',
+        'Administrative Officer', 'Accountant', 'Front Desk Executive', 'Counselor',
+        'Vice Principal', 'Head of Department', 'Subject Matter Expert', 'Curriculum Designer',
+        'Online Tutor', 'Academic Writer', 'Examination Controller', 'Hostel Warden',
+        'Sports Coach', 'Dance Teacher', 'Sanskrit Teacher', 'French Teacher',
+        'German Teacher', 'Biology Teacher', 'Chemistry Teacher', 'Physics Teacher',
+        'Economics Teacher', 'Psychology Teacher', 'Sociology Teacher', 'Political Science Teacher',
+        'History Teacher', 'Geography Teacher', 'Environmental Science Teacher',
+        'Early Childhood Educator', 'Activity Teacher', 'Yoga Teacher',
+        'IT Administrator', 'Transport Manager', 'Security Supervisor'
+    ];
+
+    // ===== CERTIFICATIONS DATABASE =====
+    const certifications = [
+        'B.Ed', 'M.Ed', 'NTT', 'Montessori Trained', 'ECCED', 'TET', 'CTET',
+        'IB Teacher Certification', 'Cambridge Teacher Certification', 'D.El.Ed',
+        'PGDM', 'PhD in Education', 'NET', 'SET', 'JRF', 'NCTE Approved',
+        'CBSE Affiliation Training', 'ICSE Training Certification',
+        'Special Education Certification', 'Counseling Certification',
+        'Computer Teacher Certification', 'Yoga Teacher Certification'
+    ];
+
+    // ===== LANGUAGES (from jb_languages table) =====
+    const languages = @json($languagesList ?? []);
+
+    // ===== SKILLS (from DB) =====
+    const allSkills = @json($skills);
+
+    // ===== COMPANY DATA =====
+    const companyData = @json($companyDetails);
+    const companies = @json($companies ?? []);
+    const degreeLevels = @json($degreeLevels ?? []);
+    const jobExperiences = @json($jobExperiences ?? []);
+
+    // ===== EDIT MODE: pre-fill from job =====
+    var isEditMode = {{ $isEdit ? 'true' : 'false' }};
+    var editJobData = @json($editJobData ?? null);
+
+    // ===== AUTO-SUGGEST HELPER =====
+    function setupAutoSuggest(inputEl, listEl, items, onSelect, isObject, clearInputOnSelect) {
+        isObject = isObject || false;
+        clearInputOnSelect = clearInputOnSelect !== false;
+        function showList(val) {
+            val = (val || '').toLowerCase().trim();
+            listEl.innerHTML = '';
+            var filtered;
+            if (val.length < 1) {
+                filtered = isObject ? Object.entries(items).slice(0, 15) : items.slice(0, 15);
+            } else if (isObject) {
+                filtered = Object.entries(items).filter(function(entry) {
+                    return entry[1].toLowerCase().includes(val);
+                }).slice(0, 15);
+            } else {
+                filtered = items.filter(function(i) { return i.toLowerCase().includes(val); }).slice(0, 15);
+            }
+            if (filtered.length === 0) { listEl.classList.remove('show'); return; }
+            filtered.forEach(function(item) {
+                var div = document.createElement('div');
+                div.className = 'jp-suggest-item';
+                var itemText = isObject ? item[1] : item;
+                var itemId = isObject ? item[0] : null;
+                div.textContent = itemText;
+                if (isObject) div.dataset.id = itemId;
+                div.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    onSelect(isObject ? { id: this.dataset.id, name: itemText } : itemText);
+                    if (clearInputOnSelect) inputEl.value = '';
+                    listEl.classList.remove('show');
+                });
+                listEl.appendChild(div);
+            });
+            listEl.classList.add('show');
+        }
+        inputEl.addEventListener('input', function() { showList(this.value); });
+        inputEl.addEventListener('focus', function() { showList(this.value); });
+        inputEl.addEventListener('blur', function() {
+            setTimeout(function() { listEl.classList.remove('show'); }, 200);
+        });
+    }
+
+    // ===== JOB TITLE AUTO-SUGGEST =====
+    var titleInput = document.getElementById('job_title');
+    var titleList = document.getElementById('job-title-suggestions');
+    setupAutoSuggest(titleInput, titleList, jobTitles, function(title) {
+        titleInput.value = title;
+        autoSetJobType(title);
+    }, false, false); // isObject=false, clearInputOnSelect=false so selected title stays visible
+
+    function autoSetJobType(title) {
+        var nonTeachingKeywords = ['librarian', 'lab assistant', 'administrative', 'accountant',
+            'front desk', 'counselor', 'it administrator', 'transport', 'security', 'hostel warden'];
+        var lowerTitle = title.toLowerCase();
+        var isNonTeaching = nonTeachingKeywords.some(function(k) { return lowerTitle.includes(k); });
+
+        document.querySelectorAll('input[name="job_type_category"]').forEach(function(radio) {
+            var card = radio.closest('.jp-option-card');
+            if (radio.value === (isNonTeaching ? 'non-teaching' : 'teaching')) {
+                radio.checked = true;
+                card.classList.add('selected');
+            } else {
+                radio.checked = false;
+                card.classList.remove('selected');
+            }
+        });
+    }
+
+    // ===== SKILLS =====
+    var selectedSkills = {};
+    var skillsSearch = document.getElementById('skills_search');
+    var skillsList = document.getElementById('skills-suggestions');
+
+    setupAutoSuggest(skillsSearch, skillsList, allSkills, function(skill) {
+        if (!selectedSkills[skill.id]) {
+            selectedSkills[skill.id] = skill.name;
+            renderSkillTags();
+        }
+    }, true);
+
+    function renderSkillTags() {
+        var container = document.getElementById('selected-skills');
+        var hiddenContainer = document.getElementById('skills-hidden-inputs');
+        container.innerHTML = '';
+        hiddenContainer.innerHTML = '';
+        Object.entries(selectedSkills).forEach(function(entry) {
+            container.innerHTML += '<span class="jp-tag">' + entry[1] + ' <span class="remove" onclick="removeSkill(\'' + entry[0] + '\')">&times;</span></span>';
+            hiddenContainer.innerHTML += '<input type="hidden" name="skills[]" value="' + entry[0] + '">';
+        });
+    }
+    window.removeSkill = function(id) {
+        delete selectedSkills[id];
+        renderSkillTags();
+    };
+
+    if (isEditMode && editJobData) {
+        editJobData.skills.forEach(function(s) { selectedSkills[s.id] = s.name; });
+        renderSkillTags();
+    }
+
+    // ===== CERTIFICATIONS =====
+    var selectedCerts = [];
+    var certSearch = document.getElementById('cert_search');
+    var certList = document.getElementById('cert-suggestions');
+
+    setupAutoSuggest(certSearch, certList, certifications, function(cert) {
+        if (selectedCerts.indexOf(cert) === -1) {
+            selectedCerts.push(cert);
+            renderCertTags();
+        }
+    });
+
+    function renderCertTags() {
+        var container = document.getElementById('selected-certs');
+        container.innerHTML = '';
+        selectedCerts.forEach(function(cert, idx) {
+            container.innerHTML += '<span class="jp-tag">' + cert + ' <span class="remove" onclick="removeCert(' + idx + ')">&times;</span></span>';
+        });
+        document.getElementById('required_certifications').value = JSON.stringify(selectedCerts);
+    }
+    window.removeCert = function(idx) {
+        selectedCerts.splice(idx, 1);
+        renderCertTags();
+    };
+
+    if (isEditMode && editJobData && editJobData.required_certifications && editJobData.required_certifications.length) {
+        selectedCerts = editJobData.required_certifications.slice();
+        renderCertTags();
+    }
+
+    // ===== LANGUAGES =====
+    var selectedLangs = [];
+    var langSearch = document.getElementById('lang_search');
+    var langList = document.getElementById('lang-suggestions');
+
+    setupAutoSuggest(langSearch, langList, languages, function(lang) {
+        if (selectedLangs.indexOf(lang) === -1) {
+            selectedLangs.push(lang);
+            renderLangTags();
+        }
+    });
+
+    function renderLangTags() {
+        var container = document.getElementById('selected-langs');
+        container.innerHTML = '';
+        selectedLangs.forEach(function(lang, idx) {
+            container.innerHTML += '<span class="jp-tag">' + lang + ' <span class="remove" onclick="removeLang(' + idx + ')">&times;</span></span>';
+        });
+        document.getElementById('language_proficiency').value = JSON.stringify(selectedLangs);
+    }
+    window.removeLang = function(idx) {
+        selectedLangs.splice(idx, 1);
+        renderLangTags();
+    };
+
+    if (isEditMode && editJobData && editJobData.language_proficiency && editJobData.language_proficiency.length) {
+        selectedLangs = editJobData.language_proficiency.slice();
+        renderLangTags();
+    }
+
+    // ===== COMPANY SELECTION =====
+    function syncCompanyLocationFromJob() {
+        if (!isEditMode || !editJobData) return;
+        var cityInp = document.getElementById('job_city_search');
+        var stateInp = document.getElementById('job_state');
+        var countryInp = document.getElementById('job_country');
+        if (editJobData.city_name && cityInp) cityInp.value = editJobData.city_name;
+        if (editJobData.state_name && stateInp) stateInp.value = editJobData.state_name;
+        if (editJobData.country_name && countryInp) countryInp.value = editJobData.country_name;
+    }
+    var companyEl = document.getElementById('company_id');
+    if (companyEl && companyEl.tagName === 'SELECT') {
+        companyEl.addEventListener('change', function() {
+            var companyId = this.value;
+            var badge = document.getElementById('inst-type-badge');
+
+            if (badge && companyId && companyData[companyId]) {
+                var data = companyData[companyId];
+                badge.textContent = data.institution_type || 'Not specified';
+                badge.style.background = data.institution_type ? '#e8f5e9' : '#fff3e0';
+                badge.style.color = data.institution_type ? '#2e7d32' : '#e65100';
+            } else if (badge) {
+                badge.textContent = 'Select a company first';
+                badge.style.background = '#f0f4ff';
+                badge.style.color = '#4a6cf7';
+            }
+
+            if (companyId && companyData[companyId]) {
+                var data2 = companyData[companyId];
+                if (data2.address) document.getElementById('job_address').value = data2.address;
+                if (data2.city_name) {
+                    document.getElementById('job_city_search').value = data2.city_name;
+                    document.getElementById('job_city_id').value = data2.city_id || '';
+                }
+                if (data2.state_name) {
+                    document.getElementById('job_state').value = data2.state_name;
+                    document.getElementById('job_state_id').value = data2.state_id || '';
+                }
+                if (data2.country_name) {
+                    document.getElementById('job_country').value = data2.country_name;
+                    document.getElementById('job_country_id').value = data2.country_id || '';
+                }
+                if (data2.postal_code) document.getElementById('job_zip_code').value = data2.postal_code;
+            }
+        });
+    }
+    if (isEditMode) setTimeout(syncCompanyLocationFromJob, 100);
+
+    // ===== SALARY PERIOD =====
+    window.selectSalaryPeriod = function(el) {
+        document.querySelectorAll('.jp-salary-tab').forEach(function(t) { t.classList.remove('active'); });
+        el.classList.add('active');
+        var val = el.dataset.value;
+
+        if (val === 'negotiable') {
+            document.getElementById('salary-amount-section').style.display = 'none';
+            document.getElementById('salary_type').value = 'negotiable';
+            document.getElementById('salary_range').value = 'monthly';
+        } else {
+            document.getElementById('salary-amount-section').style.display = 'block';
+            document.getElementById('salary_type').value = 'fixed';
+            document.getElementById('salary_range').value = val;
+        }
+    };
+
+    // ===== SALARY MODE (Range/Fixed) =====
+    window.selectSalaryMode = function(el, mode) {
+        el.closest('.jp-option-cards').querySelectorAll('.jp-option-card').forEach(function(c) { c.classList.remove('selected'); });
+        el.classList.add('selected');
+        document.getElementById('salary-to-wrap').style.display = mode === 'fixed' ? 'none' : 'block';
+    };
+
+    // ===== RADIO/CHECKBOX OPTION CARDS =====
+    window.selectOption = function(el, name) {
+        var cards = el.closest('.jp-option-cards').querySelectorAll('.jp-option-card');
+        cards.forEach(function(c) { c.classList.remove('selected'); });
+        el.classList.add('selected');
+        el.querySelector('input').checked = true;
+
+        if (name === 'application_location_type') {
+            var val = el.querySelector('input').value;
+            document.getElementById('specific-locations-wrap').style.display = val === 'specific' ? 'block' : 'none';
+        }
+        if (name === 'apply_type') {
+            var val2 = el.querySelector('input').value;
+            var externalWrap = document.getElementById('external-url-wrap');
+            var internalWrap = document.getElementById('internal-emails-wrap');
+            if (externalWrap) externalWrap.style.display = val2 === 'external' ? 'block' : 'none';
+            if (internalWrap) internalWrap.style.display = val2 === 'internal' ? 'block' : 'none';
+        }
+    };
+
+    // ===== SCREENING QUESTIONS: Toggle edit, 1-Click auto-fill =====
+    document.querySelectorAll('.sq-toggle-edit').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var expand = this.closest('.sq-item').querySelector('.sq-item-expand');
+            expand.style.display = expand.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+    document.querySelectorAll('.sq-auto-fill').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var item = this.closest('.sq-item');
+            var templateQ = item.dataset.templateQuestion || '';
+            var templateO = item.dataset.templateOptions || '';
+            var repl = {
+                degree_level: degreeLevels[document.getElementById('degree_level_id')?.value] || '',
+                job_title: document.getElementById('job_title')?.value || '',
+                experience_years: jobExperiences[document.getElementById('job_experience_id')?.value] || '',
+                certification: (selectedCerts && selectedCerts[0]) || '',
+                language: (selectedLangs && selectedLangs[0]) || '',
+                job_location: (document.getElementById('job_address')?.value || '') + ' ' + (document.getElementById('job_city_search')?.value || ''),
+                application_locations: (function(){ var v = document.getElementById('application_locations')?.value; if (!v) return ''; try { var a = JSON.parse(v); return Array.isArray(a) ? a.join(', ') : v; } catch(e){ return v.replace(/[\[\]"]/g,'').split(',').map(function(s){return s.trim();}).filter(Boolean).join(', '); } })(),
+                company_name: companies[document.getElementById('company_id')?.value] || '',
+                institution_type: companyData[document.getElementById('company_id')?.value]?.institution_type || ''
+            };
+            for (var k in repl) {
+                templateQ = templateQ.replace(new RegExp('\\{' + k + '\\}', 'g'), repl[k]);
+                templateO = templateO.replace(new RegExp('\\{' + k + '\\}', 'g'), repl[k]);
+            }
+            var qInp = item.querySelector('.sq-edit-question');
+            var oInp = item.querySelector('.sq-edit-options');
+            if (qInp) qInp.value = templateQ;
+            if (oInp) oInp.value = templateO;
+            item.querySelector('.sq-question-text').textContent = templateQ || item.dataset.templateQuestion;
+            item.querySelector('.sq-item-expand').style.display = 'block';
+        });
+    });
+    document.querySelectorAll('.sq-select-cb').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            var req = document.getElementById('sq_req_' + this.value);
+            if (req) req.disabled = !this.checked;
+        });
+    });
+    document.querySelectorAll('.sq-edit-question').forEach(function(ta) {
+        ta.addEventListener('input', function() {
+            var item = this.closest('.sq-item');
+            var label = item.querySelector('.sq-question-text');
+            if (label) label.textContent = this.value || item.dataset.templateQuestion;
+        });
+    });
+
+    // ===== CITY SEARCH FOR JOB LOCATION =====
+    var cityInput = document.getElementById('job_city_search');
+    var cityList2 = document.getElementById('job-city-suggestions');
+    var cityTimeout = null;
+
+    cityInput.addEventListener('input', function() {
+        clearTimeout(cityTimeout);
+        var val = this.value.trim();
+        if (val.length < 2) { cityList2.classList.remove('show'); return; }
+
+        cityTimeout = setTimeout(function() {
+            fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    cityList2.innerHTML = '';
+                    if (!data.length) { cityList2.classList.remove('show'); return; }
+                    data.forEach(function(city) {
+                        var div = document.createElement('div');
+                        div.className = 'jp-suggest-item';
+                        div.textContent = city.full_name || city.name;
+                        div.addEventListener('click', function() {
+                            cityInput.value = city.name;
+                            document.getElementById('job_city_id').value = city.id;
+                            document.getElementById('job_state').value = city.state_name || '';
+                            document.getElementById('job_state_id').value = city.state_id || '';
+                            document.getElementById('job_country').value = city.country_name || '';
+                            document.getElementById('job_country_id').value = city.country_id || '';
+                            cityList2.classList.remove('show');
+                        });
+                        cityList2.appendChild(div);
+                    });
+                    cityList2.classList.add('show');
+                });
+        }, 300);
+    });
+
+    cityInput.addEventListener('blur', function() {
+        setTimeout(function() { cityList2.classList.remove('show'); }, 200);
+    });
+
+    // ===== APPLICATION LOCATION CITY SEARCH =====
+    document.querySelectorAll('.app-location-input').forEach(function(input) {
+        var suggest = input.closest('.jp-suggest-wrap').querySelector('.app-loc-suggest');
+        var timer = null;
+
+        input.addEventListener('input', function() {
+            clearTimeout(timer);
+            var val = this.value.trim();
+            if (val.length < 2) { suggest.classList.remove('show'); return; }
+
+            timer = setTimeout(function() {
+                fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        suggest.innerHTML = '';
+                        if (!data.length) { suggest.classList.remove('show'); return; }
+                        data.forEach(function(city) {
+                            var div = document.createElement('div');
+                            div.className = 'jp-suggest-item';
+                            div.textContent = city.full_name || city.name;
+                            div.addEventListener('click', function() {
+                                input.value = city.name;
+                                input.dataset.cityId = city.id;
+                                suggest.classList.remove('show');
+                                updateAppLocations();
+                            });
+                            suggest.appendChild(div);
+                        });
+                        suggest.classList.add('show');
+                    });
+            }, 300);
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(function() { suggest.classList.remove('show'); }, 200);
+        });
+    });
+
+    function updateAppLocations() {
+        var locs = [];
+        document.querySelectorAll('.app-location-input').forEach(function(input) {
+            if (input.dataset.cityId) {
+                locs.push({ city_id: input.dataset.cityId, name: input.value });
+            }
+        });
+        document.getElementById('application_locations').value = JSON.stringify(locs);
+    }
+
+    // ===== SCREENING QUESTIONS: enable/disable "Required" when question is selected =====
+    document.querySelectorAll('.sq-select-cb').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            var item = this.closest('.sq-item');
+            var reqCb = item ? item.querySelector('.sq-required-cb') : null;
+            if (reqCb) {
+                reqCb.disabled = !this.checked;
+                if (!this.checked) reqCb.checked = false;
+            }
+        });
+    });
+
+    // ===== AI GENERATE DESCRIPTION (OpenAI API) =====
+    var aiErrorEl = document.getElementById('ai-generate-error');
+    function showAiError(text) {
+        if (aiErrorEl) {
+            aiErrorEl.textContent = text || 'AI could not generate. Please write the description manually.';
+            aiErrorEl.classList.add('show');
+        }
+    }
+    function hideAiError() {
+        if (aiErrorEl) {
+            aiErrorEl.textContent = '';
+            aiErrorEl.classList.remove('show');
+        }
+    }
+
+    document.getElementById('aiGenerateBtn').addEventListener('click', function() {
+        var title = (document.getElementById('job_title').value || '').trim();
+        var instTitle = '';
+        var hiringTypeEl = document.getElementById('hiring_institution_type');
+        var hiringNameEl = document.getElementById('hiring_school_name');
+        if (hiringTypeEl && hiringTypeEl.options && hiringTypeEl.options[hiringTypeEl.selectedIndex]) {
+            instTitle = hiringTypeEl.options[hiringTypeEl.selectedIndex].text || hiringTypeEl.value || '';
+        }
+        if (!instTitle && hiringNameEl && hiringNameEl.value) instTitle = hiringNameEl.value;
+        if (!title) {
+            showAiError('Please enter a job title first.');
+            return;
+        }
+
+        hideAiError();
+        var btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
+
+        var url = '{{ route("public.account.jobs.generate-description") }}';
+        var token = (document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content')) || '';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ title: title, institution_title: instTitle })
+        })
+        .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, status: res.status, data: data }; }); })
+        .then(function(result) {
+            if (result.ok && result.data.success && result.data.description) {
+                document.getElementById('job_description').value = result.data.description;
+                if (result.data.fallback) {
+                    var fallbackMsg = result.data.api_error
+                        ? (result.data.api_error + ' Draft generated below – you can edit it.')
+                        : 'Draft generated (AI limit reached). You can edit below.';
+                    showAiError(fallbackMsg);
+                } else {
+                    hideAiError();
+                }
+            } else {
+                var msg = (result.data && result.data.message) ? result.data.message : 'AI could not generate. Please write the description manually.';
+                showAiError(msg);
+            }
+        })
+        .catch(function() {
+            showAiError('Network error. Please try again or write the description manually.');
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-magic"></i> Generate with AI';
+        });
+    });
+
+    document.getElementById('aiClearBtn').addEventListener('click', function() {
+        var descEl = document.getElementById('job_description');
+        if (descEl) descEl.value = '';
+        hideAiError();
+    });
+
+    // ===== JOB-SPECIFIC SCREENING QUESTIONS (add/remove/toggle) =====
+    var jsqList = document.getElementById('job-screening-questions-list');
+    var jsqAddBtn = document.getElementById('jsq-add-btn');
+    function getJsqNextIndex() {
+        var rows = jsqList.querySelectorAll('.jsq-row');
+        var max = -1;
+        rows.forEach(function(r) {
+            var idx = parseInt(r.getAttribute('data-index'), 10);
+            if (!isNaN(idx) && idx > max) max = idx;
+        });
+        return max + 1;
+    }
+    function toggleJsqOptions(row) {
+        var typeSel = row.querySelector('.jsq-type');
+        var type = typeSel ? typeSel.value : '';
+        var optsWrap = row.querySelector('.jsq-options-wrap');
+        var correctWrap = row.querySelector('.jsq-correct-wrap');
+        if (optsWrap) optsWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
+        if (correctWrap) correctWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
+    }
+    if (jsqAddBtn) {
+        jsqAddBtn.addEventListener('click', function() {
+            var idx = getJsqNextIndex();
+            var html = '<div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="' + idx + '">' +
+                '<input type="hidden" name="job_screening_questions[' + idx + '][id]" value="">' +
+                '<div class="row g-2 mb-2">' +
+                '<div class="col-12"><label class="form-label small mb-0">{{ __("Question") }}</label>' +
+                '<textarea name="job_screening_questions[' + idx + '][question]" class="form-control form-control-sm" rows="2" placeholder="{{ __("e.g. Do you have B.Ed?") }}"></textarea></div>' +
+                '<div class="col-md-4"><label class="form-label small mb-0">{{ __("Type") }}</label>' +
+                '<select name="job_screening_questions[' + idx + '][question_type]" class="form-select form-select-sm jsq-type">' +
+                '<option value="text" selected>Text</option><option value="textarea">Textarea</option><option value="dropdown">Dropdown</option><option value="checkbox">Checkbox</option></select></div>' +
+                '<div class="col-md-4"><label class="form-label small mb-0"><input type="checkbox" name="job_screening_questions[' + idx + '][is_required]" value="1"> {{ __("Required") }}</label></div>' +
+                '<div class="col-md-4 text-end"><button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="{{ __("Remove") }}"><i class="fa fa-times"></i></button></div></div>' +
+                '<div class="jsq-options-wrap mb-2" style="display:none;"><label class="form-label small mb-0">{{ __("Options (one per line)") }}</label>' +
+                '<textarea name="job_screening_questions[' + idx + '][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No"></textarea></div>' +
+                '<div class="jsq-correct-wrap" style="display:none;"><label class="form-label small mb-0">{{ __("Correct answer (candidate must select this to apply)") }}</label>' +
+                '<input type="text" name="job_screening_questions[' + idx + '][correct_answer]" class="form-control form-control-sm" placeholder="{{ __("Optional") }}"></div></div>';
+            jsqList.insertAdjacentHTML('beforeend', html);
+            var newRow = jsqList.querySelector('.jsq-row[data-index="' + idx + '"]');
+            if (newRow) {
+                var sel = newRow.querySelector('.jsq-type');
+                if (sel) sel.addEventListener('change', function() { toggleJsqOptions(newRow); });
+                var rm = newRow.querySelector('.jsq-remove');
+                if (rm) rm.addEventListener('click', function() { newRow.remove(); });
+            }
+        });
+    }
+    jsqList.querySelectorAll('.jsq-row').forEach(function(row) {
+        row.querySelectorAll('.jsq-type').forEach(function(sel) {
+            sel.addEventListener('change', function() { toggleJsqOptions(row); });
+        });
+        row.querySelectorAll('.jsq-remove').forEach(function(btn) {
+            btn.addEventListener('click', function() { row.remove(); });
+        });
+    });
+
+    // ===== FORM VALIDATION =====
+    document.getElementById('jobPostForm').addEventListener('submit', function(e) {
+        var empSel = document.getElementById('employment_type');
+        if (empSel) {
+            if (!empSel.value) {
+                empSel.removeAttribute('name');
+            } else {
+                empSel.setAttribute('name', 'jobTypes[]');
+            }
+        }
+        var valid = true;
+
+        if (!document.getElementById('job_title').value.trim()) {
+            document.getElementById('err-title').classList.add('show');
+            valid = false;
+        } else {
+            document.getElementById('err-title').classList.remove('show');
+        }
+
+        if (!document.getElementById('job_description').value.trim()) {
+            document.getElementById('err-description').classList.add('show');
+            valid = false;
+        } else {
+            document.getElementById('err-description').classList.remove('show');
+        }
+
+        var jobTypeChecked = document.querySelector('input[name="job_type_category"]:checked');
+        if (!jobTypeChecked) {
+            document.getElementById('err-job-type').classList.add('show');
+            valid = false;
+        } else {
+            document.getElementById('err-job-type').classList.remove('show');
+        }
+
+        if (!valid) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            var btn = document.getElementById('submitJobBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '{{ $isEdit ? __("Updating...") : __("Posting...") }}';
+            }
+        }
+    });
+});
+</script>
+@endsection

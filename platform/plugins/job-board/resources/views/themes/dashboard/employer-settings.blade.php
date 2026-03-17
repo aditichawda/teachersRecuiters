@@ -218,7 +218,7 @@
 
 <!-- Page header - same as dashboard -->
 <div class="emp-settings-header">
-    <h2>{{ $isConsultancy ? __('Consultant Profile') : __('School/Institution Profile') }}</h2>
+    <h2>{{ __('School/Institution Profile') }}</h2>
     <a href="{{ route('public.account.dashboard') }}">{{ __('Dashboard') }} &rarr;</a>
 </div>
 
@@ -324,7 +324,6 @@
                     <input type="text" name="name" class="form-control" value="{{ old('name', $company->name ?? $account->institution_name ?? '') }}" required placeholder="{{ __('Enter institution name') }}">
                 </div>
                 
-                @if(! $isConsultancy)
                 <!-- Institution Type -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label">{{ __('Type of Institution') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the category/affiliations that best describes your institution.') }}"><i class="fa fa-question-circle"></i></span></label>
@@ -369,7 +368,6 @@
                         </optgroup>
                     </select>
                 </div>
-                @endif
                 
                 <!-- About Us -->
                 <div class="col-12 mb-3">
@@ -413,7 +411,6 @@
     </div>
 
     {{-- ===== SECTION 3: Campus & Facilities ===== --}}
-    @if(false)
     <div class="emp-section mb-4">
         <div class="emp-section-header">
             <span class="emp-section-icon blue"><i class="fa fa-school"></i></span>
@@ -514,7 +511,6 @@
             </div>
         </div>
     </div>
-    @endif
 
     {{-- ===== SECTION 4: Location ===== --}}
     <div class="emp-section mb-4">
@@ -623,7 +619,6 @@
         </div>
     </div>
 
-    @if(! $isConsultancy)
     {{-- ===== SECTION 6: Awards ===== --}}
     <div class="emp-section mb-4">
         <div class="emp-section-header">
