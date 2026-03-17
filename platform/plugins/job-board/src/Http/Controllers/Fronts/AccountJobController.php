@@ -22,7 +22,6 @@ use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\AccountActivityLog;
 use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\CreditConsumption;
-use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Currency;
 use Botble\JobBoard\Models\CustomFieldValue;
 use Botble\JobBoard\Models\DegreeLevel;
@@ -207,6 +206,9 @@ class AccountJobController extends BaseController
          * @var Account $account
          */
         $account = auth('account')->user();
+        if ($account && $account->getKey()) {
+            $account = Account::find($account->getKey()) ?? $account;
+        }
 
         // Lock job post: no package ever purchased OR (package period invalid and no credits) OR no slot and no credits
         $packageContext = PackageContext::forAccount($account);

@@ -292,6 +292,7 @@ class WalletController extends BaseController
             }
         }
 
+        $isConsultancy = $account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy();
         $viewData = compact(
             'account',
             'transactions',
@@ -319,7 +320,8 @@ class WalletController extends BaseController
             'dedicatedRecruiterRequests',
             'dedicatedRecruiterValidTill',
             'companies',
-            'transactionStatusMap'
+            'transactionStatusMap',
+            'isConsultancy'
         );
 
         if ($account->isEmployer()) {
