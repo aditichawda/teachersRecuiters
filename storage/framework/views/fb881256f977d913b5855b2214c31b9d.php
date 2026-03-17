@@ -211,12 +211,19 @@
 <?php
     /** @var \Botble\JobBoard\Models\Account $account */
     $account = auth('account')->user();
+<<<<<<< HEAD
     $isConsultancy = $account && method_exists($account, 'isConsultancy') ? $account->isConsultancy() : (($account->registration_type ?? null) === 'consultancy');
+=======
+>>>>>>> 3833d8d6 (evening updates)
 ?>
 
 <!-- Page header - same as dashboard -->
 <div class="emp-settings-header">
+<<<<<<< HEAD
     <h2><?php echo e($isConsultancy ? __('Consultant Profile') : __('School/Institution Profile')); ?></h2>
+=======
+    <h2><?php echo e(__('School/Institution Profile')); ?></h2>
+>>>>>>> 3833d8d6 (evening updates)
     <a href="<?php echo e(route('public.account.dashboard')); ?>"><?php echo e(__('Dashboard')); ?> &rarr;</a>
 </div>
 
@@ -323,7 +330,10 @@
                     <input type="text" name="name" class="form-control" value="<?php echo e(old('name', $company->name ?? $account->institution_name ?? '')); ?>" required placeholder="<?php echo e(__('Enter institution name')); ?>">
                 </div>
                 
+<<<<<<< HEAD
                 <?php if(! $isConsultancy): ?>
+=======
+>>>>>>> 3833d8d6 (evening updates)
                 <!-- Institution Type -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label"><?php echo e(__('Type of Institution')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Select the category/affiliations that best describes your institution.')); ?>"><i class="fa fa-question-circle"></i></span></label>
@@ -368,7 +378,10 @@
                         </optgroup>
                     </select>
                 </div>
+<<<<<<< HEAD
                 <?php endif; ?>
+=======
+>>>>>>> 3833d8d6 (evening updates)
                 
                 <!-- About Us -->
                 <div class="col-12 mb-3">
@@ -412,7 +425,10 @@
     </div>
 
     
+<<<<<<< HEAD
     <?php if(false): ?>
+=======
+>>>>>>> 3833d8d6 (evening updates)
     <div class="emp-section mb-4">
         <div class="emp-section-header">
             <span class="emp-section-icon blue"><i class="fa fa-school"></i></span>
@@ -423,8 +439,13 @@
             <div class="row">
                 <!-- Campus Type -->
                 <div class="col-md-6 mb-3">
+<<<<<<< HEAD
                     <label class="form-label"><?php echo e(__('Campus Type')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Select whether your institution operates as a Day School, Boarding School, or Both.')); ?> · Day Campus · Boarding Campus"><i class="fa fa-question-circle"></i></span></label>
                     <select name="campus_type" class="form-select" required>
+=======
+                    <label class="form-label"><?php echo e(__('Campus Type')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Select whether your institution operates as a Day School, Boarding School, or Both.')); ?> · Day Campus · Boarding Campus"><i class="fa fa-question-circle"></i></span></label>
+                    <select name="campus_type" class="form-select">
+>>>>>>> 3833d8d6 (evening updates)
                         <option value=""><?php echo e(__('Select campus type')); ?></option>
                         <option value="day" <?php if(old('campus_type', $company->campus_type ?? '') == 'day'): echo 'selected'; endif; ?>><?php echo e(__('Day Campus')); ?></option>
                         <option value="boarding" <?php if(old('campus_type', $company->campus_type ?? '') == 'boarding'): echo 'selected'; endif; ?>><?php echo e(__('Boarding Campus')); ?></option>
@@ -434,7 +455,11 @@
                 
                 <!-- Academic Levels Offered -->
                 <div class="col-md-6 mb-3">
+<<<<<<< HEAD
                     <label class="form-label"><?php echo e(__('Academic Levels Offered')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Choose the grade range available at your school.')); ?>"><i class="fa fa-question-circle"></i></span></label>
+=======
+                    <label class="form-label"><?php echo e(__('Academic Levels Offered')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Choose the grade range available at your school.')); ?>"><i class="fa fa-question-circle"></i></span></label>
+>>>>>>> 3833d8d6 (evening updates)
                     <?php $selectedLevels = old('standard_level', $company->standard_level ?? []); ?>
                     <select id="ts-standard-level" name="standard_level[]" multiple placeholder="<?php echo e(__('Select levels...')); ?>">
                         <?php $__currentLoopData = ['pre_primary' => 'Pre-Primary', 'primary' => 'Primary', 'upper_primary' => 'Upper Primary', 'secondary' => 'Secondary', 'higher_secondary' => 'Higher Secondary', 'degree' => 'Degree College', 'post_graduate' => 'Post Graduate', 'research' => 'Research']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $val => $lbl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -445,7 +470,11 @@
                 
                 <!-- Staff Facilities & Benefits -->
                 <div class="col-12 mb-3">
+<<<<<<< HEAD
                     <label class="form-label"><?php echo e(__('Staff Facilities & Benefits')); ?> <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Select the facilities and benefits provided to staff.')); ?>"><i class="fa fa-question-circle"></i></span></label>
+=======
+                    <label class="form-label"><?php echo e(__('Staff Facilities & Benefits')); ?><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Select the facilities and benefits provided to staff.')); ?>"><i class="fa fa-question-circle"></i></span></label>
+>>>>>>> 3833d8d6 (evening updates)
                     <?php $selectedFacilities = old('staff_facilities', $company->staff_facilities ?? []); ?>
                     <select id="ts-staff-facilities" name="staff_facilities[]" multiple placeholder="<?php echo e(__('Select facilities...')); ?>">
                         <?php $__currentLoopData = ['accommodation' => __('Accommodation'), 'transportation_facility' => __('Transportation Facility'), 'meals' => __('Free/Discounted Meals'), 'medical_insurance' => __('Medical Insurance'), 'pf_esic' => __('PF / ESIC'), 'professional_development' => __('Professional Development Programs'), 'on_campus_housing' => __('On-campus Housing'), 'child_education' => __('Child Education Benefits')]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $val => $lbl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -514,7 +543,10 @@
             </div>
         </div>
     </div>
+<<<<<<< HEAD
     <?php endif; ?>
+=======
+>>>>>>> 3833d8d6 (evening updates)
 
     
     <div class="emp-section mb-4">
@@ -597,7 +629,10 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     <?php if(! $isConsultancy): ?>
+=======
+>>>>>>> 3833d8d6 (evening updates)
     
     <div class="emp-section mb-4">
         <div class="emp-section-header">
@@ -642,6 +677,7 @@
             <small class="form-text text-muted ms-2" id="award-count"><?php echo e(is_array($awards) ? count($awards) : 0); ?>/5</small>
         </div>
     </div>
+<<<<<<< HEAD
     <?php endif; ?>
 
     
@@ -654,10 +690,23 @@
         </div>
         <div class="emp-section-body">
             <p class="text-muted mb-3" style="font-size: 13px;"><?php echo e(__('Add affiliations and accreditations')); ?></p>
+=======
+
+    
+    <div class="emp-section mb-4">
+        <div class="emp-section-header">
+            <span class="emp-section-icon blue"><i class="fa fa-certificate"></i></span>
+            <h5><?php echo e(__('Affiliations')); ?></h5>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Add affiliations/recognitions (e.g., CBSE, ICSE, University, Accreditation).')); ?>"><i class="fa fa-question-circle"></i></span>
+        </div>
+        <div class="emp-section-body">
+            <p class="text-muted mb-3" style="font-size: 13px;"><?php echo e(__('Add affiliations (max 5)')); ?></p>
+>>>>>>> 3833d8d6 (evening updates)
             <div id="affiliations-container">
                 <?php $affiliations = old('affiliations', $company->affiliations ?? []); ?>
                 <?php if(is_array($affiliations) && count($affiliations) > 0): ?>
                     <?php $__currentLoopData = $affiliations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $aff): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+<<<<<<< HEAD
                     <div class="dynamic-entry affiliation-entry">
                         <button type="button" class="btn-remove-entry" onclick="this.closest('.affiliation-entry').remove();">✕</button>
                         <div class="row">
@@ -688,18 +737,57 @@
 
     
     <?php if(false): ?>
+=======
+                        <div class="dynamic-entry affiliation-entry">
+                            <button type="button" class="btn-remove-entry" onclick="this.closest('.affiliation-entry').remove(); updateAffiliationCount();">✕</button>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label"><?php echo e(__('Affiliation Title')); ?></label>
+                                    <input type="text" name="affiliations[<?php echo e($i); ?>][title]" class="form-control" value="<?php echo e($aff['title'] ?? ''); ?>" placeholder="<?php echo e(__('e.g. CBSE Affiliated')); ?>">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label"><?php echo e(__('Certificate/Photo')); ?></label>
+                                    <input type="file" name="affiliations_photos[<?php echo e($i); ?>]" class="form-control" accept="image/*">
+                                    <?php if(!empty($aff['photo'])): ?>
+                                        <small class="text-success"><?php echo e(__('Photo uploaded')); ?></small>
+                                        <input type="hidden" name="affiliations[<?php echo e($i); ?>][photo]" value="<?php echo e($aff['photo']); ?>">
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php endif; ?>
+            </div>
+            <button type="button" class="btn-add-entry mt-2" id="btn-add-affiliation" onclick="addAffiliation()">
+                <i class="fa fa-plus me-1"></i> <?php echo e(__('Add Affiliation')); ?>
+
+            </button>
+            <small class="form-text text-muted ms-2" id="affiliation-count"><?php echo e(is_array($affiliations) ? count($affiliations) : 0); ?>/5</small>
+        </div>
+    </div>
+
+    
+>>>>>>> 3833d8d6 (evening updates)
     <div class="emp-section mb-4">
         <div class="emp-section-header">
             <span class="emp-section-icon blue"><i class="fa fa-users"></i></span>
             <h5><?php echo e(__('Team Members')); ?></h5>
+<<<<<<< HEAD
             <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Introduce key members of your institution to build transparency and trust with potential candidates.')); ?>"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
             <p class="text-muted mb-3" style="font-size: 13px;"><?php echo e(__('Add key team members with their details')); ?></p>
+=======
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="<?php echo e(__('Add key team members (optional).')); ?>"><i class="fa fa-question-circle"></i></span>
+        </div>
+        <div class="emp-section-body">
+            <p class="text-muted mb-3" style="font-size: 13px;"><?php echo e(__('Add team members (max 5)')); ?></p>
+>>>>>>> 3833d8d6 (evening updates)
             <div id="team-container">
                 <?php $teamMembers = old('team_members', $company->team_members ?? []); ?>
                 <?php if(is_array($teamMembers) && count($teamMembers) > 0): ?>
                     <?php $__currentLoopData = $teamMembers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $member): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+<<<<<<< HEAD
                     <div class="dynamic-entry team-entry">
                         <button type="button" class="btn-remove-entry" onclick="this.closest('.team-entry').remove();">✕</button>
                         <div class="row">
@@ -728,6 +816,35 @@
     </div>
     <?php endif; ?>
     <?php endif; ?>
+=======
+                        <div class="dynamic-entry team-entry">
+                            <button type="button" class="btn-remove-entry" onclick="this.closest('.team-entry').remove(); updateTeamCount();">✕</button>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label"><?php echo e(__('Name')); ?></label>
+                                    <input type="text" name="team_members[<?php echo e($i); ?>][name]" class="form-control" value="<?php echo e($member['name'] ?? ''); ?>" placeholder="<?php echo e(__('Full Name')); ?>">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label"><?php echo e(__('Designation')); ?></label>
+                                    <input type="text" name="team_members[<?php echo e($i); ?>][designation]" class="form-control" value="<?php echo e($member['designation'] ?? ''); ?>" placeholder="<?php echo e(__('e.g. Vice Principal')); ?>">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label"><?php echo e(__('LinkedIn')); ?></label>
+                                    <input type="url" name="team_members[<?php echo e($i); ?>][linkedin]" class="form-control" value="<?php echo e($member['linkedin'] ?? ''); ?>" placeholder="https://linkedin.com/in/...">
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php endif; ?>
+            </div>
+            <button type="button" class="btn-add-entry mt-2" id="btn-add-team" onclick="addTeamMember()">
+                <i class="fa fa-plus me-1"></i> <?php echo e(__('Add Team Member')); ?>
+
+            </button>
+            <small class="form-text text-muted ms-2" id="team-count"><?php echo e(is_array($teamMembers) ? count($teamMembers) : 0); ?>/5</small>
+        </div>
+    </div>
+>>>>>>> 3833d8d6 (evening updates)
 
     
     <div class="text-end mb-4">
@@ -892,7 +1009,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+<<<<<<< HEAD
 <?php if(! $isConsultancy): ?>
+=======
+>>>>>>> 3833d8d6 (evening updates)
 // Dynamic Awards
 let awardIndex = <?php echo e(isset($awards) && is_array($awards) ? count($awards) : 0); ?>;
 function addAward() {
@@ -937,7 +1057,10 @@ function updateAwardCount() {
         else btn.style.display = '';
     }
 }
+<<<<<<< HEAD
 <?php endif; ?>
+=======
+>>>>>>> 3833d8d6 (evening updates)
 
 // Dynamic Campus Photos
 let campusPhotoIndex = <?php echo e(is_array($campusPhotos ?? []) ? count($campusPhotos ?? []) : 0); ?>;
@@ -977,6 +1100,7 @@ function updateCampusPhotoCount() {
     }
 }
 
+<<<<<<< HEAD
 // Dynamic Affiliations (section is disabled; start from 0 to avoid Blade variable errors)
 let affIndex = 0;
 function addAffiliation() {
@@ -984,6 +1108,20 @@ function addAffiliation() {
     const html = `
         <div class="dynamic-entry affiliation-entry">
             <button type="button" class="btn-remove-entry" onclick="this.closest('.affiliation-entry').remove();">✕</button>
+=======
+// Dynamic Affiliations
+let affIndex = <?php echo e(isset($affiliations) && is_array($affiliations) ? count($affiliations) : 0); ?>;
+function addAffiliation() {
+    const container = document.getElementById('affiliations-container');
+    if (!container) return;
+    if (container.querySelectorAll('.affiliation-entry').length >= 5) {
+        alert('<?php echo e(__("Maximum 5 affiliations allowed")); ?>');
+        return;
+    }
+    const html = `
+        <div class="dynamic-entry affiliation-entry">
+            <button type="button" class="btn-remove-entry" onclick="this.closest('.affiliation-entry').remove(); updateAffiliationCount();">✕</button>
+>>>>>>> 3833d8d6 (evening updates)
             <div class="row">
                 <div class="col-md-6 mb-2">
                     <label class="form-label"><?php echo e(__('Affiliation Title')); ?></label>
@@ -998,6 +1136,7 @@ function addAffiliation() {
     `;
     container.insertAdjacentHTML('beforeend', html);
     affIndex++;
+<<<<<<< HEAD
 }
 
 // Dynamic Team Members (section is disabled; start from 0 to avoid Blade variable errors)
@@ -1007,6 +1146,33 @@ function addTeamMember() {
     const html = `
         <div class="dynamic-entry team-entry">
             <button type="button" class="btn-remove-entry" onclick="this.closest('.team-entry').remove();">✕</button>
+=======
+    updateAffiliationCount();
+}
+
+function updateAffiliationCount() {
+    const container = document.getElementById('affiliations-container');
+    if (!container) return;
+    const count = container.querySelectorAll('.affiliation-entry').length;
+    const countEl = document.getElementById('affiliation-count');
+    const btn = document.getElementById('btn-add-affiliation');
+    if (countEl) countEl.textContent = count + '/5';
+    if (btn) btn.style.display = count >= 5 ? 'none' : '';
+}
+
+// Dynamic Team Members
+let teamIndex = <?php echo e(isset($teamMembers) && is_array($teamMembers) ? count($teamMembers) : 0); ?>;
+function addTeamMember() {
+    const container = document.getElementById('team-container');
+    if (!container) return;
+    if (container.querySelectorAll('.team-entry').length >= 5) {
+        alert('<?php echo e(__("Maximum 5 team members allowed")); ?>');
+        return;
+    }
+    const html = `
+        <div class="dynamic-entry team-entry">
+            <button type="button" class="btn-remove-entry" onclick="this.closest('.team-entry').remove(); updateTeamCount();">✕</button>
+>>>>>>> 3833d8d6 (evening updates)
             <div class="row">
                 <div class="col-md-4 mb-2">
                     <label class="form-label"><?php echo e(__('Name')); ?></label>
@@ -1025,8 +1191,30 @@ function addTeamMember() {
     `;
     container.insertAdjacentHTML('beforeend', html);
     teamIndex++;
+<<<<<<< HEAD
 }
 
+=======
+    updateTeamCount();
+}
+
+function updateTeamCount() {
+    const container = document.getElementById('team-container');
+    if (!container) return;
+    const count = container.querySelectorAll('.team-entry').length;
+    const countEl = document.getElementById('team-count');
+    const btn = document.getElementById('btn-add-team');
+    if (countEl) countEl.textContent = count + '/5';
+    if (btn) btn.style.display = count >= 5 ? 'none' : '';
+}
+
+// Initialize counts on load (in case data exists)
+updateCampusPhotoCount();
+updateAwardCount();
+updateAffiliationCount();
+updateTeamCount();
+
+>>>>>>> 3833d8d6 (evening updates)
 // Remove Avatar Button
 const removeAvatarBtn = document.getElementById('remove-avatar-btn');
 if (removeAvatarBtn) {

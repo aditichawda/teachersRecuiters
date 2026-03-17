@@ -730,14 +730,6 @@ class JobBoardServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-users-group',
                 ]))
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
-                    'id' => 'cms-account-staff',
-                    'priority' => 6.5,
-                    'parent_id' => null,
-                    'name' => 'plugins/job-board::dashboard.menu.staff',
-                    'url' => fn () => route('public.account.team-members.index'),
-                    'icon' => 'ti ti-users-group',
-                ]))
-                ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
                     'id' => 'cms-account-invoices',
                     'priority' => 7,
                     'parent_id' => null,

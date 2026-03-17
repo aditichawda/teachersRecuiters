@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 <?php if (! $__env->hasRenderedOnce('b4639257-c957-43bd-969e-146b3bc169e8')): $__env->markAsRenderedOnce('b4639257-c957-43bd-969e-146b3bc169e8'); ?>
+=======
+<?php if (! $__env->hasRenderedOnce('49138c38-81e4-4f8d-b733-225f0bbbeeaa')): $__env->markAsRenderedOnce('49138c38-81e4-4f8d-b733-225f0bbbeeaa'); ?>
+>>>>>>> 3833d8d6 (evening updates)
     <script src="<?php echo e(asset('vendor/core/packages/theme/js/toast.js')); ?>?v=<?php echo e(get_cms_version()); ?>"></script>
 
     <?php if(session()->has('success_msg') ||
