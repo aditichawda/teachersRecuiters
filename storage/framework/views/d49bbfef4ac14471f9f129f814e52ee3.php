@@ -10,10 +10,14 @@
 
 <!-- Featured Schools SECTION START -->
 <<<<<<< HEAD
+<<<<<<< HEAD
 <div class="section-full pt10 pb-10 site-bg-white twm-featured-schools-wrap" style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
 =======
 <div class="section-full p-t120 p-b90 site-bg-white twm-featured-schools-wrap" style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
 >>>>>>> fb5c60a2 (evening updates)
+=======
+<div class="section-full pt10 pb-10 site-bg-white twm-featured-schools-wrap" style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
+>>>>>>> ed09284c (udpdates)
     <div class="container">
         <div class="wt-separator-two-part">
             <div class="row wt-separator-two-part-row">

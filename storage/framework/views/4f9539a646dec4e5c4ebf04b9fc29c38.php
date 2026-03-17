@@ -27,10 +27,14 @@
 .v-testimonial-wrap {
     position: relative;
 <<<<<<< HEAD
+<<<<<<< HEAD
     padding: 15px 0;
 =======
     padding: 20px 0;
 >>>>>>> fb5c60a2 (evening updates)
+=======
+    padding: 15px 0;
+>>>>>>> ed09284c (udpdates)
     display: flex;
     flex-direction: column;
     align-items: center;

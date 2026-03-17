@@ -67,6 +67,9 @@
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> ed09284c (udpdates)
 /* Home Keyword Search Dropdown Styling */
 .home-keyword-search-wrapper {
     position: relative;
@@ -128,8 +131,11 @@
     background: #ffffff !important;
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> fb5c60a2 (evening updates)
+=======
+>>>>>>> ed09284c (udpdates)
 /* Ensure dropdown appears above other elements */
 .twm-bnr-search-bar {
     position: relative;
@@ -141,12 +147,18 @@
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> ed09284c (udpdates)
 .home-keyword-search-wrapper {
     z-index: 1001;
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> fb5c60a2 (evening updates)
+=======
+>>>>>>> ed09284c (udpdates)
 /* Remove outline from location input field */
 .home-city-search-input,
 .home-city-search-input:focus,
@@ -168,6 +180,9 @@
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> ed09284c (udpdates)
 /* Remove outline from keyword input field */
 .home-keyword-search-input,
 .home-keyword-search-input:focus,
@@ -300,9 +315,12 @@
 }
 
 /* Bootstrap Select Dropdown Styling - White Background, Black Text (for other selects) */
+<<<<<<< HEAD
 =======
 /* Bootstrap Select Dropdown Styling - White Background, Black Text */
 >>>>>>> fb5c60a2 (evening updates)
+=======
+>>>>>>> ed09284c (udpdates)
 .wt-search-bar-select.selectpicker-keyword,
 .wt-search-bar-select.selectpicker-keyword + .bootstrap-select,
 .bootstrap-select.selectpicker-keyword {
@@ -465,6 +483,7 @@
             <div class="form-group col-xl-4 col-lg-5 col-md-6">
                 <label><?php echo e(__('Keyword')); ?></label>
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <select class="wt-search-bar-select selectpicker-keyword" name="job_categories[]" id="home_keyword_search">
                     <option value=""><?php echo e(__('Type to search...')); ?></option>
                     <?php $__currentLoopData = app(\Botble\JobBoard\Repositories\Interfaces\CategoryInterface::class)->allBy(['status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED]); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -475,6 +494,12 @@
                     <?php $__currentLoopData = app(\Botble\JobBoard\Repositories\Interfaces\CategoryInterface::class)->allBy(['status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED]); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <option value="<?php echo e($item->id); ?>"><?php echo e($item->name); ?></option>
 >>>>>>> fb5c60a2 (evening updates)
+=======
+                <select class="wt-search-bar-select selectpicker-keyword" name="job_categories[]" id="home_keyword_search">
+                    <option value=""><?php echo e(__('Type to search...')); ?></option>
+                    <?php $__currentLoopData = app(\Botble\JobBoard\Repositories\Interfaces\CategoryInterface::class)->allBy(['status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED]); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($item->id); ?>" <?php echo e(request('job_categories.0') == $item->id ? 'selected' : ''); ?>><?php echo e($item->name); ?></option>
+>>>>>>> ed09284c (udpdates)
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
@@ -498,6 +523,9 @@
 
 </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> ed09284c (udpdates)
 
 <script>
     // Initialize Select2 for keyword search with typing functionality
@@ -580,6 +608,9 @@
         }
     })();
 </script>
+<<<<<<< HEAD
 =======
 >>>>>>> fb5c60a2 (evening updates)
+=======
+>>>>>>> ed09284c (udpdates)
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/partials/shortcodes/search-bar/form.blade.php ENDPATH**/ ?>
