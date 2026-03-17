@@ -290,33 +290,21 @@
             <div class="cd-hero-info">
                 <h1>{{ $company->name }} {!! $company->badge !!}</h1>
                 <div class="cd-hero-meta">
-                    @if ($company->full_address)
-                        <span><i class="feather-map-pin"></i> {{ $company->full_address }}</span>
-                    @elseif ($company->address)
-                        <span><i class="feather-map-pin"></i> {{ $company->address }}</span>
-                    @endif
-                    @if ($company->website && !empty(trim($company->website)))
-                        <a href="{{ $company->website }}" target="_blank" rel="noopener"><i class="feather-globe"></i> {{ Str::limit($company->website, 50) }}</a>
+                    @if ($canViewSchoolContactInfo ?? true)
+                        @if ($company->full_address)
+                            <span><i class="feather-map-pin"></i> {{ $company->full_address }}</span>
+                        @elseif ($company->address)
+                            <span><i class="feather-map-pin"></i> {{ $company->address }}</span>
+                        @endif
+                        @if ($company->website && !empty(trim($company->website)))
+                            <a href="{{ $company->website }}" target="_blank" rel="noopener"><i class="feather-globe"></i> {{ Str::limit($company->website, 50) }}</a>
+                        @endif
                     @endif
                 </div>
                 @if ($company->description && !empty(trim($company->description)))
                     <p class="cd-hero-desc">{{ Str::limit($company->description, 200) }}</p>
                 @endif
-                @php
-                    $admissionOpen = false;
-                    if ($company->admission && isset($company->admission->status) && $company->admission->status === 'published') {
-                        $content = $company->admission->content ?? '';
-                        $deadline = $company->admission->admission_deadline ?? null;
-                        if (trim($content) !== '' && $deadline) {
-                            try {
-                                $admissionOpen = !\Carbon\Carbon::parse($deadline)->endOfDay()->isPast();
-                            } catch (\Exception $e) {
-                                $admissionOpen = false;
-                            }
-                        }
-                    }
-                @endphp
-                @if ($admissionOpen)
+                @if (!empty($showAdmissionOnProfile) && $company->admission)
                 <div class="mt-3">
                     <button type="button" class="btn btn-primary px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#admissionEnquiryModal" style="background: linear-gradient(135deg, #059669, #047857); border: none;">
                         <i class="fas fa-graduation-cap me-2"></i>{{ __('Admission Enquiry') }}
@@ -384,26 +372,36 @@
                             </div>
                         @endif
 
-                        @if ($company->email)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Email') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->email }}</span>
-                            </div>
-                        @endif
-
-                        @if ($company->phone)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Phone') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->phone }}</span>
-                            </div>
-                        @endif
-
-                        @if ($company->website)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Website') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">
-                                    <a href="{{ $company->website }}" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;">{{ $company->website }}</a>
-                                </span>
+                        @if ($canViewSchoolContactInfo ?? true)
+                            @if ($company->email)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Email') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->email }}</span>
+                                </div>
+                            @endif
+                            @if ($company->phone)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Phone') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->phone }}</span>
+                                </div>
+                            @endif
+                            @if ($company->website)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Website') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">
+                                        <a href="{{ $company->website }}" target="_blank" rel="noopener" style="color: #0ea5e9; text-decoration: none;">{{ $company->website }}</a>
+                                    </span>
+                                </div>
+                            @endif
+                        @else
+                            <div class="company-detail-item p-3 rounded" style="background: #f8fafc; border: 1px dashed #e2e8f0;">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <i class="fas fa-lock text-secondary"></i>
+                                    <span style="color: #475569; font-size: 15px;">{{ __('plugins/job-board::messages.view_contact_info_locked') }}</span>
+                                    @if (!empty($contactInfoUpgradeUrl))
+                                        <a href="{{ $contactInfoUpgradeUrl }}" class="btn btn-sm btn-primary ms-2">{{ __('Upgrade') }}</a>
+                                    @endif
+                                </div>
                             </div>
                         @endif
 
@@ -449,16 +447,18 @@
                             </div>
                         @endif
 
-                        @if ($company->full_address)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Full Address') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->full_address }}</span>
-                            </div>
-                        @elseif ($company->address)
-                            <div class="company-detail-item">
-                                <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Address') }}:</strong>
-                                <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->address }}</span>
-                            </div>
+                        @if ($canViewSchoolContactInfo ?? true)
+                            @if ($company->full_address)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Full Address') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->full_address }}</span>
+                                </div>
+                            @elseif ($company->address)
+                                <div class="company-detail-item">
+                                    <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Address') }}:</strong>
+                                    <span style="color: #475569; font-size: 15px; margin-left: 10px;">{{ $company->address }}</span>
+                                </div>
+                            @endif
                         @endif
 
                         @if (is_plugin_active('location'))
@@ -670,8 +670,8 @@
                     </div>
                 @endif
 
-                {{-- Admission Section + Enquiry Form: only when employer has added About School/Institution and deadline has not passed --}}
-                @if (isset($admissionOpen) && $admissionOpen && $company->admission)
+                {{-- Admission Section: unlocked when package has "Admission Form on Profile" or credits entitlement --}}
+                @if (!empty($showAdmissionOnProfile) && $company->admission)
                 <div class="cd-content-card">
                     <h4 class="cd-section-title">{{ __('Get Admission with :name', ['name' => $company->name]) }}</h4>
                     <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0c1e3c;">{{ __('About School / Institution') }}</h5>
@@ -682,6 +682,21 @@
                     <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;">{{ __('Enquiry Form') }}</h5>
                     <p class="text-muted small mb-3">{{ __('Submit your admission enquiry using the form below or use the button above.') }}</p>
                     @include(Theme::getThemeNamespace('views.job-board.admission.partials.enquiry-form'), ['company' => $company])
+                </div>
+                @elseif (!empty($admissionFormLocked))
+                {{-- Admission Form Locked: show for owner with "Unlock with X credits" --}}
+                <div class="cd-content-card" style="border: 2px dashed #e2e8f0; background: #f8fafc;">
+                    <h4 class="cd-section-title mb-3">
+                        <i class="fas fa-lock text-secondary me-2"></i>{{ __('Admission Form on Profile') }} – {{ __('Locked') }}
+                    </h4>
+                    <p class="text-muted mb-3">{{ __('This feature is not included in your current package. Unlock it with payment (not coins) to show the admission enquiry form on your institution profile.') }}</p>
+                    @if (!empty($isOwner))
+                        <p class="mb-0">
+                            <a href="{{ route('public.account.packages') }}#choose-plan" class="btn btn-primary px-4 py-2 rounded-pill">
+                                <i class="fas fa-credit-card me-2"></i>{{ __('Unlock with payment') }}
+                            </a>
+                        </p>
+                    @endif
                 </div>
                 @endif
             </div>
@@ -738,7 +753,7 @@
                                         </div>
                                     </li>
                                 @endif
-                                @if ($company->phone)
+                                @if (($canViewSchoolContactInfo ?? true) && $company->phone)
                                     <li>
                                         <span class="cd-info-icon"><i class="fas fa-mobile-alt"></i></span>
                                         <div class="cd-info-text">
@@ -784,8 +799,8 @@
     </div>
 </div>
 
-{{-- Admission Enquiry Modal - only when admission is open (content + deadline not passed) --}}
-@if (isset($admissionOpen) && $admissionOpen)
+{{-- Admission Enquiry Modal - when admission shown on profile (package feature or open deadline) --}}
+@if (!empty($showAdmissionOnProfile) && $company->admission)
 <style>
 #admissionEnquiryModal .modal-dialog { max-width: 520px; }
 #admissionEnquiryModal .modal-body { padding: 1rem 1.25rem 1.5rem; }

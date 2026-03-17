@@ -938,3 +938,26 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 @endif
+
+{{-- Job seeker: when apply limit/validity exhausted, show popup on Apply button click --}}
+@if (is_plugin_active('job-board') && isset($jobSeekerCanApply) && $jobSeekerCanApply === false && !empty($jobSeekerApplyMessage ?? ''))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var packagesUrl = {!! json_encode($jobSeekerPackagesUrl ?? '#') !!};
+    var msg = {!! json_encode($jobSeekerApplyMessage ?? '') !!};
+    var upgradeText = {!! json_encode(__('Upgrade')) !!};
+    var title = {!! json_encode(__('Cannot Apply')) !!};
+    document.body.addEventListener('click', function(e) {
+        var a = e.target.closest('a[href="#applyNow"], a[href="#applyExternalJob"]');
+        if (!a) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('warning', msg + ' <br><a href="' + packagesUrl + '" class="btn btn-primary btn-sm mt-2">' + upgradeText + '</a>', title);
+        } else {
+            if (confirm(msg + '\n\n' + upgradeText + '?')) window.location.href = packagesUrl;
+        }
+    }, true);
+});
+</script>
+@endif

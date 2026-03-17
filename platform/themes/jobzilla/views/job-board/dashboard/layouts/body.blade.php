@@ -7,6 +7,11 @@
     use Botble\Slug\Facades\SlugHelper;
     
     $account = auth('account')->user();
+    // Ensure full model with registration_type so consultancy conditions work (show/hide, redirects)
+    if ($account && $account->getKey()) {
+        $account = \Botble\JobBoard\Models\Account::find($account->getKey()) ?? $account;
+    }
+    $company = $account ? $account->companies()->with('slugable')->first() : null;
     $company = $account ? $account->companies()->with('slugable')->first() : null;
     $employerPublicProfileUrl = null;
     if ($account->isEmployer() && $company) {
@@ -32,7 +37,19 @@
     }
     
     // Profile completion (use null-safe: $company can be null when employer has no company yet)
+    // Profile completion (use null-safe: $company can be null when employer has no company yet)
     $profileFields = [
+        ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company?->name)],
+        ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company?->email)],
+        ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company?->phone)],
+        ['field' => 'logo', 'label' => 'Institution Logo', 'filled' => !empty($company?->logo)],
+        ['field' => 'description', 'label' => 'About Us', 'filled' => !empty($company?->description)],
+        ['field' => 'address', 'label' => 'Address', 'filled' => !empty($company?->address)],
+        ['field' => 'institution_type', 'label' => 'Institution Type', 'filled' => !empty($company?->institution_type)],
+        ['field' => 'year_founded', 'label' => 'Established Year', 'filled' => !empty($company?->year_founded)],
+        ['field' => 'campus_type', 'label' => 'Campus Type', 'filled' => !empty($company?->campus_type)],
+        ['field' => 'standard_level', 'label' => 'Standard Level', 'filled' => !empty($company?->standard_level)],
+        ['field' => 'staff_facilities', 'label' => 'Staff Facilities', 'filled' => !empty($company?->staff_facilities)],
         ['field' => 'name', 'label' => 'Institution Name', 'filled' => !empty($company?->name)],
         ['field' => 'email', 'label' => 'Institution Email', 'filled' => !empty($company?->email)],
         ['field' => 'phone', 'label' => 'Institution Phone', 'filled' => !empty($company?->phone)],
@@ -50,6 +67,7 @@
     
     $currentUrl = url()->current();
     $menuItems = DashboardMenu::getAll('account');
+    $isConsultancy = $account && method_exists($account, 'isConsultancy') && $account->isConsultancy();
 
     // Post Job: lock when no package ever purchased (credits system enabled). Allow when package slot or credits (PackageContext).
     $hasPurchasedPackage = false;
@@ -81,50 +99,56 @@
         }
     }
 
-    // Admission: separate from Post Job. Lock only when admission enquiry access is missing.
-    $canAccessAdmission = true;
-    $admissionLocked = false;
-    if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
-        try {
-            if (!\Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
+
+
+// Admission: unlock if (1) package has "Admission Form on Profile" and is valid, OR (2) credits used (debit) and validity.
+$canAccessAdmission = true;
+$admissionLocked = false;
+if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem()) {
+    try {
+        // 1) Package me "Admission Form on Profile" hai aur package valid hai → unlock
+        if ($packageContext && $packageContext->package && $packageContext->hasAdmissionFormOnProfile() && $packageContext->periodEnd && \Carbon\Carbon::now()->lte($packageContext->periodEnd)) {
+            $canAccessAdmission = true;
+        } elseif (!\Illuminate\Support\Facades\Schema::hasColumn('jb_transactions', 'feature_key')) {
+            $canAccessAdmission = false;
+        } else {
+            // 2) Package me nahi hai to credits se unlock (debit transaction + validity)
+            $admissionDebit = Transaction::query()
+                ->where('account_id', $account->getKey())
+                ->where('type', Transaction::TYPE_DEBIT)
+                ->where('feature_key', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
+                ->latest()
+                ->first();
+            if (!$admissionDebit || !$admissionDebit->created_at) {
                 $canAccessAdmission = false;
             } else {
-                $admissionDebit = Transaction::query()
+                $lastPurchase = Transaction::query()
                     ->where('account_id', $account->getKey())
-                    ->where('type', Transaction::TYPE_DEBIT)
-                    ->where('feature_key', \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
+                    ->where(function ($q): void {
+                        $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+                    })
+                    ->whereNotNull('payment_id')
+                    ->whereNotNull('package_id')
+                    ->with('package')
                     ->latest()
                     ->first();
-                if (!$admissionDebit || !$admissionDebit->created_at) {
-                    $canAccessAdmission = false;
+                if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+                    $packageExpiryAt = \Carbon\Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+                    $canAccessAdmission = \Carbon\Carbon::now()->lte($packageExpiryAt);
                 } else {
-                    $lastPurchase = Transaction::query()
-                        ->where('account_id', $account->getKey())
-                        ->where(function ($q): void {
-                            $q->whereNull('type')->orWhere('type', '!=', 'deduct');
-                        })
-                        ->whereNotNull('payment_id')
-                        ->whereNotNull('package_id')
-                        ->with('package')
-                        ->latest()
-                        ->first();
-                    if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
-                        $packageExpiryAt = \Carbon\Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
-                        $canAccessAdmission = \Carbon\Carbon::now()->lte($packageExpiryAt);
-                    } else {
-                        $debitDate = $admissionDebit->created_at instanceof \DateTimeInterface
-                            ? \Carbon\Carbon::parse($admissionDebit->created_at)
-                            : \Carbon\Carbon::parse((string) $admissionDebit->created_at);
-                        $canAccessAdmission = $debitDate->gte(\Carbon\Carbon::now()->subDays(365));
-                    }
+                    $debitDate = $admissionDebit->created_at instanceof \DateTimeInterface
+                        ? \Carbon\Carbon::parse($admissionDebit->created_at)
+                        : \Carbon\Carbon::parse((string) $admissionDebit->created_at);
+                    $canAccessAdmission = $debitDate->gte(\Carbon\Carbon::now()->subDays(365));
                 }
             }
-            $admissionLocked = !$canAccessAdmission;
-        } catch (\Throwable $e) {
-            $canAccessAdmission = false;
-            $admissionLocked = true;
         }
+        $admissionLocked = !$canAccessAdmission;
+    } catch (\Throwable $e) {
+        $canAccessAdmission = false;
+        $admissionLocked = true;
     }
+}
 
     // Get featured categories with job counts
     $featuredCategories = collect();
@@ -625,6 +649,7 @@
     position: sticky;
     top: 20px;
     transition: transform 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
 .enl-avatar-wrap {
@@ -887,8 +912,61 @@
         left: 0;
     }
     
+    
+    /* Show sidebar toggle on mobile */
+    .enl-sidebar-toggle {
+        display: flex;
+        top: 70px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .enl-sidebar-toggle.active {
+        left: 250px;
+    }
+    
+    .enl-sidebar-col {
+        width: 260px;
+        max-width: 260px;
+        left: -260px;
+    }
+    
+    .enl-sidebar-col.show {
+        left: 0;
+    }
+    
     .enl-mobile-header { display: flex; }
     .enl-main { padding: 15px 0; }
+    
+    .emp-new-layout .container {
+        padding: 15px 10px;
+    }
+    
+    .enl-header-inner {
+        padding: 0 10px;
+        height: 60px;
+    }
+    
+    .enl-header-nav {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .enl-sidebar-col {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .enl-sidebar-toggle.active {
+        left: calc(100% - 50px);
+    }
+    
+    .enl-main {
+        padding: 10px 0;
+    }
     
     .emp-new-layout .container {
         padding: 15px 10px;
@@ -1099,6 +1177,74 @@
 })();
 </script>
 
+<script>
+// Dashboard Sidebar Toggle Functionality
+(function() {
+    function initDashboardSidebar() {
+        const toggleBtn = document.getElementById('dashboard-sidebar-toggle');
+        const sidebar = document.getElementById('dashboard-sidebar');
+        const overlay = document.getElementById('dashboard-sidebar-overlay');
+        
+        if (toggleBtn && sidebar && overlay) {
+            toggleBtn.addEventListener('click', function() {
+                const isOpen = sidebar.classList.contains('show');
+                
+                if (isOpen) {
+                    // Close sidebar
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                    toggleBtn.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Open sidebar
+                    sidebar.classList.add('show');
+                    overlay.classList.add('show');
+                    toggleBtn.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            });
+            
+            // Close on overlay click
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+                toggleBtn.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+            
+            // Close on sidebar link click (mobile/tablet)
+            const sidebarLinks = sidebar.querySelectorAll('a');
+            sidebarLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 991) {
+                        sidebar.classList.remove('show');
+                        overlay.classList.remove('show');
+                        toggleBtn.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            });
+            
+            // Close on window resize if desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 991) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                    toggleBtn.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDashboardSidebar);
+    } else {
+        initDashboardSidebar();
+    }
+})();
+</script>
+
 <div class="emp-new-layout">
     <!-- Mobile Sidebar Toggle Button -->
     <button class="enl-sidebar-toggle" id="dashboard-sidebar-toggle" aria-label="Toggle sidebar">
@@ -1134,12 +1280,14 @@
                         @endif
                     </div>
                     
+                    @unless($isConsultancy)
                     <!-- Credits (click opens profile completion modal) -->
                     <div class="enl-credits" onclick="document.getElementById('enlProfileModal').style.display='flex'" style="cursor:pointer;">
                         <i class="fa fa-coins"></i>
                         <span>Credits:</span>
                         <span class="enl-credits-val">{{ $account->credits ?? 0 }}</span>
                     </div>
+                    @endunless
 
                     <!-- Profile Completion -->
                     <div class="enl-completion">
@@ -1150,9 +1298,10 @@
                         <span class="enl-comp-text" onclick="document.getElementById('enlProfileModal').style.display='flex'">{{ $empCompletion }}% Complete</span>
                     </div>
                     
-                    <!-- Post Job Button (locked: show limit-over popup with "Use credits for 1 Job Post"; no auto-deduct) -->
+                    <!-- Post Job Button: consultancy → direct to form; others → choice popup -->
                     @php $postJobLocked = !($canPost ?? true); @endphp
-                    <a href="{{ $postJobLocked ? route('public.account.wallet') : route('public.account.jobs.create') }}" class="enl-postjob {{ $postJobLocked ? 'enl-postjob-locked' : '' }} @if($postJobLocked && $account->isEmployer() && $jobPostCreditsRequired > 0) enl-limit-over-trigger @endif" data-limit-over="job_post" data-credits-required="{{ $jobPostCreditsRequired }}" data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" title="{{ $postJobLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
+                    @if($isConsultancy)
+                    <a href="{{ route('public.account.jobs.create') }}" class="enl-postjob {{ $postJobLocked ? 'enl-postjob-locked' : '' }}" title="{{ __('Post Job') }}">
                         @if($postJobLocked)
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
                             <span>{{ __('Post Job') }}</span>
@@ -1160,9 +1309,25 @@
                             <i class="fa fa-plus-circle"></i> {{ __('Post Job') }}
                         @endif
                     </a>
+                    @else
+                    <a href="#" class="enl-postjob enl-postjob-choice-trigger {{ $postJobLocked ? 'enl-postjob-locked' : '' }}" data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" data-can-post="{{ $canPost ? '1' : '0' }}" title="{{ __('Choose how to post job') }}">
+                        @if($postJobLocked)
+                            <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
+                            <span>{{ __('Post Job') }}</span>
+                        @else
+                            <i class="fa fa-plus-circle"></i> {{ __('Post Job') }}
+                        @endif
+                    </a>
+                    @endif
 
+                    @unless($isConsultancy)
                     <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
-                    <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
+                    <a
+                        href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}"
+                        class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}"
+                        style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}"
+                        title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}"
+                    >
                         @if($admissionLocked)
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
                             <span>{{ __('Admission') }}</span>
@@ -1170,6 +1335,7 @@
                             <i class="fa fa-graduation-cap"></i> {{ __('Admission') }}
                         @endif
                     </a>
+                    @endunless
                     
                     <!-- Navigation -->
                     <ul class="enl-nav">
@@ -1178,6 +1344,9 @@
                             @php
                                 $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages'];
                                 if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
+                                    continue;
+                                }
+                                if ($isConsultancy && in_array($item['id'] ?? '', ['cms-account-staff', 'cms-account-companies'])) {
                                     continue;
                                 }
                             @endphp
@@ -1215,11 +1384,13 @@
     <div class="enl-pm-modal">
         <button type="button" class="enl-pm-close" onclick="document.getElementById('enlProfileModal').style.display='none'">&times;</button>
         
+        @unless($isConsultancy)
         <div class="enl-pm-badge">
             <i class="fa fa-coins"></i>
             <span>Credits:</span>
             <span class="enl-pm-badge-val">{{ $account->credits ?? 0 }}</span>
         </div>
+        @endunless
 
         <div class="enl-pm-comp">
             <h6 class="enl-pm-comp-title">Profile Completion</h6>
@@ -1308,6 +1479,67 @@
     </div>
 </div>
 
+@if($account && $account->isEmployer() && !$isConsultancy)
+{{-- Post Job choice popup: Need assistant (→ Wallet) or Post by self (→ Job form) — hidden for consultancy (they go direct to form) --}}
+<div id="enlPostJobChoiceModal" class="enl-pm-overlay" style="display:none;">
+    <div class="enl-pm-modal" style="max-width:420px;">
+        <button type="button" class="enl-pm-close" onclick="document.getElementById('enlPostJobChoiceModal').style.display='none'">&times;</button>
+        <h5 style="font-size:18px;font-weight:700;color:#333;margin-bottom:12px;">
+            <i class="fa fa-plus-circle" style="color:#0073d1;margin-right:8px;"></i>
+            {{ __('Post Job') }}
+        </h5>
+        <p style="font-size:14px;color:#555;line-height:1.5;margin-bottom:20px;">{{ __('Choose how you want to post a job:') }}</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <button type="button" id="enlPostJobChoiceNeedAssistantBtn" style="padding:12px 18px;border:1.5px solid #0073d1;border-radius:8px;background:#fff;color:#0073d1;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+                <i class="fa fa-hand-holding-heart" style="margin-right:8px;"></i> {{ __('Need assistant for job posting') }}
+            </button>
+            <button type="button" id="enlPostJobChoiceBySelfBtn" style="padding:12px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,#0073d1,#005bb5);color:#fff;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+                <i class="fa fa-edit" style="margin-right:8px;"></i> {{ __('Post a job by self') }}
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    var trigger = document.querySelector('a.enl-postjob-choice-trigger');
+    var choiceModal = document.getElementById('enlPostJobChoiceModal');
+    var needAssistantBtn = document.getElementById('enlPostJobChoiceNeedAssistantBtn');
+    var bySelfBtn = document.getElementById('enlPostJobChoiceBySelfBtn');
+    var limitOverModal = document.getElementById('enlLimitOverModal');
+    if (!trigger || !choiceModal) return;
+    trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        choiceModal.style.display = 'flex';
+    });
+    choiceModal.addEventListener('click', function(e) {
+        if (e.target === choiceModal) choiceModal.style.display = 'none';
+    });
+    if (needAssistantBtn) {
+        needAssistantBtn.addEventListener('click', function() {
+            var url = trigger.getAttribute('data-wallet-url');
+            if (url) window.location.href = url;
+        });
+    }
+    if (bySelfBtn) {
+        bySelfBtn.addEventListener('click', function() {
+            var canPost = trigger.getAttribute('data-can-post') === '1';
+            var jobCreateUrl = trigger.getAttribute('data-job-create-url');
+            if (canPost && jobCreateUrl) {
+                choiceModal.style.display = 'none';
+                window.location.href = jobCreateUrl;
+            } else if (limitOverModal) {
+                choiceModal.style.display = 'none';
+                limitOverModal.style.display = 'flex';
+            } else if (jobCreateUrl) {
+                choiceModal.style.display = 'none';
+                window.location.href = jobCreateUrl;
+            }
+        });
+    }
+})();
+</script>
+@endif
+
 @if($account && $account->isEmployer() && $jobPostCreditsRequired > 0)
 <!-- Limit over popup: message + Use credits for 1 Job Post (no auto-deduct) -->
 <div id="enlLimitOverModal" class="enl-pm-overlay" style="display:none;">
@@ -1330,15 +1562,11 @@
 </div>
 <script>
 (function() {
-    var trigger = document.querySelector('a.enl-limit-over-trigger[data-limit-over="job_post"]');
+    var trigger = document.querySelector('a.enl-postjob-choice-trigger[data-purchase-url]');
     var modal = document.getElementById('enlLimitOverModal');
     var useCreditsBtn = document.getElementById('enlLimitOverUseCreditsBtn');
     var walletBtn = document.getElementById('enlLimitOverWalletBtn');
     if (!trigger || !modal || !useCreditsBtn) return;
-    trigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        modal.style.display = 'flex';
-    });
     useCreditsBtn.addEventListener('click', function() {
         var url = trigger.getAttribute('data-purchase-url');
         var jobCreateUrl = trigger.getAttribute('data-job-create-url');

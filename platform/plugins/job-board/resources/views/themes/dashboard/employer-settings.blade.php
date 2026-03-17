@@ -1,3 +1,4 @@
+
 @extends(JobBoardHelper::viewPath('dashboard.layouts.master'))
 
 @section('content')
@@ -210,6 +211,11 @@
     } 
 </style>
 
+@php
+    /** @var \Botble\JobBoard\Models\Account $account */
+    $account = auth('account')->user();
+@endphp
+
 <!-- Page header - same as dashboard -->
 <div class="emp-settings-header">
     <h2>{{ __('School/Institution Profile') }}</h2>
@@ -415,8 +421,8 @@
             <div class="row">
                 <!-- Campus Type -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Campus Type') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select whether your institution operates as a Day School, Boarding School, or Both.') }} · Day Campus · Boarding Campus"><i class="fa fa-question-circle"></i></span></label>
-                    <select name="campus_type" class="form-select" required>
+                    <label class="form-label">{{ __('Campus Type') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select whether your institution operates as a Day School, Boarding School, or Both.') }} · Day Campus · Boarding Campus"><i class="fa fa-question-circle"></i></span></label>
+                    <select name="campus_type" class="form-select">
                         <option value="">{{ __('Select campus type') }}</option>
                         <option value="day" @selected(old('campus_type', $company->campus_type ?? '') == 'day')>{{ __('Day Campus') }}</option>
                         <option value="boarding" @selected(old('campus_type', $company->campus_type ?? '') == 'boarding')>{{ __('Boarding Campus') }}</option>
@@ -426,7 +432,7 @@
                 
                 <!-- Academic Levels Offered -->
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Academic Levels Offered') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Choose the grade range available at your school.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    <label class="form-label">{{ __('Academic Levels Offered') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Choose the grade range available at your school.') }}"><i class="fa fa-question-circle"></i></span></label>
                     @php $selectedLevels = old('standard_level', $company->standard_level ?? []); @endphp
                     <select id="ts-standard-level" name="standard_level[]" multiple placeholder="{{ __('Select levels...') }}">
                         @foreach(['pre_primary' => 'Pre-Primary', 'primary' => 'Primary', 'upper_primary' => 'Upper Primary', 'secondary' => 'Secondary', 'higher_secondary' => 'Higher Secondary', 'degree' => 'Degree College', 'post_graduate' => 'Post Graduate', 'research' => 'Research'] as $val => $lbl)
@@ -437,7 +443,7 @@
                 
                 <!-- Staff Facilities & Benefits -->
                 <div class="col-12 mb-3">
-                    <label class="form-label">{{ __('Staff Facilities & Benefits') }} <span class="required">*</span><span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the facilities and benefits provided to staff.') }}"><i class="fa fa-question-circle"></i></span></label>
+                    <label class="form-label">{{ __('Staff Facilities & Benefits') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Select the facilities and benefits provided to staff.') }}"><i class="fa fa-question-circle"></i></span></label>
                     @php $selectedFacilities = old('staff_facilities', $company->staff_facilities ?? []); @endphp
                     <select id="ts-staff-facilities" name="staff_facilities[]" multiple placeholder="{{ __('Select facilities...') }}">
                         @foreach(['accommodation' => __('Accommodation'), 'transportation_facility' => __('Transportation Facility'), 'meals' => __('Free/Discounted Meals'), 'medical_insurance' => __('Medical Insurance'), 'pf_esic' => __('PF / ESIC'), 'professional_development' => __('Professional Development Programs'), 'on_campus_housing' => __('On-campus Housing'), 'child_education' => __('Child Education Benefits')] as $val => $lbl)
@@ -634,39 +640,40 @@
     {{-- ===== SECTION 7: Affiliations ===== --}}
     <div class="emp-section mb-4">
         <div class="emp-section-header">
-            <span class="emp-section-icon blue"><i class="fa fa-handshake"></i></span>
+            <span class="emp-section-icon blue"><i class="fa fa-certificate"></i></span>
             <h5>{{ __('Affiliations') }}</h5>
-            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Mention your official board affiliations and accreditations.') }}"><i class="fa fa-question-circle"></i></span>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add affiliations/recognitions (e.g., CBSE, ICSE, University, Accreditation).') }}"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
-            <p class="text-muted mb-3" style="font-size: 13px;">{{ __('Add affiliations and accreditations') }}</p>
+            <p class="text-muted mb-3" style="font-size: 13px;">{{ __('Add affiliations (max 5)') }}</p>
             <div id="affiliations-container">
                 @php $affiliations = old('affiliations', $company->affiliations ?? []); @endphp
                 @if(is_array($affiliations) && count($affiliations) > 0)
                     @foreach($affiliations as $i => $aff)
-                    <div class="dynamic-entry affiliation-entry">
-                        <button type="button" class="btn-remove-entry" onclick="this.closest('.affiliation-entry').remove();">✕</button>
-                        <div class="row">
-                            <div class="col-md-6 mb-2">
-                                <label class="form-label">{{ __('Affiliation Title') }}</label>
-                                <input type="text" name="affiliations[{{ $i }}][title]" class="form-control" value="{{ $aff['title'] ?? '' }}" placeholder="{{ __('e.g. CBSE Affiliated') }}">
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <label class="form-label">{{ __('Certificate/Photo') }}</label>
-                                <input type="file" name="affiliations_photos[{{ $i }}]" class="form-control" accept="image/*">
-                                @if(!empty($aff['photo']))
-                                    <small class="text-success">{{ __('Photo uploaded') }}</small>
-                                    <input type="hidden" name="affiliations[{{ $i }}][photo]" value="{{ $aff['photo'] }}">
-                                @endif
+                        <div class="dynamic-entry affiliation-entry">
+                            <button type="button" class="btn-remove-entry" onclick="this.closest('.affiliation-entry').remove(); updateAffiliationCount();">✕</button>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">{{ __('Affiliation Title') }}</label>
+                                    <input type="text" name="affiliations[{{ $i }}][title]" class="form-control" value="{{ $aff['title'] ?? '' }}" placeholder="{{ __('e.g. CBSE Affiliated') }}">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">{{ __('Certificate/Photo') }}</label>
+                                    <input type="file" name="affiliations_photos[{{ $i }}]" class="form-control" accept="image/*">
+                                    @if(!empty($aff['photo']))
+                                        <small class="text-success">{{ __('Photo uploaded') }}</small>
+                                        <input type="hidden" name="affiliations[{{ $i }}][photo]" value="{{ $aff['photo'] }}">
+                                    @endif
+                                </div>
                             </div>
                         </div>
-                    </div>
                     @endforeach
                 @endif
             </div>
-            <button type="button" class="btn-add-entry mt-2" onclick="addAffiliation()">
+            <button type="button" class="btn-add-entry mt-2" id="btn-add-affiliation" onclick="addAffiliation()">
                 <i class="fa fa-plus me-1"></i> {{ __('Add Affiliation') }}
             </button>
+            <small class="form-text text-muted ms-2" id="affiliation-count">{{ is_array($affiliations) ? count($affiliations) : 0 }}/5</small>
         </div>
     </div>
 
@@ -675,37 +682,38 @@
         <div class="emp-section-header">
             <span class="emp-section-icon blue"><i class="fa fa-users"></i></span>
             <h5>{{ __('Team Members') }}</h5>
-            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Introduce key members of your institution to build transparency and trust with potential candidates.') }}"><i class="fa fa-question-circle"></i></span>
+            <span class="field-help-icon ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Add key team members (optional).') }}"><i class="fa fa-question-circle"></i></span>
         </div>
         <div class="emp-section-body">
-            <p class="text-muted mb-3" style="font-size: 13px;">{{ __('Add key team members with their details') }}</p>
+            <p class="text-muted mb-3" style="font-size: 13px;">{{ __('Add team members (max 5)') }}</p>
             <div id="team-container">
                 @php $teamMembers = old('team_members', $company->team_members ?? []); @endphp
                 @if(is_array($teamMembers) && count($teamMembers) > 0)
                     @foreach($teamMembers as $i => $member)
-                    <div class="dynamic-entry team-entry">
-                        <button type="button" class="btn-remove-entry" onclick="this.closest('.team-entry').remove();">✕</button>
-                        <div class="row">
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">{{ __('Name') }}</label>
-                                <input type="text" name="team_members[{{ $i }}][name]" class="form-control" value="{{ $member['name'] ?? '' }}" placeholder="{{ __('Full Name') }}">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">{{ __('Designation') }}</label>
-                                <input type="text" name="team_members[{{ $i }}][designation]" class="form-control" value="{{ $member['designation'] ?? '' }}" placeholder="{{ __('e.g. Vice Principal') }}">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">{{ __('LinkedIn') }}</label>
-                                <input type="url" name="team_members[{{ $i }}][linkedin]" class="form-control" value="{{ $member['linkedin'] ?? '' }}" placeholder="https://linkedin.com/in/...">
+                        <div class="dynamic-entry team-entry">
+                            <button type="button" class="btn-remove-entry" onclick="this.closest('.team-entry').remove(); updateTeamCount();">✕</button>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">{{ __('Name') }}</label>
+                                    <input type="text" name="team_members[{{ $i }}][name]" class="form-control" value="{{ $member['name'] ?? '' }}" placeholder="{{ __('Full Name') }}">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">{{ __('Designation') }}</label>
+                                    <input type="text" name="team_members[{{ $i }}][designation]" class="form-control" value="{{ $member['designation'] ?? '' }}" placeholder="{{ __('e.g. Vice Principal') }}">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">{{ __('LinkedIn') }}</label>
+                                    <input type="url" name="team_members[{{ $i }}][linkedin]" class="form-control" value="{{ $member['linkedin'] ?? '' }}" placeholder="https://linkedin.com/in/...">
+                                </div>
                             </div>
                         </div>
-                    </div>
                     @endforeach
                 @endif
             </div>
-            <button type="button" class="btn-add-entry mt-2" onclick="addTeamMember()">
+            <button type="button" class="btn-add-entry mt-2" id="btn-add-team" onclick="addTeamMember()">
                 <i class="fa fa-plus me-1"></i> {{ __('Add Team Member') }}
             </button>
+            <small class="form-text text-muted ms-2" id="team-count">{{ is_array($teamMembers) ? count($teamMembers) : 0 }}/5</small>
         </div>
     </div>
 
@@ -872,9 +880,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Dynamic Awards
-let awardIndex = {{ is_array($awards) ? count($awards) : 0 }};
+let awardIndex = {{ isset($awards) && is_array($awards) ? count($awards) : 0 }};
 function addAward() {
     const container = document.getElementById('awards-container');
+    if (!container) return;
     if (container.querySelectorAll('.award-entry').length >= 5) {
         alert('Maximum 5 awards allowed');
         return;
@@ -903,10 +912,16 @@ function addAward() {
     updateAwardCount();
 }
 function updateAwardCount() {
-    const count = document.querySelectorAll('.award-entry').length;
-    document.getElementById('award-count').textContent = count + '/5';
-    if (count >= 5) document.getElementById('btn-add-award').style.display = 'none';
-    else document.getElementById('btn-add-award').style.display = '';
+    const container = document.getElementById('awards-container');
+    if (!container) return;
+    const count = container.querySelectorAll('.award-entry').length;
+    const countEl = document.getElementById('award-count');
+    const btn = document.getElementById('btn-add-award');
+    if (countEl) countEl.textContent = count + '/5';
+    if (btn) {
+        if (count >= 5) btn.style.display = 'none';
+        else btn.style.display = '';
+    }
 }
 
 // Dynamic Campus Photos
@@ -948,12 +963,17 @@ function updateCampusPhotoCount() {
 }
 
 // Dynamic Affiliations
-let affIndex = {{ is_array($affiliations) ? count($affiliations) : 0 }};
+let affIndex = {{ isset($affiliations) && is_array($affiliations) ? count($affiliations) : 0 }};
 function addAffiliation() {
     const container = document.getElementById('affiliations-container');
+    if (!container) return;
+    if (container.querySelectorAll('.affiliation-entry').length >= 5) {
+        alert('{{ __("Maximum 5 affiliations allowed") }}');
+        return;
+    }
     const html = `
         <div class="dynamic-entry affiliation-entry">
-            <button type="button" class="btn-remove-entry" onclick="this.closest('.affiliation-entry').remove();">✕</button>
+            <button type="button" class="btn-remove-entry" onclick="this.closest('.affiliation-entry').remove(); updateAffiliationCount();">✕</button>
             <div class="row">
                 <div class="col-md-6 mb-2">
                     <label class="form-label">{{ __('Affiliation Title') }}</label>
@@ -968,15 +988,31 @@ function addAffiliation() {
     `;
     container.insertAdjacentHTML('beforeend', html);
     affIndex++;
+    updateAffiliationCount();
+}
+
+function updateAffiliationCount() {
+    const container = document.getElementById('affiliations-container');
+    if (!container) return;
+    const count = container.querySelectorAll('.affiliation-entry').length;
+    const countEl = document.getElementById('affiliation-count');
+    const btn = document.getElementById('btn-add-affiliation');
+    if (countEl) countEl.textContent = count + '/5';
+    if (btn) btn.style.display = count >= 5 ? 'none' : '';
 }
 
 // Dynamic Team Members
-let teamIndex = {{ is_array($teamMembers) ? count($teamMembers) : 0 }};
+let teamIndex = {{ isset($teamMembers) && is_array($teamMembers) ? count($teamMembers) : 0 }};
 function addTeamMember() {
     const container = document.getElementById('team-container');
+    if (!container) return;
+    if (container.querySelectorAll('.team-entry').length >= 5) {
+        alert('{{ __("Maximum 5 team members allowed") }}');
+        return;
+    }
     const html = `
         <div class="dynamic-entry team-entry">
-            <button type="button" class="btn-remove-entry" onclick="this.closest('.team-entry').remove();">✕</button>
+            <button type="button" class="btn-remove-entry" onclick="this.closest('.team-entry').remove(); updateTeamCount();">✕</button>
             <div class="row">
                 <div class="col-md-4 mb-2">
                     <label class="form-label">{{ __('Name') }}</label>
@@ -995,7 +1031,24 @@ function addTeamMember() {
     `;
     container.insertAdjacentHTML('beforeend', html);
     teamIndex++;
+    updateTeamCount();
 }
+
+function updateTeamCount() {
+    const container = document.getElementById('team-container');
+    if (!container) return;
+    const count = container.querySelectorAll('.team-entry').length;
+    const countEl = document.getElementById('team-count');
+    const btn = document.getElementById('btn-add-team');
+    if (countEl) countEl.textContent = count + '/5';
+    if (btn) btn.style.display = count >= 5 ? 'none' : '';
+}
+
+// Initialize counts on load (in case data exists)
+updateCampusPhotoCount();
+updateAwardCount();
+updateAffiliationCount();
+updateTeamCount();
 
 // Remove Avatar Button
 const removeAvatarBtn = document.getElementById('remove-avatar-btn');

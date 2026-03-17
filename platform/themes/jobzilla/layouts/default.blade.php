@@ -9,25 +9,25 @@
     margin: 0 auto;
     padding: 0 15px;
 }
-@media (max-width: 1199px) {
+@@media (max-width: 1199px) {
     .container {
         max-width: 960px;
         padding: 0 15px;
     }
 }
-@media (max-width: 991px) {
+@@media (max-width: 991px) {
     .container {
         max-width: 720px;
         padding: 0 15px;
     }
 }
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .container {
         max-width: 540px;
         padding: 0 15px;
     }
 }
-@media (max-width: 575px) {
+@@media (max-width: 575px) {
     .container {
         max-width: 100%;
         padding: 0 10px;
@@ -43,7 +43,7 @@
 /* [class*="col-"] {
     padding: 0 15px;
 } */
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     [class*="col-lg-"], [class*="col-md-"], [class*="col-xl-"] {
         flex: 0 0 100%;
         max-width: 100%;
@@ -52,7 +52,7 @@
 }
 
 /* Jobs Page Responsive */
-@media (max-width: 991px) {
+@@media (max-width: 991px) {
     .jobs-sidebar-modern {
         position: fixed;
         top: 0;
@@ -71,7 +71,7 @@
         width: 100%;
     }
 }
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .jobs-sidebar-modern {
         width: 100%;
     }
@@ -81,7 +81,7 @@
 }
 
 /* Companies Page Responsive */
-@media (max-width: 991px) {
+@@media (max-width: 991px) {
     .company-sidebar {
         position: fixed;
         top: 0;
@@ -97,19 +97,19 @@
         left: 0;
     }
 }
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .company-sidebar {
         width: 100%;
     }
 }
 
 /* Blog Page Responsive */
-@media (max-width: 991px) {
+@@media (max-width: 991px) {
     .blog-sidebar {
         margin-top: 30px;
     }
 }
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .blog-post {
         margin-bottom: 30px;
     }
@@ -120,7 +120,7 @@
 }
 
 /* Contact Page Responsive */
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .contact-form-outer, .contact-info-outer {
         margin-bottom: 30px;
     }
@@ -130,7 +130,7 @@
 }
 
 /* Dashboard Responsive */
-@media (max-width: 991px) {
+@@media (max-width: 991px) {
     .dashboard-sidebar {
         position: fixed;
         left: -100%;
@@ -143,7 +143,7 @@
         width: 100%;
     }
 }
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .dashboard-table {
         overflow-x: auto;
     }
@@ -153,7 +153,7 @@
 }
 
 /* For Teachers / For Schools Pages Responsive */
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .for-teachers-section, .for-schools-section {
         padding: 40px 0;
     }
@@ -163,7 +163,7 @@
 }
 
 /* FAQ Page - Already has responsive, ensuring it works */
-@media (max-width: 480px) {
+@@media (max-width: 480px) {
     .faq-tabs {
         flex-direction: column;
         align-items: stretch;
@@ -174,7 +174,7 @@
 }
 
 /* Privacy & Terms Pages - Already responsive, enhancing */
-@media (max-width: 575px) {
+@@media (max-width: 575px) {
     .pp-content, .tc-content {
         font-size: 14px;
     }
@@ -184,7 +184,7 @@
 }
 
 /* Fraud Alert Page Responsive */
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .fraud-hero {
         padding: 60px 0 40px;
     }
@@ -220,19 +220,19 @@
 .section-full {
     padding: 60px 0;
 }
-@media (max-width: 991px) {
+@@media (max-width: 991px) {
     .section-full {
         padding: 40px 0;
     }
 }
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .section-full {
         padding: 30px 0;
     }
 }
 
 /* Buttons Responsive */
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     .site-button, .hiw-btn-primary, .hiw-btn-white, .hiw-btn-outline {
         width: 100%;
         max-width: 100%;
@@ -249,7 +249,7 @@ img {
 }
 
 /* Tables Responsive */
-@media (max-width: 767px) {
+@@media (max-width: 767px) {
     table {
         display: block;
         overflow-x: auto;

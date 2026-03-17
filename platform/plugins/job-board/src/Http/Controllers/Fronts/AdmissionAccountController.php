@@ -10,6 +10,7 @@ use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\CompanyAdmission;
 use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Transaction;
+use Botble\JobBoard\Supports\PackageContext;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Botble\SeoHelper\Facades\SeoHelper;
@@ -172,11 +173,17 @@ class AdmissionAccountController extends BaseController
     }
 
     /**
-     * Admission access when credits system enabled: employer has used credits for Admission Enquiry Form.
-     * Valid while package is not expired, OR if no package then for 365 days from the debit transaction.
+     * Admission access when credits system enabled:
+     * (1) Package me "Admission Form on Profile" hai aur package valid hai → access.
+     * (2) Nahi to credits se unlock (debit) – valid while package not expired, else 365 days from debit.
      */
     private function hasAdmissionEnquiryAccess(Account $account): bool
     {
+        $packageContext = PackageContext::forAccount($account);
+        if ($packageContext->package && $packageContext->hasAdmissionFormOnProfile() && $packageContext->periodEnd && Carbon::now()->lte($packageContext->periodEnd)) {
+            return true;
+        }
+
         if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
             return false;
         }

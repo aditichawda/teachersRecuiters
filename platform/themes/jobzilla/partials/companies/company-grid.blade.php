@@ -4,7 +4,7 @@
     @forelse($companies as $company)
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="company-card-grid">
-                @if ($company->is_featured)
+                @if ($company->effective_is_featured)
                     <span class="ccg-featured">★ {{ __('Featured') }}</span>
                 @endif
                 @if ($company->is_verified)

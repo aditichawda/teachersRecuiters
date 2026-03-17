@@ -118,26 +118,64 @@ class SlugHelper
 
     public function createSlug(BaseModel $model, ?string $name = null): BaseModel|Slug
     {
+        $prefix = $this->getPrefix($model::class);
+        $column = $this->getColumnNameToGenerateSlug($model::class);
+        $rawName = $name ?: ($model->{$column} ?? '');
+
+        if ($this->turnOffAutomaticUrlTranslationIntoLatin()) {
+            $baseKey = $rawName;
+        } else {
+            $baseKey = Str::slug($rawName);
+        }
+
+        if ($baseKey === '' || $baseKey === null) {
+            $baseKey = 'item-' . $model->getKey();
+        }
+
         /**
          * @var Slug $slug
          */
         $slug = Slug::query()->firstOrNew([
             'reference_type' => $model::class,
             'reference_id' => $model->getKey(),
-            'prefix' => $this->getPrefix($model::class),
+            'prefix' => $prefix,
         ]);
 
-        if ($this->turnOffAutomaticUrlTranslationIntoLatin()) {
-            $slug->key = $name ?: $model->{$this->getColumnNameToGenerateSlug($model::class)};
-        } else {
-            $slug->key = Str::slug($name ?: $model->{$this->getColumnNameToGenerateSlug($model::class)});
-        }
+        $slug->key = $this->makeUniqueSlugKey($prefix, $baseKey, $model::class, $model->getKey());
 
         $slug->ensureIdCanBeCreated();
 
         $slug->saveQuietly();
 
         return $slug;
+    }
+
+    /**
+     * Ensure slug key is unique within the same prefix (same name => abc-school, abc-school-2, abc-school-3 ...).
+     */
+    protected function makeUniqueSlugKey(string $prefix, string $baseKey, string $modelClass, $referenceId): string
+    {
+        $key = $baseKey;
+        $suffix = 1;
+
+        while (true) {
+            // Another slug with same prefix+key that is not for this model row
+            $existing = Slug::query()
+                ->where('prefix', $prefix)
+                ->where('key', $key)
+                ->where(function ($q) use ($modelClass, $referenceId) {
+                    $q->where('reference_type', '!=', $modelClass)
+                        ->orWhere('reference_id', '!=', $referenceId);
+                })
+                ->exists();
+
+            if (! $existing) {
+                return $key;
+            }
+
+            $suffix++;
+            $key = $baseKey . '-' . $suffix;
+        }
     }
 
     public function getSlug(

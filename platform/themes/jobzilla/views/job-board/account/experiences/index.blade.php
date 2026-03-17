@@ -166,7 +166,7 @@
     }
     .exp-empty {
         text-align: center;
-        /* padding: 60px 20px; */
+        padding: 60px 20px;
         background: #fff;
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);

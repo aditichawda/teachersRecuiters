@@ -30,6 +30,7 @@ use Botble\JobBoard\Models\Tag;
 use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Repositories\Interfaces\JobInterface;
+use Botble\JobBoard\Supports\JobSeekerPackageContext;
 use Botble\JobBoard\Supports\PackageContext;
 use Botble\Language\Facades\Language;
 use Botble\Location\Facades\Location;
@@ -497,7 +498,7 @@ class PublicController extends BaseController
                 'reviews',
             ])
             ->withAvg('reviews', 'star')
-            ->with(['slugable'])
+            ->with(['slugable', 'accounts'])
             ->pinFeatured();
 
         // Filter by company ID (institution name)
@@ -678,6 +679,20 @@ class PublicController extends BaseController
                             trans('plugins/job-board::messages.already_applied')
                         );
                 }
+
+                // Job seeker package: enforce apply limit; if exceeded, ask to upgrade
+                $jsCtx = JobSeekerPackageContext::forAccount($account);
+                if (! $jsCtx->canApply()) {
+                    $message = $jsCtx->hasPackage() && $jsCtx->isPeriodValid()
+                        ? trans('plugins/job-board::messages.job_apply_limit_reached')
+                        : trans('plugins/job-board::messages.job_apply_upgrade_required');
+
+                    return $this
+                        ->httpResponse()
+                        ->setError()
+                        ->setMessage($message)
+                        ->setData(['upgrade_url' => $jsCtx->packagesUrl()]);
+                }
             }
 
             $jobApplication = new JobApplication();
@@ -827,6 +842,18 @@ class PublicController extends BaseController
             
             $jobApplication->fill($fillableData);
             $jobApplication->save();
+
+            if ($account && $account->isJobSeeker()) {
+                // Used wallet-purchased job apply slot when package limit was already reached
+                if (Schema::hasColumn('jb_accounts', 'job_apply_credits_balance')) {
+                    $bal = (int) ($account->getAttribute('job_apply_credits_balance') ?? 0);
+                    if ($bal > 0 && $jsCtx->jobApplyLimit !== null && $jsCtx->jobApplicationsUsed >= $jsCtx->jobApplyLimit) {
+                        $account->job_apply_credits_balance = $bal - 1;
+                        $account->save();
+                    }
+                }
+                JobSeekerPackageContext::clearCache((int) $account->getKey());
+            }
 
             \Log::info('[JOB_APPLICATION] Application saved successfully', [
                 'application_id' => $jobApplication->id,
@@ -1419,23 +1446,74 @@ class PublicController extends BaseController
 
         $canReviewCompany = $canReview;
 
+        // Admission on profile: unlocked if (package has "Admission Form on Profile" OR credits entitlement) and company has content
+        $ownerAccount = $company->accounts()->first();
+        $hasAdmissionContent = $company->admission && trim((string) ($company->admission->content ?? '')) !== '';
+        $showAdmissionFromPackage = false;
+        $hasAdmissionEntitlement = false;
+        if ($ownerAccount && JobBoardHelper::isEnabledCreditsSystem()) {
+            $ctx = PackageContext::forAccount($ownerAccount);
+            $showAdmissionFromPackage = $ctx->hasAdmissionFormOnProfile();
+            if (Schema::hasColumn('jb_transactions', 'feature_key')) {
+                $hasAdmissionEntitlement = CreditConsumption::hasEntitlement($ownerAccount, CreditConsumption::FEATURE_ADMISSION_ENQUIRY);
+            }
+        }
+        $showAdmissionOnProfile = $hasAdmissionContent && ($showAdmissionFromPackage || $hasAdmissionEntitlement);
+
+        $admissionFormLocked = $hasAdmissionContent && ! $showAdmissionOnProfile;
+        $admissionUnlockCredits = 0;
+        if (JobBoardHelper::isEnabledCreditsSystem()) {
+            $admissionUnlockCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_ADMISSION_ENQUIRY, 500);
+        }
+        $isOwner = false;
+        $canUnlockAdmission = false;
+        if (Auth::guard('account')->check()) {
+            $currentAccount = Auth::guard('account')->user();
+            $isOwner = $currentAccount->isEmployer() && $company->accounts()->where('account_id', $currentAccount->getKey())->exists();
+            $canUnlockAdmission = $isOwner && $currentAccount->credits >= $admissionUnlockCredits && $admissionUnlockCredits > 0;
+        }
+
+        // Job seeker package: "View School Contact Info" – gate email, phone, address, website for job seekers without feature
+        $canViewSchoolContactInfo = true;
+        $contactInfoUpgradeUrl = null;
+        if (Auth::guard('account')->check() && JobBoardHelper::isEnabledCreditsSystem()) {
+            $viewerAccount = Auth::guard('account')->user();
+            if ($viewerAccount->isJobSeeker()) {
+                $jsCtx = JobSeekerPackageContext::forAccount($viewerAccount);
+                $canViewSchoolContactInfo = $jsCtx->hasViewContactInfo();
+                if (! $canViewSchoolContactInfo) {
+                    $contactInfoUpgradeUrl = $jsCtx->packagesUrl();
+                }
+            }
+        }
+
         return Theme::scope(
             'job-board.company',
-            compact('company', 'jobs', 'canReview', 'canReviewCompany'),
+            compact(
+                'company',
+                'jobs',
+                'canReview',
+                'canReviewCompany',
+                'showAdmissionOnProfile',
+                'admissionFormLocked',
+                'admissionUnlockCredits',
+                'isOwner',
+                'canUnlockAdmission',
+                'canViewSchoolContactInfo',
+                'contactInfoUpgradeUrl',
+            ),
             'plugins/job-board::themes.company'
         )->render();
     }
 
-    public function getCandidate(string $slug)
+    public function getCandidate(string $slugParam)
     {
         abort_if(JobBoardHelper::isDisabledPublicProfile(), 404);
 
-        $slug = SlugHelper::getSlug($slug, SlugHelper::getPrefix(Account::class));
-
-        abort_unless($slug, 404);
+        $prefix = SlugHelper::getPrefix(Account::class, 'candidates');
+        $slug = SlugHelper::getSlug($slugParam, $prefix);
 
         $condition = [
-            ['id', '=', $slug->reference_id],
             ['is_public_profile', '=', 1],
             ['type', '=', AccountTypeEnum::JOB_SEEKER],
         ];
@@ -1445,11 +1523,46 @@ class PublicController extends BaseController
         }
 
         /**
-         * @var Account $candidate
+         * @var Account|null $candidate
          */
-        $candidate = Account::query()
-            ->where($condition)
-            ->firstOrFail();
+        $candidate = null;
+
+        if ($slug) {
+            $candidate = Account::query()
+                ->where(array_merge($condition, [['id', '=', $slug->reference_id]]))
+                ->first();
+        }
+
+        // Fallback: find by unique_id or numeric id when slug record is missing
+        if (! $candidate && Schema::hasColumn('jb_accounts', 'unique_id')) {
+            $candidate = Account::query()
+                ->where($condition)
+                ->where(function (Builder $q) use ($slugParam): void {
+                    $q->where('unique_id', $slugParam);
+                    if (is_numeric($slugParam)) {
+                        $q->orWhere('id', (int) $slugParam);
+                    }
+                })
+                ->first();
+            if ($candidate && ! $slug) {
+                $slug = \Botble\Slug\Models\Slug::query()->firstOrCreate(
+                    [
+                        'reference_type' => Account::class,
+                        'reference_id' => $candidate->getKey(),
+                        'prefix' => $prefix,
+                    ],
+                    ['key' => Str::slug($slugParam ?: $candidate->full_name ?: (string) $candidate->id)]
+                );
+            }
+        }
+
+        if (! $candidate) {
+            $candidate = $slug
+                ? Account::query()->where($condition)->where('id', $slug->reference_id)->first()
+                : null;
+        }
+
+        abort_unless($candidate, 404);
 
         // Allow employers to view any candidate profile; allow job seeker to view their own profile
         $account = Auth::guard('account')->user();
@@ -1567,9 +1680,23 @@ class PublicController extends BaseController
             $canReview = false;
         }
 
+        $employerJobs = collect();
+        if ($account && $account->isEmployer()) {
+            $companyIds = $account->companies()->pluck('jb_companies.id')->all();
+            $employerJobs = JobModel::query()
+                ->whereIn('company_id', $companyIds)
+                ->where('status', JobStatusEnum::PUBLISHED)
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
+
+        $candidateIsFeatured = $candidate->isJobSeeker()
+            ? JobSeekerPackageContext::forAccount($candidate)->hasFeaturedProfile()
+            : false;
+
         return Theme::scope(
             'job-board.candidate',
-            compact('candidate', 'experiences', 'educations', 'account', 'canReview', 'profileLocked'),
+            compact('candidate', 'experiences', 'educations', 'account', 'canReview', 'profileLocked', 'employerJobs', 'candidateIsFeatured'),
             'plugins/job-board::themes.candidate'
         )->render();
     }

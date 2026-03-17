@@ -56,9 +56,25 @@ class JobBoardHelper
         return (bool) setting('job_board_enabled_register_account', true);
     }
 
-    public function jobExpiredDays(): int
+    public function jobExpiredDays(?Account $account = null): int
     {
+        // Global fallback
         $days = (int) setting('job_expired_after_days');
+
+        // Employer-specific overrides by registration type (School/Institution vs Consultancy)
+        if ($account && $account->isEmployer()) {
+            if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+                $override = (int) setting('job_expired_after_days_consultancy', 0);
+                if ($override > 0) {
+                    $days = $override;
+                }
+            } else {
+                $override = (int) setting('job_expired_after_days_school_institution', 0);
+                if ($override > 0) {
+                    $days = $override;
+                }
+            }
+        }
 
         if ($days > 0) {
             return $days;

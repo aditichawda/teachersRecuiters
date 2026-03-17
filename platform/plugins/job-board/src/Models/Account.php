@@ -72,11 +72,14 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         
         // Account type & package
         'package_id',
+        'parent_account_id',
+        'sub_account_role',
         'type',
         'registration_type',
         'credits',
         'job_post_credits_balance',
         'profile_view_credits_balance',
+        'job_apply_credits_balance',
         'profile_views',
         'unique_id',
         
@@ -384,9 +387,31 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         return $this->type == AccountTypeEnum::JOB_SEEKER;
     }
 
+    public function isConsultancy(): bool
+    {
+        return $this->isEmployer() && $this->registration_type === 'consultancy';
+    }
+
+    public function isSchoolInstitution(): bool
+    {
+        return $this->isEmployer() && ($this->registration_type === null || $this->registration_type === 'school_institution');
+    }
+
     public function companies(): BelongsToMany
     {
         return $this->belongsToMany(Company::class, 'jb_companies_accounts', 'account_id', 'company_id');
+    }
+
+    /** Parent employer account (for staff/sub-accounts created via Multiple Login). */
+    public function parentAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'parent_account_id');
+    }
+
+    /** Staff/sub-accounts created by this employer via Multiple Login. */
+    public function staffAccounts(): HasMany
+    {
+        return $this->hasMany(Account::class, 'parent_account_id');
     }
 
     public function transactions(): HasMany

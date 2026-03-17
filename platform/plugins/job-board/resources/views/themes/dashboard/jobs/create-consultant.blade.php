@@ -1,0 +1,1484 @@
+@php
+    $layout = 'plugins/job-board::themes.dashboard.layouts.master';
+    $isEdit = isset($job) && $job && $job->exists;
+    $formAction = $isEdit ? route('public.account.jobs.update', $job->id) : route('public.account.jobs.store');
+    $submitLabel = $isEdit ? __('Update Job') : __('Post Job');
+    $pageTitle = $isEdit ? __('Edit Job') : __('Post a New Job');
+    Theme::set('pageTitle', $pageTitle);
+@endphp
+
+@extends($layout)
+
+@section('content')
+<style>
+    .jp-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        padding: 28px;
+        margin-bottom: 24px;
+    }
+    .jp-card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    .jp-card-title i { color: #0073d1; margin-right: 8px; }
+    .jp-label { font-weight: 600; color: #333; margin-bottom: 6px; display: block; font-size: 14px; }
+    .jp-label .required { color: #dc3545; }
+    .jp-label .hint { font-weight: 400; color: #888; font-size: 12px; margin-left: 4px; }
+    .jp-input, .jp-select, .jp-textarea {
+        width: 100%;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+        background: #fff;
+    }
+    .jp-input:focus, .jp-select:focus, .jp-textarea:focus {
+        border-color: #0073d1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0,115,209,0.1);
+    }
+    .jp-textarea { min-height: 120px; resize: vertical; }
+    .jp-error { color: #dc3545; font-size: 12px; margin-top: 4px; display: none; }
+    .jp-error.show { display: block; }
+    .jp-ai-error { display: none; margin-top: 8px; padding: 10px 12px; font-size: 13px; color: #856404; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; }
+    .jp-ai-error.show { display: block; }
+    .jp-group { margin-bottom: 20px; }
+    .jp-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .jp-col-6 { flex: 0 0 calc(50% - 10px); max-width: calc(50% - 10px); }
+    .jp-col-4 { flex: 0 0 calc(33.33% - 14px); max-width: calc(33.33% - 14px); }
+    .jp-col-3 { flex: 0 0 calc(25% - 15px); max-width: calc(25% - 15px); }
+    .jp-col-9 { flex: 0 0 calc(75% - 15px); max-width: calc(75% - 15px); }
+    .jp-col-12 { flex: 0 0 100%; max-width: 100%; }
+    @media (max-width: 768px) {
+        .jp-col-6, .jp-col-4, .jp-col-3, .jp-col-9 { flex: 0 0 100%; max-width: 100%; }
+        .jp-card { padding: 18px; }
+        .jp-salary-type-tabs { flex-wrap: wrap; }
+        .jp-salary-tab { flex: 1 1 auto; min-width: 80px; border-radius: 8px !important; margin: 2px; }
+        .jp-option-cards { flex-direction: column; }
+        .jp-option-card { width: 100%; }
+        .jp-page-header { flex-direction: column; gap: 12px; align-items: flex-start; text-align: left; }
+        .jp-page-header h2 { font-size: 18px; }
+        .jp-row { gap: 12px; }
+        .jp-group { margin-bottom: 16px; }
+    }
+
+    /* Down arrow for suggest/search dropdown inputs (Skills, Certifications, Language) */
+    .jp-suggest-wrap .jp-input {
+        padding-right: 2.25rem;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+    }
+
+    /* Auto-suggest dropdown */
+    .jp-suggest-wrap { position: relative; }
+    .jp-suggest-list {
+        position: absolute; top: 100%; left: 0; right: 0;
+        background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+        max-height: 220px; overflow-y: auto; z-index: 100;
+        display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .jp-suggest-list.show { display: block; }
+    .jp-suggest-item {
+        padding: 10px 14px; cursor: pointer; font-size: 14px;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    .jp-suggest-item:hover, .jp-suggest-item.active { background: #e8f4fc; color: #0073d1; }
+
+    /* Tag chips */
+    .jp-tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .jp-tag {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #e8f4fc; color: #0073d1; border: 1px solid #0073d1;
+        border-radius: 20px; padding: 4px 12px; font-size: 13px;
+    }
+    .jp-tag .remove { cursor: pointer; font-weight: 700; font-size: 16px; line-height: 1; }
+
+    /* Checkbox/Radio cards */
+    .jp-option-cards { display: flex; flex-wrap: wrap; gap: 10px; }
+    .jp-option-card {
+        border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 20px;
+        cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+        font-size: 14px; background: #fff;
+    }
+    .jp-option-card:hover { border-color: #0073d1; background: #f0f7ff; }
+    .jp-option-card.selected { border-color: #0073d1; background: #e8f4fc; color: #0073d1; font-weight: 600; }
+    .jp-option-card input { display: none; }
+
+    /* Salary section */
+    .jp-salary-type-tabs { display: flex; gap: 0; margin-bottom: 16px; }
+    .jp-salary-tab {
+        padding: 8px 20px; border: 1.5px solid #e0e0e0; cursor: pointer;
+        font-size: 13px; background: #fff; transition: all 0.2s;
+    }
+    .jp-salary-tab:first-child { border-radius: 8px 0 0 8px; }
+    .jp-salary-tab:last-child { border-radius: 0 8px 8px 0; }
+    .jp-salary-tab.active { background: #0073d1; color: #fff; border-color: #0073d1; }
+
+    /* Screening questions */
+    .sq-list { display: flex; flex-direction: column; gap: 12px; }
+    .sq-item {
+        display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        padding: 16px 18px; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .sq-item:hover { border-color: #d1d5db; }
+    .sq-item-main { display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0; }
+    .sq-select-cb { margin-top: 4px; width: 18px; height: 18px; accent-color: #0073d1; flex-shrink: 0; }
+    .sq-item-content { flex: 1; min-width: 0; }
+    .sq-question-text { display: block; cursor: pointer; margin: 0; font-size: 15px; font-weight: 500; color: #1f2937; line-height: 1.4; }
+    .sq-type-badge { display: inline-block; margin-top: 6px; padding: 2px 10px; background: #f3f4f6; color: #6b7280; border-radius: 6px; font-size: 12px; text-transform: capitalize; }
+    .sq-item-required { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding-left: 12px; border-left: 1px solid #e5e7eb; }
+    .sq-item-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; width: 100%; }
+    .sq-required-wrap { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+    .sq-required-cb { width: 16px; height: 16px; accent-color: #0073d1; }
+    .sq-required-label { margin: 0; cursor: pointer; font-size: 13px; color: #6b7280; white-space: nowrap; }
+    .sq-item-required:has(.sq-required-cb:not([disabled])) .sq-required-label { color: #374151; }
+    .sq-empty-msg { margin: 0; padding: 20px; background: #f9fafb; border-radius: 10px; color: #6b7280; font-size: 14px; }
+
+    /* Submit button */
+    .jp-submit-btn {
+        background: linear-gradient(135deg, #0073d1, #005bb5); color: #fff; border: none; padding: 14px 40px;
+        border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
+        transition: all 0.2s;
+    }
+    .jp-submit-btn:hover { background: linear-gradient(135deg, #005bb5, #003f8a); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,115,209,0.3); }
+    .jp-submit-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+    /* Hide salary checkbox */
+    .jp-check-wrap { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .jp-check-wrap input[type="checkbox"] { width: 18px; height: 18px; accent-color: #0073d1; }
+
+    /* AI button */
+    .jp-ai-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff; border: none; padding: 6px 14px; border-radius: 6px;
+        font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .jp-ai-btn:hover { opacity: 0.9; }
+
+    /* Link to create company */
+    .jp-create-link { color: #0073d1; font-size: 13px; text-decoration: underline; cursor: pointer; }
+    .jp-create-link:hover { color: #005bb5; }
+
+    .jp-institution-type-badge {
+        display: inline-block; background: #f0f4ff; color: #4a6cf7;
+        padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;
+    }
+
+    /* Page header */
+    .jp-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .jp-page-header h2 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    .jp-page-header a {
+        color: #0073d1;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    /* Section headers - all sections visible by default */
+    .jp-card-collapsible .jp-card-header {
+        margin-bottom: 0;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    .jp-card-collapsible .jp-card-header .jp-card-title { margin-bottom: 0; padding-bottom: 0; border: none; }
+    .jp-card-collapsible .jp-card-body { overflow: visible; }
+</style>
+
+<!-- Page Header -->
+<div class="jp-page-header">
+    <h2><i class="fa {{ $isEdit ? 'fa-edit' : 'fa-plus-circle' }}" style="color: #0073d1; margin-right: 8px;"></i>{{ $pageTitle }}</h2>
+    <a href="{{ route('public.account.jobs.index') }}"><i class="fa fa-list me-1"></i>{{ __('View All Jobs') }}</a>
+</div>
+
+@if($errors->any())
+    <div class="alert alert-danger mb-4" style="border-radius: 10px;">
+        <strong><i class="fa fa-exclamation-triangle me-2"></i>{{ __('Please fix the following errors:') }}</strong>
+        <ul class="mb-0 mt-2">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<form id="jobPostForm" method="POST" action="{{ $formAction }}" enctype="multipart/form-data">
+    @csrf
+    @if($isEdit)@method('PUT')@endif
+
+    {{-- ====== SECTION 1: Company & Job Title ====== --}}
+    <div class="jp-card jp-card-collapsible" data-section="1">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-building"></i> Company & Job Details</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
+        @php
+            $consultantCompanyId = old(
+                'company_id',
+                optional($job)->company_id
+                    ?? ($defaultCompanyId ?? (count($companies) ? array_key_first($companies) : null))
+            );
+            $hiringInstType = old('hiring_institution_type', optional($job)->hiring_institution_type ?? '');
+            $hiringSchoolName = old('hiring_school_name', optional($job)->hiring_school_name ?? '');
+            $hideHiringName = (bool) old('hide_hiring_school_name', optional($job)->hide_hiring_school_name ?? false);
+        @endphp
+
+        {{-- Hidden company id (still required by backend validation) --}}
+        <input type="hidden" name="company_id" id="company_id" value="{{ $consultantCompanyId }}">
+
+        {{-- Institution Type + Hiring School/Institution name --}}
+        <div class="jp-row">
+ 
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Are you hiring for which school / institution? * <span class="required">*</span></label>
+                    <input type="text" name="hiring_school_name" id="hiring_school_name" class="jp-input" value="{{ $hiringSchoolName }}" placeholder="Enter name of the hiring school/Institution" required>
+                    <div class="jp-check-wrap" style="margin-top:10px;">
+                        <input type="checkbox" name="hide_hiring_school_name" id="hide_hiring_school_name" value="1" {{ $hideHiringName ? 'checked' : '' }}>
+                        <label for="hide_hiring_school_name" style="cursor:pointer; font-size:14px;">Don't want to display school/institute name</label>
+                    </div>
+                </div>
+            </div>
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Institution Type <span class="required">*</span></label>
+                    <select name="hiring_institution_type" id="hiring_institution_type" class="jp-select" required>
+                        <option value="">{{ __('Select type') }}</option>
+                        <optgroup label="🏫 School">
+                            <option value="cbse-school" {{ $hiringInstType === 'cbse-school' ? 'selected' : '' }}>CBSE School</option>
+                            <option value="icse-school" {{ $hiringInstType === 'icse-school' ? 'selected' : '' }}>ICSE School</option>
+                            <option value="cambridge-school" {{ $hiringInstType === 'cambridge-school' ? 'selected' : '' }}>Cambridge School</option>
+                            <option value="ib-school" {{ $hiringInstType === 'ib-school' ? 'selected' : '' }}>IB School</option>
+                            <option value="igcse-school" {{ $hiringInstType === 'igcse-school' ? 'selected' : '' }}>IGCSE School</option>
+                            <option value="primary-school" {{ $hiringInstType === 'primary-school' ? 'selected' : '' }}>Primary School</option>
+                            <option value="play-school" {{ $hiringInstType === 'play-school' ? 'selected' : '' }}>Play School</option>
+                            <option value="state-board-school" {{ $hiringInstType === 'state-board-school' ? 'selected' : '' }}>State Board School</option>
+                        </optgroup>
+                        <optgroup label="🎓 College">
+                            <option value="engineering-college" {{ $hiringInstType === 'engineering-college' ? 'selected' : '' }}>Engineering College</option>
+                            <option value="medical-college" {{ $hiringInstType === 'medical-college' ? 'selected' : '' }}>Medical College</option>
+                            <option value="nursing-college" {{ $hiringInstType === 'nursing-college' ? 'selected' : '' }}>Nursing College</option>
+                            <option value="pharmacy-college" {{ $hiringInstType === 'pharmacy-college' ? 'selected' : '' }}>Pharmacy College</option>
+                            <option value="science-college" {{ $hiringInstType === 'science-college' ? 'selected' : '' }}>Science College</option>
+                            <option value="management-college" {{ $hiringInstType === 'management-college' ? 'selected' : '' }}>Management College</option>
+                            <option value="degree-college" {{ $hiringInstType === 'degree-college' ? 'selected' : '' }}>Degree College</option>
+                        </optgroup>
+                        <optgroup label="📚 Coaching Institute">
+                            <option value="jee-neet-institute" {{ $hiringInstType === 'jee-neet-institute' ? 'selected' : '' }}>JEE & NEET Institute</option>
+                            <option value="banking-institute" {{ $hiringInstType === 'banking-institute' ? 'selected' : '' }}>Banking Institute</option>
+                            <option value="civil-services-institute" {{ $hiringInstType === 'civil-services-institute' ? 'selected' : '' }}>Civil Services Institute</option>
+                            <option value="it-training-institute" {{ $hiringInstType === 'it-training-institute' ? 'selected' : '' }}>IT Training Institute</option>
+                        </optgroup>
+                        <optgroup label="💻 EdTech & Online">
+                            <option value="edtech-company" {{ $hiringInstType === 'edtech-company' ? 'selected' : '' }}>EdTech Company</option>
+                            <option value="online-education-platform" {{ $hiringInstType === 'online-education-platform' ? 'selected' : '' }}>Online Education Platform</option>
+                        </optgroup>
+                        <optgroup label="🏛️ University & Academy">
+                            <option value="university" {{ $hiringInstType === 'university' ? 'selected' : '' }}>University</option>
+                            <option value="sport-academy" {{ $hiringInstType === 'sport-academy' ? 'selected' : '' }}>Sport Academy</option>
+                            <option value="music-academy" {{ $hiringInstType === 'music-academy' ? 'selected' : '' }}>Music Academy</option>
+                        </optgroup>
+                        <optgroup label="📋 Other">
+                            <option value="non-profit-organization" {{ $hiringInstType === 'non-profit-organization' ? 'selected' : '' }}>Non-Profit Organization</option>
+                            <option value="book-publishing-company" {{ $hiringInstType === 'book-publishing-company' ? 'selected' : '' }}>Book Publishing Company</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {{-- Job Title & Required Skills - one row, col-6 col-6 --}}
+        <div class="jp-row">
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Job Title <span class="required">*</span> <span class="hint">(Start typing to search)</span></label>
+                    <div class="jp-suggest-wrap">
+                        <input type="text" name="name" id="job_title" class="jp-input" placeholder="e.g. Primary English Teacher" value="{{ old('name', optional($job)->name ?? '') }}" required autocomplete="off">
+                        <div class="jp-suggest-list" id="job-title-suggestions"></div>
+                    </div>
+                    <div class="jp-error" id="err-title">Job title is required.</div>
+                </div>
+            </div>
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Required Skills <span class="hint">(Select multiple)</span></label>
+                    <div class="jp-suggest-wrap">
+                        <input type="text" id="skills_search" class="jp-input" placeholder="Search & add skills..." autocomplete="off">
+                        <div class="jp-suggest-list" id="skills-suggestions"></div>
+                    </div>
+                    <div class="jp-tags-wrap" id="selected-skills"></div>
+                    <div id="skills-hidden-inputs"></div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Detailed Job Description --}}
+        <div class="jp-group">
+            <label class="jp-label">
+                Detailed Job Description <span class="required">*</span>
+                <button type="button" class="jp-ai-btn ms-2" id="aiGenerateBtn" title="Generate from job title and institution">
+                    <i class="fa fa-magic"></i> Generate with AI
+                </button>
+                <button type="button" class="jp-ai-btn jp-clear-btn ms-2" id="aiClearBtn" title="Clear AI-generated description">
+                    <i class="fa fa-eraser"></i> Clear
+                </button>
+            </label>
+            <textarea name="content" id="job_description" class="jp-textarea" rows="6" placeholder="Enter detailed job description or use AI to generate..." required>{{ old('content', optional($job)->content ?? '') }}</textarea>
+            <div class="jp-error" id="err-description">Job description is required.</div>
+            <div class="jp-ai-error" id="ai-generate-error" role="alert" aria-live="polite"></div>
+        </div>
+
+        {{-- Job Type Category --}}
+        <div class="jp-group">
+            <label class="jp-label">Job Type <span class="required">*</span></label>
+            <div class="jp-option-cards">
+                @php $jtCat = old('job_type_category', optional($job)->job_type_category ?? 'teaching'); @endphp
+                <label class="jp-option-card {{ $jtCat === 'teaching' ? 'selected' : '' }}" onclick="selectOption(this, 'job_type_category')">
+                    <input type="radio" name="job_type_category" value="teaching" {{ $jtCat === 'teaching' ? 'checked' : '' }} required>
+                    <i class="fa fa-chalkboard-teacher"></i> Teaching
+                </label>
+                <label class="jp-option-card {{ $jtCat === 'non-teaching' ? 'selected' : '' }}" onclick="selectOption(this, 'job_type_category')">
+                    <input type="radio" name="job_type_category" value="non-teaching" {{ $jtCat === 'non-teaching' ? 'checked' : '' }}>
+                    <i class="fa fa-briefcase"></i> Non-Teaching
+                </label>
+            </div>
+            <div class="jp-error" id="err-job-type">Please select job type.</div>
+        </div>
+        </div>
+    </div>
+
+    {{-- ====== SECTION 2: Salary ====== --}}
+    <div class="jp-card jp-card-collapsible" data-section="2">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-rupee-sign"></i> Salary Details</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
+        @php
+            $srVal = optional($job)->salary_range;
+            $sr = old('salary_range', $srVal && is_object($srVal) ? $srVal->getValue() : ($srVal ?: 'monthly'));
+            $salaryMode = (optional($job)->salary_to ?? 0) ? 'range' : 'fixed';
+        @endphp
+        {{-- Salary Period & Salary Type - one row, col-6 col-6 --}}
+        <div class="jp-row">
+            <div class="jp-col-9">
+                <div class="jp-group">
+                    <label class="jp-label">Salary Period <span class="required">*</span></label>
+                    <div class="jp-salary-type-tabs" id="salary-period-tabs">
+                        @foreach ($salaryRanges as $key => $label)
+                            <div class="jp-salary-tab {{ $key === ($sr ?? 'monthly') ? 'active' : '' }}" data-value="{{ $key }}" onclick="selectSalaryPeriod(this)">{{ $label }}</div>
+                        @endforeach
+                        <div class="jp-salary-tab {{ ($sr ?? '') === 'negotiable' ? 'active' : '' }}" data-value="negotiable" onclick="selectSalaryPeriod(this)">Negotiable</div>
+                    </div>
+                    <input type="hidden" name="salary_range" id="salary_range" value="{{ $sr ?? 'monthly' }}">
+                </div>
+            </div>
+            <div class="jp-col-3">
+                <div class="jp-group">
+                    <label class="jp-label">Salary Type</label>
+                    <div class="jp-option-cards">
+                        <label class="jp-option-card {{ $salaryMode === 'range' ? 'selected' : '' }}" onclick="selectSalaryMode(this, 'range')">
+                            <input type="radio" name="salary_mode" value="range" {{ $salaryMode === 'range' ? 'checked' : '' }}> Range
+                        </label>
+                        <label class="jp-option-card {{ $salaryMode === 'fixed' ? 'selected' : '' }}" onclick="selectSalaryMode(this, 'fixed')">
+                            <input type="radio" name="salary_mode" value="fixed" {{ $salaryMode === 'fixed' ? 'checked' : '' }}> Fixed
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="salary-amount-section" style="display: {{ ($sr ?? '') === 'negotiable' ? 'none' : 'block' }};">
+            <div class="jp-row">
+                <div class="jp-col-6">
+                    <div class="jp-group">
+                        <label class="jp-label">Salary From ₹</label>
+                        <input type="number" name="salary_from" id="salary_from" class="jp-input" placeholder="e.g. 25000" value="{{ old('salary_from', optional($job)->salary_from ?? '') }}">
+                    </div>
+                </div>
+                <div class="jp-col-6" id="salary-to-wrap" style="display: {{ $salaryMode === 'fixed' ? 'none' : 'block' }};">
+                    <div class="jp-group">
+                        <label class="jp-label">Salary To ₹</label>
+                        <input type="number" name="salary_to" id="salary_to" class="jp-input" placeholder="e.g. 50000" value="{{ old('salary_to', optional($job)->salary_to ?? '') }}">
+                    </div>
+                </div>
+            </div>
+            @php
+                $inrCurrencyId = collect($currencies)->search(fn($t) => stripos($t, 'INR') !== false || stripos($t, '₹') !== false || stripos($t, 'Rupee') !== false);
+                if ($inrCurrencyId === false) { $inrCurrencyId = get_application_currency_id() ?? array_key_first($currencies); }
+            @endphp
+            <input type="hidden" name="currency_id" value="{{ $inrCurrencyId }}">
+            <div class="jp-group">
+                <div class="jp-check-wrap">
+                    <input type="checkbox" name="hide_salary" id="hide_salary" value="1" {{ old('hide_salary', optional($job)->hide_salary ?? 0) ? 'checked' : '' }}>
+                    <label for="hide_salary" style="cursor:pointer; font-size:14px;">Hide Salary on Job Posting</label>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="salary_type" id="salary_type" value="fixed">
+        </div>
+    </div>
+
+    {{-- ====== SECTION 3: Requirements ====== --}}
+    <div class="jp-card jp-card-collapsible" data-section="3">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-certificate"></i> Requirements</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
+        <div class="jp-row">
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Required Qualification Level <span class="required">*</span></label>
+                    <select name="degree_level_id" id="degree_level_id" class="jp-select" required>
+                        <option value="">-- Select --</option>
+                        @foreach ($degreeLevels as $id => $name)
+                            <option value="{{ $id }}" {{ old('degree_level_id', optional($job)->degree_level_id ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Experience Required <span class="required">*</span></label>
+                    <select name="job_experience_id" id="job_experience_id" class="jp-select" required>
+                        <option value="">-- Select --</option>
+                        @foreach ($jobExperiences as $id => $name)
+                            <option value="{{ $id }}" {{ old('job_experience_id', optional($job)->job_experience_id ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {{-- Certifications & Language - one row, col-6 col-6 --}}
+        <div class="jp-row">
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Required Teaching / Other Certifications <span class="hint">(Select multiple)</span></label>
+                    <div class="jp-suggest-wrap">
+                        <input type="text" id="cert_search" class="jp-input" placeholder="Search certifications..." autocomplete="off">
+                        <div class="jp-suggest-list" id="cert-suggestions"></div>
+                    </div>
+                    <div class="jp-tags-wrap" id="selected-certs"></div>
+                    @php $reqCerts = old('required_certifications', optional($job)->required_certifications ?? '[]'); $reqCertsStr = is_array($reqCerts) ? json_encode($reqCerts) : ($reqCerts ?: '[]'); @endphp
+                    <input type="hidden" name="required_certifications" id="required_certifications" value="{{ $reqCertsStr }}">
+                </div>
+            </div>
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Language Proficiency Required <span class="hint">(Select multiple)</span></label>
+                    <div class="jp-suggest-wrap">
+                        <input type="text" id="lang_search" class="jp-input" placeholder="Search languages..." autocomplete="off">
+                        <div class="jp-suggest-list" id="lang-suggestions"></div>
+                    </div>
+                    <div class="jp-tags-wrap" id="selected-langs"></div>
+                    @php $langProf = old('language_proficiency', optional($job)->language_proficiency ?? '[]'); $langProfStr = is_array($langProf) ? json_encode($langProf) : ($langProf ?: '[]'); @endphp
+                    <input type="hidden" name="language_proficiency" id="language_proficiency" value="{{ $langProfStr }}">
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    {{-- ====== SECTION 4: Job Preferences ====== --}}
+    <div class="jp-card jp-card-collapsible" data-section="4">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-sliders-h"></i> Job Preferences</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
+        <div class="jp-row">
+            <div class="jp-col-4">
+                <div class="jp-group">
+                    <label class="jp-label">Number of Positions <span class="hint">(max. 10)</span></label>
+                    <input type="number" name="number_of_positions" class="jp-input" value="{{ old('number_of_positions', optional($job)->number_of_positions ?? 1) }}" min="1" max="10">
+                </div>
+            </div>
+            <div class="jp-col-4">
+                <div class="jp-group">
+                    <label class="jp-label">Gender Preference</label>
+                    <select name="gender_preference" class="jp-select">
+                        <option value="" {{ old('gender_preference', optional($job)->gender_preference ?? '') == '' ? 'selected' : '' }}>Any</option>
+                        <option value="male" {{ old('gender_preference', optional($job)->gender_preference ?? '') == 'male' ? 'selected' : '' }}>Male</option>
+                        <option value="female" {{ old('gender_preference', optional($job)->gender_preference ?? '') == 'female' ? 'selected' : '' }}>Female</option>
+                    </select>
+                </div>
+            </div>
+            <div class="jp-col-4">
+                <div class="jp-group">
+                    <label class="jp-label">Marital Status Preference</label>
+                    <select name="marital_status_preference" class="jp-select">
+                        <option value="" {{ old('marital_status_preference', optional($job)->marital_status_preference ?? '') == '' ? 'selected' : '' }}>Any</option>
+                        <option value="married" {{ old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'married' ? 'selected' : '' }}>Married</option>
+                        <option value="single" {{ old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'single' ? 'selected' : '' }}>Single</option>
+                        <option value="other" {{ old('marital_status_preference', optional($job)->marital_status_preference ?? '') == 'other' ? 'selected' : '' }}>Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="jp-row">
+            <div class="jp-col-4">
+                <div class="jp-group">
+                    <label class="jp-label">Job Shift</label>
+                    <select name="job_shift_id" class="jp-select">
+                        <option value="">-- Select --</option>
+                        @foreach ($jobShifts as $id => $name)
+                            <option value="{{ $id }}" {{ old('job_shift_id', optional($job)->job_shift_id ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="jp-col-4">
+                <div class="jp-group">
+                    <label class="jp-label">Employment Type</label>
+                    @php $firstJobType = (isset($job) && $job && $job->jobTypes->isNotEmpty()) ? $job->jobTypes->first()->id : null; @endphp
+                    <select name="jobTypes[]" id="employment_type" class="jp-select">
+                        <option value="">-- Select --</option>
+                        @foreach ($jobTypes as $id => $name)
+                            <option value="{{ $id }}" {{ old('jobTypes.0', $firstJobType ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="jp-col-4">
+                <div class="jp-group" style="padding-top: 28px;">
+                    <div class="jp-check-wrap">
+                        <input type="checkbox" name="is_remote" id="is_remote" value="1" {{ old('is_remote', optional($job)->is_remote ?? 0) ? 'checked' : '' }}>
+                        <label for="is_remote" style="cursor:pointer; font-size:14px;">This is a Remote / WFH / Online job</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    {{-- ====== SECTION 5: Application Location ====== --}}
+    <div class="jp-card jp-card-collapsible" data-section="5">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-map-marker-alt"></i> Application & Location</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
+        <div class="jp-group">
+            <label class="jp-label">Application accepted from which location <span class="required">*</span></label>
+            @php $appLocType = old('application_location_type', optional($job)->application_location_type ?? 'nearby'); @endphp
+            <div class="jp-option-cards">
+                <label class="jp-option-card {{ $appLocType === 'nearby' ? 'selected' : '' }}" onclick="selectOption(this, 'application_location_type')">
+                    <input type="radio" name="application_location_type" value="nearby" {{ $appLocType === 'nearby' ? 'checked' : '' }}>
+                    <i class="fa fa-map-pin"></i> Nearby areas only
+                </label>
+                <label class="jp-option-card {{ $appLocType === 'specific' ? 'selected' : '' }}" onclick="selectOption(this, 'application_location_type')">
+                    <input type="radio" name="application_location_type" value="specific" {{ $appLocType === 'specific' ? 'checked' : '' }}>
+                    <i class="fa fa-list"></i> Specific Locations (up to 3)
+                </label>
+                <label class="jp-option-card {{ $appLocType === 'anywhere' ? 'selected' : '' }}" onclick="selectOption(this, 'application_location_type')">
+                    <input type="radio" name="application_location_type" value="anywhere" {{ $appLocType === 'anywhere' ? 'checked' : '' }}>
+                    <i class="fa fa-globe"></i> Anywhere India
+                </label>
+            </div>
+        </div>
+
+        {{-- Specific Locations --}}
+        <div class="jp-group" id="specific-locations-wrap" style="display: {{ $appLocType === 'specific' ? 'block' : 'none' }};">
+            <label class="jp-label">Choose Locations <span class="hint">(up to 3)</span></label>
+            <div class="jp-row">
+                <div class="jp-col-4">
+                    <div class="jp-suggest-wrap">
+                        <input type="text" class="jp-input app-location-input" placeholder="Search city..." data-index="1" autocomplete="off">
+                        <div class="jp-suggest-list app-loc-suggest"></div>
+                    </div>
+                </div>
+                <div class="jp-col-4">
+                    <div class="jp-suggest-wrap">
+                        <input type="text" class="jp-input app-location-input" placeholder="Search city..." data-index="2" autocomplete="off">
+                        <div class="jp-suggest-list app-loc-suggest"></div>
+                    </div>
+                </div>
+                <div class="jp-col-4">
+                    <div class="jp-suggest-wrap">
+                        <input type="text" class="jp-input app-location-input" placeholder="Search city..." data-index="3" autocomplete="off">
+                        <div class="jp-suggest-list app-loc-suggest"></div>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" name="application_locations" id="application_locations" value="">
+        </div>
+
+        {{-- Job Location --}}
+        <div class="jp-group">
+            <label class="jp-label">Job Location / Address <span class="hint">(Auto-defined from company, editable)</span></label>
+            <div class="jp-row">
+                <div class="jp-col-6">
+                    <input type="text" name="address" id="job_address" class="jp-input" placeholder="Address" value="{{ old('address', optional($job)->address ?? '') }}">
+                </div>
+                <div class="jp-col-6">
+                    <input type="text" name="zip_code" id="job_zip_code" class="jp-input" placeholder="Pin Code" value="{{ old('zip_code', optional($job)->zip_code ?? '') }}">
+                </div>
+            </div>
+            <div class="jp-row mt-2">
+                <div class="jp-col-4">
+                    <div class="jp-suggest-wrap">
+                        <input type="text" id="job_city_search" class="jp-input" placeholder="Search city..." autocomplete="off">
+                        <div class="jp-suggest-list" id="job-city-suggestions"></div>
+                    </div>
+                    <input type="hidden" name="city_id" id="job_city_id" value="{{ old('city_id', optional($job)->city_id ?? '') }}">
+                </div>
+                <div class="jp-col-4">
+                    <input type="text" id="job_state" class="jp-input" placeholder="State" readonly style="background:#f5f5f5;">
+                    <input type="hidden" name="state_id" id="job_state_id" value="{{ old('state_id', optional($job)->state_id ?? '') }}">
+                </div>
+                <div class="jp-col-4">
+                    <input type="text" id="job_country" class="jp-input" placeholder="Country" readonly style="background:#f5f5f5;">
+                    <input type="hidden" name="country_id" id="job_country_id" value="{{ old('country_id', optional($job)->country_id ?? '') }}">
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    {{-- ====== SECTION 6: Application Settings ====== --}}
+    <div class="jp-card jp-card-collapsible" data-section="6">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-paper-plane"></i>Receive Application By</div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
+        <div class="jp-group">
+            <label class="jp-label">Application received by <span class="required">*</span></label>
+            @php $applyType = old('apply_type', optional($job)->apply_type ?? 'internal'); @endphp
+            <div class="jp-option-cards">
+                <label class="jp-option-card {{ $applyType === 'internal' ? 'selected' : '' }}" onclick="selectOption(this, 'apply_type')">
+                    <input type="radio" name="apply_type" value="internal" {{ $applyType === 'internal' ? 'checked' : '' }}>
+                    <i class="fa fa-inbox"></i>  Registered Email
+                </label>
+                <label class="jp-option-card {{ $applyType === 'external' ? 'selected' : '' }}" onclick="selectOption(this, 'apply_type')">
+                    <input type="radio" name="apply_type" value="external" {{ $applyType === 'external' ? 'checked' : '' }}>
+                    <i class="fa fa-external-link-alt"></i> External Link
+                </label>
+            </div>
+        </div>
+
+        <div class="jp-group" id="external-url-wrap" style="display: {{ $applyType === 'external' ? 'block' : 'none' }};">
+            <label class="jp-label">External Apply URL</label>
+            <input type="url" name="apply_url" id="apply_url" class="jp-input" placeholder="https://example.com/apply" value="{{ old('apply_url', optional($job)->apply_url ?? '') }}">
+        </div>
+
+        <div class="jp-group" id="internal-emails-wrap" style="display: {{ $applyType === 'internal' ? 'block' : 'none' }};">
+            @php $registeredEmail = $account->email ?? auth('account')->user()->email ?? ''; @endphp
+            <div class="jp-registered-email-info" style="margin-bottom:16px; padding:12px 14px; background:#f0f7ff; border-radius:8px; border:1px solid #cce5ff;">
+                <label class="jp-label" style="margin-bottom:4px;"><i class="fa fa-envelope" style="margin-right:6px; color:#0073d1;"></i>{{ __('Your registered email') }}</label>
+                <p class="mb-0" style="font-size:14px; color:#333;"><strong>{{ $registeredEmail }}</strong> — {{ __('Applications will always be sent to this email.') }}</p>
+            </div>
+        </div>
+
+        <div class="jp-row">
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Application Deadline</label>
+                    @php $closingDate = optional($job)->application_closing_date; $closingStr = $closingDate ? (is_object($closingDate) ? $closingDate->format('Y-m-d') : $closingDate) : ''; @endphp
+                    <input type="date" name="application_closing_date" class="jp-input" min="{{ date('Y-m-d') }}" value="{{ old('application_closing_date', $closingStr) }}">
+                </div>
+            </div>
+            <div class="jp-col-6">
+                <div class="jp-group">
+                    <label class="jp-label">Job Status</label>
+                    @php $st = optional($job)->status; $jobStatus = old('status', $st && is_object($st) ? $st->getValue() : ($st ?: 'published')); @endphp
+                    <select name="status" class="jp-select">
+                        <option value="published" {{ $jobStatus === 'published' ? 'selected' : '' }}>Published</option>
+                        <option value="draft" {{ $jobStatus === 'draft' ? 'selected' : '' }}>Draft</option>
+                        <option value="pending" {{ $jobStatus === 'pending' ? 'selected' : '' }}>Pending</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="jp-group">
+            <div class="jp-check-wrap">
+                <input type="checkbox" name="hide_company" id="hide_company" value="1" {{ old('hide_company', optional($job)->hide_company ?? 0) ? 'checked' : '' }}>
+                <label for="hide_company" style="cursor:pointer; font-size:14px;"><i class="fa fa-eye-slash" style="margin-right:4px;"></i> Hide my company details (Post as anonymously)</label>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    {{-- ====== SECTION 7: Screening Questions (Advanced) ====== --}}
+    <div class="jp-card jp-card-collapsible" data-section="7">
+        <div class="jp-card-header">
+            <div class="jp-card-title"><i class="fa fa-clipboard-list"></i> {{ __('Job Screening Questions') }} <span class="hint" style="font-weight:400;font-size:13px;">({{ __('Select, edit Q&A, and mark correct answer. Wrong answer restricts candidate from applying.') }})</span></div>
+        </div>
+        <div class="jp-card-body" style="padding-top: 20px;">
+        <div id="screening-questions-container" class="sq-list">
+            @php
+                $jobSqs = optional($job)->screeningQuestions ?? collect();
+                $selectedSqIds = old('screening_question_ids', $jobSqs->pluck('id')->all());
+                $requiredSqIds = old('screening_question_required', $jobSqs->filter(fn($q) => $q->pivot->is_required ?? false)->pluck('id')->all());
+                $sqOverrides = [];
+                foreach ($screeningQuestions ?? [] as $q) {
+                    $pivot = $jobSqs->firstWhere('id', $q->id)?->pivot;
+                    $sqOverrides[$q->id] = [
+                        'question' => old('screening_question_question.'.$q->id, $pivot->question_override ?? ''),
+                        'options' => old('screening_question_options.'.$q->id, $pivot->options_override ?? ''),
+                        'correct_answer' => old('screening_question_correct.'.$q->id, $pivot->correct_answer ?? ''),
+                    ];
+                }
+            @endphp
+            @forelse($screeningQuestions ?? [] as $sq)
+                @php
+                    $override = $sqOverrides[$sq->id] ?? ['question'=>'','options'=>'','correct_answer'=>''];
+                    $opts = $sq->options_array;
+                    $optsStr = is_array($opts) ? implode("\n", $opts) : (string)($opts ?? '');
+                    $optsForCorrect = !empty($override['options']) ? array_filter(array_map('trim', preg_split('/[\r\n]+/', (string)$override['options']))) : (is_array($opts) ? $opts : []);
+                @endphp
+                <div class="sq-item" data-id="{{ $sq->id }}" data-template-question="{{ e($sq->question) }}" data-template-options="{{ e($optsStr) }}" data-type="{{ $sq->question_type }}">
+                    <div class="sq-item-main">
+                        <input type="checkbox" name="screening_question_ids[]" value="{{ $sq->id }}" id="sq_cb_{{ $sq->id }}" class="form-check-input sq-select-cb" {{ in_array($sq->id, $selectedSqIds) ? 'checked' : '' }}>
+                        <div class="sq-item-content">
+                            <label for="sq_cb_{{ $sq->id }}" class="sq-question-text">{{ $override['question'] ?: $sq->question }}</label>
+                            <span class="sq-type-badge">{{ $sq->question_type }}</span>
+                        </div>
+                    </div>
+                    <div class="sq-item-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary sq-toggle-edit" title="{{ __('Edit Q&A') }}"><i class="fa fa-edit"></i></button>
+                        <button type="button" class="btn btn-sm btn-outline-primary sq-auto-fill" title="{{ __('1-Click: Fill from job form') }}"><i class="fa fa-magic"></i> 1-Click</button>
+                        <span class="sq-required-wrap">
+                            <input type="checkbox" name="screening_question_required[]" value="{{ $sq->id }}" id="sq_req_{{ $sq->id }}" class="form-check-input sq-required-cb" {{ in_array($sq->id, $requiredSqIds) ? 'checked' : '' }} {{ in_array($sq->id, $selectedSqIds) ? '' : 'disabled' }}>
+                            <label for="sq_req_{{ $sq->id }}" class="sq-required-label">{{ __('Required') }}</label>
+                        </span>
+                    </div>
+                    <div class="sq-item-expand" style="display:none;width:100%;margin-top:12px; padding:16px; background:#f9f9f9; border-radius:8px; border:1px solid #eee;">
+                        <div class="mb-2">
+                            <label class="form-label small">{{ __('Question (editable)') }}</label>
+                            <textarea name="screening_question_question[{{ $sq->id }}]" class="form-control sq-edit-question" rows="2" placeholder="{{ $sq->question }}">{{ $override['question'] }}</textarea>
+                        </div>
+                        @if(in_array($sq->question_type, ['dropdown','checkbox']))
+                        <div class="mb-2">
+                            <label class="form-label small">{{ __('Options (one per line)') }}</label>
+                            <textarea name="screening_question_options[{{ $sq->id }}]" class="form-control sq-edit-options" rows="3" placeholder="{{ $optsStr }}">{{ is_array($override['options']) ? implode("\n", $override['options']) : $override['options'] }}</textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">{{ __('Correct answer (restricts wrong)') }} <span class="text-muted">({{ __('Candidate must select this to apply') }})</span></label>
+                            <select name="screening_question_correct[{{ $sq->id }}]" class="form-select sq-edit-correct">
+                                <option value="">{{ __('No restriction') }}</option>
+                                @foreach($optsForCorrect as $opt)
+                                <option value="{{ $opt }}" {{ ($override['correct_answer'] ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            @empty
+            <p class="sq-empty-msg">{{ __('No screening questions available. Admin can add them in Job Board → Job Attributes → Screening Questions.') }}</p>
+            @endforelse
+        </div>
+
+        {{-- Job-specific screening questions (employer adds per job, not stored in admin) --}}
+        <div class="mt-4 pt-4 border-top">
+            <h4 class="mb-3 fw-semibold"><i class="fa fa-plus-circle"></i> {{ __('Your screening questions for this job') }}</h4>
+            <p class="text-muted small mb-3">{{ __('Add questions only for this job. Candidates will answer these when applying.') }}</p>
+            <div id="job-screening-questions-list">
+                @php
+                    $jobScreeningQuestions = old('job_screening_questions', ($editJobData ?? [])['job_screening_questions'] ?? []);
+                    if (!is_array($jobScreeningQuestions)) $jobScreeningQuestions = [];
+                @endphp
+                @foreach($jobScreeningQuestions as $idx => $jsq)
+                <div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="{{ $idx }}">
+                    <input type="hidden" name="job_screening_questions[{{ $idx }}][id]" value="{{ $jsq['id'] ?? '' }}">
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <label class="form-label small mb-0">{{ __('Question') }}</label>
+                            <textarea name="job_screening_questions[{{ $idx }}][question]" class="form-control form-control-sm" rows="2" placeholder="{{ __('e.g. Do you have B.Ed?') }}">{{ $jsq['question'] ?? '' }}</textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">{{ __('Type') }}</label>
+                            <select name="job_screening_questions[{{ $idx }}][question_type]" class="form-select form-select-sm jsq-type">
+                                <option value="text" {{ ($jsq['question_type'] ?? 'text') === 'text' ? 'selected' : '' }}>Text</option>
+                                <option value="textarea" {{ ($jsq['question_type'] ?? '') === 'textarea' ? 'selected' : '' }}>Textarea</option>
+                                <option value="dropdown" {{ ($jsq['question_type'] ?? '') === 'dropdown' ? 'selected' : '' }}>Dropdown</option>
+                                <option value="checkbox" {{ ($jsq['question_type'] ?? '') === 'checkbox' ? 'selected' : '' }}>Checkbox</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">
+                                <input type="checkbox" name="job_screening_questions[{{ $idx }}][is_required]" value="1" {{ !empty($jsq['is_required']) ? 'checked' : '' }}> {{ __('Required') }}
+                            </label>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="{{ __('Remove') }}"><i class="fa fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="jsq-options-wrap mb-2" style="display:{{ in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none' }};">
+                        <label class="form-label small mb-0">{{ __('Options (one per line)') }}</label>
+                        <textarea name="job_screening_questions[{{ $idx }}][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No">{{ is_array($jsq['options'] ?? null) ? implode("\n", $jsq['options']) : ($jsq['options'] ?? '') }}</textarea>
+                    </div>
+                    <div class="jsq-correct-wrap" style="display:{{ in_array($jsq['question_type'] ?? '', ['dropdown','checkbox']) ? 'block' : 'none' }};">
+                        <label class="form-label small mb-0">{{ __('Correct answer (candidate must select this to apply)') }}</label>
+                        <input type="text" name="job_screening_questions[{{ $idx }}][correct_answer]" class="form-control form-control-sm" placeholder="{{ __('Optional') }}" value="{{ $jsq['correct_answer'] ?? '' }}">
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="jsq-add-btn"><i class="fa fa-plus"></i> {{ __('Add question') }}</button>
+        </div>
+        </div>
+    </div>
+
+    {{-- ====== SUBMIT ====== --}}
+    <div class="jp-card" style="text-align: center;">
+        <button type="submit" class="jp-submit-btn" id="submitJobBtn">
+            <i class="fa fa-check"></i> {{ $submitLabel }}
+        </button>
+        <a href="{{ route('public.account.jobs.index') }}" class="btn btn-outline-secondary ms-3" style="border-radius:8px; padding:12px 30px;">
+            Cancel
+        </a>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ===== JOB TITLES DATABASE =====
+    const jobTitles = [
+        'Primary English Teacher', 'Secondary Mathematics Teacher', 'School Principal',
+        'Academic Coordinator', 'Higher Secondary Commerce Teacher', 'Primary Hindi Teacher',
+        'Secondary Science Teacher', 'Secondary Social Studies Teacher', 'Physical Education Teacher',
+        'Music Teacher', 'Art Teacher', 'Computer Science Teacher', 'Special Education Teacher',
+        'Nursery Teacher', 'KG Teacher', 'Montessori Teacher', 'Librarian', 'Lab Assistant',
+        'Administrative Officer', 'Accountant', 'Front Desk Executive', 'Counselor',
+        'Vice Principal', 'Head of Department', 'Subject Matter Expert', 'Curriculum Designer',
+        'Online Tutor', 'Academic Writer', 'Examination Controller', 'Hostel Warden',
+        'Sports Coach', 'Dance Teacher', 'Sanskrit Teacher', 'French Teacher',
+        'German Teacher', 'Biology Teacher', 'Chemistry Teacher', 'Physics Teacher',
+        'Economics Teacher', 'Psychology Teacher', 'Sociology Teacher', 'Political Science Teacher',
+        'History Teacher', 'Geography Teacher', 'Environmental Science Teacher',
+        'Early Childhood Educator', 'Activity Teacher', 'Yoga Teacher',
+        'IT Administrator', 'Transport Manager', 'Security Supervisor'
+    ];
+
+    // ===== CERTIFICATIONS DATABASE =====
+    const certifications = [
+        'B.Ed', 'M.Ed', 'NTT', 'Montessori Trained', 'ECCED', 'TET', 'CTET',
+        'IB Teacher Certification', 'Cambridge Teacher Certification', 'D.El.Ed',
+        'PGDM', 'PhD in Education', 'NET', 'SET', 'JRF', 'NCTE Approved',
+        'CBSE Affiliation Training', 'ICSE Training Certification',
+        'Special Education Certification', 'Counseling Certification',
+        'Computer Teacher Certification', 'Yoga Teacher Certification'
+    ];
+
+    // ===== LANGUAGES (from jb_languages table) =====
+    const languages = @json($languagesList ?? []);
+
+    // ===== SKILLS (from DB) =====
+    const allSkills = @json($skills);
+
+    // ===== COMPANY DATA =====
+    const companyData = @json($companyDetails);
+    const companies = @json($companies ?? []);
+    const degreeLevels = @json($degreeLevels ?? []);
+    const jobExperiences = @json($jobExperiences ?? []);
+
+    // ===== EDIT MODE: pre-fill from job =====
+    var isEditMode = {{ $isEdit ? 'true' : 'false' }};
+    var editJobData = @json($editJobData ?? null);
+
+    // ===== AUTO-SUGGEST HELPER =====
+    function setupAutoSuggest(inputEl, listEl, items, onSelect, isObject, clearInputOnSelect) {
+        isObject = isObject || false;
+        clearInputOnSelect = clearInputOnSelect !== false;
+        function showList(val) {
+            val = (val || '').toLowerCase().trim();
+            listEl.innerHTML = '';
+            var filtered;
+            if (val.length < 1) {
+                filtered = isObject ? Object.entries(items).slice(0, 15) : items.slice(0, 15);
+            } else if (isObject) {
+                filtered = Object.entries(items).filter(function(entry) {
+                    return entry[1].toLowerCase().includes(val);
+                }).slice(0, 15);
+            } else {
+                filtered = items.filter(function(i) { return i.toLowerCase().includes(val); }).slice(0, 15);
+            }
+            if (filtered.length === 0) { listEl.classList.remove('show'); return; }
+            filtered.forEach(function(item) {
+                var div = document.createElement('div');
+                div.className = 'jp-suggest-item';
+                var itemText = isObject ? item[1] : item;
+                var itemId = isObject ? item[0] : null;
+                div.textContent = itemText;
+                if (isObject) div.dataset.id = itemId;
+                div.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    onSelect(isObject ? { id: this.dataset.id, name: itemText } : itemText);
+                    if (clearInputOnSelect) inputEl.value = '';
+                    listEl.classList.remove('show');
+                });
+                listEl.appendChild(div);
+            });
+            listEl.classList.add('show');
+        }
+        inputEl.addEventListener('input', function() { showList(this.value); });
+        inputEl.addEventListener('focus', function() { showList(this.value); });
+        inputEl.addEventListener('blur', function() {
+            setTimeout(function() { listEl.classList.remove('show'); }, 200);
+        });
+    }
+
+    // ===== JOB TITLE AUTO-SUGGEST =====
+    var titleInput = document.getElementById('job_title');
+    var titleList = document.getElementById('job-title-suggestions');
+    setupAutoSuggest(titleInput, titleList, jobTitles, function(title) {
+        titleInput.value = title;
+        autoSetJobType(title);
+    }, false, false); // isObject=false, clearInputOnSelect=false so selected title stays visible
+
+    function autoSetJobType(title) {
+        var nonTeachingKeywords = ['librarian', 'lab assistant', 'administrative', 'accountant',
+            'front desk', 'counselor', 'it administrator', 'transport', 'security', 'hostel warden'];
+        var lowerTitle = title.toLowerCase();
+        var isNonTeaching = nonTeachingKeywords.some(function(k) { return lowerTitle.includes(k); });
+
+        document.querySelectorAll('input[name="job_type_category"]').forEach(function(radio) {
+            var card = radio.closest('.jp-option-card');
+            if (radio.value === (isNonTeaching ? 'non-teaching' : 'teaching')) {
+                radio.checked = true;
+                card.classList.add('selected');
+            } else {
+                radio.checked = false;
+                card.classList.remove('selected');
+            }
+        });
+    }
+
+    // ===== SKILLS =====
+    var selectedSkills = {};
+    var skillsSearch = document.getElementById('skills_search');
+    var skillsList = document.getElementById('skills-suggestions');
+
+    setupAutoSuggest(skillsSearch, skillsList, allSkills, function(skill) {
+        if (!selectedSkills[skill.id]) {
+            selectedSkills[skill.id] = skill.name;
+            renderSkillTags();
+        }
+    }, true);
+
+    function renderSkillTags() {
+        var container = document.getElementById('selected-skills');
+        var hiddenContainer = document.getElementById('skills-hidden-inputs');
+        container.innerHTML = '';
+        hiddenContainer.innerHTML = '';
+        Object.entries(selectedSkills).forEach(function(entry) {
+            container.innerHTML += '<span class="jp-tag">' + entry[1] + ' <span class="remove" onclick="removeSkill(\'' + entry[0] + '\')">&times;</span></span>';
+            hiddenContainer.innerHTML += '<input type="hidden" name="skills[]" value="' + entry[0] + '">';
+        });
+    }
+    window.removeSkill = function(id) {
+        delete selectedSkills[id];
+        renderSkillTags();
+    };
+
+    if (isEditMode && editJobData) {
+        editJobData.skills.forEach(function(s) { selectedSkills[s.id] = s.name; });
+        renderSkillTags();
+    }
+
+    // ===== CERTIFICATIONS =====
+    var selectedCerts = [];
+    var certSearch = document.getElementById('cert_search');
+    var certList = document.getElementById('cert-suggestions');
+
+    setupAutoSuggest(certSearch, certList, certifications, function(cert) {
+        if (selectedCerts.indexOf(cert) === -1) {
+            selectedCerts.push(cert);
+            renderCertTags();
+        }
+    });
+
+    function renderCertTags() {
+        var container = document.getElementById('selected-certs');
+        container.innerHTML = '';
+        selectedCerts.forEach(function(cert, idx) {
+            container.innerHTML += '<span class="jp-tag">' + cert + ' <span class="remove" onclick="removeCert(' + idx + ')">&times;</span></span>';
+        });
+        document.getElementById('required_certifications').value = JSON.stringify(selectedCerts);
+    }
+    window.removeCert = function(idx) {
+        selectedCerts.splice(idx, 1);
+        renderCertTags();
+    };
+
+    if (isEditMode && editJobData && editJobData.required_certifications && editJobData.required_certifications.length) {
+        selectedCerts = editJobData.required_certifications.slice();
+        renderCertTags();
+    }
+
+    // ===== LANGUAGES =====
+    var selectedLangs = [];
+    var langSearch = document.getElementById('lang_search');
+    var langList = document.getElementById('lang-suggestions');
+
+    setupAutoSuggest(langSearch, langList, languages, function(lang) {
+        if (selectedLangs.indexOf(lang) === -1) {
+            selectedLangs.push(lang);
+            renderLangTags();
+        }
+    });
+
+    function renderLangTags() {
+        var container = document.getElementById('selected-langs');
+        container.innerHTML = '';
+        selectedLangs.forEach(function(lang, idx) {
+            container.innerHTML += '<span class="jp-tag">' + lang + ' <span class="remove" onclick="removeLang(' + idx + ')">&times;</span></span>';
+        });
+        document.getElementById('language_proficiency').value = JSON.stringify(selectedLangs);
+    }
+    window.removeLang = function(idx) {
+        selectedLangs.splice(idx, 1);
+        renderLangTags();
+    };
+
+    if (isEditMode && editJobData && editJobData.language_proficiency && editJobData.language_proficiency.length) {
+        selectedLangs = editJobData.language_proficiency.slice();
+        renderLangTags();
+    }
+
+    // ===== COMPANY SELECTION =====
+    function syncCompanyLocationFromJob() {
+        if (!isEditMode || !editJobData) return;
+        var cityInp = document.getElementById('job_city_search');
+        var stateInp = document.getElementById('job_state');
+        var countryInp = document.getElementById('job_country');
+        if (editJobData.city_name && cityInp) cityInp.value = editJobData.city_name;
+        if (editJobData.state_name && stateInp) stateInp.value = editJobData.state_name;
+        if (editJobData.country_name && countryInp) countryInp.value = editJobData.country_name;
+    }
+    var companyEl = document.getElementById('company_id');
+    if (companyEl && companyEl.tagName === 'SELECT') {
+        companyEl.addEventListener('change', function() {
+            var companyId = this.value;
+            var badge = document.getElementById('inst-type-badge');
+
+            if (badge && companyId && companyData[companyId]) {
+                var data = companyData[companyId];
+                badge.textContent = data.institution_type || 'Not specified';
+                badge.style.background = data.institution_type ? '#e8f5e9' : '#fff3e0';
+                badge.style.color = data.institution_type ? '#2e7d32' : '#e65100';
+            } else if (badge) {
+                badge.textContent = 'Select a company first';
+                badge.style.background = '#f0f4ff';
+                badge.style.color = '#4a6cf7';
+            }
+
+            if (companyId && companyData[companyId]) {
+                var data2 = companyData[companyId];
+                if (data2.address) document.getElementById('job_address').value = data2.address;
+                if (data2.city_name) {
+                    document.getElementById('job_city_search').value = data2.city_name;
+                    document.getElementById('job_city_id').value = data2.city_id || '';
+                }
+                if (data2.state_name) {
+                    document.getElementById('job_state').value = data2.state_name;
+                    document.getElementById('job_state_id').value = data2.state_id || '';
+                }
+                if (data2.country_name) {
+                    document.getElementById('job_country').value = data2.country_name;
+                    document.getElementById('job_country_id').value = data2.country_id || '';
+                }
+                if (data2.postal_code) document.getElementById('job_zip_code').value = data2.postal_code;
+            }
+        });
+    }
+    if (isEditMode) setTimeout(syncCompanyLocationFromJob, 100);
+
+    // ===== SALARY PERIOD =====
+    window.selectSalaryPeriod = function(el) {
+        document.querySelectorAll('.jp-salary-tab').forEach(function(t) { t.classList.remove('active'); });
+        el.classList.add('active');
+        var val = el.dataset.value;
+
+        if (val === 'negotiable') {
+            document.getElementById('salary-amount-section').style.display = 'none';
+            document.getElementById('salary_type').value = 'negotiable';
+            document.getElementById('salary_range').value = 'monthly';
+        } else {
+            document.getElementById('salary-amount-section').style.display = 'block';
+            document.getElementById('salary_type').value = 'fixed';
+            document.getElementById('salary_range').value = val;
+        }
+    };
+
+    // ===== SALARY MODE (Range/Fixed) =====
+    window.selectSalaryMode = function(el, mode) {
+        el.closest('.jp-option-cards').querySelectorAll('.jp-option-card').forEach(function(c) { c.classList.remove('selected'); });
+        el.classList.add('selected');
+        document.getElementById('salary-to-wrap').style.display = mode === 'fixed' ? 'none' : 'block';
+    };
+
+    // ===== RADIO/CHECKBOX OPTION CARDS =====
+    window.selectOption = function(el, name) {
+        var cards = el.closest('.jp-option-cards').querySelectorAll('.jp-option-card');
+        cards.forEach(function(c) { c.classList.remove('selected'); });
+        el.classList.add('selected');
+        el.querySelector('input').checked = true;
+
+        if (name === 'application_location_type') {
+            var val = el.querySelector('input').value;
+            document.getElementById('specific-locations-wrap').style.display = val === 'specific' ? 'block' : 'none';
+        }
+        if (name === 'apply_type') {
+            var val2 = el.querySelector('input').value;
+            var externalWrap = document.getElementById('external-url-wrap');
+            var internalWrap = document.getElementById('internal-emails-wrap');
+            if (externalWrap) externalWrap.style.display = val2 === 'external' ? 'block' : 'none';
+            if (internalWrap) internalWrap.style.display = val2 === 'internal' ? 'block' : 'none';
+        }
+    };
+
+    // ===== SCREENING QUESTIONS: Toggle edit, 1-Click auto-fill =====
+    document.querySelectorAll('.sq-toggle-edit').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var expand = this.closest('.sq-item').querySelector('.sq-item-expand');
+            expand.style.display = expand.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+    document.querySelectorAll('.sq-auto-fill').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var item = this.closest('.sq-item');
+            var templateQ = item.dataset.templateQuestion || '';
+            var templateO = item.dataset.templateOptions || '';
+            var repl = {
+                degree_level: degreeLevels[document.getElementById('degree_level_id')?.value] || '',
+                job_title: document.getElementById('job_title')?.value || '',
+                experience_years: jobExperiences[document.getElementById('job_experience_id')?.value] || '',
+                certification: (selectedCerts && selectedCerts[0]) || '',
+                language: (selectedLangs && selectedLangs[0]) || '',
+                job_location: (document.getElementById('job_address')?.value || '') + ' ' + (document.getElementById('job_city_search')?.value || ''),
+                application_locations: (function(){ var v = document.getElementById('application_locations')?.value; if (!v) return ''; try { var a = JSON.parse(v); return Array.isArray(a) ? a.join(', ') : v; } catch(e){ return v.replace(/[\[\]"]/g,'').split(',').map(function(s){return s.trim();}).filter(Boolean).join(', '); } })(),
+                company_name: companies[document.getElementById('company_id')?.value] || '',
+                institution_type: companyData[document.getElementById('company_id')?.value]?.institution_type || ''
+            };
+            for (var k in repl) {
+                templateQ = templateQ.replace(new RegExp('\\{' + k + '\\}', 'g'), repl[k]);
+                templateO = templateO.replace(new RegExp('\\{' + k + '\\}', 'g'), repl[k]);
+            }
+            var qInp = item.querySelector('.sq-edit-question');
+            var oInp = item.querySelector('.sq-edit-options');
+            if (qInp) qInp.value = templateQ;
+            if (oInp) oInp.value = templateO;
+            item.querySelector('.sq-question-text').textContent = templateQ || item.dataset.templateQuestion;
+            item.querySelector('.sq-item-expand').style.display = 'block';
+        });
+    });
+    document.querySelectorAll('.sq-select-cb').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            var req = document.getElementById('sq_req_' + this.value);
+            if (req) req.disabled = !this.checked;
+        });
+    });
+    document.querySelectorAll('.sq-edit-question').forEach(function(ta) {
+        ta.addEventListener('input', function() {
+            var item = this.closest('.sq-item');
+            var label = item.querySelector('.sq-question-text');
+            if (label) label.textContent = this.value || item.dataset.templateQuestion;
+        });
+    });
+
+    // ===== CITY SEARCH FOR JOB LOCATION =====
+    var cityInput = document.getElementById('job_city_search');
+    var cityList2 = document.getElementById('job-city-suggestions');
+    var cityTimeout = null;
+
+    cityInput.addEventListener('input', function() {
+        clearTimeout(cityTimeout);
+        var val = this.value.trim();
+        if (val.length < 2) { cityList2.classList.remove('show'); return; }
+
+        cityTimeout = setTimeout(function() {
+            fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    cityList2.innerHTML = '';
+                    if (!data.length) { cityList2.classList.remove('show'); return; }
+                    data.forEach(function(city) {
+                        var div = document.createElement('div');
+                        div.className = 'jp-suggest-item';
+                        div.textContent = city.full_name || city.name;
+                        div.addEventListener('click', function() {
+                            cityInput.value = city.name;
+                            document.getElementById('job_city_id').value = city.id;
+                            document.getElementById('job_state').value = city.state_name || '';
+                            document.getElementById('job_state_id').value = city.state_id || '';
+                            document.getElementById('job_country').value = city.country_name || '';
+                            document.getElementById('job_country_id').value = city.country_id || '';
+                            cityList2.classList.remove('show');
+                        });
+                        cityList2.appendChild(div);
+                    });
+                    cityList2.classList.add('show');
+                });
+        }, 300);
+    });
+
+    cityInput.addEventListener('blur', function() {
+        setTimeout(function() { cityList2.classList.remove('show'); }, 200);
+    });
+
+    // ===== APPLICATION LOCATION CITY SEARCH =====
+    document.querySelectorAll('.app-location-input').forEach(function(input) {
+        var suggest = input.closest('.jp-suggest-wrap').querySelector('.app-loc-suggest');
+        var timer = null;
+
+        input.addEventListener('input', function() {
+            clearTimeout(timer);
+            var val = this.value.trim();
+            if (val.length < 2) { suggest.classList.remove('show'); return; }
+
+            timer = setTimeout(function() {
+                fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        suggest.innerHTML = '';
+                        if (!data.length) { suggest.classList.remove('show'); return; }
+                        data.forEach(function(city) {
+                            var div = document.createElement('div');
+                            div.className = 'jp-suggest-item';
+                            div.textContent = city.full_name || city.name;
+                            div.addEventListener('click', function() {
+                                input.value = city.name;
+                                input.dataset.cityId = city.id;
+                                suggest.classList.remove('show');
+                                updateAppLocations();
+                            });
+                            suggest.appendChild(div);
+                        });
+                        suggest.classList.add('show');
+                    });
+            }, 300);
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(function() { suggest.classList.remove('show'); }, 200);
+        });
+    });
+
+    function updateAppLocations() {
+        var locs = [];
+        document.querySelectorAll('.app-location-input').forEach(function(input) {
+            if (input.dataset.cityId) {
+                locs.push({ city_id: input.dataset.cityId, name: input.value });
+            }
+        });
+        document.getElementById('application_locations').value = JSON.stringify(locs);
+    }
+
+    // ===== SCREENING QUESTIONS: enable/disable "Required" when question is selected =====
+    document.querySelectorAll('.sq-select-cb').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            var item = this.closest('.sq-item');
+            var reqCb = item ? item.querySelector('.sq-required-cb') : null;
+            if (reqCb) {
+                reqCb.disabled = !this.checked;
+                if (!this.checked) reqCb.checked = false;
+            }
+        });
+    });
+
+    // ===== AI GENERATE DESCRIPTION (OpenAI API) =====
+    var aiErrorEl = document.getElementById('ai-generate-error');
+    function showAiError(text) {
+        if (aiErrorEl) {
+            aiErrorEl.textContent = text || 'AI could not generate. Please write the description manually.';
+            aiErrorEl.classList.add('show');
+        }
+    }
+    function hideAiError() {
+        if (aiErrorEl) {
+            aiErrorEl.textContent = '';
+            aiErrorEl.classList.remove('show');
+        }
+    }
+
+    document.getElementById('aiGenerateBtn').addEventListener('click', function() {
+        var title = (document.getElementById('job_title').value || '').trim();
+        var instTitle = '';
+        var hiringTypeEl = document.getElementById('hiring_institution_type');
+        var hiringNameEl = document.getElementById('hiring_school_name');
+        if (hiringTypeEl && hiringTypeEl.options && hiringTypeEl.options[hiringTypeEl.selectedIndex]) {
+            instTitle = hiringTypeEl.options[hiringTypeEl.selectedIndex].text || hiringTypeEl.value || '';
+        }
+        if (!instTitle && hiringNameEl && hiringNameEl.value) instTitle = hiringNameEl.value;
+        if (!title) {
+            showAiError('Please enter a job title first.');
+            return;
+        }
+
+        hideAiError();
+        var btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
+
+        var url = '{{ route("public.account.jobs.generate-description") }}';
+        var token = (document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content')) || '';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ title: title, institution_title: instTitle })
+        })
+        .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, status: res.status, data: data }; }); })
+        .then(function(result) {
+            if (result.ok && result.data.success && result.data.description) {
+                document.getElementById('job_description').value = result.data.description;
+                if (result.data.fallback) {
+                    var fallbackMsg = result.data.api_error
+                        ? (result.data.api_error + ' Draft generated below – you can edit it.')
+                        : 'Draft generated (AI limit reached). You can edit below.';
+                    showAiError(fallbackMsg);
+                } else {
+                    hideAiError();
+                }
+            } else {
+                var msg = (result.data && result.data.message) ? result.data.message : 'AI could not generate. Please write the description manually.';
+                showAiError(msg);
+            }
+        })
+        .catch(function() {
+            showAiError('Network error. Please try again or write the description manually.');
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-magic"></i> Generate with AI';
+        });
+    });
+
+    document.getElementById('aiClearBtn').addEventListener('click', function() {
+        var descEl = document.getElementById('job_description');
+        if (descEl) descEl.value = '';
+        hideAiError();
+    });
+
+    // ===== JOB-SPECIFIC SCREENING QUESTIONS (add/remove/toggle) =====
+    var jsqList = document.getElementById('job-screening-questions-list');
+    var jsqAddBtn = document.getElementById('jsq-add-btn');
+    function getJsqNextIndex() {
+        var rows = jsqList.querySelectorAll('.jsq-row');
+        var max = -1;
+        rows.forEach(function(r) {
+            var idx = parseInt(r.getAttribute('data-index'), 10);
+            if (!isNaN(idx) && idx > max) max = idx;
+        });
+        return max + 1;
+    }
+    function toggleJsqOptions(row) {
+        var typeSel = row.querySelector('.jsq-type');
+        var type = typeSel ? typeSel.value : '';
+        var optsWrap = row.querySelector('.jsq-options-wrap');
+        var correctWrap = row.querySelector('.jsq-correct-wrap');
+        if (optsWrap) optsWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
+        if (correctWrap) correctWrap.style.display = (type === 'dropdown' || type === 'checkbox') ? 'block' : 'none';
+    }
+    if (jsqAddBtn) {
+        jsqAddBtn.addEventListener('click', function() {
+            var idx = getJsqNextIndex();
+            var html = '<div class="jsq-row mb-3 p-3 border rounded bg-light" data-index="' + idx + '">' +
+                '<input type="hidden" name="job_screening_questions[' + idx + '][id]" value="">' +
+                '<div class="row g-2 mb-2">' +
+                '<div class="col-12"><label class="form-label small mb-0">{{ __("Question") }}</label>' +
+                '<textarea name="job_screening_questions[' + idx + '][question]" class="form-control form-control-sm" rows="2" placeholder="{{ __("e.g. Do you have B.Ed?") }}"></textarea></div>' +
+                '<div class="col-md-4"><label class="form-label small mb-0">{{ __("Type") }}</label>' +
+                '<select name="job_screening_questions[' + idx + '][question_type]" class="form-select form-select-sm jsq-type">' +
+                '<option value="text" selected>Text</option><option value="textarea">Textarea</option><option value="dropdown">Dropdown</option><option value="checkbox">Checkbox</option></select></div>' +
+                '<div class="col-md-4"><label class="form-label small mb-0"><input type="checkbox" name="job_screening_questions[' + idx + '][is_required]" value="1"> {{ __("Required") }}</label></div>' +
+                '<div class="col-md-4 text-end"><button type="button" class="btn btn-sm btn-outline-danger jsq-remove" title="{{ __("Remove") }}"><i class="fa fa-times"></i></button></div></div>' +
+                '<div class="jsq-options-wrap mb-2" style="display:none;"><label class="form-label small mb-0">{{ __("Options (one per line)") }}</label>' +
+                '<textarea name="job_screening_questions[' + idx + '][options]" class="form-control form-control-sm" rows="2" placeholder="Yes&#10;No"></textarea></div>' +
+                '<div class="jsq-correct-wrap" style="display:none;"><label class="form-label small mb-0">{{ __("Correct answer (candidate must select this to apply)") }}</label>' +
+                '<input type="text" name="job_screening_questions[' + idx + '][correct_answer]" class="form-control form-control-sm" placeholder="{{ __("Optional") }}"></div></div>';
+            jsqList.insertAdjacentHTML('beforeend', html);
+            var newRow = jsqList.querySelector('.jsq-row[data-index="' + idx + '"]');
+            if (newRow) {
+                var sel = newRow.querySelector('.jsq-type');
+                if (sel) sel.addEventListener('change', function() { toggleJsqOptions(newRow); });
+                var rm = newRow.querySelector('.jsq-remove');
+                if (rm) rm.addEventListener('click', function() { newRow.remove(); });
+            }
+        });
+    }
+    jsqList.querySelectorAll('.jsq-row').forEach(function(row) {
+        row.querySelectorAll('.jsq-type').forEach(function(sel) {
+            sel.addEventListener('change', function() { toggleJsqOptions(row); });
+        });
+        row.querySelectorAll('.jsq-remove').forEach(function(btn) {
+            btn.addEventListener('click', function() { row.remove(); });
+        });
+    });
+
+    // ===== FORM VALIDATION =====
+    document.getElementById('jobPostForm').addEventListener('submit', function(e) {
+        var empSel = document.getElementById('employment_type');
+        if (empSel) {
+            if (!empSel.value) {
+                empSel.removeAttribute('name');
+            } else {
+                empSel.setAttribute('name', 'jobTypes[]');
+            }
+        }
+        var valid = true;
+
+        if (!document.getElementById('job_title').value.trim()) {
+            document.getElementById('err-title').classList.add('show');
+            valid = false;
+        } else {
+            document.getElementById('err-title').classList.remove('show');
+        }
+
+        if (!document.getElementById('job_description').value.trim()) {
+            document.getElementById('err-description').classList.add('show');
+            valid = false;
+        } else {
+            document.getElementById('err-description').classList.remove('show');
+        }
+
+        var jobTypeChecked = document.querySelector('input[name="job_type_category"]:checked');
+        if (!jobTypeChecked) {
+            document.getElementById('err-job-type').classList.add('show');
+            valid = false;
+        } else {
+            document.getElementById('err-job-type').classList.remove('show');
+        }
+
+        if (!valid) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            var btn = document.getElementById('submitJobBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '{{ $isEdit ? __("Updating...") : __("Posting...") }}';
+            }
+        }
+    });
+});
+</script>
+@endsection

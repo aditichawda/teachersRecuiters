@@ -212,7 +212,12 @@ AdminHelper::registerRoutes(function (): void {
         });
 
         Route::group(['prefix' => 'packages', 'as' => 'packages.'], function (): void {
-            Route::resource('', 'PackageController')->parameters(['' => 'package']);
+            Route::match(['get', 'post'], '/', 'PackageController@index')->name('index');
+            Route::get('create', 'PackageController@create')->name('create');
+            Route::post('store', 'PackageController@store')->name('store');
+            Route::get('{package}/edit', 'PackageController@edit')->name('edit')->whereNumber('package');
+            Route::put('{package}', 'PackageController@update')->name('update')->whereNumber('package');
+            Route::delete('{package}', 'PackageController@destroy')->name('destroy')->whereNumber('package');
         });
 
         Route::group(['prefix' => 'credit-consumption', 'as' => 'credit-consumption.'], function (): void {
@@ -282,6 +287,133 @@ AdminHelper::registerRoutes(function (): void {
                 'uses' => 'AdmissionEnquiryController@destroy',
                 'permission' => 'admission-enquiries.destroy',
             ])->wherePrimaryKey('admission_enquiry');
+        });
+
+        Route::group(['prefix' => 'dedicated-recruiter-requests', 'as' => 'dedicated-recruiter-requests.'], function (): void {
+            Route::match(['get', 'post'], '/', [
+                'as' => 'index',
+                'uses' => 'DedicatedRecruiterRequestController@index',
+                'permission' => 'dedicated-recruiter-requests.index',
+            ]);
+            Route::get('{id}/edit', [
+                'as' => 'edit',
+                'uses' => 'DedicatedRecruiterRequestController@edit',
+                'permission' => 'dedicated-recruiter-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::put('{id}', [
+                'as' => 'update',
+                'uses' => 'DedicatedRecruiterRequestController@update',
+                'permission' => 'dedicated-recruiter-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::delete('{id}', [
+                'as' => 'destroy',
+                'uses' => 'DedicatedRecruiterRequestController@destroy',
+                'permission' => 'dedicated-recruiter-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::post('{id}/accept', [
+                'as' => 'accept',
+                'uses' => 'DedicatedRecruiterRequestController@accept',
+                'permission' => 'dedicated-recruiter-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::post('{id}/reject', [
+                'as' => 'reject',
+                'uses' => 'DedicatedRecruiterRequestController@reject',
+                'permission' => 'dedicated-recruiter-requests.index',
+            ])->where('id', '[0-9]+');
+        });
+
+        Route::group(['prefix' => 'job-posting-assistance-requests', 'as' => 'job-posting-assistance-requests.'], function (): void {
+            Route::match(['get', 'post'], '/', [
+                'as' => 'index',
+                'uses' => 'JobPostingAssistanceRequestController@index',
+                'permission' => 'job-posting-assistance-requests.index',
+            ]);
+            Route::get('{id}/edit', [
+                'as' => 'edit',
+                'uses' => 'JobPostingAssistanceRequestController@edit',
+                'permission' => 'job-posting-assistance-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::put('{id}', [
+                'as' => 'update',
+                'uses' => 'JobPostingAssistanceRequestController@update',
+                'permission' => 'job-posting-assistance-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::delete('{id}', [
+                'as' => 'destroy',
+                'uses' => 'JobPostingAssistanceRequestController@destroy',
+                'permission' => 'job-posting-assistance-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::post('{id}/accept', [
+                'as' => 'accept',
+                'uses' => 'JobPostingAssistanceRequestController@accept',
+                'permission' => 'job-posting-assistance-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::post('{id}/reject', [
+                'as' => 'reject',
+                'uses' => 'JobPostingAssistanceRequestController@reject',
+                'permission' => 'job-posting-assistance-requests.index',
+            ])->where('id', '[0-9]+');
+        });
+
+        Route::group(['prefix' => 'walkin-drive-ad-requests', 'as' => 'walkin-drive-ad-requests.'], function (): void {
+            Route::match(['get', 'post'], '/', [
+                'as' => 'index',
+                'uses' => 'WalkinDriveAdRequestController@index',
+                'permission' => 'walkin-drive-ad-requests.index',
+            ]);
+            Route::get('{id}/edit', [
+                'as' => 'edit',
+                'uses' => 'WalkinDriveAdRequestController@edit',
+                'permission' => 'walkin-drive-ad-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::put('{id}', [
+                'as' => 'update',
+                'uses' => 'WalkinDriveAdRequestController@update',
+                'permission' => 'walkin-drive-ad-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::delete('{id}', [
+                'as' => 'destroy',
+                'uses' => 'WalkinDriveAdRequestController@destroy',
+                'permission' => 'walkin-drive-ad-requests.index',
+            ])->where('id', '[0-9]+');
+        });
+
+        Route::group(['prefix' => 'social-promotion-requests', 'as' => 'social-promotion-requests.'], function (): void {
+            Route::match(['get', 'post'], '/', [
+                'as' => 'index',
+                'uses' => 'SocialPromotionRequestController@index',
+                'permission' => 'social-promotion-requests.index',
+            ]);
+            Route::get('{id}/edit', [
+                'as' => 'edit',
+                'uses' => 'SocialPromotionRequestController@edit',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::get('{id}/download-image', [
+                'as' => 'download-image',
+                'uses' => 'SocialPromotionRequestController@downloadImage',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::put('{id}', [
+                'as' => 'update',
+                'uses' => 'SocialPromotionRequestController@update',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::post('{id}/accept', [
+                'as' => 'accept',
+                'uses' => 'SocialPromotionRequestController@accept',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::post('{id}/reject', [
+                'as' => 'reject',
+                'uses' => 'SocialPromotionRequestController@reject',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
+            Route::delete('{id}', [
+                'as' => 'destroy',
+                'uses' => 'SocialPromotionRequestController@destroy',
+                'permission' => 'social-promotion-requests.index',
+            ])->where('id', '[0-9]+');
         });
 
         Route::group(['prefix' => 'job-applications', 'as' => 'job-applications.'], function (): void {

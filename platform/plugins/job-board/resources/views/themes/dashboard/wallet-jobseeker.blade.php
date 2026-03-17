@@ -150,8 +150,8 @@
                             @endif
                             <x-core::card.body class="pb-2">
                                 <h6 class="text-uppercase small text-muted mb-1">{{ $package->name }}</h6>
-                                <p class="text-muted small mb-1">{{ format_credits_short($package->credits_included ?? $package->number_of_listings) }} {{ trans('plugins/job-board::dashboard.credits') }}</p>
-                                <p class="wallet-package-price mb-2">{{ $package->price_text }}</p>
+                                <p class="text-muted small mb-1">{{ format_credits_short($package->credits_included ?? $package->number_of_listings) }} {{ trans('plugins/job-board::dashboard.credits') }}@if($package->validity_days) · {{ trans('plugins/job-board::dashboard.package_validity_days', ['days' => $package->validity_days]) }}@else · {{ __('Unlimited validity') }}@endif</p>
+                                <p class="wallet-package-price mb-2">@if((float)($package->price ?? 0) == 0){{ __('Free') }}@else{{ $package->price_text }}@endif</p>
                                 @if(trim((string) $package->description) !== '')
                                     <div class="wallet-package-main-desc">{{ $package->description }}</div>
                                 @elseif($packageFeatures = $package->formatted_features)

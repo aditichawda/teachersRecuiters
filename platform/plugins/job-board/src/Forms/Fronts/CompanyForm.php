@@ -21,7 +21,13 @@ class CompanyForm extends FormAbstract
             ->setValidatorClass(CompanyRequest::class)
             ->columns(12)
             ->setFormOption('enctype', 'multipart/form-data')
-            ->template(JobBoardHelper::viewPath('dashboard.forms.base'))
+            ->template(JobBoardHelper::viewPath('dashboard.forms.base'));
+
+        if (request('credits_already_deducted')) {
+            $this->add('credits_already_deducted', 'hidden', ['value' => '1']);
+        }
+
+        $this
             ->add('name', 'text', [
                 'label' => trans('plugins/job-board::forms.company_name'),
                 'required' => true,

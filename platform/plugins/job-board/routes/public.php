@@ -9,6 +9,7 @@ use Botble\Location\Models\City;
 use Botble\Location\Models\State;
 use Botble\Slug\Facades\SlugHelper;
 use Botble\Theme\Facades\Theme;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middleware' => ['web', 'core']], function (): void {
@@ -102,6 +103,18 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers\Fronts', 'middlew
     Route::group(['prefix' => 'payments'], function (): void {
         Route::post('checkout', 'CheckoutController@postCheckout')->name('payments.checkout');
     });
+
+    // Wallet recharge callback (Razorpay redirect POST) - no CSRF
+    Theme::registerRoutes(function (): void {
+        Route::prefix('account/wallet/recharge')->name('public.account.wallet.recharge.')
+            ->withoutMiddleware([VerifyCsrfToken::class])
+            ->group(function (): void {
+                Route::match(['get', 'post'], 'callback/{token}', [
+                    'as' => 'callback',
+                    'uses' => 'WalletRechargeController@callback',
+                ]);
+            });
+    }, ['core']);
 
     // User Notifications Routes
     Route::group(['prefix' => 'account/notifications', 'middleware' => ['auth:account']], function (): void {

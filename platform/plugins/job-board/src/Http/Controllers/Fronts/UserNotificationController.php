@@ -26,9 +26,8 @@ class UserNotificationController extends BaseController
             $notification->markAsRead();
         }
 
-        // Only redirect if it's not an AJAX request
-        // For AJAX requests, just return JSON response to update UI without reload
-        if (!$request->ajax() && !$request->wantsJson() && $notification->action_url && $notification->action_url !== '#') {
+        // If notification has action_url, redirect there
+        if ($notification->action_url && $notification->action_url !== '#') {
             return redirect()->to(url($notification->action_url));
         }
 
@@ -95,6 +94,21 @@ class UserNotificationController extends BaseController
         UserNotification::where('account_id', $account->id)->delete();
 
         return $response->setMessage('All notifications deleted');
+    }
+
+    public function countUnread(BaseHttpResponse $response)
+    {
+        $account = Auth::guard('account')->user();
+        
+        if (!$account) {
+            return $response->setData(0);
+        }
+
+        $count = UserNotification::where('account_id', $account->id)
+            ->whereNull('read_at')
+            ->count();
+
+        return $response->setData($count);
     }
 
     public function countUnread(BaseHttpResponse $response)

@@ -25,6 +25,7 @@ use Botble\JobBoard\Forms\Fronts\Auth\RegisterForm;
 use Botble\JobBoard\Forms\Fronts\Auth\ResetPasswordForm;
 use Botble\JobBoard\Http\Middleware\EnabledCreditsSystem;
 use Botble\JobBoard\Http\Middleware\RedirectIfAccount;
+use Botble\JobBoard\Http\Middleware\RedirectConsultancyAwayFromSchoolOnlyRoutes;
 use Botble\JobBoard\Http\Middleware\RedirectIfNotAccount;
 use Botble\JobBoard\Http\Requests\Fronts\Auth\ForgotPasswordRequest;
 use Botble\JobBoard\Http\Requests\Fronts\Auth\LoginRequest;
@@ -433,6 +434,42 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => route('admission-enquiries.index'),
                     'permissions' => ['admission-enquiries.index'],
                 ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-dedicated-recruiter-requests',
+                    'priority' => 5.6,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Dedicated Recruiter Requests'),
+                    'icon' => 'ti ti-user-check',
+                    'url' => route('dedicated-recruiter-requests.index'),
+                    'permissions' => ['dedicated-recruiter-requests.index'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-social-promotion-requests',
+                    'priority' => 5.7,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Social Promotion Requests'),
+                    'icon' => 'ti ti-brand-linkedin',
+                    'url' => route('social-promotion-requests.index'),
+                    'permissions' => ['social-promotion-requests.index'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-job-posting-assistance-requests',
+                    'priority' => 5.75,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Job Posting Assistance Requests'),
+                    'icon' => 'ti ti-briefcase',
+                    'url' => route('job-posting-assistance-requests.index'),
+                    'permissions' => ['job-posting-assistance-requests.index'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-job-board-walkin-drive-ad-requests',
+                    'priority' => 5.78,
+                    'parent_id' => 'cms-plugins-job-board-main',
+                    'name' => __('Walk-in Drive Ad Requests'),
+                    'icon' => 'ti ti-photo',
+                    'url' => route('walkin-drive-ad-requests.index'),
+                    'permissions' => ['walkin-drive-ad-requests.index'],
+                ])
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), static function (DashboardMenuSupport $dashboardMenu): void {
                     $dashboardMenu
                         ->registerItem([
@@ -610,6 +647,13 @@ class JobBoardServiceProvider extends ServiceProvider
         });
 
         DashboardMenu::for('account')->beforeRetrieving(function (): void {
+            $account = auth('account')->user();
+            // Ensure full model with registration_type so consultancy menu (hide Staff, Companies) is correct
+            if ($account && $account->getKey()) {
+                $account = \Botble\JobBoard\Models\Account::find($account->getKey()) ?? $account;
+            }
+            $isConsultancy = $account && method_exists($account, 'isConsultancy') && $account->isConsultancy();
+
             DashboardMenu::make()
                 ->registerItem([
                     'id' => 'cms-account-dashboard',
@@ -619,7 +663,7 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => fn () => route('public.account.dashboard'),
                     'icon' => 'ti ti-home',
                 ])
-                ->when(JobBoardHelper::employerManageCompanyInfo(), fn (DashboardMenuSupport $m) => $m->registerItem([
+                ->when(JobBoardHelper::employerManageCompanyInfo() && ! $isConsultancy, fn (DashboardMenuSupport $m) => $m->registerItem([
                     'id' => 'cms-account-companies',
                     'priority' => 2,
                     'parent_id' => null,
@@ -677,6 +721,14 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => fn () => route('public.account.wallet'),
                     'icon' => 'ti ti-wallet',
                 ]))
+                ->when(JobBoardHelper::isEnabledCreditsSystem() && ! $isConsultancy, fn (DashboardMenuSupport $m) => $m->registerItem([
+                    'id' => 'cms-account-staff',
+                    'priority' => 6.5,
+                    'parent_id' => null,
+                    'name' => 'plugins/job-board::dashboard.menu.staff',
+                    'url' => fn () => route('public.account.team-members.index'),
+                    'icon' => 'ti ti-users-group',
+                ]))
                 ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
                     'id' => 'cms-account-invoices',
                     'priority' => 7,
@@ -711,6 +763,7 @@ class JobBoardServiceProvider extends ServiceProvider
             $router->aliasMiddleware('account', RedirectIfNotAccount::class);
             $router->aliasMiddleware('account.guest', RedirectIfAccount::class);
             $router->aliasMiddleware('enable-credits', EnabledCreditsSystem::class);
+            $router->aliasMiddleware('consultancy.redirect.school-only', RedirectConsultancyAwayFromSchoolOnlyRoutes::class);
         });
 
         $this->app->register(CommandServiceProvider::class);
@@ -893,6 +946,19 @@ class JobBoardServiceProvider extends ServiceProvider
                             }
                         }
 
+                        break;
+                    case Package::class:
+                        // When saving Package translation for default locale, sync main table so edit form shows saved data
+                        $lang = $request->input('language') ?: $request->header('X-LANGUAGE') ?: \Botble\Language\Facades\Language::getDefaultLocaleCode();
+                        if ($lang === \Botble\Language\Facades\Language::getDefaultLocaleCode()) {
+                            $data->name = $request->input('name', $data->name);
+                            $data->description = $request->input('description', $data->description);
+                            $features = $request->input('features');
+                            if ($features !== null) {
+                                $data->features = is_array($features) ? $features : (array) json_decode($features ?: '[]', true);
+                            }
+                            $data->save();
+                        }
                         break;
                 }
             }, 1234, 2);

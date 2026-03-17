@@ -26,6 +26,12 @@ class EmployerSettingController extends BaseController
 
         /** @var Account $account */
         $account = auth('account')->user();
+        if ($account && $account->getKey()) {
+            $account = Account::find($account->getKey()) ?? $account;
+        }
+        $isConsultancy = $account && method_exists($account, 'isConsultancy')
+            ? (bool) $account->isConsultancy()
+            : (($account->registration_type ?? null) === 'consultancy');
 
         // Get or create the company for this employer
         $company = $account->companies()->first();
@@ -85,6 +91,18 @@ class EmployerSettingController extends BaseController
             if ($company->isDirty()) {
                 $company->save();
             }
+
+            // Ensure company has slug when name is set (fixes existing/dummy data without slug)
+            if (SlugHelper::isSupportedModel(Company::class) && ! empty($company->name)) {
+                try {
+                    $existingSlug = SlugHelper::getSlug(null, SlugHelper::getPrefix(Company::class), Company::class, $company->id);
+                    if (! $existingSlug) {
+                        SlugHelper::createSlug($company);
+                    }
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+            }
         }
 
         // Load saved location names for display (Country, State, City)
@@ -130,13 +148,21 @@ class EmployerSettingController extends BaseController
             }
         }
 
-        return JobBoardHelper::view('dashboard.employer-settings', compact('account', 'company', 'locationCityName', 'locationStateName', 'locationCountryName'));
+        $view = $isConsultancy ? 'dashboard.consultant-settings' : 'dashboard.employer-settings';
+
+        return JobBoardHelper::view($view, compact('account', 'company', 'locationCityName', 'locationStateName', 'locationCountryName'));
     }
 
     public function update(Request $request)
     {
         /** @var Account $account */
         $account = auth('account')->user();
+        if ($account && $account->getKey()) {
+            $account = Account::find($account->getKey()) ?? $account;
+        }
+        $isConsultancy = $account && method_exists($account, 'isConsultancy')
+            ? (bool) $account->isConsultancy()
+            : (($account->registration_type ?? null) === 'consultancy');
 
         // Normalize empty location IDs to null so validation (nullable|integer) passes when city is changed/cleared
         $request->merge([
@@ -145,26 +171,18 @@ class EmployerSettingController extends BaseController
             'country_id' => $request->input('country_id') !== '' && $request->input('country_id') !== null ? (int) $request->input('country_id') : null,
         ]);
 
-        $request->validate([
+        $rules = [
             // Account fields
             'full_name' => 'required|string|max:120',
             'account_phone' => 'required|string|max:30',
             'designation' => 'nullable|string|max:120',
             // Company fields
             'name' => 'required|string|max:120',
-            'institution_type' => 'required|array|min:1|max:4',
-            'institution_type.*' => 'required|string|max:80',
             'description' => 'required|string|max:400',
             'email' => 'required|email|max:60',
             'phone' => 'required|string|max:30',
             'website' => 'nullable|url|max:120',
-            'year_founded' => 'required|integer|min:1800|max:' . date('Y'),
             'total_staff' => 'nullable|integer|min:0|max:999',
-            'campus_type' => 'required|string|in:boarding,day,both',
-            'standard_level' => 'required|array|min:1',
-            'standard_level.*' => 'string',
-            'staff_facilities' => 'required|array|min:1',
-            'staff_facilities.*' => 'string',
             'country_id' => 'nullable|integer',
             'state_id' => 'nullable|integer',
             'city_id' => 'nullable|integer',
@@ -192,24 +210,56 @@ class EmployerSettingController extends BaseController
             'campus_photos.*.caption' => 'nullable|string|max:255',
             'campus_photos_photos' => 'nullable|array',
             'campus_photos_photos.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
-        ]);
+        ];
+
+        if (! $isConsultancy) {
+            $rules = array_merge($rules, [
+                'institution_type' => 'required|array|min:1|max:4',
+                'institution_type.*' => 'required|string|max:80',
+                'year_founded' => 'required|integer|min:1800|max:' . date('Y'),
+                // These sections are currently disabled in the view, so keep them optional to avoid blocking saves.
+                'campus_type' => 'nullable|string|in:boarding,day,both',
+                'standard_level' => 'nullable|array|min:1',
+                'standard_level.*' => 'string',
+                'staff_facilities' => 'nullable|array|min:1',
+                'staff_facilities.*' => 'string',
+            ]);
+        } else {
+            // Consultancy: institution_type not required (and typically hidden)
+            $rules = array_merge($rules, [
+                'institution_type' => 'nullable|array|max:4',
+                'institution_type.*' => 'nullable|string|max:80',
+                'year_founded' => 'nullable|integer|min:1800|max:' . date('Y'),
+            ]);
+        }
+
+        $request->validate($rules);
 
         // Update account full name and phone
         $fullName = $request->input('full_name');
         $nameParts = explode(' ', $fullName, 2);
-        $institutionTypeInput = $request->input('institution_type', []);
-        $institutionTypeStr = is_array($institutionTypeInput)
-            ? implode(',', array_slice(array_filter($institutionTypeInput), 0, 4))
-            : (string) $institutionTypeInput;
-        $account->update([
+        $institutionTypeStr = null;
+        if ($request->has('institution_type')) {
+            $institutionTypeInput = $request->input('institution_type', []);
+            $institutionTypeStr = is_array($institutionTypeInput)
+                ? implode(',', array_slice(array_filter($institutionTypeInput), 0, 4))
+                : (string) $institutionTypeInput;
+        }
+
+        $accountData = [
             'first_name' => $nameParts[0],
             'last_name' => $nameParts[1] ?? '',
             'full_name' => $fullName,
             'designation' => $request->input('designation'),
             'phone' => $request->input('account_phone'),
             'institution_name' => $request->input('name'),
-            'institution_type' => $institutionTypeStr,
-        ]);
+        ];
+
+        if ($institutionTypeStr !== null) {
+            $accountData['institution_type'] = $institutionTypeStr;
+        }
+
+        $account->update($accountData);
 
         $company = $account->companies()->first();
 
@@ -229,7 +279,9 @@ class EmployerSettingController extends BaseController
             'country_id', 'state_id', 'city_id', 'address', 'postal_code',
             'facebook', 'linkedin', 'youtube_video', 'instagram',
         ]);
-        $data['institution_type'] = $institutionTypeStr;
+        if ($institutionTypeStr !== null) {
+            $data['institution_type'] = $institutionTypeStr;
+        }
 
         // Institution logo (right side): store in jb_companies.logo only. Left profile logo = account avatar, unchanged.
         if ($request->hasFile('logo')) {
@@ -342,11 +394,23 @@ class EmployerSettingController extends BaseController
         $company->fill($data);
         $company->save();
 
+        // Ensure company has a slug (create if missing, or when name is now set) so profile URL works
+        if (SlugHelper::isSupportedModel(Company::class) && ! empty($company->name)) {
+            try {
+                $existingSlug = SlugHelper::getSlug(null, SlugHelper::getPrefix(Company::class), Company::class, $company->id);
+                if (! $existingSlug) {
+                    SlugHelper::createSlug($company);
+                }
+            } catch (\Throwable $e) {
+                // ignore slug failure so profile save still succeeds
+            }
+        }
+
         AccountActivityLog::query()->create(['action' => 'update_setting']);
 
         return $this
             ->httpResponse()
             ->setNextUrl(route('public.account.employer.settings.edit'))
-            ->setMessage(__('School/Institution profile updated successfully!'));
+            ->setMessage($isConsultancy ? __('Consultancy profile updated successfully!') : __('School/Institution profile updated successfully!'));
     }
 }

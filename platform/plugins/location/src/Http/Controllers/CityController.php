@@ -168,10 +168,7 @@ class CityController extends BaseController
             if (! $keyword || strlen($keyword) < 2) {
                 if ($defaultCountry === '1' || $defaultCountry === 'true') {
                     $india = Country::query()
-                        ->where(function ($q) {
-                            $q->where('status', BaseStatusEnum::PUBLISHED)->orWhereNull('status');
-                        })
-                        ->whereRaw('LOWER(name) = ?', ['india'])
+                        ->whereRaw('LOWER(TRIM(name)) = ?', ['india'])
                         ->first();
                     if ($india) {
                         $query->where(function ($q) use ($india) {
@@ -179,7 +176,7 @@ class CityController extends BaseController
                                 ->orWhereHas('state', fn ($s) => $s->where('country_id', $india->id));
                         });
                         $total = $query->count();
-                        $citiesQuery = (clone $query)->orderBy('order')->orderBy('name')
+                        $citiesQuery = (clone $query)->orderBy('name')
                             ->offset(($page - 1) * $perPage)
                             ->limit($perPage);
                         $cities = $citiesQuery->get()->map(function ($city) {

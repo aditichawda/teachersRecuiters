@@ -47,6 +47,7 @@ use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Slug\Facades\SlugHelper;
 use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -92,14 +93,6 @@ class AccountJobController extends BaseController
                 ], 503);
             }
 
-            $account = auth('account')->user();
-            if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem() && ! $this->hasJobPostingAssistanceAccess($account)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => __('Purchase Job Posting Assistance from Wallet to use AI description. Valid till your package expiry.'),
-                ], 403);
-            }
-
             $result = $aiService->generateFromTitle($title, '', $institutionTitle);
 
             if ($result['error'] !== null) {
@@ -129,12 +122,93 @@ class AccountJobController extends BaseController
         }
     }
 
+    /**
+     * Deduct 100 credits for additional email (one-time). Call before allowing "Add email" in UI.
+     * Valid till package active. If already has entitlement, returns success without deducting.
+     */
+    public function deductAdditionalEmail(Request $request): JsonResponse
+    {
+        $account = auth('account')->user();
+        if (! $account || ! $account->isEmployer()) {
+            return response()->json(['success' => false, 'message' => __('Unauthorized.')], 403);
+        }
+        if (! JobBoardHelper::isEnabledCreditsSystem()) {
+            return response()->json(['success' => true, 'has_entitlement' => true]);
+        }
+        if (CreditConsumption::hasEntitlement($account, CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL)) {
+            return response()->json(['success' => true, 'has_entitlement' => true, 'message' => __('Already enabled.')]);
+        }
+        $emailCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100);
+        if ($account->credits < $emailCredits) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Insufficient credits. Need :credits credits (one-time). Valid till your package is active.', ['credits' => $emailCredits]),
+            ], 422);
+        }
+        $ok = CreditConsumption::deductForFeature(
+            $account,
+            CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL,
+            $emailCredits,
+            __('Additional Email for Application Alerts (one-time). Valid till package active.'),
+            ['source' => 'add_email_button']
+        );
+        if (! $ok) {
+            return response()->json(['success' => false, 'message' => __('Insufficient credits.')], 422);
+        }
+        return response()->json([
+            'success' => true,
+            'has_entitlement' => true,
+            'message' => __('Credits deducted. You can add additional email. Valid till your package is active.'),
+            'credits' => (int) $account->fresh()->credits,
+        ]);
+    }
+
+    /**
+     * Deduct 10 credits for one WhatsApp number (one-time per number). Call before allowing "Add phone" in UI.
+     * Valid till package active. Max 3 numbers per job.
+     */
+    public function deductWhatsAppNumber(Request $request): JsonResponse
+    {
+        $account = auth('account')->user();
+        if (! $account || ! $account->isEmployer()) {
+            return response()->json(['success' => false, 'message' => __('Unauthorized.')], 403);
+        }
+        if (! JobBoardHelper::isEnabledCreditsSystem()) {
+            return response()->json(['success' => true]);
+        }
+        $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+        if ($account->credits < $wpCredits) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Insufficient credits. Need :credits credits per number (one-time). Valid till your package is active.', ['credits' => $wpCredits]),
+            ], 422);
+        }
+        $ok = CreditConsumption::deductForFeature(
+            $account,
+            CreditConsumption::FEATURE_APPLICATION_ALERT_WP,
+            $wpCredits,
+            __('WhatsApp number for application alerts (one-time per number). Valid till package active.'),
+            ['source' => 'add_phone_button']
+        );
+        if (! $ok) {
+            return response()->json(['success' => false, 'message' => __('Insufficient credits.')], 422);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => __('Credits deducted. You can add phone number. Valid till your package is active.'),
+            'credits' => (int) $account->fresh()->credits,
+        ]);
+    }
+
     public function create()
     {
         /**
          * @var Account $account
          */
         $account = auth('account')->user();
+        if ($account && $account->getKey()) {
+            $account = Account::find($account->getKey()) ?? $account;
+        }
 
         // Lock job post: no package ever purchased OR (package period invalid and no credits) OR no slot and no credits
         $packageContext = PackageContext::forAccount($account);
@@ -261,10 +335,22 @@ class AccountJobController extends BaseController
         $editJobData = null;
         $defaultCompanyId = count($companies) === 1 ? array_key_first($companies) : null;
 
-        return JobBoardHelper::view('dashboard.jobs.create', compact(
+        $creditsEnabled = JobBoardHelper::isEnabledCreditsSystem();
+        $walletUrl = route('public.account.wallet');
+        $accountCredits = $creditsEnabled ? (int) $account->credits : 0;
+        $emailCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100);
+        $wpCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+
+        $view = 'dashboard.jobs.create';
+        if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+            $view = 'dashboard.jobs.create-consultant';
+        }
+
+        return JobBoardHelper::view($view, compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
-            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData', 'defaultCompanyId'
+            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData', 'defaultCompanyId',
+            'walletUrl', 'accountCredits', 'emailCreditsRequired', 'wpCreditsRequired', 'creditsEnabled'
         ));
     }
 
@@ -323,10 +409,9 @@ class AccountJobController extends BaseController
             }
         }
 
-        // New Application Alert by WhatsApp: only allow if employer has enough credits (per-alert deduction happens when sending)
+        // WhatsApp: allow if employer has entitlement (they deducted when adding phone; valid till package)
         if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
-            $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
-            if ($account->credits < $wpCredits) {
+            if (! CreditConsumption::hasEntitlement($account, CreditConsumption::FEATURE_APPLICATION_ALERT_WP)) {
                 $request->merge(['enable_whatsapp_notifications' => 0]);
             }
         }
@@ -353,8 +438,19 @@ class AccountJobController extends BaseController
             }
         }
 
+        $jobValidityDays = null;
+        if ($account->isEmployer() && class_exists(\Botble\JobBoard\Supports\PackageContext::class)) {
+            $ctx = \Botble\JobBoard\Supports\PackageContext::forAccount($account);
+            if ($ctx->hasPackage() && $ctx->isPeriodValid() && $ctx->package && \Illuminate\Support\Facades\Schema::hasColumn('jb_packages', 'job_validity_days')) {
+                $val = (int) ($ctx->package->job_validity_days ?? 0);
+                if ($val > 0) {
+                    $jobValidityDays = $val;
+                }
+            }
+        }
+
         $request->merge([
-            'expire_date' => Carbon::now()->addDays(JobBoardHelper::jobExpiredDays()),
+            'expire_date' => Carbon::now()->addDays($jobValidityDays ?? JobBoardHelper::jobExpiredDays($account)),
             'author_id' => $account->getAuthIdentifier(),
             'author_type' => Account::class,
         ]);
@@ -372,6 +468,9 @@ class AccountJobController extends BaseController
         }
         if (! $request->has('is_remote')) {
             $request->merge(['is_remote' => 0]);
+        }
+        if (! $request->has('hide_hiring_school_name')) {
+            $request->merge(['hide_hiring_school_name' => 0]);
         }
 
         // Ensure job can be stored: set defaults for optional fields if empty
@@ -407,6 +506,16 @@ class AccountJobController extends BaseController
         }
 
         $job->save();
+
+        if ($this->hasFeaturedJobEntitlement($account)) {
+            $job->is_featured = 1;
+            $job->saveQuietly();
+            // Employer ne Featured Job buy kiya hai to is account ki saari jobs featured karo
+            Job::query()
+                ->where('author_id', $account->getKey())
+                ->where('author_type', Account::class)
+                ->update(['is_featured' => 1]);
+        }
 
         if ($this->hasFeaturedJobEntitlement($account)) {
             $job->is_featured = 1;
@@ -516,6 +625,27 @@ class AccountJobController extends BaseController
         // Check if job is published (use the model instance, not query again)
         if ($job->status == JobStatusEnum::PUBLISHED && $job->moderation_status == ModerationStatusEnum::APPROVED) {
             EmployerPostedJobEvent::dispatch($job, $account);
+        }
+
+        // Send notification to employer when job is posted successfully
+        try {
+            $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+            $notificationService->sendJobPostedNotification(
+                $account,
+                $job->name,
+                $job->id
+            );
+            \Log::info('[JOB_POST] Notification sent to employer for job posting', [
+                'job_id' => $job->id,
+                'job_title' => $job->name,
+                'employer_id' => $account->id,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('[JOB_POST] Failed to send notification to employer: ' . $e->getMessage(), [
+                'job_id' => $job->id,
+                'employer_id' => $account->id,
+            ]);
+            // Don't break the flow if notification fails
         }
 
         // Send notification to employer when job is posted successfully
@@ -723,10 +853,23 @@ class AccountJobController extends BaseController
             ];
         }
 
-        return JobBoardHelper::view('dashboard.jobs.create', compact(
+        $creditsEnabled = JobBoardHelper::isEnabledCreditsSystem();
+        $walletUrl = route('public.account.wallet');
+        $accountCredits = $creditsEnabled ? (int) $account->credits : 0;
+        $emailCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_EMAIL, 100);
+        $wpCreditsRequired = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
+
+        $view = 'dashboard.jobs.create';
+        if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+            $view = 'dashboard.jobs.create-consultant';
+        }
+        $defaultCompanyId = $job->company_id ?? (count($companies) === 1 ? array_key_first($companies) : null);
+
+        return JobBoardHelper::view($view, compact(
             'account', 'companies', 'companyInstitutionTypes', 'companyDetails',
             'skills', 'jobTypes', 'degreeLevels', 'jobExperiences',
-            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData'
+            'jobShifts', 'languagesList', 'currencies', 'salaryRanges', 'canPost', 'screeningQuestions', 'job', 'editJobData', 'defaultCompanyId',
+            'walletUrl', 'accountCredits', 'emailCreditsRequired', 'wpCreditsRequired', 'creditsEnabled'
         ));
     }
 
@@ -825,6 +968,9 @@ if ($request->has('enable_whatsapp_notifications')) {
 if (! $request->has('employer_colleagues')) {
     $request->merge(['employer_colleagues' => []]);
 }
+if (! $request->has('hide_hiring_school_name')) {
+    $request->merge(['hide_hiring_school_name' => 0]);
+}
 
 // Handle enable_whatsapp_notifications checkbox (same logic as store)
 if (! $request->has('enable_whatsapp_notifications')) {
@@ -840,11 +986,10 @@ if (! $request->has('enable_whatsapp_notifications')) {
     $request->merge(['enable_whatsapp_notifications' => 1]);
 }
 
-// WhatsApp alert: only allow if employer has enough credits (per-alert deduction when sending)
+// WhatsApp: allow if employer has entitlement (they deducted when adding phone; valid till package)
 $accountForUpdate = auth('account')->user();
 if (JobBoardHelper::isEnabledCreditsSystem() && $request->input('enable_whatsapp_notifications')) {
-    $wpCredits = CreditConsumption::getCreditsForFeature('employer', CreditConsumption::FEATURE_APPLICATION_ALERT_WP, 10);
-    if ($accountForUpdate->credits < $wpCredits) {
+    if (! CreditConsumption::hasEntitlement($accountForUpdate, CreditConsumption::FEATURE_APPLICATION_ALERT_WP)) {
         $request->merge(['enable_whatsapp_notifications' => 0]);
     }
 }
@@ -878,6 +1023,16 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
 
         $job->fill($request->input());
         $job->save();
+
+        if ($this->hasFeaturedJobEntitlement($account = auth('account')->user())) {
+            $job->is_featured = 1;
+            $job->saveQuietly();
+            // Employer ne Featured Job buy kiya hai to is account ki saari jobs featured karo
+            Job::query()
+                ->where('author_id', $account->getKey())
+                ->where('author_type', Account::class)
+                ->update(['is_featured' => 1]);
+        }
 
         if ($this->hasFeaturedJobEntitlement($account = auth('account')->user())) {
             $job->is_featured = 1;
@@ -974,6 +1129,17 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
                 'final_emails' => !empty($slicedEmails) ? $slicedEmails : null,
             ]);
             
+            $slicedEmails = array_slice($emails, 0, 3);
+            // Fix: Empty array should be null, not []
+            $request->merge(['apply_internal_emails' => !empty($slicedEmails) ? $slicedEmails : null]);
+            
+            \Log::info('[JOB_POST] Processed apply_internal_emails', [
+                'original_emails' => $request->input('apply_internal_emails', []),
+                'filtered_emails' => $emails,
+                'sliced_emails' => $slicedEmails,
+                'final_emails' => !empty($slicedEmails) ? $slicedEmails : null,
+            ]);
+            
         // Process apply_internal_phones - format with country code and store
         $phones = array_filter(array_map('trim', (array) $request->input('apply_internal_phones', [])));
         $formattedPhones = [];
@@ -1005,6 +1171,9 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
         }
         
         // Store formatted phones (max 3)
+        // Fix: Empty array should be null, not []
+        $slicedPhones = array_slice($formattedPhones, 0, 3);
+        $request->merge(['apply_internal_phones' => !empty($slicedPhones) ? $slicedPhones : null]);
         // Fix: Empty array should be null, not []
         $slicedPhones = array_slice($formattedPhones, 0, 3);
         $request->merge(['apply_internal_phones' => !empty($slicedPhones) ? $slicedPhones : null]);
@@ -1058,7 +1227,18 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
                 ->httpResponse()->setError()->setMessage(trans('plugins/job-board::messages.not_enough_credit_renew'));
         }
 
-        $job->expire_date = $job->expire_date->addDays(JobBoardHelper::jobExpiredDays());
+        $days = null;
+        if ($account->isEmployer() && class_exists(\Botble\JobBoard\Supports\PackageContext::class)) {
+            $ctx = \Botble\JobBoard\Supports\PackageContext::forAccount($account);
+            if ($ctx->hasPackage() && $ctx->isPeriodValid() && $ctx->package && \Illuminate\Support\Facades\Schema::hasColumn('jb_packages', 'job_validity_days')) {
+                $val = (int) ($ctx->package->job_validity_days ?? 0);
+                if ($val > 0) {
+                    $days = $val;
+                }
+            }
+        }
+
+        $job->expire_date = $job->expire_date->addDays($days ?? JobBoardHelper::jobExpiredDays($account));
         $job->save();
 
         if (JobBoardHelper::isEnabledCreditsSystem() && $account->credits > 0) {
@@ -1284,6 +1464,16 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
                     \Log::error('Failed to send job saved notification: ' . $e->getMessage());
                 }
             }
+            
+            // Send notification to job seeker when job is saved
+            if (!$account->isEmployer()) {
+                try {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $notificationService->sendJobSavedNotification($account, $job->name, $job->id);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send job saved notification: ' . $e->getMessage());
+                }
+            }
         } else {
             $account->savedJobs()->detach($job->id);
             $message = trans('plugins/job-board::messages.job_removed_from_saved', ['job' => $job->name]);
@@ -1301,45 +1491,6 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
     public function getAllTags(): array
     {
         return Tag::query()->pluck('name')->all();
-    }
-
-    /**
-     * Employer has ever purchased a package (transaction with package_id). Used to lock Post Job when no package bought.
-     */
-    /**
-     * Job Posting Assistance (Gemini) access: package valid and employer has used credits for it (valid till package expiry).
-     */
-    private function hasJobPostingAssistanceAccess(Account $account): bool
-    {
-        $lastPurchase = Transaction::query()
-            ->where('account_id', $account->getKey())
-            ->where(function ($q): void {
-                $q->whereNull('type')->orWhere('type', '!=', 'deduct');
-            })
-            ->whereNotNull('payment_id')
-            ->whereNotNull('package_id')
-            ->with('package')
-            ->latest()
-            ->first();
-
-        if (! $lastPurchase || ! $lastPurchase->package || ! $lastPurchase->package->validity_days) {
-            return false;
-        }
-
-        $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
-        if (Carbon::now()->gt($packageExpiryAt)) {
-            return false;
-        }
-
-        if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
-            return false;
-        }
-
-        return Transaction::query()
-            ->where('account_id', $account->getKey())
-            ->where('type', Transaction::TYPE_DEBIT)
-            ->where('feature_key', CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE)
-            ->exists();
     }
 
     private function hasPurchasedPackage(Account $account): bool
