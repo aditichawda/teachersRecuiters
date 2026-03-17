@@ -152,10 +152,14 @@
             color: #ffffff !important;
         }
 <<<<<<< HEAD
+<<<<<<< HEAD
         @media(max-width: 767px) {
 =======
         @media (max-width: 767px) {
 >>>>>>> 3833d8d6 (evening updates)
+=======
+        @media(max-width: 767px) {
+>>>>>>> c225926b (udpdates)
             .footer-screenshot-style .footer-bottom-inner {
                 flex-direction: column;
                 text-align: center;
@@ -179,30 +183,42 @@
         <?php endif; ?>>
         <div class="container">
 <<<<<<< HEAD
+<<<<<<< HEAD
             <!-- Section 1: Top ? 5 columns -->
 =======
             <!-- Section 1: Top – 5 columns -->
 >>>>>>> 3833d8d6 (evening updates)
+=======
+            <!-- Section 1: Top ? 5 columns -->
+>>>>>>> c225926b (udpdates)
             <div class="footer-top">
                 <div class="row g-4">
                     <!-- Col 1: Brand -->
                     <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
 <<<<<<< HEAD
+<<<<<<< HEAD
                             <h3 class="footer-title">TeachersRecruiter?</h3>
 =======
                             <h3 class="footer-title">TeachersRecruiter™</h3>
 >>>>>>> 3833d8d6 (evening updates)
+=======
+                            <h3 class="footer-title">TeachersRecruiter?</h3>
+>>>>>>> c225926b (udpdates)
                             <p class="footer-desc">
                                 Connecting educators and schools across India since 2015. With thousands of teacher
                                 placements and a dedicated education job portal, we make hiring and job searching simple,
                                 fast, and reliable.
                             </p>
 <<<<<<< HEAD
+<<<<<<< HEAD
                             <a href="/about-us" class="footer-read-more">read more ?</a>
 =======
                             <a href="/about-us" class="footer-read-more">read more →</a>
 >>>>>>> 3833d8d6 (evening updates)
+=======
+                            <a href="/about-us" class="footer-read-more">read more ?</a>
+>>>>>>> c225926b (udpdates)
                         </div>
                     </div>
                     <!-- Col 2: Discover -->
@@ -213,6 +229,7 @@
                                 <li><a href="/">Home</a></li>
                                 <li><a href="/jobs">Jobs</a></li>
                                 <li><a href="/companies">Institutes</a></li>
+                                <li><a href="<?php echo e(route('public.start-hiring')); ?>">Start Hiring</a></li>
                                 <!-- <li><a href="/candidates">Candidates</a></li> -->
                             </ul>
                         </div>
@@ -260,10 +277,14 @@
                                     <li><a href="https://www.facebook.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i> Facebook</a></li>
                                     <li><a href="https://www.google.com/search?q=teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-google"></i> Google</a></li>
 <<<<<<< HEAD
+<<<<<<< HEAD
                                     <li><a href="https://www.youtube.com/@@teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-youtube"></i> YouTube</a></li>
 =======
                                     <li><a href="https://www.youtube.com/@teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-youtube"></i> YouTube</a></li>
 >>>>>>> 3833d8d6 (evening updates)
+=======
+                                    <li><a href="https://www.youtube.com/@@teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-youtube"></i> YouTube</a></li>
+>>>>>>> c225926b (udpdates)
                                     <li><a href="https://www.instagram.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-instagram"></i> Instagram</a></li>
                                     <li><a href="https://www.linkedin.com/company/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i> LinkedIn</a></li>
                                 </ul>
@@ -277,13 +298,18 @@
                     <div class="footer-partners-list">
                         <a href="{{ route('public.for-teachers') }}" class="footer-partner-item">For Teachers</a>
                         <a href="{{ route('public.for-schools') }}" class="footer-partner-item">For Schools</a>
+                        <a href="{{ route('public.start-hiring') }}" class="footer-partner-item">Start Hiring</a>
                         <a href="{{ route('public.careers') }}" class="footer-partner-item">Careers</a>
                     </div>
+<<<<<<< HEAD
 <<<<<<< HEAD
                     <a href="/companies" class="footer-see-all">See All ?</a>
 =======
                     <a href="/companies" class="footer-see-all">See All →</a>
 >>>>>>> 3833d8d6 (evening updates)
+=======
+                    <a href="/companies" class="footer-see-all">See All ?</a>
+>>>>>>> c225926b (udpdates)
                 </div>
             </div>
             </div>
@@ -292,10 +318,14 @@
             
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             <!-- Section 3: Bottom ? Copyright + Legal -->
 =======
             <!-- Section 3: Bottom – Copyright + Legal -->
 >>>>>>> 3833d8d6 (evening updates)
+=======
+            <!-- Section 3: Bottom ? Copyright + Legal -->
+>>>>>>> c225926b (udpdates)
             <div class="footer-bottom">
                 <div class="footer-bottom-inner">
                     <div class="footer-copy-right">
@@ -335,10 +365,14 @@
         }
         /* Ensure WhatsApp icon is always visible on scroll */
 <<<<<<< HEAD
+<<<<<<< HEAD
         @@media (max-width: 768px) {
 =======
         @media (max-width: 768px) {
 >>>>>>> 3833d8d6 (evening updates)
+=======
+        @@media (max-width: 768px) {
+>>>>>>> c225926b (udpdates)
             .whatsapp-float {
                 bottom: 15px !important;
                 right: 15px !important;
@@ -372,12 +406,17 @@
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">
 <<<<<<< HEAD
+<<<<<<< HEAD
         <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     </script>
 =======
             <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         </script>
 >>>>>>> 3833d8d6 (evening updates)
+=======
+        <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    </script>
+>>>>>>> c225926b (udpdates)
 <?php endif; ?>
 
 <?php echo Theme::footer(); ?>

@@ -66,6 +66,67 @@
     background: #ffffff !important;
 }
 
+/* Home Keyword Search Dropdown Styling */
+.home-keyword-search-wrapper {
+    position: relative;
+}
+
+.home-keyword-suggestions {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    margin-top: 0 !important;
+}
+
+.home-keyword-suggestion-item {
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: #000000 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background 0.15s ease !important;
+    background: #ffffff !important;
+}
+
+.home-keyword-suggestion-item:last-child {
+    border-bottom: none !important;
+}
+
+.home-keyword-suggestion-item:hover,
+.home-keyword-suggestion-item.active {
+    background: #f0f7ff !important;
+    color: #000000 !important;
+}
+
+.home-keyword-suggestion-item .keyword-name {
+    font-weight: 500 !important;
+    color: #000000 !important;
+    margin-bottom: 2px !important;
+}
+
+.home-keyword-suggestion-item:hover .keyword-name,
+.home-keyword-suggestion-item.active .keyword-name {
+    color: #000000 !important;
+}
+
+.home-keyword-loading,
+.home-keyword-no-results {
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    color: #64748b !important;
+    text-align: center !important;
+    background: #ffffff !important;
+}
+
 /* Ensure dropdown appears above other elements */
 .twm-bnr-search-bar {
     position: relative;
@@ -73,6 +134,10 @@
 }
 
 .home-city-search-wrapper {
+    z-index: 1001;
+}
+
+.home-keyword-search-wrapper {
     z-index: 1001;
 }
 
@@ -96,7 +161,138 @@
     border-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Bootstrap Select Dropdown Styling - White Background, Black Text */
+/* Remove outline from keyword input field */
+.home-keyword-search-input,
+.home-keyword-search-input:focus,
+.home-keyword-search-input:active,
+.home-keyword-search-input:focus-visible,
+.home-keyword-search-input:hover {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.wt-search-bar-select.home-keyword-search-input,
+.wt-search-bar-select.home-keyword-search-input:focus,
+.wt-search-bar-select.home-keyword-search-input:active,
+.wt-search-bar-select.home-keyword-search-input:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Select2 Dropdown Styling for Keyword Search - White Background, Black Text */
+.select2-container--default .select2-selection--single {
+    color: #000000 !important;
+    background: #ffffff !important;
+    border: none !important;
+    height: auto !important;
+    min-height: 34px !important;
+    line-height: 34px !important;
+    padding: 0 12px !important;
+    box-shadow: none !important;
+}
+
+/* Remove border when placeholder is shown */
+.select2-container--default .select2-selection--single[aria-expanded="false"] {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.select2-container--default.selectpicker-keyword .select2-selection--single {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #000000 !important;
+    line-height: 34px !important;
+    padding-left: 0 !important;
+    padding-right: 20px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #94a3b8 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 34px !important;
+    right: 8px !important;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Specific styling for keyword select container */
+#home_keyword_search.selectpicker-keyword + .select2-container {
+    width: 100% !important;
+}
+
+#home_keyword_search.selectpicker-keyword + .select2-container .select2-selection--single {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+#home_keyword_search.selectpicker-keyword + .select2-container.select2-container--default .select2-selection--single {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    padding: 8px 12px !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field:focus {
+    outline: none !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+.select2-container--default .select2-results__option {
+    color: #000000 !important;
+    background: #ffffff !important;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.select2-container--default .select2-results__option:last-child {
+    border-bottom: none !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: #f0f7ff !important;
+    color: #000000 !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background: #f0f7ff !important;
+    color: #000000 !important;
+}
+
+.select2-dropdown {
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    background: #ffffff !important;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+
+/* Bootstrap Select Dropdown Styling - White Background, Black Text (for other selects) */
 .wt-search-bar-select.selectpicker-keyword,
 .wt-search-bar-select.selectpicker-keyword + .bootstrap-select,
 .bootstrap-select.selectpicker-keyword {
@@ -258,10 +454,10 @@
         <div class="row">
             <div class="form-group col-xl-4 col-lg-5 col-md-6">
                 <label><?php echo e(__('Keyword')); ?></label>
-                <select class="wt-search-bar-select selectpicker-keyword" name="job_categories[]">
+                <select class="wt-search-bar-select selectpicker-keyword" name="job_categories[]" id="home_keyword_search">
                     <option value=""><?php echo e(__('Type to search...')); ?></option>
                     <?php $__currentLoopData = app(\Botble\JobBoard\Repositories\Interfaces\CategoryInterface::class)->allBy(['status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED]); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($item->id); ?>"><?php echo e($item->name); ?></option>
+                        <option value="<?php echo e($item->id); ?>" <?php echo e(request('job_categories.0') == $item->id ? 'selected' : ''); ?>><?php echo e($item->name); ?></option>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
@@ -284,4 +480,86 @@
     <?php echo Form::close(); ?>
 
 </div>
+
+<script>
+    // Initialize Select2 for keyword search with typing functionality
+    (function() {
+        function initKeywordSelect2() {
+            if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+                const $keywordSelect = jQuery('#home_keyword_search.selectpicker-keyword');
+                if ($keywordSelect.length && !$keywordSelect.hasClass('select2-hidden-accessible')) {
+                    // Destroy bootstrap-select if it was initialized
+                    if (typeof jQuery.fn.selectpicker !== 'undefined' && $keywordSelect.data('selectpicker')) {
+                        $keywordSelect.selectpicker('destroy');
+                    }
+                    
+                    $keywordSelect.select2({
+                        placeholder: '<?php echo e(__('Type to search...')); ?>',
+                        allowClear: true,
+                        minimumInputLength: 0,
+                        language: {
+                            noResults: function() {
+                                return '<?php echo e(__('No results found')); ?>';
+                            },
+                            searching: function() {
+                                return '<?php echo e(__('Searching...')); ?>';
+                            }
+                        },
+                        matcher: function(params, data) {
+                            // If there's no search term, show all results
+                            if (!params.term || params.term.trim() === '') {
+                                return data;
+                            }
+                            // Filter by search term
+                            if (typeof data.text === 'undefined') {
+                                return null;
+                            }
+                            if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
+                                return data;
+                            }
+                            return null;
+                        }
+                    });
+                    
+                    // Set placeholder for search input when dropdown opens
+                    $keywordSelect.on('select2:open', function() {
+                        jQuery('.select2-container--default .select2-selection--single').addClass('selectpicker-keyword');
+                        // Set placeholder for search input - try multiple times as it's created dynamically
+                        const setPlaceholder = function(attempts) {
+                            attempts = attempts || 0;
+                            if (attempts > 10) return; // Stop after 10 attempts
+                            
+                            const $searchInput = jQuery('.select2-container--default .select2-search__field');
+                            if ($searchInput.length) {
+                                $searchInput.attr('placeholder', '<?php echo e(__('Type to search...')); ?>');
+                            } else {
+                                setTimeout(function() {
+                                    setPlaceholder(attempts + 1);
+                                }, 50);
+                            }
+                        };
+                        setPlaceholder();
+                    });
+                    
+                    console.log('[KEYWORD_SEARCH] Select2 initialized with search functionality');
+                }
+            } else {
+                // Retry if select2 is not loaded yet
+                setTimeout(initKeywordSelect2, 100);
+            }
+        }
+        
+        // Initialize on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initKeywordSelect2);
+        } else {
+            initKeywordSelect2();
+        }
+        
+        // Also try with jQuery ready
+        if (typeof jQuery !== 'undefined') {
+            jQuery(document).ready(initKeywordSelect2);
+        }
+    })();
+</script>
 <?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/partials/shortcodes/search-bar/form.blade.php ENDPATH**/ ?>
