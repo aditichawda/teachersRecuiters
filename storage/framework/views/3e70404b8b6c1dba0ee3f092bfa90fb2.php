@@ -28,11 +28,9 @@
         padding: 0 15px;
     }
 }
-@media(max-width: 575px) {
+
+@media (max-width: 575px) {
     .container {
-        max-width: 100%;
-        padding: 0 10px;
-    }
 }
 
 /* Row and Column Responsive */
