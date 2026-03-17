@@ -139,9 +139,7 @@ class DashboardController extends BaseController
         $packageType = $account->isEmployer() ? 'employer' : 'job-seeker';
         $packagesQuery = Package::query()
             ->wherePublished()
-            ->when(Schema::hasColumn('jb_packages', 'package_type'), function ($query) use ($packageType) {
-                $query->where('package_type', $packageType);
-            })
+            ->where('package_type', $packageType)
             ->when($packageType === 'employer' && Schema::hasColumn('jb_packages', 'show_for_consultancy'), function ($query) use ($account) {
                 if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
                     $query->where('show_for_consultancy', true);
@@ -199,9 +197,7 @@ class DashboardController extends BaseController
         $packageType = $account->isEmployer() ? 'employer' : 'job-seeker';
         $packagesQuery = Package::query()
             ->wherePublished()
-            ->when(Schema::hasColumn('jb_packages', 'package_type'), function ($query) use ($packageType) {
-                $query->where('package_type', $packageType);
-            })
+            ->where('package_type', $packageType)
             ->when($packageType === 'employer' && Schema::hasColumn('jb_packages', 'show_for_consultancy'), function ($query) use ($account) {
                 if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
                     $query->where('show_for_consultancy', true);

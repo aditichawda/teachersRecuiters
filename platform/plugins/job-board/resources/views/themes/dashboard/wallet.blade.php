@@ -210,7 +210,7 @@
                 </x-core::card.body>
             </x-core::card>
         </div>
-        @php $isConsultancy = $isConsultancy ?? ($account && method_exists($account, 'isConsultancy') && $account->isConsultancy()); @endphp
+        @php $isConsultancy = $account && method_exists($account, 'isConsultancy') && $account->isConsultancy(); @endphp
         @unless($isConsultancy)
         <div class="col-lg-12 col-md-12">
             <x-core::card class="h-100">

@@ -646,6 +646,7 @@
     <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; margin:20px; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
         <p id="buy-credits-popup-msg" class="mb-4" style="font-size:15px; color:#333;">{{ __('Insufficient credits. Please buy credits to use this feature.') }}</p>
 
+
         @php
             $creditsEnabledPopup = (bool) ($creditsEnabled ?? \Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem());
             $canRechargeWallet = $creditsEnabledPopup && (bool) ($canPost ?? false) && ((int) ($accountCredits ?? 0) <= 0);
@@ -688,6 +689,7 @@
             </div>
         @endif
 
+
         <div class="d-flex gap-2 justify-content-end">
             <button type="button" class="btn btn-secondary" id="buy-credits-popup-close">{{ __('Cancel') }}</button>
             <a href="{{ $walletUrl ?? route('public.account.wallet') }}" class="btn btn-primary" id="buy-credits-popup-wallet">{{ __('Buy credits') }}</a>
@@ -700,9 +702,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var walletUrl = '{{ $walletUrl ?? route("public.account.wallet") }}';
     var accountCredits = {{ (int) ($accountCredits ?? 0) }};
     var emailCreditsRequired = {{ (int) ($emailCreditsRequired ?? 100) }};
+    var wpCreditsRequired = {{ (int) ($wpCreditsRequired ?? 10) }};
 
     var canRechargeWallet = {{ ($creditsEnabledPopup ?? false) && ($canPost ?? false) && ((int) ($accountCredits ?? 0) <= 0) ? 'true' : 'false' }};
-
 
     function showBuyCreditsPopup(msg) {
         var el = document.getElementById('buy-credits-popup');
@@ -743,7 +745,6 @@ document.addEventListener('DOMContentLoaded', function() {
             rechargeHidden.value = String(val);
         });
     }
-
 
     // ===== JOB TITLES DATABASE =====
     const jobTitles = [
@@ -1010,7 +1011,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits; else show Buy credits popup =====
 
-    document.getElementById('add-internal-email-btn').addEventListener('click', function(e) {
+    document.getElementById('add-internal-email-btn')?.addEventListener('click', function(e) {
 
         e.preventDefault();
         e.stopPropagation();
@@ -1054,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
 
-    document.getElementById('add-internal-phone-btn').addEventListener('click', function(e) {
+    document.getElementById('add-internal-phone-btn')?.addEventListener('click', function(e) {
 
         e.preventDefault();
         e.stopPropagation();
