@@ -198,37 +198,6 @@ class PackageController extends BaseController
         $package->job_apply_limit = $request->input('job_apply_limit');
         $package->save();
 
-        // Ensure package name is editable/persisted even when translations table is used
-        if (Schema::hasTable('jb_packages_translations')) {
-            $langCode = function_exists('is_plugin_active') && is_plugin_active('language')
-                ? \Botble\Language\Facades\Language::getCurrentAdminLocaleCode()
-                : app()->getLocale();
-
-            $langCode = $langCode ?: app()->getLocale();
-
-            DB::table('jb_packages_translations')->updateOrInsert(
-                ['lang_code' => $langCode, 'jb_packages_id' => $package->getKey()],
-                [
-                    'name' => $package->getAttribute('name'),
-                    'description' => $package->getAttribute('description'),
-                ]
-            );
-        }
-
-        // Sync translatable fields (name, description) to current locale so edit form shows saved data.
-        // NOTE: We intentionally skip "features" here because it can be a large JSON payload,
-        // which makes LanguageAdvanced sync very slow and can hit max_execution_time.
-        if (is_plugin_active('language-advanced') && LanguageAdvancedManager::isSupported($package)) {
-            $request->merge([
-                'name' => $package->name,
-                'description' => $package->description,
-            ]);
-            if (! $request->has('language')) {
-                $request->merge(['language' => \Botble\Language\Facades\Language::getCurrentAdminLocaleCode() ?: \Botble\Language\Facades\Language::getDefaultLocaleCode()]);
-            }
-            LanguageAdvancedManager::save($package, $request);
-        }
-
         event(new UpdatedContentEvent(PACKAGE_MODULE_SCREEN_NAME, $request, $package));
 
         $response = $this
