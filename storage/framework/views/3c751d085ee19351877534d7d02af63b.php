@@ -151,7 +151,7 @@
         .footer-screenshot-style .footer-legal a:hover {
             color: #ffffff !important;
         }
-        @media (max-width: 767px) {
+        @media(max-width: 767px) {
             .footer-screenshot-style .footer-bottom-inner {
                 flex-direction: column;
                 text-align: center;
@@ -174,19 +174,19 @@
             style="background-color: #1a1d21;"
         <?php endif; ?>>
         <div class="container">
-            <!-- Section 1: Top – 5 columns -->
+            <!-- Section 1: Top ? 5 columns -->
             <div class="footer-top">
                 <div class="row g-4">
                     <!-- Col 1: Brand -->
                     <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
-                            <h3 class="footer-title">TeachersRecruiter™</h3>
+                            <h3 class="footer-title">TeachersRecruiter?</h3>
                             <p class="footer-desc">
                                 Connecting educators and schools across India since 2015. With thousands of teacher
                                 placements and a dedicated education job portal, we make hiring and job searching simple,
                                 fast, and reliable.
                             </p>
-                            <a href="/about-us" class="footer-read-more">read more →</a>
+                            <a href="/about-us" class="footer-read-more">read more ?</a>
                         </div>
                     </div>
                     <!-- Col 2: Discover -->
@@ -244,7 +244,7 @@
                                 <ul class="footer-links footer-social-links">
                                     <li><a href="https://www.facebook.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i> Facebook</a></li>
                                     <li><a href="https://www.google.com/search?q=teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-google"></i> Google</a></li>
-                                    <li><a href="https://www.youtube.com/@teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-youtube"></i> YouTube</a></li>
+                                    <li><a href="https://www.youtube.com/@@teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-youtube"></i> YouTube</a></li>
                                     <li><a href="https://www.instagram.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-instagram"></i> Instagram</a></li>
                                     <li><a href="https://www.linkedin.com/company/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i> LinkedIn</a></li>
                                 </ul>
@@ -261,7 +261,7 @@
                         <a href="<?php echo e(route('public.start-hiring')); ?>" class="footer-partner-item">Start Hiring</a>
                         <a href="<?php echo e(route('public.careers')); ?>" class="footer-partner-item">Careers</a>
                     </div>
-                    <a href="/companies" class="footer-see-all">See All →</a>
+                    <a href="/companies" class="footer-see-all">See All ?</a>
                 </div>
             </div>
             </div>
@@ -269,7 +269,7 @@
             <!-- Section 2: Partners -->
             
 
-            <!-- Section 3: Bottom – Copyright + Legal -->
+            <!-- Section 3: Bottom ? Copyright + Legal -->
             <div class="footer-bottom">
                 <div class="footer-bottom-inner">
                     <div class="footer-copy-right">
@@ -309,7 +309,7 @@
             transform: scale(1.1);
         }
         /* Ensure WhatsApp icon is always visible on scroll */
-        @media (max-width: 768px) {
+        @@media (max-width: 768px) {
             .whatsapp-float {
                 bottom: 15px !important;
                 right: 15px !important;
@@ -324,8 +324,8 @@
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.apply-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">
-            <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-        </script>
+        <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    </script>
 <?php endif; ?>
 
 <?php echo Theme::footer(); ?>
