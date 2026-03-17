@@ -427,6 +427,7 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
             Route::group([
                 'prefix' => 'companies',
                 'as' => 'companies.',
+                'middleware' => ['consultancy.redirect.school-only'],
             ], function (): void {
                 Route::resource('', 'CompanyController')->parameters(['' => 'companies']);
             });
@@ -544,7 +545,7 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
 
             // Credit features: sub-account (multiple login), dedicated recruiter request, social promotion request
             Route::group([
-                'middleware' => ['enable-credits', LocaleMiddleware::class],
+                'middleware' => ['enable-credits', LocaleMiddleware::class, 'consultancy.redirect.school-only'],
             ], function (): void {
                 Route::get('team-members', [
                     'as' => 'team-members.index',

@@ -210,7 +210,7 @@
                 </x-core::card.body>
             </x-core::card>
         </div>
-        @php $isConsultancy = $account && method_exists($account, 'isConsultancy') && $account->isConsultancy(); @endphp
+        @php $isConsultancy = $isConsultancy ?? ($account && method_exists($account, 'isConsultancy') && $account->isConsultancy()); @endphp
         @unless($isConsultancy)
         <div class="col-lg-12 col-md-12">
             <x-core::card class="h-100">
@@ -1270,7 +1270,8 @@
     @endif
 
     <div class="wallet-consumption-invoice-section">
-    {{-- Consumption Report (includes pending requests) --}}
+    {{-- Consumption Report (includes pending requests) – hidden for consultancy --}}
+    @unless($isConsultancy)
     @php
         $transactionStatusMap = $transactionStatusMap ?? [];
         $allSocialRequests = ($account->isEmployer() && isset($socialPromotionRequests) && $socialPromotionRequests) ? $socialPromotionRequests : collect();
@@ -1410,6 +1411,7 @@
             @endif
         </x-core::card.body>
     </x-core::card>
+    @endunless
 
     {{-- Invoice details (employer only) --}}
     <x-core::card>

@@ -25,6 +25,7 @@ use Botble\JobBoard\Forms\Fronts\Auth\RegisterForm;
 use Botble\JobBoard\Forms\Fronts\Auth\ResetPasswordForm;
 use Botble\JobBoard\Http\Middleware\EnabledCreditsSystem;
 use Botble\JobBoard\Http\Middleware\RedirectIfAccount;
+use Botble\JobBoard\Http\Middleware\RedirectConsultancyAwayFromSchoolOnlyRoutes;
 use Botble\JobBoard\Http\Middleware\RedirectIfNotAccount;
 use Botble\JobBoard\Http\Requests\Fronts\Auth\ForgotPasswordRequest;
 use Botble\JobBoard\Http\Requests\Fronts\Auth\LoginRequest;
@@ -646,6 +647,13 @@ class JobBoardServiceProvider extends ServiceProvider
         });
 
         DashboardMenu::for('account')->beforeRetrieving(function (): void {
+            $account = auth('account')->user();
+            // Ensure full model with registration_type so consultancy menu (hide Staff, Companies) is correct
+            if ($account && $account->getKey()) {
+                $account = \Botble\JobBoard\Models\Account::find($account->getKey()) ?? $account;
+            }
+            $isConsultancy = $account && method_exists($account, 'isConsultancy') && $account->isConsultancy();
+
             DashboardMenu::make()
                 ->registerItem([
                     'id' => 'cms-account-dashboard',
@@ -655,7 +663,7 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => fn () => route('public.account.dashboard'),
                     'icon' => 'ti ti-home',
                 ])
-                ->when(JobBoardHelper::employerManageCompanyInfo(), fn (DashboardMenuSupport $m) => $m->registerItem([
+                ->when(JobBoardHelper::employerManageCompanyInfo() && ! $isConsultancy, fn (DashboardMenuSupport $m) => $m->registerItem([
                     'id' => 'cms-account-companies',
                     'priority' => 2,
                     'parent_id' => null,
@@ -713,7 +721,7 @@ class JobBoardServiceProvider extends ServiceProvider
                     'url' => fn () => route('public.account.wallet'),
                     'icon' => 'ti ti-wallet',
                 ]))
-                ->when(JobBoardHelper::isEnabledCreditsSystem(), fn (DashboardMenuSupport $m) => $m->registerItem([
+                ->when(JobBoardHelper::isEnabledCreditsSystem() && ! $isConsultancy, fn (DashboardMenuSupport $m) => $m->registerItem([
                     'id' => 'cms-account-staff',
                     'priority' => 6.5,
                     'parent_id' => null,
@@ -755,6 +763,7 @@ class JobBoardServiceProvider extends ServiceProvider
             $router->aliasMiddleware('account', RedirectIfNotAccount::class);
             $router->aliasMiddleware('account.guest', RedirectIfAccount::class);
             $router->aliasMiddleware('enable-credits', EnabledCreditsSystem::class);
+            $router->aliasMiddleware('consultancy.redirect.school-only', RedirectConsultancyAwayFromSchoolOnlyRoutes::class);
         });
 
         $this->app->register(CommandServiceProvider::class);

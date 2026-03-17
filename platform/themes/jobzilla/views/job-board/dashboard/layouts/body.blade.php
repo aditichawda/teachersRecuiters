@@ -7,6 +7,10 @@
     use Botble\Slug\Facades\SlugHelper;
     
     $account = auth('account')->user();
+    // Ensure full model with registration_type so consultancy conditions work (show/hide, redirects)
+    if ($account && $account->getKey()) {
+        $account = \Botble\JobBoard\Models\Account::find($account->getKey()) ?? $account;
+    }
     $company = $account ? $account->companies()->with('slugable')->first() : null;
     $company = $account ? $account->companies()->with('slugable')->first() : null;
     $employerPublicProfileUrl = null;
@@ -635,55 +639,6 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     opacity: 1;
 }
 
-/* Sidebar Toggle Button */
-.enl-sidebar-toggle {
-    display: none;
-    position: fixed;
-    top: 90px;
-    left: 15px;
-    z-index: 1001;
-    background: #0073d1;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    width: 45px;
-    height: 45px;
-    font-size: 18px;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    transition: all 0.3s ease;
-    align-items: center;
-    justify-content: center;
-}
-
-.enl-sidebar-toggle:hover {
-    background: #005bb5;
-    transform: scale(1.05);
-}
-
-.enl-sidebar-toggle.active {
-    left: 265px;
-}
-
-/* Sidebar Overlay */
-.enl-sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.enl-sidebar-overlay.show {
-    display: block;
-    opacity: 1;
-}
-
 /* Profile Sidebar */
 .enl-sidebar {
     background: #fff;
@@ -892,44 +847,6 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     .enl-sidebar { padding: 20px; }
     .enl-main { padding: 20px 0 0 0; }
     .enl-sidebar-col { flex: 0 0 250px; max-width: 250px; }
-    
-    /* Show sidebar toggle on tablet */
-    .enl-sidebar-toggle {
-        display: flex;
-    }
-    
-    .enl-sidebar-col {
-        position: fixed;
-        left: -280px;
-        top: 0;
-        height: 100vh;
-        z-index: 1000;
-        background: #fff;
-        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        transition: left 0.3s ease;
-        overflow-y: auto;
-        padding: 20px;
-        width: 280px;
-        max-width: 280px;
-    }
-    
-    .enl-sidebar-col.show {
-        left: 0;
-    }
-    
-    .enl-sidebar {
-        position: relative;
-        top: 0;
-        margin-bottom: 0;
-        box-shadow: none;
-    }
-    
-    .enl-main-col {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-}
-
     
     /* Show sidebar toggle on tablet */
     .enl-sidebar-toggle {
@@ -1337,18 +1254,9 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     <!-- Mobile Sidebar Overlay -->
     <div class="enl-sidebar-overlay" id="dashboard-sidebar-overlay"></div>
     
-    <!-- Mobile Sidebar Toggle Button -->
-    <button class="enl-sidebar-toggle" id="dashboard-sidebar-toggle" aria-label="Toggle sidebar">
-        <i class="fa fa-bars"></i>
-    </button>
-    
-    <!-- Mobile Sidebar Overlay -->
-    <div class="enl-sidebar-overlay" id="dashboard-sidebar-overlay"></div>
-    
     <div class="container">
         <div class="enl-row">
             <!-- Sidebar -->
-            <div class="enl-sidebar-col" id="dashboard-sidebar">
             <div class="enl-sidebar-col" id="dashboard-sidebar">
                 <div class="enl-sidebar">
                     <div class="text-center">
@@ -1414,10 +1322,12 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
 
                     @unless($isConsultancy)
                     <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
-                    <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
-                        @if($admissionLocked)
-                    <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
-                    <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
+                    <a
+                        href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}"
+                        class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}"
+                        style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}"
+                        title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}"
+                    >
                         @if($admissionLocked)
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
                             <span>{{ __('Admission') }}</span>

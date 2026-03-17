@@ -255,7 +255,15 @@
         </div>
 
         <div class="premium-pricing">
-            <h2>{{ __('Choose Your Plan') }}</h2>
+            <h2>
+                @if(($employerPackageLabel ?? null) === 'consultancy')
+                    {{ __('Consultancy Plans') }}
+                @elseif(($employerPackageLabel ?? null) === 'school_institution')
+                    {{ __('School / Institution Plans') }}
+                @else
+                    {{ __('Choose Your Plan') }}
+                @endif
+            </h2>
             <div class="pricing-plans">
                 @forelse($packages ?? [] as $plan)
                     <div class="pricing-plan {{ $plan->is_default ? 'featured' : '' }}">
@@ -303,3 +311,25 @@
         </div>
     </div>
 </section>
+
+<script>
+    (function () {
+        const packageType = @json($packageType ?? null);
+        const employerPackageLabel = @json($employerPackageLabel ?? null);
+        const premiumDebug = @json($premiumDebug ?? null);
+        const packagesCount = @json(isset($packages) ? $packages->count() : 0);
+        const packageIds = @json(isset($packages) ? $packages->pluck('id')->values() : []);
+
+        const filterApplied =
+            packageType === 'employer'
+                ? (employerPackageLabel === 'consultancy' ? 'show_for_consultancy' : 'show_for_school_institution')
+                : 'none';
+
+        console.log('[PREMIUM_SERVICE_DEBUG] packageType:', packageType);
+        console.log('[PREMIUM_SERVICE_DEBUG] employerPackageLabel:', employerPackageLabel);
+        console.log('[PREMIUM_SERVICE_DEBUG] filterApplied:', filterApplied);
+        console.log('[PREMIUM_SERVICE_DEBUG] packagesCount:', packagesCount);
+        console.log('[PREMIUM_SERVICE_DEBUG] packageIds:', packageIds);
+        console.log('[PREMIUM_SERVICE_DEBUG] premiumDebug:', premiumDebug);
+    })();
+</script>
