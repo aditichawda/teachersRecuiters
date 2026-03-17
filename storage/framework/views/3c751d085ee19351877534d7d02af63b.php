@@ -151,7 +151,7 @@
         .footer-screenshot-style .footer-legal a:hover {
             color: #ffffff !important;
         }
-        @media(max-width: 767px) {
+        @media (max-width: 767px) {
             .footer-screenshot-style .footer-bottom-inner {
                 flex-direction: column;
                 text-align: center;
@@ -174,19 +174,19 @@
             style="background-color: #1a1d21;"
         <?php endif; ?>>
         <div class="container">
-            <!-- Section 1: Top ? 5 columns -->
+            <!-- Section 1: Top – 5 columns -->
             <div class="footer-top">
                 <div class="row g-4">
                     <!-- Col 1: Brand -->
                     <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
-                            <h3 class="footer-title">TeachersRecruiter?</h3>
+                            <h3 class="footer-title">TeachersRecruiter™</h3>
                             <p class="footer-desc">
                                 Connecting educators and schools across India since 2015. With thousands of teacher
                                 placements and a dedicated education job portal, we make hiring and job searching simple,
                                 fast, and reliable.
                             </p>
-                            <a href="/about-us" class="footer-read-more">read more ?</a>
+                            <a href="/about-us" class="footer-read-more">read more →</a>
                         </div>
                     </div>
                     <!-- Col 2: Discover -->
@@ -230,25 +230,25 @@
                     <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
                             <h4 class="footer-title">Social</h4>
-                            <?php($socialLinks = Theme::getSocialLinks())
-                            @if ($socialLinks)
+                            <?php ($socialLinks = Theme::getSocialLinks()); ?>
+                            <?php if($socialLinks): ?>
                                 <ul class="footer-links footer-social-links">
-                                    @foreach ($socialLinks as $socialLink)
-                                        @continue(!$socialLink->getUrl() || !$socialLink->getIconHtml())
+                                    <?php $__currentLoopData = $socialLinks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $socialLink): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php if(!$socialLink->getUrl() || !$socialLink->getIconHtml()) continue; ?>
                                         <li>
-                                            <a href="{{ $socialLink->getUrl() }}" target="_blank" rel="noopener">{!! $socialLink->getIconHtml() !!} {{ $socialLink->getName() }}</a>
+                                            <a href="<?php echo e($socialLink->getUrl()); ?>" target="_blank" rel="noopener"><?php echo $socialLink->getIconHtml(); ?> <?php echo e($socialLink->getName()); ?></a>
                                         </li>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
-                            @else
+                            <?php else: ?>
                                 <ul class="footer-links footer-social-links">
                                     <li><a href="https://www.facebook.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i> Facebook</a></li>
                                     <li><a href="https://www.google.com/search?q=teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-google"></i> Google</a></li>
-                                    <li><a href="https://www.youtube.com/@@teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-youtube"></i> YouTube</a></li>
+                                    <li><a href="https://www.youtube.com/@teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-youtube"></i> YouTube</a></li>
                                     <li><a href="https://www.instagram.com/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-instagram"></i> Instagram</a></li>
                                     <li><a href="https://www.linkedin.com/company/teachersrecruiter" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i> LinkedIn</a></li>
                                 </ul>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -256,12 +256,12 @@
                 <div class="footer-partners-inner">
                     <span class="footer-partners-label">For You:</span>
                     <div class="footer-partners-list">
-                        <a href="{{ route('public.for-teachers') }}" class="footer-partner-item">For Teachers</a>
-                        <a href="{{ route('public.for-schools') }}" class="footer-partner-item">For Schools</a>
-                        <a href="{{ route('public.start-hiring') }}" class="footer-partner-item">Start Hiring</a>
-                        <a href="{{ route('public.careers') }}" class="footer-partner-item">Careers</a>
+                        <a href="<?php echo e(route('public.for-teachers')); ?>" class="footer-partner-item">For Teachers</a>
+                        <a href="<?php echo e(route('public.for-schools')); ?>" class="footer-partner-item">For Schools</a>
+                        <a href="<?php echo e(route('public.start-hiring')); ?>" class="footer-partner-item">Start Hiring</a>
+                        <a href="<?php echo e(route('public.careers')); ?>" class="footer-partner-item">Careers</a>
                     </div>
-                    <a href="/companies" class="footer-see-all">See All ?</a>
+                    <a href="/companies" class="footer-see-all">See All →</a>
                 </div>
             </div>
             </div>
@@ -269,17 +269,18 @@
             <!-- Section 2: Partners -->
             
 
-            <!-- Section 3: Bottom ? Copyright + Legal -->
+            <!-- Section 3: Bottom – Copyright + Legal -->
             <div class="footer-bottom">
                 <div class="footer-bottom-inner">
                     <div class="footer-copy-right">
-                        {!! Theme::getSiteCopyright() ?: 'Teachers Recruiter &copy; ' . date('Y') . '. All Right Reserved.' !!}
+                        <?php echo Theme::getSiteCopyright() ?: 'Teachers Recruiter &copy; ' . date('Y') . '. All Right Reserved.'; ?>
+
                     </div>
                     <!-- <div class="footer-legal">
                         <a href="/terms-conditions">Terms</a>
                         <a href="/privacy-policy">Privacy</a>
-                        <a href="/fraud-alert">Fraud Alert</a>
-                    </div> -->
+                        <a href="/fraud-alert">Fraud Alert</a> -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -308,7 +309,7 @@
             transform: scale(1.1);
         }
         /* Ensure WhatsApp icon is always visible on scroll */
-        @@media (max-width: 768px) {
+        @media (max-width: 768px) {
             .whatsapp-float {
                 bottom: 15px !important;
                 right: 15px !important;
@@ -317,32 +318,14 @@
             }
         }
     </style>
-@endunless
+<?php endif; ?>
 
-@if (is_plugin_active('job-board'))
-    @php
-        $jobSeekerCanApply = true;
-        $jobSeekerPackagesUrl = function_exists('route') ? route('public.account.jobseeker.packages') : '#';
-        $jobSeekerApplyMessage = '';
-        if (auth('account')->check()) {
-            $acc = auth('account')->user();
-            if ($acc && method_exists($acc, 'isJobSeeker') && $acc->isJobSeeker()) {
-                $jobSeekerCtxForApply = \Botble\JobBoard\Supports\JobSeekerPackageContext::forAccount($acc);
-                $jobSeekerCanApply = $jobSeekerCtxForApply->canApply();
-                $jobSeekerPackagesUrl = $jobSeekerCtxForApply->packagesUrl();
-                if (!$jobSeekerCanApply) {
-                    $jobSeekerApplyMessage = $jobSeekerCtxForApply->hasPackage() && $jobSeekerCtxForApply->isPeriodValid()
-                        ? trans('plugins/job-board::messages.job_apply_limit_reached')
-                        : trans('plugins/job-board::messages.job_apply_upgrade_required');
-                }
-            }
-        }
-    ?>
+<?php if(is_plugin_active('job-board')): ?>
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.apply-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">
-        <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-    </script>
+            <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+        </script>
 <?php endif; ?>
 
 <?php echo Theme::footer(); ?>
@@ -510,20 +493,20 @@
         'use strict';
         window.onload = function() {
             <?php if(session()->has('success_msg')): ?>
-                window.showAlert("<?php echo addslashes(session('success_msg')); ?>", 'success');
+                window.showAlert('text-success', "<?php echo addslashes(session('success_msg')); ?>");
             <?php endif; ?>
             <?php if(session()->has('status')): ?>
-                window.showAlert("<?php echo addslashes(session('status')); ?>", 'success');
+                window.showAlert('text-success', "<?php echo addslashes(session('status')); ?>");
             <?php endif; ?>
             <?php if(session()->has('error_msg')): ?>
-                window.showAlert("<?php echo addslashes(session('error_msg')); ?>", 'danger');
+                window.showAlert('text-danger', "<?php echo addslashes(session('error_msg')); ?>");
             <?php endif; ?>
             <?php if(isset($error_msg)): ?>
-                window.showAlert("<?php echo addslashes($error_msg); ?>", 'danger');
+                window.showAlert('text-danger', "<?php echo addslashes($error_msg); ?>");
             <?php endif; ?>
             <?php if(isset($errors)): ?>
                 <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    window.showAlert("<?php echo addslashes($error); ?>", 'danger');
+                    window.showAlert('text-danger', "<?php echo addslashes($error); ?>");
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             <?php endif; ?>
         };
@@ -531,5 +514,4 @@
 <?php endif; ?>
 </body>
 
-</html>
-<?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/partials/footer.blade.php ENDPATH**/ ?>
+</html><?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/partials/footer.blade.php ENDPATH**/ ?>
