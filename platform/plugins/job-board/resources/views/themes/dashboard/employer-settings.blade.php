@@ -1,3 +1,4 @@
+
 @extends(JobBoardHelper::viewPath('dashboard.layouts.master'))
 
 @section('content')

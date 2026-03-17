@@ -1,10 +1,10 @@
 </div>
-@php
+<?php
     $hideFooterOnRoutes = ['public.account.login', 'public.account.register'];
     $shouldHideFooter = in_array(\Illuminate\Support\Facades\Route::currentRouteName(), $hideFooterOnRoutes, true);
-@endphp
+?>
 
-@unless ($shouldHideFooter)
+<?php if (! ($shouldHideFooter)): ?>
     <!-- FOOTER STYLES -->
     <style>
         .footer-screenshot-style {
@@ -151,7 +151,7 @@
         .footer-screenshot-style .footer-legal a:hover {
             color: #ffffff !important;
         }
-        @@media (max-width: 767px) {
+        @media(max-width: 767px) {
             .footer-screenshot-style .footer-bottom-inner {
                 flex-direction: column;
                 text-align: center;
@@ -168,11 +168,11 @@
 
     <!-- FOOTER START -->
     <footer class="footer-dark footer-screenshot-style"
-        @if (theme_option('footer_background'))
-            style="background-image: url({{ RvMedia::getImageUrl(theme_option('footer_background')) }});"
-        @else
+        <?php if(theme_option('footer_background')): ?>
+            style="background-image: url(<?php echo e(RvMedia::getImageUrl(theme_option('footer_background'))); ?>);"
+        <?php else: ?>
             style="background-color: #1a1d21;"
-        @endif>
+        <?php endif; ?>>
         <div class="container">
             <!-- Section 1: Top ? 5 columns -->
             <div class="footer-top">
@@ -229,7 +229,7 @@
                     <div class="col-lg col-md-4 col-6">
                         <div class="footer-widget">
                             <h4 class="footer-title">Social</h4>
-                            @php($socialLinks = Theme::getSocialLinks())
+                            <?php($socialLinks = Theme::getSocialLinks())
                             @if ($socialLinks)
                                 <ul class="footer-links footer-social-links">
                                     @foreach ($socialLinks as $socialLink)
@@ -335,20 +335,21 @@
                 }
             }
         }
-    @endphp
-    @include(Theme::getThemeNamespace('views.job-board.partials.apply-modal'))
-    @include(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'))
+    ?>
+    <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.apply-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.signup-login-modal'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <script id="traffic-popup-map-template" type="text/x-jquery-tmpl">
-        @include(Theme::getThemeNamespace('views.job-board.partials.map'))
+        <?php echo $__env->make(Theme::getThemeNamespace('views.job-board.partials.map'), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     </script>
-@endif
+<?php endif; ?>
 
-{!! Theme::footer() !!}
+<?php echo Theme::footer(); ?>
 
-{{-- Dialog Alert JS --}}
-<script src="{{ asset('themes/jobzilla/js/dialog-alert.js') }}?v=2.0.{{ time() }}"></script>
 
-{{-- Fix Testimonials Equal Height --}}
+
+<script src="<?php echo e(asset('themes/jobzilla/js/dialog-alert.js')); ?>?v=2.0.<?php echo e(time()); ?>"></script>
+
+
 <script>
 (function() {
     function equalizeTestimonialHeights() {
@@ -441,7 +442,7 @@
 })();
 </script>
 
-{{-- Hide Newsletter Popup Completely --}}
+
 <style>
     #newsletter-popup,
     .newsletter-popup,
@@ -498,34 +499,35 @@
     })();
 </script>
 
-@if (session()->has('status') ||
+<?php if(session()->has('status') ||
         session()->has('success_msg') ||
         session()->has('error_msg') ||
         (isset($errors) && $errors->count() > 0) ||
-        isset($error_msg))
+        isset($error_msg)): ?>
     <script type="text/javascript">
         'use strict';
         window.onload = function() {
-            @if (session()->has('success_msg'))
-                window.showAlert("{!! addslashes(session('success_msg')) !!}", 'success');
-            @endif
-            @if (session()->has('status'))
-                window.showAlert("{!! addslashes(session('status')) !!}", 'success');
-            @endif
-            @if (session()->has('error_msg'))
-                window.showAlert("{!! addslashes(session('error_msg')) !!}", 'danger');
-            @endif
-            @if (isset($error_msg))
-                window.showAlert("{!! addslashes($error_msg) !!}", 'danger');
-            @endif
-            @if (isset($errors))
-                @foreach ($errors->all() as $error)
-                    window.showAlert("{!! addslashes($error) !!}", 'danger');
-                @endforeach
-            @endif
+            <?php if(session()->has('success_msg')): ?>
+                window.showAlert("<?php echo addslashes(session('success_msg')); ?>", 'success');
+            <?php endif; ?>
+            <?php if(session()->has('status')): ?>
+                window.showAlert("<?php echo addslashes(session('status')); ?>", 'success');
+            <?php endif; ?>
+            <?php if(session()->has('error_msg')): ?>
+                window.showAlert("<?php echo addslashes(session('error_msg')); ?>", 'danger');
+            <?php endif; ?>
+            <?php if(isset($error_msg)): ?>
+                window.showAlert("<?php echo addslashes($error_msg); ?>", 'danger');
+            <?php endif; ?>
+            <?php if(isset($errors)): ?>
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    window.showAlert("<?php echo addslashes($error); ?>", 'danger');
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            <?php endif; ?>
         };
     </script>
-@endif
+<?php endif; ?>
 </body>
 
 </html>
+<?php /**PATH C:\xampp\htdocs\Aditi\platform\themes/jobzilla/partials/footer.blade.php ENDPATH**/ ?>
