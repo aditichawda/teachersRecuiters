@@ -4,6 +4,7 @@ namespace Botble\JobBoard\Models;
 
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Models\BaseModel;
+use Botble\JobBoard\Supports\PackageContext;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 
@@ -86,6 +87,18 @@ class CreditConsumption extends BaseModel
         array $meta = []
     ): bool
     {
+        // Wallet credits can be used only with an active hiring plan (employer accounts).
+        if ($account->isEmployer()) {
+            try {
+                $packageContext = PackageContext::forAccount($account);
+                if (! $packageContext->canPostJob($account)) {
+                    return false;
+                }
+            } catch (\Throwable $e) {
+                return false;
+            }
+        }
+
         if ($credits <= 0 || $account->credits < $credits) {
             return false;
         }

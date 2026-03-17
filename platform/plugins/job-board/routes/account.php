@@ -520,6 +520,10 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     'as' => 'wallet',
                     'uses' => 'WalletController@index',
                 ]);
+                Route::post('wallet/recharge', [
+                    'as' => 'wallet.recharge.start',
+                    'uses' => 'WalletRechargeController@start',
+                ]);
                 Route::post('wallet/purchase-job-post-slot', [
                     'as' => 'wallet.purchase_job_post_slot',
                     'uses' => 'WalletController@purchaseJobPostSlot',

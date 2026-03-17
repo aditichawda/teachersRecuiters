@@ -24,7 +24,12 @@ class PackageRequest extends Request
             'features.*.value' => ['nullable', 'string', 'max:255'],
             'status' => Rule::in(BaseStatusEnum::values()),
             'package_type' => ['required', 'string', 'in:employer,job-seeker'],
+            'show_for_school_institution' => ['nullable', 'boolean'],
+            'show_for_consultancy' => ['nullable', 'boolean'],
+            'visible_for_account_ids' => ['nullable', 'array'],
+            'visible_for_account_ids.*' => ['integer', 'min:1'],
             'validity_days' => ['nullable', 'integer', 'min:0'],
+            'job_validity_days' => ['nullable', 'integer', 'min:0'],
             'credits_included' => ['nullable', 'integer', 'min:0'],
             'profile_views_allowed' => ['nullable', 'integer', 'min:0'],
             'job_apply_limit' => ['nullable', 'integer', 'min:0'],
@@ -46,6 +51,33 @@ class PackageRequest extends Request
 
         if (in_array($features, ['', '[]', 'null', null], true) || empty($features)) {
             $this->merge(['features' => null]);
+        }
+
+        $visibleFor = $this->input('visible_for_account_ids');
+        if (is_string($visibleFor)) {
+            $visibleFor = trim($visibleFor);
+            if ($visibleFor === '') {
+                $this->merge(['visible_for_account_ids' => null]);
+            } else {
+                $ids = preg_split('/\s*,\s*/', $visibleFor);
+                $ids = array_values(array_unique(array_filter(array_map(static function ($v) {
+                    $v = trim((string) $v);
+                    return ctype_digit($v) ? (int) $v : null;
+                }, $ids))));
+
+                $this->merge(['visible_for_account_ids' => $ids ?: []]);
+            }
+        } elseif (is_array($visibleFor)) {
+            // From multi-select: normalize empty array to null (= visible for all)
+            $ids = array_values(array_unique(array_filter(array_map(static function ($v) {
+                if (is_int($v)) {
+                    return $v;
+                }
+                $v = trim((string) $v);
+                return ctype_digit($v) ? (int) $v : null;
+            }, $visibleFor))));
+
+            $this->merge(['visible_for_account_ids' => $ids ? array_values($ids) : null]);
         }
     }
 

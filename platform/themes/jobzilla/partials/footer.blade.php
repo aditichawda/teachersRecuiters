@@ -276,8 +276,8 @@
                     <!-- <div class="footer-legal">
                         <a href="/terms-conditions">Terms</a>
                         <a href="/privacy-policy">Privacy</a>
-                        <a href="/fraud-alert">Fraud Alert</a> -->
-                    </div>
+                        <a href="/fraud-alert">Fraud Alert</a>
+                    </div> -->
                 </div>
             </div>
         </div>

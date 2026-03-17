@@ -26,7 +26,11 @@ class Package extends BaseModel
         'features',
         'status',
         'package_type',
+        'show_for_school_institution',
+        'show_for_consultancy',
+        'visible_for_account_ids',
         'validity_days',
+        'job_validity_days',
         'credits_included',
         'profile_views_allowed',
         'job_apply_limit',
@@ -37,6 +41,10 @@ class Package extends BaseModel
         'status' => \Botble\JobBoard\Casts\PackageStatusCast::class,
         'name' => SafeContent::class,
         'features' => 'json',
+        'show_for_school_institution' => 'bool',
+        'show_for_consultancy' => 'bool',
+        'job_validity_days' => 'int',
+        'visible_for_account_ids' => 'array',
     ];
 
     protected $appends = [

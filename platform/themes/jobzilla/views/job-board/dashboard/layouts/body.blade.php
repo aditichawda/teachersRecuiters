@@ -50,6 +50,7 @@
     
     $currentUrl = url()->current();
     $menuItems = DashboardMenu::getAll('account');
+    $isConsultancy = $account && method_exists($account, 'isConsultancy') && $account->isConsultancy();
 
     // Post Job: lock when no package ever purchased (credits system enabled). Allow when package slot or credits (PackageContext).
     $hasPurchasedPackage = false;
@@ -1140,12 +1141,14 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
                         @endif
                     </div>
                     
+                    @unless($isConsultancy)
                     <!-- Credits (click opens profile completion modal) -->
                     <div class="enl-credits" onclick="document.getElementById('enlProfileModal').style.display='flex'" style="cursor:pointer;">
                         <i class="fa fa-coins"></i>
                         <span>Credits:</span>
                         <span class="enl-credits-val">{{ $account->credits ?? 0 }}</span>
                     </div>
+                    @endunless
 
                     <!-- Profile Completion -->
                     <div class="enl-completion">
@@ -1156,8 +1159,18 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
                         <span class="enl-comp-text" onclick="document.getElementById('enlProfileModal').style.display='flex'">{{ $empCompletion }}% Complete</span>
                     </div>
                     
-                    <!-- Post Job Button: click opens choice popup (Need assistant → Wallet, Post by self → Job form) -->
+                    <!-- Post Job Button: consultancy → direct to form; others → choice popup -->
                     @php $postJobLocked = !($canPost ?? true); @endphp
+                    @if($isConsultancy)
+                    <a href="{{ route('public.account.jobs.create') }}" class="enl-postjob {{ $postJobLocked ? 'enl-postjob-locked' : '' }}" title="{{ __('Post Job') }}">
+                        @if($postJobLocked)
+                            <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
+                            <span>{{ __('Post Job') }}</span>
+                        @else
+                            <i class="fa fa-plus-circle"></i> {{ __('Post Job') }}
+                        @endif
+                    </a>
+                    @else
                     <a href="#" class="enl-postjob enl-postjob-choice-trigger {{ $postJobLocked ? 'enl-postjob-locked' : '' }}" data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" data-can-post="{{ $canPost ? '1' : '0' }}" title="{{ __('Choose how to post job') }}">
                         @if($postJobLocked)
                             <span class="enl-postjob-icon-wrap"><i class="fa fa-lock"></i></span>
@@ -1166,7 +1179,9 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
                             <i class="fa fa-plus-circle"></i> {{ __('Post Job') }}
                         @endif
                     </a>
+                    @endif
 
+                    @unless($isConsultancy)
                     <!-- Admission Button (employer only; lock only when admission enquiry access is missing, NOT tied to Post Job) -->
                     <a href="{{ $admissionLocked ? route('public.account.wallet') : route('public.account.admission.edit') }}" class="enl-postjob {{ $admissionLocked ? 'enl-postjob-locked' : '' }}" style="{{ $admissionLocked ? 'margin-top: 8px;' : 'background: linear-gradient(135deg, #059669, #047857); margin-top: 8px;' }}" title="{{ $admissionLocked ? trans('plugins/job-board::messages.insufficient_credits') : '' }}">
                         @if($admissionLocked)
@@ -1176,6 +1191,7 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
                             <i class="fa fa-graduation-cap"></i> {{ __('Admission') }}
                         @endif
                     </a>
+                    @endunless
                     
                     <!-- Navigation -->
                     <ul class="enl-nav">
@@ -1184,6 +1200,9 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
                             @php
                                 $employerOnlyIds = ['cms-account-wallet', 'cms-account-packages'];
                                 if (in_array($item['id'] ?? '', $employerOnlyIds) && !optional(auth('account')->user())->isEmployer()) {
+                                    continue;
+                                }
+                                if ($isConsultancy && in_array($item['id'] ?? '', ['cms-account-staff', 'cms-account-companies'])) {
                                     continue;
                                 }
                             @endphp
@@ -1221,11 +1240,13 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     <div class="enl-pm-modal">
         <button type="button" class="enl-pm-close" onclick="document.getElementById('enlProfileModal').style.display='none'">&times;</button>
         
+        @unless($isConsultancy)
         <div class="enl-pm-badge">
             <i class="fa fa-coins"></i>
             <span>Credits:</span>
             <span class="enl-pm-badge-val">{{ $account->credits ?? 0 }}</span>
         </div>
+        @endunless
 
         <div class="enl-pm-comp">
             <h6 class="enl-pm-comp-title">Profile Completion</h6>
@@ -1314,8 +1335,8 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     </div>
 </div>
 
-@if($account && $account->isEmployer())
-{{-- Post Job choice popup: Need assistant (→ Wallet) or Post by self (→ Job form) --}}
+@if($account && $account->isEmployer() && !$isConsultancy)
+{{-- Post Job choice popup: Need assistant (→ Wallet) or Post by self (→ Job form) — hidden for consultancy (they go direct to form) --}}
 <div id="enlPostJobChoiceModal" class="enl-pm-overlay" style="display:none;">
     <div class="enl-pm-modal" style="max-width:420px;">
         <button type="button" class="enl-pm-close" onclick="document.getElementById('enlPostJobChoiceModal').style.display='none'">&times;</button>
