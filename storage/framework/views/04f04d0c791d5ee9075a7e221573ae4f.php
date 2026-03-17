@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<?php if (! $__env->hasRenderedOnce('b4639257-c957-43bd-969e-146b3bc169e8')): $__env->markAsRenderedOnce('b4639257-c957-43bd-969e-146b3bc169e8'); ?>
-=======
-<?php if (! $__env->hasRenderedOnce('49138c38-81e4-4f8d-b733-225f0bbbeeaa')): $__env->markAsRenderedOnce('49138c38-81e4-4f8d-b733-225f0bbbeeaa'); ?>
->>>>>>> 3833d8d6 (evening updates)
-=======
-<?php if (! $__env->hasRenderedOnce('2e61a46d-ef6a-43a9-a06f-d9e9e577719e')): $__env->markAsRenderedOnce('2e61a46d-ef6a-43a9-a06f-d9e9e577719e'); ?>
->>>>>>> c225926b (udpdates)
+<?php if (! $__env->hasRenderedOnce('fd38db5d-ca7c-4953-ac9d-1b47f1c7a382')): $__env->markAsRenderedOnce('fd38db5d-ca7c-4953-ac9d-1b47f1c7a382'); ?>
     <script src="<?php echo e(asset('vendor/core/packages/theme/js/toast.js')); ?>?v=<?php echo e(get_cms_version()); ?>"></script>
 
     <?php if(session()->has('success_msg') ||
