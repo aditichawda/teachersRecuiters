@@ -7,7 +7,8 @@ use Theme\Jobzilla\Http\Controllers\JobzillaController;
 Route::group(['controller' => JobzillaController::class, 'middleware' => ['web', 'core']], function (): void {
     Route::group(apply_filters(BASE_FILTER_GROUP_PUBLIC_ROUTE, []), function (): void {
         Route::get('ajax/cities', 'ajaxGetCities')->name('public.ajax.cities');
-        Route::get('ajax/search-cities', 'ajaxGetCities')->name('ajax.search-cities');
+        // Removed ajax/search-cities route - using location plugin's route instead
+        // Route::get('ajax/search-cities', 'ajaxGetCities')->name('ajax.search-cities');
         Route::get('ajax/job-roles', 'ajaxGetJobRoles')->name('public.ajax.job-roles');
         
         // FAQ Page
@@ -21,6 +22,9 @@ Route::group(['controller' => JobzillaController::class, 'middleware' => ['web',
         
         // For Schools Page
         Route::get('for-schools', 'forSchools')->name('public.for-schools');
+        
+        // Start Hiring Page
+        Route::get('start-hiring', 'startHiring')->name('public.start-hiring');
         
         // Careers Page
         Route::get('careers', 'careers')->name('public.careers');

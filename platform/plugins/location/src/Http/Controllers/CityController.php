@@ -14,6 +14,7 @@ use Botble\Location\Models\City;
 use Botble\Location\Models\Country;
 use Botble\Location\Tables\CityTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class CityController extends BaseController
 {
@@ -143,14 +144,20 @@ class CityController extends BaseController
     public function ajaxSearchCities(Request $request)
     {
         try {
+            // Force JSON response for AJAX requests
+            $request->headers->set('Accept', 'application/json');
+            
             $keyword = BaseHelper::stringify($request->query('k') ?: $request->query('keyword'));
             $defaultCountry = $request->query('default_country');
 
+            // Direct database query - get cities from database
+            // Status 1 = PUBLISHED, include all cities with status 1 or NULL
             $query = City::query()
                 ->select(['id', 'name', 'state_id', 'country_id'])
-                ->where(function ($q) {
-                    $q->where('cities.status', BaseStatusEnum::PUBLISHED)
-                        ->orWhereNull('cities.status');
+                ->where(function($q) {
+                    $q->where('status', BaseStatusEnum::PUBLISHED)
+                      ->orWhere('status', 1)
+                      ->orWhereNull('status');
                 })
                 ->with(['state:id,name,country_id', 'state.country:id,name', 'country:id,name']);
 
@@ -200,30 +207,44 @@ class CityController extends BaseController
                     $query->limit(12);
                 }
             } else {
-                // Keyword search: case-insensitive across all countries
-                $query->whereRaw('LOWER(cities.name) LIKE ?', ['%' . mb_strtolower($keyword) . '%'])->limit(15);
+                // Keyword search: simple LIKE search in city name
+                $keyword = trim($keyword);
+                $query->where('name', 'LIKE', '%' . $keyword . '%')->limit(20);
             }
 
-            $query->orderBy('order')->orderBy('name');
+            // Order by name
+            $query->orderBy('name');
 
-            $cities = $query->get()->map(function ($city) {
+            $cities = $query->get();
+
+            $mappedCities = $cities->map(function ($city) {
                 $countryId = $city->country_id ?: $city->state?->country_id;
                 $countryName = $city->country?->name ?: $city->state?->country?->name;
 
                 return [
                     'id' => $city->id,
                     'name' => $city->name,
-                    'state_id' => $city->state_id,
-                    'state_name' => $city->state?->name,
-                    'country_id' => $countryId,
-                    'country_name' => $countryName,
+                    'state_id' => $city->state_id ?? null,
+                    'state_name' => $city->state?->name ?? '',
+                    'country_id' => $countryId ?? null,
+                    'country_name' => $countryName ?? '',
                 ];
             });
 
+            $finalData = $mappedCities->values()->all();
+            
             return $this
                 ->httpResponse()
-                ->setData($cities);
+                ->setData($finalData);
         } catch (\Throwable $e) {
+            \Log::error('[LOCATION_PLUGIN] City search error', [
+                'keyword' => $keyword ?? 'none',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return $this
                 ->httpResponse()
                 ->setData([]);

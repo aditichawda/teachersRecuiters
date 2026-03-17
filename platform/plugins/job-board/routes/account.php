@@ -403,6 +403,12 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                 'uses' => 'DashboardController@index',
             ]);
 
+            // Employer: candidates listing (dashboard)
+            Route::get('candidates', [
+                'as' => 'candidates',
+                'uses' => 'DashboardController@candidates',
+            ]);
+
             Route::get('employer/settings', [
                 'as' => 'employer.settings.edit',
                 'uses' => 'EmployerSettingController@edit',

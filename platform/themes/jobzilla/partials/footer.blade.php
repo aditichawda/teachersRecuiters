@@ -197,6 +197,7 @@
                                 <li><a href="/">Home</a></li>
                                 <li><a href="/jobs">Jobs</a></li>
                                 <li><a href="/companies">Institutes</a></li>
+                                <li><a href="{{ route('public.start-hiring') }}">Start Hiring</a></li>
                                 <!-- <li><a href="/candidates">Candidates</a></li> -->
                             </ul>
                         </div>
@@ -257,6 +258,7 @@
                     <div class="footer-partners-list">
                         <a href="{{ route('public.for-teachers') }}" class="footer-partner-item">For Teachers</a>
                         <a href="{{ route('public.for-schools') }}" class="footer-partner-item">For Schools</a>
+                        <a href="{{ route('public.start-hiring') }}" class="footer-partner-item">Start Hiring</a>
                         <a href="{{ route('public.careers') }}" class="footer-partner-item">Careers</a>
                     </div>
                     <a href="/companies" class="footer-see-all">See All →</a>

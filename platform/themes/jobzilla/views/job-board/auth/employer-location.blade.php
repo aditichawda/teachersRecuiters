@@ -439,8 +439,21 @@ $(document).ready(function() {
                 url: '{{ route("ajax.search-cities") }}',
                 type: 'GET',
                 data: { k: keyword },
+                dataType: 'json',
                 success: function(response) {
-                    const cities = response.data || [];
+                    console.log('City search response:', response);
+                    
+                    // Handle different response structures
+                    let cities = [];
+                    if (Array.isArray(response.data)) {
+                        cities = response.data;
+                    } else if (Array.isArray(response)) {
+                        cities = response;
+                    } else if (response.data && Array.isArray(response.data.cities)) {
+                        cities = response.data.cities;
+                    }
+
+                    console.log('Parsed cities:', cities);
 
                     if (cities.length === 0) {
                         $suggestions.html('<div class="city-no-results">No cities found</div>');
@@ -467,7 +480,8 @@ $(document).ready(function() {
 
                     $suggestions.html(html);
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error('City search error:', status, error, xhr.responseText);
                     $suggestions.html('<div class="city-no-results">Error searching cities</div>');
                 }
             });

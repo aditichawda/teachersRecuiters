@@ -536,7 +536,29 @@ class DashboardController extends BaseController
         $orderByParams = JobBoardHelper::getSortByParams();
         $layout = $request->query('layout', 'grid');
 
-        $data = compact('candidates', 'orderByParams', 'layout');
+        // Debug counts to quickly confirm whether candidate data exists and is eligible for listing
+        $totalJobSeekers = Account::query()->where('type', \Botble\JobBoard\Enums\AccountTypeEnum::JOB_SEEKER)->count();
+        $publicJobSeekers = Account::query()
+            ->where('type', \Botble\JobBoard\Enums\AccountTypeEnum::JOB_SEEKER)
+            ->where('is_public_profile', 1)
+            ->count();
+        $eligibleJobSeekers = $publicJobSeekers;
+        if (setting('verify_account_email', 0)) {
+            $eligibleJobSeekers = Account::query()
+                ->where('type', \Botble\JobBoard\Enums\AccountTypeEnum::JOB_SEEKER)
+                ->where('is_public_profile', 1)
+                ->whereNotNull('confirmed_at')
+                ->count();
+        }
+
+        $data = compact(
+            'candidates',
+            'orderByParams',
+            'layout',
+            'totalJobSeekers',
+            'publicJobSeekers',
+            'eligibleJobSeekers'
+        );
 
         return JobBoardHelper::view('account.candidates', $data);
     }

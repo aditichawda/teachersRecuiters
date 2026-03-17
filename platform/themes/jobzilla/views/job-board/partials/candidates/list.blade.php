@@ -1,8 +1,11 @@
 @php
-    $candidates->loadMissing(['country', 'state', 'city', 'favoriteSkills', 'slugable', 'educations', 'experiences']);
+    if ($candidates && ($candidates->count() > 0 || ($candidates instanceof \Illuminate\Pagination\LengthAwarePaginator && $candidates->total() > 0))) {
+        $candidates->loadMissing(['country', 'state', 'city', 'favoriteSkills', 'slugable', 'educations', 'experiences']);
+    }
     $canViewCandidates = $canViewCandidates ?? true;
 @endphp
 
+@if($candidates && ($candidates->count() > 0 || ($candidates instanceof \Illuminate\Pagination\LengthAwarePaginator && $candidates->total() > 0)))
 @foreach ($candidates as $candidate)
     @php
         // Auto-create slug if missing but candidate is eligible
@@ -295,3 +298,4 @@
         @endif
     </div>
 @endforeach
+@endif

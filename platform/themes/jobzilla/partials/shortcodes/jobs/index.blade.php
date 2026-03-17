@@ -2319,22 +2319,25 @@ html {
                     <div class="backdrop"></div>
                     <div class="side-bar p-0">
                         <div class="sidebar-elements search-bx">
-                            <button class="d-md-none position-absolute btn btn-link btn-close-filter" style="top: 10px; right: 10px; z-index: 10;">
-                                <i class="feather-x"></i>
-                            </button>
-                            
                             {{-- Sidebar Header with Clear Filters --}}
                             <div class="sidebar-header">
-                                <h4>
-                                    <i class="feather-filter"></i>
-                                        {{ __('Filters') }}
-                                    </h4>
-                                <button type="button" class="btn-clear-filters" id="clear-all-job-filters" onclick="clearAllFiltersNow(); return false;">
-                                    <i class="feather-x-circle"></i>
-                                        {{ __('Clear All') }}
-                                    </button>
+                                <div class="filters-dropdown-toggle" id="filters-dropdown-toggle">
+                                    <div class="filters-header-left">
+                                        <i class="feather-filter"></i>
+                                        <span>{{ __('Filters') }}</span>
+                                    </div>
+                                    <div class="filters-header-right">
+                                        <button type="button" class="btn-clear-filters" id="clear-all-job-filters" onclick="clearAllFiltersNow(); return false;">
+                                            <i class="feather-x-circle"></i>
+                                            <span>{{ __('Clear All') }}</span>
+                                        </button>
+                                        <i class="feather-chevron-down filters-dropdown-arrow d-md-none"></i>
+                                    </div>
+                                </div>
                             </div>
                             
+                            {{-- Filters Container (Collapsible in Mobile) --}}
+                            <div class="filters-container" id="filters-container">
                                 <form action="{{ JobBoardHelper::getJobsPageURL() }}" method="get" id="jobs-filter-form" data-ajax-url="{{ route('public.ajax.jobs') }}">
                                         {!! Theme::partial('jobs.filters.institute-name') !!}
                                         {!! Theme::partial('jobs.filters.institute-type') !!}
@@ -2356,6 +2359,7 @@ html {
                                         </button>
                                     </div>
                                 </form>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -2665,6 +2669,466 @@ html {
                                 }
                             }, 300);
                         });
+                    </script>
+                    
+                    {{-- Mobile Filters Dropdown Styles and Script --}}
+                    <style>
+                        /* Mobile Filters Dropdown Styles */
+                        @media (max-width: 991px) {
+                            .sidebar-header {
+                                margin-bottom: 0;
+                            }
+                            
+                            .filters-dropdown-toggle {
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                width: 100%;
+                                margin: 0;
+                                padding: 14px 16px;
+                                background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                                border-radius: 10px;
+                                transition: all 0.3s ease;
+                                cursor: pointer !important;
+                                user-select: none;
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                                position: relative;
+                                z-index: 10;
+                                -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+                                touch-action: manipulation;
+                            }
+                            
+                            .filters-dropdown-toggle {
+                                pointer-events: auto !important;
+                            }
+                            
+                            .filters-dropdown-toggle * {
+                                pointer-events: none;
+                            }
+                            
+                            .filters-dropdown-toggle .btn-clear-filters,
+                            .filters-dropdown-toggle .btn-clear-filters * {
+                                pointer-events: auto !important;
+                            }
+                            
+                            .filters-dropdown-toggle .filters-dropdown-arrow {
+                                pointer-events: auto !important;
+                            }
+                            
+                            .filters-header-left,
+                            .filters-header-left * {
+                                pointer-events: none;
+                            }
+                            
+                            .filters-dropdown-toggle:hover {
+                                background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                            }
+                            
+                            .filters-header-left {
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                                font-weight: 600;
+                                font-size: 16px;
+                                color: #1565c0;
+                            }
+                            
+                            .filters-header-left i.feather-filter {
+                                font-size: 18px;
+                                color: #1565c0;
+                            }
+                            
+                            .filters-header-right {
+                                display: flex;
+                                align-items: center;
+                                gap: 12px;
+                            }
+                            
+                            .filters-dropdown-arrow {
+                                transition: transform 0.3s ease;
+                                font-size: 20px;
+                                color: #1565c0;
+                                font-weight: bold;
+                                display: inline-block !important;
+                                cursor: pointer;
+                                pointer-events: auto;
+                                padding: 4px;
+                                margin-left: 8px;
+                            }
+                            
+                            .filters-dropdown-arrow:hover {
+                                color: #0d47a1;
+                                transform: scale(1.1);
+                            }
+                            
+                            .filters-dropdown-toggle.active .filters-dropdown-arrow {
+                                transform: rotate(180deg);
+                            }
+                            
+                            .sidebar-header .btn-clear-filters {
+                                display: flex;
+                                align-items: center;
+                                gap: 6px;
+                                padding: 6px 12px;
+                                background: white;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 6px;
+                                color: #1565c0;
+                                font-size: 13px;
+                                font-weight: 500;
+                                transition: all 0.2s ease;
+                            }
+                            
+                            .sidebar-header .btn-clear-filters:hover {
+                                background: #f5f5f5;
+                                border-color: #bdbdbd;
+                            }
+                            
+                            .sidebar-header .btn-clear-filters i {
+                                font-size: 14px;
+                            }
+                            
+                            #filters-container.filters-container {
+                                max-height: 0 !important;
+                                overflow: hidden !important;
+                                transition: none !important;
+                                padding-top: 0 !important;
+                                opacity: 0 !important;
+                                display: block !important;
+                                visibility: hidden !important;
+                            }
+                            
+                            #filters-container.filters-container.show {
+                                max-height: 5000px !important;
+                                transition: none !important;
+                                padding-top: 16px !important;
+                                opacity: 1 !important;
+                                overflow: visible !important;
+                                display: block !important;
+                                visibility: visible !important;
+                            }
+                            
+                            /* Additional specificity for sidebar */
+                            .side-bar-filter #filters-container.filters-container.show {
+                                max-height: 5000px !important;
+                                opacity: 1 !important;
+                                overflow: visible !important;
+                                visibility: visible !important;
+                            }
+                            
+                            /* Override any inline style resets */
+                            #filters-container[style*="max-height: 5000px"] {
+                                max-height: 5000px !important;
+                                opacity: 1 !important;
+                                visibility: visible !important;
+                            }
+                        }
+                        
+                        /* Desktop: Always show filters */
+                        @media (min-width: 992px) {
+                            .filters-container {
+                                display: block !important;
+                                max-height: none !important;
+                            }
+                            
+                            .filters-dropdown-arrow {
+                                display: none !important;
+                            }
+                        }
+                    </style>
+                    
+                    <script>
+                        (function() {
+                            console.log('🔵 [FILTERS DROPDOWN] Script starting...');
+                            console.log('🔵 [FILTERS DROPDOWN] jQuery available:', typeof $ !== 'undefined');
+                            console.log('🔵 [FILTERS DROPDOWN] Window width:', window.innerWidth);
+                            
+                            // Function to initialize filters dropdown
+                            function initFiltersDropdown() {
+                                // Prevent duplicate initialization (DOMContentLoaded + load + other scripts)
+                                if (window.__filtersDropdownInitialized) {
+                                    console.log('🟡 [FILTERS DROPDOWN] Already initialized, skipping...');
+                                    return;
+                                }
+
+                                window.__filtersDropdownInitialized = true;
+                                console.log('🔵 [FILTERS DROPDOWN] Initializing filters dropdown...');
+                                
+                                // Check if elements exist using vanilla JS
+                                const toggleEl = document.getElementById('filters-dropdown-toggle');
+                                const containerEl = document.getElementById('filters-container');
+                                const arrowEl = document.querySelector('.filters-dropdown-arrow');
+                                
+                                console.log('🔵 [FILTERS DROPDOWN] Toggle element found:', toggleEl ? '✅' : '❌', toggleEl);
+                                console.log('🔵 [FILTERS DROPDOWN] Container element found:', containerEl ? '✅' : '❌', containerEl);
+                                console.log('🔵 [FILTERS DROPDOWN] Arrow element found:', arrowEl ? '✅' : '❌', arrowEl);
+                                
+                                if (!toggleEl || !containerEl) {
+                                    console.error('❌ [FILTERS DROPDOWN] Required elements not found!');
+                                    window.__filtersDropdownInitialized = false;
+                                    return;
+                                }
+                                
+                                // Debounce variable to prevent double-firing
+                                let isToggling = false;
+                                let lastToggleAt = 0;
+                                
+                                // Function to toggle filters
+                                function toggleFilters() {
+                                    // Prevent double-firing
+                                    if (isToggling) {
+                                        console.log('🟡 [FILTERS DROPDOWN] Toggle already in progress, ignoring...');
+                                        return;
+                                    }
+
+                                    const now = Date.now();
+                                    if (now - lastToggleAt < 250) {
+                                        console.log('🟡 [FILTERS DROPDOWN] Toggle throttled (<250ms), ignoring...');
+                                        return;
+                                    }
+                                    lastToggleAt = now;
+                                    
+                                    isToggling = true;
+                                    console.log('🟢 [FILTERS DROPDOWN] ===== toggleFilters() CALLED =====');
+                                    console.log('🟢 [FILTERS DROPDOWN] Window width:', window.innerWidth);
+                                    
+                                    if (window.innerWidth <= 991) {
+                                        const toggle = document.getElementById('filters-dropdown-toggle');
+                                        const container = document.getElementById('filters-container');
+                                        
+                                        if (!toggle || !container) {
+                                            console.error('❌ [FILTERS DROPDOWN] Elements not found in toggleFilters');
+                                            isToggling = false;
+                                            return;
+                                        }
+                                        
+                                        console.log('🟢 [FILTERS DROPDOWN] Toggle element:', toggle);
+                                        console.log('🟢 [FILTERS DROPDOWN] Container element:', container);
+                                        
+                                        const hasActive = toggle.classList.contains('active');
+                                        const hasShow = container.classList.contains('show');
+                                        const currentMaxHeight = container.style.maxHeight || window.getComputedStyle(container).maxHeight;
+                                        
+                                        console.log('🟢 [FILTERS DROPDOWN] Before toggle:');
+                                        console.log('🟢 [FILTERS DROPDOWN] - hasActive class:', hasActive);
+                                        console.log('🟢 [FILTERS DROPDOWN] - hasShow class:', hasShow);
+                                        console.log('🟢 [FILTERS DROPDOWN] - current maxHeight:', currentMaxHeight);
+                                        
+                                        // Determine if we should open or close based on current state
+                                        const shouldOpen = !hasShow || currentMaxHeight === '0px' || currentMaxHeight === '0';
+                                        
+                                        console.log('🟢 [FILTERS DROPDOWN] shouldOpen:', shouldOpen);
+                                        
+                                        if (shouldOpen) {
+                                            // OPEN filters
+                                            toggle.classList.add('active');
+                                            container.classList.add('show');
+                                            
+                                            // Force open with inline styles - use direct assignment first
+                                            container.style.maxHeight = '5000px';
+                                            container.style.opacity = '1';
+                                            container.style.paddingTop = '16px';
+                                            container.style.overflow = 'visible';
+                                            
+                                            // Then use setProperty with important to prevent override
+                                            container.style.setProperty('max-height', '5000px', 'important');
+                                            container.style.setProperty('opacity', '1', 'important');
+                                            container.style.setProperty('padding-top', '16px', 'important');
+                                            container.style.setProperty('overflow', 'visible', 'important');
+                                            
+                                            // Also set display and visibility to ensure visibility
+                                            container.style.setProperty('display', 'block', 'important');
+                                            container.style.setProperty('visibility', 'visible', 'important');
+                                            
+                                            console.log('🟢 [FILTERS DROPDOWN] ✅✅✅ Filters OPENED ✅✅✅');
+                                            console.log('🟢 [FILTERS DROPDOWN] Applied styles - maxHeight:', container.style.maxHeight, 'opacity:', container.style.opacity);
+                                            
+                                            // Verify after a short delay
+                                            setTimeout(function() {
+                                                const finalMaxHeight = container.style.maxHeight || window.getComputedStyle(container).maxHeight;
+                                                const finalOpacity = container.style.opacity || window.getComputedStyle(container).opacity;
+                                                console.log('🟢 [FILTERS DROPDOWN] After 50ms - maxHeight:', finalMaxHeight, 'opacity:', finalOpacity);
+                                                if (finalMaxHeight === '0px' || finalOpacity === '0') {
+                                                    console.error('❌ [FILTERS DROPDOWN] Styles were reset! Re-applying...');
+                                                    container.style.setProperty('max-height', '5000px', 'important');
+                                                    container.style.setProperty('opacity', '1', 'important');
+                                                    container.style.setProperty('visibility', 'visible', 'important');
+                                                }
+                                                isToggling = false;
+                                            }, 100);
+                                        } else {
+                                            // CLOSE filters
+                                            toggle.classList.remove('active');
+                                            container.classList.remove('show');
+                                            // Force close with inline styles using setProperty with important
+                                            container.style.setProperty('max-height', '0px', 'important');
+                                            container.style.setProperty('opacity', '0', 'important');
+                                            container.style.setProperty('padding-top', '0', 'important');
+                                            container.style.setProperty('overflow', 'hidden', 'important');
+                                            container.style.setProperty('visibility', 'hidden', 'important');
+                                            console.log('🔴 [FILTERS DROPDOWN] Filters CLOSED');
+                                            setTimeout(function() {
+                                                isToggling = false;
+                                            }, 120);
+                                        }
+                                        
+                                        // Force display for debugging
+                                        setTimeout(function() {
+                                            console.log('🟢 [FILTERS DROPDOWN] After toggle - Container classes:', container.className);
+                                            console.log('🟢 [FILTERS DROPDOWN] Container has "show" class:', container.classList.contains('show'));
+                                            const computedStyle = window.getComputedStyle(container);
+                                            console.log('🟢 [FILTERS DROPDOWN] Container inline max-height:', container.style.maxHeight);
+                                            console.log('🟢 [FILTERS DROPDOWN] Container computed max-height:', computedStyle.maxHeight);
+                                            console.log('🟢 [FILTERS DROPDOWN] Container inline opacity:', container.style.opacity);
+                                            console.log('🟢 [FILTERS DROPDOWN] Container computed opacity:', computedStyle.opacity);
+                                            console.log('🟢 [FILTERS DROPDOWN] Container display:', computedStyle.display);
+                                            console.log('🟢 [FILTERS DROPDOWN] Container overflow:', computedStyle.overflow);
+                                        }, 200);
+                                    } else {
+                                        console.log('🟡 [FILTERS DROPDOWN] Desktop view - not toggling');
+                                    }
+                                }
+                                
+                                // Click handler for dropdown toggle (entire header)
+                                function handleToggleClick(e) {
+                                    console.log('🟡 [FILTERS DROPDOWN] ===== HEADER CLICKED =====');
+                                    console.log('🟡 [FILTERS DROPDOWN] Event type:', e.type);
+                                    console.log('🟡 [FILTERS DROPDOWN] Click target:', e.target);
+                                    console.log('🟡 [FILTERS DROPDOWN] Target class:', e.target.className);
+                                    console.log('🟡 [FILTERS DROPDOWN] Target tag:', e.target.tagName);
+                                    console.log('🟡 [FILTERS DROPDOWN] Current target:', e.currentTarget);
+                                    
+                                    // Don't trigger if clicking on Clear All button
+                                    if (e.target.closest('.btn-clear-filters') || 
+                                        e.target.classList.contains('btn-clear-filters')) {
+                                        console.log('🟡 [FILTERS DROPDOWN] ❌ Click on Clear All button, ignoring');
+                                        return;
+                                    }
+                                    
+                                    if (window.innerWidth <= 991) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        console.log('🟡 [FILTERS DROPDOWN] ✅ Mobile view - Toggling filters from header click');
+                                        toggleFilters();
+                                    } else {
+                                        console.log('🟡 [FILTERS DROPDOWN] Desktop view - ignoring click');
+                                    }
+                                }
+                                
+                                // IMPORTANT: Use ONLY one event listener to prevent double-firing (flicker)
+                                // We intentionally avoid mousedown/touchstart because mobile browsers often fire
+                                // multiple events for a single tap.
+                                toggleEl.addEventListener('click', handleToggleClick, false);
+                                
+                                // Specific click handler for dropdown arrow (single event to prevent flicker)
+                                if (arrowEl) {
+                                    function handleArrowClick(e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        console.log('🟡 [FILTERS DROPDOWN] ===== ARROW CLICKED DIRECTLY =====');
+                                        console.log('🟡 [FILTERS DROPDOWN] Arrow element:', arrowEl);
+                                        console.log('🟡 [FILTERS DROPDOWN] Event type:', e.type);
+                                        toggleFilters();
+                                    }
+                                    
+                                    arrowEl.addEventListener('click', handleArrowClick, false);
+                                    
+                                    console.log('✅ [FILTERS DROPDOWN] Arrow click handlers attached');
+                                } else {
+                                    console.error('❌ [FILTERS DROPDOWN] Arrow element not found!');
+                                }
+                                
+                                // Click handler for filters-header-left (single event to prevent flicker)
+                                const headerLeft = document.querySelector('.filters-header-left');
+                                if (headerLeft) {
+                                    function handleHeaderLeftClick(e) {
+                                        if (window.innerWidth <= 991) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            console.log('🟡 [FILTERS DROPDOWN] ===== FILTERS HEADER LEFT CLICKED =====');
+                                            console.log('🟡 [FILTERS DROPDOWN] Event type:', e.type);
+                                            toggleFilters();
+                                        }
+                                    }
+                                    
+                                    headerLeft.addEventListener('click', handleHeaderLeftClick, false);
+                                    
+                                    console.log('✅ [FILTERS DROPDOWN] Header left click handlers attached');
+                                } else {
+                                    console.error('❌ [FILTERS DROPDOWN] Header left element not found!');
+                                }
+                                
+                                // Prevent Clear All button from toggling dropdown
+                                const clearBtn = document.querySelector('.btn-clear-filters');
+                                if (clearBtn) {
+                                    clearBtn.addEventListener('click', function(e) {
+                                        e.stopPropagation();
+                                        console.log('🟡 [FILTERS DROPDOWN] Clear All button clicked, stopping propagation');
+                                    });
+                                }
+                                
+                                // Initialize: hide filters on mobile by default
+                                if (window.innerWidth <= 991) {
+                                    // Remove any existing classes
+                                    containerEl.classList.remove('show');
+                                    toggleEl.classList.remove('active');
+                                    
+                                    // Force hide with inline styles (important to override any CSS)
+                                    containerEl.style.setProperty('max-height', '0px', 'important');
+                                    containerEl.style.setProperty('opacity', '0', 'important');
+                                    containerEl.style.setProperty('padding-top', '0', 'important');
+                                    containerEl.style.setProperty('overflow', 'hidden', 'important');
+                                    containerEl.style.setProperty('visibility', 'hidden', 'important');
+                                    
+                                    console.log('🔵 [FILTERS DROPDOWN] Mobile view detected, filters hidden by default');
+                                    console.log('🔵 [FILTERS DROPDOWN] Initial container styles:', {
+                                        maxHeight: containerEl.style.maxHeight,
+                                        opacity: containerEl.style.opacity,
+                                        hasShow: containerEl.classList.contains('show'),
+                                        hasActive: toggleEl.classList.contains('active')
+                                    });
+                                } else {
+                                    containerEl.classList.add('show');
+                                    containerEl.style.maxHeight = 'none';
+                                    containerEl.style.opacity = '1';
+                                    console.log('🔵 [FILTERS DROPDOWN] Desktop view detected, filters always visible');
+                                }
+                                
+                                console.log('✅ [FILTERS DROPDOWN] Filters dropdown initialized successfully');
+                                
+                                // Test: Add a global click listener to see ALL clicks
+                                if (!window.__filtersDropdownGlobalClickBound) {
+                                    window.__filtersDropdownGlobalClickBound = true;
+                                    document.addEventListener('click', function(e) {
+                                    if (e.target.closest('#filters-dropdown-toggle') || 
+                                        e.target.closest('.filters-dropdown-arrow') ||
+                                        e.target.closest('.filters-header-left')) {
+                                        console.log('🔍 [FILTERS DROPDOWN] GLOBAL CLICK DETECTED on filters area');
+                                        console.log('🔍 [FILTERS DROPDOWN] Target:', e.target);
+                                        console.log('🔍 [FILTERS DROPDOWN] Closest toggle:', e.target.closest('#filters-dropdown-toggle'));
+                                    }
+                                    }, true);
+                                }
+                            }
+                            
+                            // Wait for DOM to be ready
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    console.log('🔵 [FILTERS DROPDOWN] DOM Content Loaded');
+                                    setTimeout(initFiltersDropdown, 100);
+                                });
+                            } else {
+                                console.log('🔵 [FILTERS DROPDOWN] DOM already ready');
+                                setTimeout(initFiltersDropdown, 100);
+                            }
+                            
+                            // Also try with window load as fallback (guarded by __filtersDropdownInitialized)
+                            window.addEventListener('load', function() {
+                                console.log('🔵 [FILTERS DROPDOWN] Window loaded');
+                                setTimeout(initFiltersDropdown, 200);
+                            });
+                        })();
                     </script>
                 </div>
 

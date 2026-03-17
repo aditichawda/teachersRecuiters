@@ -45,7 +45,7 @@ class JobzillaController extends PublicController
         }
 
         try {
-            $cities = $cityRepository->filters($keyword, 20, ['state']);
+            $cities = $cityRepository->filters($keyword, 20, ['state', 'country']);
             
             // Log for debugging
             \Log::info('[CITY_SEARCH] Search performed', [
@@ -145,6 +145,15 @@ class JobzillaController extends PublicController
             ->add(__('For Schools'), route('public.for-schools'));
 
         return Theme::scope('for-schools')->render();
+    }
+
+    public function startHiring()
+    {
+        Theme::breadcrumb()
+            ->add(__('Home'), url('/'))
+            ->add(__('Start Hiring'), route('public.start-hiring'));
+
+        return Theme::scope('start-hiring')->render();
     }
 
     public function careers()
