@@ -380,17 +380,21 @@
                             </button>
                             
                             {{-- Sidebar Header with Clear Filters --}}
-                            <div class="sidebar-header">
+                            <div class="sidebar-header candidate-filters-toggle" id="candidate-filters-toggle">
                                 <h4>
                                     <i class="feather-filter"></i>
                                     {{ __('Filters') }}
                                 </h4>
+                                <div class="candidate-filters-header-right">
                                 <button type="button" class="btn-clear-filters" id="clear-all-candidate-filters">
                                     <i class="feather-x-circle"></i>
                                     {{ __('Clear All') }}
                                 </button>
+                                    <i class="feather-chevron-down candidate-filters-arrow d-md-none"></i>
+                                </div>
                             </div>
                             
+                            <div class="candidate-filters-container" id="candidate-filters-container">
                             <form action="{{ route('public.ajax.candidates') }}" method="get" id="candidate-filter-form" data-ajax-url="{{ route('public.ajax.candidates') }}" style="display: flex; flex-direction: column; min-height: 100%;">
                                 {!! Theme::partial('candidates.filters.keyword') !!}
                                 {!! Theme::partial('candidates.filters.city') !!}
@@ -415,6 +419,89 @@
                     </div>
                 </div>
             </div>
+            </div>
+
+            {{-- Mobile Candidate Filters Dropdown (Top) --}}
+            <style>
+                @media (max-width: 991px) {
+                    .candidates-sidebar-modern .side-bar-filter .backdrop { display: none !important; }
+                    .candidates-sidebar-modern .side-bar { position: relative !important; left: auto !important; width: 100% !important; transition: none !important; box-shadow: none !important; }
+                    .candidates-sidebar-modern .btn-close-filter { display: none !important; }
+
+                    .candidate-filters-toggle { cursor: pointer; user-select: none; }
+                    .candidate-filters-header-right { display: flex; align-items: center; gap: 10px; }
+                    .candidate-filters-arrow { font-size: 20px; color: #0c4a6e; cursor: pointer; }
+                    .candidate-filters-toggle.active .candidate-filters-arrow { transform: rotate(180deg); }
+
+                    #candidate-filters-container {
+                        max-height: 0 !important;
+                        overflow: hidden !important;
+                        opacity: 0 !important;
+                        padding-top: 0 !important;
+                        visibility: hidden !important;
+                        transition: none !important;
+                    }
+                    #candidate-filters-container.show {
+                        max-height: 5000px !important;
+                        overflow: visible !important;
+                        opacity: 1 !important;
+                        padding-top: 16px !important;
+                        visibility: visible !important;
+                    }
+                }
+            </style>
+
+            <script>
+                (function () {
+                    function initCandidateFiltersDropdown() {
+                        if (window.__candidateFiltersDropdownInitialized) return;
+                        window.__candidateFiltersDropdownInitialized = true;
+
+                        var toggle = document.getElementById('candidate-filters-toggle');
+                        var container = document.getElementById('candidate-filters-container');
+                        if (!toggle || !container) return;
+
+                        function setOpen(open) {
+                            if (open) {
+                                toggle.classList.add('active');
+                                container.classList.add('show');
+                                container.style.setProperty('max-height', '5000px', 'important');
+                                container.style.setProperty('opacity', '1', 'important');
+                                container.style.setProperty('visibility', 'visible', 'important');
+                                container.style.setProperty('overflow', 'visible', 'important');
+                                container.style.setProperty('padding-top', '16px', 'important');
+                            } else {
+                                toggle.classList.remove('active');
+                                container.classList.remove('show');
+                                container.style.setProperty('max-height', '0px', 'important');
+                                container.style.setProperty('opacity', '0', 'important');
+                                container.style.setProperty('visibility', 'hidden', 'important');
+                                container.style.setProperty('overflow', 'hidden', 'important');
+                                container.style.setProperty('padding-top', '0', 'important');
+                            }
+                        }
+
+                        // mobile default collapsed
+                        if (window.innerWidth <= 991) setOpen(false);
+                        else setOpen(true);
+
+                        toggle.addEventListener('click', function (e) {
+                            if (e.target && e.target.closest && e.target.closest('.btn-clear-filters')) return;
+                            if (window.innerWidth > 991) return;
+                            e.preventDefault();
+                            setOpen(!container.classList.contains('show'));
+                        });
+
+                        window.addEventListener('resize', function () {
+                            if (window.innerWidth > 991) setOpen(true);
+                            else setOpen(false);
+                        });
+                    }
+
+                    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCandidateFiltersDropdown);
+                    else initCandidateFiltersDropdown();
+                })();
+            </script>
 
             {{-- Candidates Listings --}}
             <div class="col-lg-8 col-md-12 position-relative candidates-listing-modern">

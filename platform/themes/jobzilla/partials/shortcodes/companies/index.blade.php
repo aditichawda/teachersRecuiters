@@ -524,7 +524,7 @@
         width: 320px;
         height: 100vh;
         background: #fff;
-        z-index: 1050;
+        z-index: 996;
         overflow-y: auto;
         transition: left 0.3s ease;
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
@@ -562,20 +562,20 @@ body.filter-open {
                 <div class="side-bar-filter">
                     <div class="backdrop"></div>
                     <div class="side-bar" style="padding: 0px;">
-                        <div class="filter-header">
+                        <div class="filter-header companies-filters-toggle" id="companies-filters-toggle">
                             <h3>
                                 <i class="feather-filter"></i>
                                 {{ __('Filters') }}
                             </h3>
-                            <a href="{{ request()->url() }}" class="btn-clear-all">
-                                <i class="feather-x"></i>
-                                {{ __('Clear All') }}
-                            </a>
+                            <div class="companies-filters-header-right">
+                                <a href="{{ request()->url() }}" class="btn-clear-all">
+                                    <i class="feather-x"></i>
+                                    {{ __('Clear All') }}
+                                </a>
+                                <i class="feather-chevron-down companies-filters-arrow d-md-none"></i>
+                            </div>
                         </div>
-                        <div class="sidebar-elements search-bx">
-                            <button class="d-md-none position-absolute btn btn-link btn-close-filter" style="top: 10px; right: 10px; z-index: 10;">
-                                <i class="feather-x"></i>
-                            </button>
+                        <div class="sidebar-elements search-bx companies-filters-container" id="companies-filters-container">
                             <form action="{{ request()->url() }}" method="get" id="companies-filter-form" data-ajax-url="{{ route('public.ajax.companies') }}">
                                 {!! Theme::partial('companies.filters.institution-name') !!}
                                 {!! Theme::partial('companies.filters.institution-type') !!}
@@ -585,18 +585,176 @@ body.filter-open {
                                 {!! Theme::partial('companies.filters.benefits-offered') !!}
                                 {!! Theme::partial('companies.filters.standard-level') !!}
                                 
-                                    <div class="form-group mb-0">
-                                        <button type="submit" class="btn-apply-filter w-100">
-                                            <i class="feather-check"></i>
-                                            {{ __('Apply Filter') }}
-                                        </button>
-                                        <!-- <a href="{{ request()->url() }}" class="btn-clear-filter w-100 mt-2">{{ __('Clear Filters') }}</a> -->
-                                    </div>
+                                <div class="form-group mb-0">
+                                    <button type="submit" class="btn-apply-filter w-100">
+                                        <i class="feather-check"></i>
+                                        {{ __('Apply Filter') }}
+                                    </button>
+                                    <!-- <a href="{{ request()->url() }}" class="btn-clear-filter w-100 mt-2">{{ __('Clear Filters') }}</a> -->
+                                </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {{-- Mobile Companies Filters Dropdown (Top) --}}
+            <style>
+                @media (max-width: 991px) {
+                    /* Make Companies filters look/behave like Jobs page (top dropdown) */
+                    .jobs-sidebar-modern .side-bar-filter .backdrop { display: none !important; }
+
+                    /* Push filters below fixed navbar (prevents overlap) */
+                    .companies-main-section {
+                        padding-top: 90px !important;
+                    }
+                    .companies-main-section .jobs-sidebar-modern {
+                        margin-top: 0 !important;
+                    }
+
+                    .jobs-sidebar-modern .side-bar-filter {
+                        position: relative !important;
+                        top: 0 !important;
+                        height: auto !important;
+                        max-height: none !important;
+                        display: block !important;
+                        border-radius: 16px !important;
+                        margin-bottom: 20px !important;
+                    }
+
+                    .jobs-sidebar-modern .side-bar {
+                        position: relative !important;
+                        left: auto !important;
+                        top: auto !important;
+                        width: 100% !important;
+                        height: auto !important;
+                        box-shadow: none !important;
+                        transition: none !important;
+                        overflow: visible !important;
+                        /* remove theme mobile margin-bottom:30px (highlighted in devtools) */
+                        margin-bottom: 0 !important;
+                    }
+
+                    /* Desktop uses flex + height:0 trick; on mobile we want normal flow */
+                    .jobs-sidebar-modern .sidebar-elements {
+                        height: auto !important;
+                        min-height: auto !important;
+                        flex: none !important;
+                        overflow: visible !important;
+                        padding: 0 !important; /* prevent white space when collapsed */
+                    }
+
+                    .companies-filters-toggle { cursor: pointer; user-select: none; }
+                    .companies-filters-header-right { display: flex; align-items: center; gap: 10px; }
+                    .companies-filters-arrow {
+                        font-size: 20px;
+                        color: #0c4a6e;
+                        cursor: pointer;
+                        display: inline-block !important; /* ensure arrow is visible */
+                        line-height: 1;
+                    }
+                    .companies-filters-toggle.active .companies-filters-arrow { transform: rotate(180deg); }
+
+                    /* Collapsible container */
+                    #companies-filters-container {
+                        max-height: 0 !important;
+                        overflow: hidden !important;
+                        opacity: 0 !important;
+                        padding: 0 !important; /* remove whitespace under header */
+                        visibility: hidden !important;
+                        transition: none !important;
+                        display: block !important;
+                    }
+                    #companies-filters-container.show {
+                        max-height: 5000px !important;
+                        overflow: visible !important;
+                        opacity: 1 !important;
+                        padding: 16px !important; /* add spacing only when open */
+                        visibility: visible !important;
+                        display: block !important;
+                    }
+                }
+            </style>
+
+            <script>
+                (function () {
+                    function initCompaniesFiltersDropdown() {
+                        if (window.__companiesFiltersDropdownInitialized) return;
+                        window.__companiesFiltersDropdownInitialized = true;
+
+                        var toggle = document.getElementById('companies-filters-toggle');
+                        var container = document.getElementById('companies-filters-container');
+                        if (!toggle || !container) return;
+
+                        // mobile default collapsed
+                        if (window.innerWidth <= 991) {
+                            toggle.classList.remove('active');
+                            container.classList.remove('show');
+                            container.style.setProperty('max-height', '0px', 'important');
+                            container.style.setProperty('opacity', '0', 'important');
+                            container.style.setProperty('visibility', 'hidden', 'important');
+                            container.style.setProperty('overflow', 'hidden', 'important');
+                            container.style.setProperty('padding-top', '0', 'important');
+                        } else {
+                            // Desktop: always visible
+                            container.classList.add('show');
+                            container.style.setProperty('max-height', 'none', 'important');
+                            container.style.setProperty('opacity', '1', 'important');
+                            container.style.setProperty('visibility', 'visible', 'important');
+                            container.style.setProperty('overflow', 'visible', 'important');
+                            container.style.setProperty('padding-top', '0', 'important');
+                        }
+
+                        function setOpen(open) {
+                            if (open) {
+                                toggle.classList.add('active');
+                                container.classList.add('show');
+                                container.style.setProperty('max-height', '5000px', 'important');
+                                container.style.setProperty('opacity', '1', 'important');
+                                container.style.setProperty('visibility', 'visible', 'important');
+                                container.style.setProperty('overflow', 'visible', 'important');
+                                container.style.setProperty('padding-top', '16px', 'important');
+                            } else {
+                                toggle.classList.remove('active');
+                                container.classList.remove('show');
+                                container.style.setProperty('max-height', '0px', 'important');
+                                container.style.setProperty('opacity', '0', 'important');
+                                container.style.setProperty('visibility', 'hidden', 'important');
+                                container.style.setProperty('overflow', 'hidden', 'important');
+                                container.style.setProperty('padding-top', '0', 'important');
+                            }
+                        }
+
+                        toggle.addEventListener('click', function (e) {
+                            // ignore clear all click
+                            if (e.target && e.target.closest && e.target.closest('.btn-clear-all')) return;
+                            if (window.innerWidth > 991) return;
+                            e.preventDefault();
+                            var isOpen = container.classList.contains('show');
+                            setOpen(!isOpen);
+                        });
+
+                        window.addEventListener('resize', function () {
+                            if (window.innerWidth > 991) {
+                                container.classList.add('show');
+                                container.style.setProperty('max-height', 'none', 'important');
+                                container.style.setProperty('opacity', '1', 'important');
+                                container.style.setProperty('visibility', 'visible', 'important');
+                                container.style.setProperty('overflow', 'visible', 'important');
+                                container.style.setProperty('padding-top', '0', 'important');
+                            } else {
+                                setOpen(false);
+                            }
+                        });
+                    }
+
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', initCompaniesFiltersDropdown);
+                    } else {
+                        initCompaniesFiltersDropdown();
+                    }
+                })();
+            </script>
 
             {{-- Companies Listings --}}
             <div class="col-lg-9 col-md-12 position-relative companies-listing-modern">

@@ -10,7 +10,8 @@ All JavaScript fuctions Start
 
     function select_picker_select() {
 
-        $('.selectpicker').select2();
+        // Initialize select2 for selectpicker, but exclude keyword select (uses select2 with custom init)
+        $('.selectpicker').not('.selectpicker-keyword').select2();
         const $singleLocation = $('.selectpicker-location');
         if ($singleLocation.length) {
             $singleLocation.select2({

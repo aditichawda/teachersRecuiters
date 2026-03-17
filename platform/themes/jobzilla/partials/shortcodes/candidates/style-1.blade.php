@@ -585,6 +585,85 @@
 }
 </style>
 
+{{-- Mobile Candidate Filters Dropdown (Top) --}}
+<style>
+    @media (max-width: 991px) {
+        /* Override existing mobile overlay-only sidebar behavior */
+        .candidates-sidebar-modern .side-bar-filter { display: block !important; position: relative !important; top: 0 !important; left: auto !important; right: auto !important; bottom: auto !important; max-height: none !important; border-radius: 16px !important; }
+        .candidates-sidebar-modern .side-bar-filter.active { position: relative !important; inset: auto !important; z-index: auto !important; max-height: none !important; border-radius: 16px !important; }
+        .candidates-sidebar-modern .backdrop { display: none !important; }
+        .candidates-sidebar-modern .btn-close-filter { display: none !important; }
+
+        #candidate-filters-container {
+            max-height: 0 !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
+            padding-top: 0 !important;
+            visibility: hidden !important;
+            transition: none !important;
+        }
+
+        #candidate-filters-container.show {
+            max-height: 5000px !important;
+            overflow: visible !important;
+            opacity: 1 !important;
+            padding-top: 10px !important;
+            visibility: visible !important;
+        }
+
+        #candidate-filters-toggle.active .candidate-filters-arrow { transform: rotate(180deg); }
+    }
+</style>
+
+<script>
+    (function () {
+        function initCandidateFiltersDropdownStyle1() {
+            if (window.__candidateFiltersDropdownStyle1Initialized) return;
+            window.__candidateFiltersDropdownStyle1Initialized = true;
+
+            var toggle = document.getElementById('candidate-filters-toggle');
+            var container = document.getElementById('candidate-filters-container');
+            if (!toggle || !container) return;
+
+            function setOpen(open) {
+                if (open) {
+                    toggle.classList.add('active');
+                    container.classList.add('show');
+                    container.style.setProperty('max-height', '5000px', 'important');
+                    container.style.setProperty('opacity', '1', 'important');
+                    container.style.setProperty('visibility', 'visible', 'important');
+                    container.style.setProperty('overflow', 'visible', 'important');
+                } else {
+                    toggle.classList.remove('active');
+                    container.classList.remove('show');
+                    container.style.setProperty('max-height', '0px', 'important');
+                    container.style.setProperty('opacity', '0', 'important');
+                    container.style.setProperty('visibility', 'hidden', 'important');
+                    container.style.setProperty('overflow', 'hidden', 'important');
+                }
+            }
+
+            if (window.innerWidth <= 991) setOpen(false);
+            else setOpen(true);
+
+            toggle.addEventListener('click', function (e) {
+                if (e.target && e.target.closest && e.target.closest('.btn-clear-filters')) return;
+                if (window.innerWidth > 991) return;
+                e.preventDefault();
+                setOpen(!container.classList.contains('show'));
+            });
+
+            window.addEventListener('resize', function () {
+                if (window.innerWidth > 991) setOpen(true);
+                else setOpen(false);
+            });
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCandidateFiltersDropdownStyle1);
+        else initCandidateFiltersDropdownStyle1();
+    })();
+</script>
+
 <div class="section-full p-t120 p-b90 site-bg-white">
     <div class="container">
         <div class="cand-heading">
@@ -615,17 +694,21 @@
                                     </button>
                                     
                                     {{-- Sidebar Header --}}
-                                    <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                                    <div class="sidebar-header candidate-filters-toggle" id="candidate-filters-toggle" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; cursor: pointer; user-select: none;">
                                         <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 8px;">
                                             <i class="feather-filter" style="color:rgb(255, 255, 255);"></i>
                                             {{ __('Filters') }}
                                         </h4>
-                                        <button type="button" class="btn-clear-filters" id="clear-all-candidate-filters" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; cursor: pointer;">
-                                            <i class="feather-x-circle" style="font-size: 14px;"></i>
-                                            {{ __('Clear All') }}
-                                        </button>
+                                        <div class="candidate-filters-header-right" style="display:flex; align-items:center; gap:10px;">
+                                            <button type="button" class="btn-clear-filters" id="clear-all-candidate-filters" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; cursor: pointer;">
+                                                <i class="feather-x-circle" style="font-size: 14px;"></i>
+                                                {{ __('Clear All') }}
+                                            </button>
+                                            <i class="feather-chevron-down candidate-filters-arrow d-md-none" style="font-size:20px; color:#ffffff; cursor:pointer;"></i>
+                                        </div>
                                     </div>
                                     
+                                    <div class="candidate-filters-container" id="candidate-filters-container">
                                     <form action="{{ request()->url() }}" method="get" id="candidate-filter-form" class="p-2">
                                         {{-- Keyword or Teaching Subject or Post --}}
                                         <div class="form-group">
@@ -897,6 +980,7 @@
                                             </button>
                                         </div>
                                     </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>

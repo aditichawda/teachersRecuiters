@@ -547,7 +547,11 @@
                         <li><a href="{{ route('public.account.reviews.index') }}" @class(['active' => str_contains($currentUrl, 'reviews')])><i class="fa fa-star"></i> {{ __('Reviews') }}</a></li>
                         @endif
                         <li><a href="{{ route('public.account.applicants.index') }}" @class(['active' => str_contains($currentUrl, 'applicants')])><i class="fa fa-users"></i> {{ __('Applicants') }}</a></li>
-                        <li><a href="/candidates" @class(['active' => str_contains($currentUrl, 'candidates')])><i class="fa fa-user-circle"></i> {{ __('All Candidates') }}</a></li>
+                        <li>
+                            <a href="{{ route('public.account.candidates') }}" @class(['active' => str_contains($currentUrl, 'account/candidates') || str_contains($currentUrl, 'candidates')])>
+                                <i class="fa fa-user-circle"></i> {{ __('All Candidates') }}
+                            </a>
+                        </li>
                         @if(JobBoardHelper::isEnabledCreditsSystem() && !$isConsultancy)
                             <li><a href="{{ route('public.account.packages') }}" @class(['active' => str_contains($currentUrl, 'packages')])><i class="fa fa-box"></i> {{ __('Packages') }} <span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:auto;">{{ $account->credits ?? 0 }}</span></a></li>
                             <li><a href="{{ route('public.account.wallet') }}" @class(['active' => str_contains($currentUrl, 'wallet')])><i class="fa fa-wallet"></i> {{ __('Wallet') }}</a></li>

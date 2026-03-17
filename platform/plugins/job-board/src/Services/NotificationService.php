@@ -844,17 +844,56 @@ class NotificationService
      */
     protected function sendWhatsAppNotification(Account $account, UserNotification $notification, string $type, array $data = []): void
     {
+        Log::info('[NOTIFICATION_WHATSAPP] Attempting WhatsApp notification', [
+            'notification_id' => $notification->id ?? null,
+            'account_id' => $account->id,
+            'type' => $type,
+            'has_phone' => ! empty($account->phone),
+            'raw_phone' => $account->phone,
+            'phone_country_code' => $account->phone_country_code,
+            'is_whatsapp_available' => (bool) ($account->is_whatsapp_available ?? false),
+        ]);
+
         // Check if account has phone number and WhatsApp is available
-        if (!$account->phone || !$account->is_whatsapp_available) {
+        if (!$account->phone) {
+            Log::warning('[NOTIFICATION_WHATSAPP] Skipped: account has no phone', [
+                'account_id' => $account->id,
+                'type' => $type,
+            ]);
+            return;
+        }
+
+        if (! $account->is_whatsapp_available) {
+            Log::warning('[NOTIFICATION_WHATSAPP] Skipped: WhatsApp not enabled for this number', [
+                'account_id' => $account->id,
+                'type' => $type,
+                'raw_phone' => $account->phone,
+            ]);
             return;
         }
 
         // Get phone number
-        $phone = $account->phone;
-        if ($account->phone_country_code) {
-            $phone = $account->phone_country_code . $phone;
+        // Note: in our registration flow, `phone` may already include the country code (e.g. "+9199xxxxxx")
+        // so we must avoid double-prepending `phone_country_code`.
+        $phone = (string) $account->phone;
+        $phoneCountryCode = (string) ($account->phone_country_code ?? '');
+
+        $trimmedPhone = ltrim($phone);
+        $hasLeadingPlus = str_starts_with($trimmedPhone, '+');
+
+        if (! $hasLeadingPlus && $phoneCountryCode !== '') {
+            $ccDigits = preg_replace('/[^0-9]/', '', $phoneCountryCode);
+            $phoneDigits = preg_replace('/[^0-9]/', '', $phone);
+
+            // Prepend CC only if phone doesn't already start with it (basic safeguard)
+            if ($ccDigits !== '' && $phoneDigits !== '' && ! str_starts_with($phoneDigits, $ccDigits)) {
+                $phone = $ccDigits . $phoneDigits;
+            } else {
+                $phone = $phoneDigits;
+            }
         }
-        // Remove any non-numeric characters
+
+        // Remove any non-numeric characters (including "+")
         $phone = preg_replace('/[^0-9]/', '', $phone);
 
         if (empty($phone)) {
@@ -880,13 +919,60 @@ class NotificationService
             return;
         }
 
-        // Build request body
-        $bodyParameters = [];
-        foreach ($messageParams as $param) {
-            $bodyParameters[] = [
-                'type' => 'text',
-                'text' => (string)$param
-            ];
+        // Build request body components
+        $components = [];
+        
+        // Handle body parameters
+        if (isset($messageParams['body']) && is_array($messageParams['body'])) {
+            $bodyParameters = [];
+            foreach ($messageParams['body'] as $param) {
+                $bodyParameters[] = [
+                    'type' => 'text',
+                    'text' => (string)$param
+                ];
+            }
+            if (!empty($bodyParameters)) {
+                $components[] = [
+                    'type' => 'body',
+                    'index' => 0,
+                    'parameters' => $bodyParameters
+                ];
+            }
+        } elseif (is_array($messageParams) && !isset($messageParams['body'])) {
+            // Legacy format: simple array of parameters
+            $bodyParameters = [];
+            foreach ($messageParams as $param) {
+                $bodyParameters[] = [
+                    'type' => 'text',
+                    'text' => (string)$param
+                ];
+            }
+            if (!empty($bodyParameters)) {
+                $components[] = [
+                    'type' => 'body',
+                    'index' => 0,
+                    'parameters' => $bodyParameters
+                ];
+            }
+        }
+        
+        // Handle button parameters (for templates with buttons)
+        if (isset($messageParams['button']) && is_array($messageParams['button'])) {
+            $buttonParameters = [];
+            foreach ($messageParams['button'] as $param) {
+                $buttonParameters[] = [
+                    'type' => 'text',
+                    'text' => (string)$param
+                ];
+            }
+            if (!empty($buttonParameters)) {
+                $components[] = [
+                    'type' => 'button',
+                    'sub_type' => 'url',
+                    'index' => 0,
+                    'parameters' => $buttonParameters
+                ];
+            }
         }
 
         $requestBody = [
@@ -901,13 +987,7 @@ class NotificationService
                     'language' => [
                         'code' => 'en'
                     ],
-                    'components' => [
-                        [
-                            'type' => 'body',
-                            'index' => 0,
-                            'parameters' => $bodyParameters
-                        ]
-                    ]
+                    'components' => $components
                 ]
             ],
             'qrImageUrl' => false,
@@ -972,7 +1052,8 @@ class NotificationService
         // Map notification types to WhatsApp template names
         // You need to create these templates in MSG Club dashboard
         $templates = [
-            self::TYPE_WELCOME => 'welcome_notification',
+            self::TYPE_WELCOME => 'educator_successful_registration',
+            self::TYPE_EMPLOYER_WELCOME => 'institution_registration_success',
             self::TYPE_JOB_APPLIED => 'job_applied_notification',
             self::TYPE_JOB_SAVED => 'job_saved_notification',
             self::TYPE_PROFILE_SHORTLISTED => 'shortlist_application_for_job', // Already exists
@@ -999,9 +1080,28 @@ class NotificationService
 
         switch ($type) {
             case self::TYPE_WELCOME:
+                // For educator_successful_registration template (Job Seeker)
+                // Body parameter: educator/account name
                 $params = [
-                    $account->name ?? 'User',
-                    'Teachers Recruiter'
+                    'body' => [
+                        $account->name ?? 'User'
+                    ],
+                    'button' => [
+                        'login/' // Button text for login (with trailing slash)
+                    ]
+                ];
+                break;
+
+            case self::TYPE_EMPLOYER_WELCOME:
+                // For institution_registration_success template (Employer)
+                // Body parameter: institution/account name
+                $params = [
+                    'body' => [
+                        $account->name ?? 'User'
+                    ],
+                    'button' => [
+                        'login' // Button text for login
+                    ]
                 ];
                 break;
 

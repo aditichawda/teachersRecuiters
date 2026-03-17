@@ -66,15 +66,8 @@ class JobzillaController extends PublicController
         }
 
         try {
-            // Use direct City model lookup so we don't require country_id/state_id to be present
-            // and avoid over-filtering by published countries when importing large datasets.
-            $cities = \Botble\Location\Models\City::query()
-                ->with('state')
-                ->where('name', 'LIKE', '%' . $keyword . '%')
-                ->orderBy('name')
-                ->limit(20)
-                ->get();
-
+            $cities = $cityRepository->filters($keyword, 20, ['state', 'country']);
+            
             // Log for debugging
             \Log::info('[CITY_SEARCH] Search performed', [
                 'keyword' => $keyword,
@@ -210,6 +203,15 @@ class JobzillaController extends PublicController
             ->add(__('For Schools'), route('public.for-schools'));
 
         return Theme::scope('for-schools')->render();
+    }
+
+    public function startHiring()
+    {
+        Theme::breadcrumb()
+            ->add(__('Home'), url('/'))
+            ->add(__('Start Hiring'), route('public.start-hiring'));
+
+        return Theme::scope('start-hiring')->render();
     }
 
     public function careers()

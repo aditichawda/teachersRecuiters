@@ -588,10 +588,16 @@ body.filter-open {
                 {{-- Toolbar --}}
                 <div class="candidates-toolbar">
                     <div class="result-count">
-                        @if($candidates instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                            {{ __('Showing') }} {{ number_format($candidates->firstItem()) }} - {{ number_format($candidates->lastItem()) }} {{ __('of') }} {{ number_format($candidates->total()) }} {{ __('candidates') }}
-                        @else
+                        @if($candidates && ($candidates instanceof \Illuminate\Pagination\LengthAwarePaginator))
+                            @if($candidates->total() > 0)
+                                {{ __('Showing') }} {{ number_format($candidates->firstItem()) }} - {{ number_format($candidates->lastItem()) }} {{ __('of') }} {{ number_format($candidates->total()) }} {{ __('candidates') }}
+                            @else
+                                {{ __('No candidates found') }}
+                            @endif
+                        @elseif($candidates && $candidates->count() > 0)
                             {{ __('Showing') }} {{ $candidates->count() }} {{ __('candidates') }}
+                        @else
+                            {{ __('No candidates found') }}
                         @endif
                     </div>
                     <div class="layout-switcher">
@@ -611,7 +617,31 @@ body.filter-open {
                 <div id="candidates-listing-container" style="position: relative; min-height: 400px;">
                     {!! Theme::partial('loader', ['containerId' => 'candidates-loader-overlay', 'size' => 'large', 'text' => 'Loading candidates...']) !!}
                     <div id="candidates-content">
-                        @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'))
+                        @if($candidates && ($candidates->count() > 0 || ($candidates instanceof \Illuminate\Pagination\LengthAwarePaginator && $candidates->total() > 0)))
+                            @include(Theme::getThemeNamespace('views.job-board.partials.candidates.index'))
+                        @else
+                            <div class="text-center py-5" style="padding: 60px 20px;">
+                                <i class="feather-users" style="font-size: 64px; color: #cbd5e1; margin-bottom: 20px;"></i>
+                                <h3 style="color: #1e293b; font-size: 24px; font-weight: 600; margin-bottom: 12px;">{{ __('No Candidates Found') }}</h3>
+                                <p style="color: #64748b; font-size: 16px; margin-bottom: 24px;">{{ __('Try adjusting your filters or check back later for new candidates.') }}</p>
+                                @if(isset($totalJobSeekers, $publicJobSeekers, $eligibleJobSeekers))
+                                    <div style="max-width: 520px; margin: 0 auto 18px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; text-align: left;">
+                                        <div style="font-size: 13px; color: #475569; font-weight: 600; margin-bottom: 8px;">{{ __('Data status (debug)') }}</div>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; color: #64748b;">
+                                            <div><strong style="color:#334155;">{{ __('Total job seekers') }}:</strong> {{ $totalJobSeekers }}</div>
+                                            <div><strong style="color:#334155;">{{ __('Public profiles') }}:</strong> {{ $publicJobSeekers }}</div>
+                                            <div style="grid-column: 1 / -1;"><strong style="color:#334155;">{{ __('Eligible for listing') }}:</strong> {{ $eligibleJobSeekers }}</div>
+                                        </div>
+                                        <div style="margin-top: 10px; font-size: 12px; color: #94a3b8;">
+                                            {{ __('Candidates are listed only when account type is Job Seeker and profile is public.') }}
+                                        </div>
+                                    </div>
+                                @endif
+                                <a href="{{ route('public.account.candidates') }}" class="btn btn-primary" style="background: #0073d1; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">
+                                    <i class="feather-refresh-cw"></i> {{ __('Clear Filters') }}
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

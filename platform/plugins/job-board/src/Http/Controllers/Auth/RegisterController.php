@@ -1422,6 +1422,29 @@ class RegisterController extends BaseController
                 'email' => $email,
             ]);
 
+            // Send job seeker welcome notification (WhatsApp + email) after successful registration completion.
+            // Employer welcome is sent in saveEmployerLocation(), but job seeker flow finishes here.
+            try {
+                if (! $request->session()->get('jobseeker_welcome_sent')) {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $notificationService->sendWelcomeNotification($account);
+
+                    $request->session()->put('jobseeker_welcome_sent', true);
+
+                    \Log::info('Job seeker welcome notification dispatched after location save', [
+                        'account_id' => $account->id,
+                        'email' => $account->email,
+                        'phone' => $account->phone,
+                        'is_whatsapp_available' => (bool) $account->is_whatsapp_available,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send job seeker welcome notification after location save: ' . $e->getMessage(), [
+                    'account_id' => $account->id,
+                    'email' => $account->email,
+                ]);
+            }
+
             // Redirect to appropriate dashboard based on account type
             $redirectUrl = $account->isEmployer() 
                 ? route('public.account.dashboard') 
