@@ -9,6 +9,7 @@ use Botble\Base\Facades\Assets;
 use Botble\Base\Http\Actions\DeleteResourceAction;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Supports\Breadcrumb;
+use Botble\JobBoard\Enums\JobStatusEnum;
 use Botble\JobBoard\Enums\ModerationStatusEnum;
 use Botble\JobBoard\Events\AdminApprovedJobEvent;
 use Botble\JobBoard\Events\JobPublishedEvent;
@@ -249,15 +250,25 @@ class JobController extends BaseController
 
         event(new UpdatedContentEvent(JOB_MODULE_SCREEN_NAME, $request, $job));
 
-        // COMMENTED OUT: Job alert notifications disabled
-        /*
+        // Trigger job alert notifications when admin approves a job
+        // Only trigger if job status is PUBLISHED and was just approved
         if (
             $moderationStatus != ModerationStatusEnum::APPROVED
             && $request->input('moderation_status') == ModerationStatusEnum::APPROVED
+            && $job->status == JobStatusEnum::PUBLISHED
         ) {
-            event(new JobPublishedEvent($job));
+            // Reload job with relationships before triggering event
+            try {
+                $job->load(['categories', 'jobTypes', 'skills', 'company', 'city', 'state', 'country', 'currency']);
+                \Log::info('Admin approved job - Triggering JobPublishedEvent for job: ' . $job->id);
+                error_log('[JOB_APPROVE] Admin approved job - Triggering JobPublishedEvent for job: ' . $job->id . ' - ' . $job->name);
+                
+                event(new JobPublishedEvent($job));
+            } catch (\Exception $e) {
+                \Log::error('Failed to trigger JobPublishedEvent after admin approval: ' . $e->getMessage());
+                error_log('[JOB_APPROVE] Failed to trigger JobPublishedEvent: ' . $e->getMessage());
+            }
         }
-        */
 
         $storeTagService->execute($request, $job);
 

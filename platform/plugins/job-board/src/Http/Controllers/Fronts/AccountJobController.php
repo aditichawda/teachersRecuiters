@@ -22,6 +22,7 @@ use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\AccountActivityLog;
 use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\CreditConsumption;
+use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Currency;
 use Botble\JobBoard\Models\CustomFieldValue;
 use Botble\JobBoard\Models\DegreeLevel;
@@ -514,6 +515,16 @@ class AccountJobController extends BaseController
                 ->update(['is_featured' => 1]);
         }
 
+        if ($this->hasFeaturedJobEntitlement($account)) {
+            $job->is_featured = 1;
+            $job->saveQuietly();
+            // Employer ne Featured Job buy kiya hai to is account ki saari jobs featured karo
+            Job::query()
+                ->where('author_id', $account->getKey())
+                ->where('author_type', Account::class)
+                ->update(['is_featured' => 1]);
+        }
+
         if (SlugHelper::isSupportedModel(Job::class)) {
             try {
                 $existing = SlugHelper::getSlug(null, SlugHelper::getPrefix(Job::class), Job::class, $job->id);
@@ -545,13 +556,13 @@ class AccountJobController extends BaseController
         
        // Job alert notifications ENABLED - sending email and WhatsApp to matching candidates
         // Trigger event after all relationships are synced
-        // Trigger if job is published (even if moderation is pending - approval might be disabled)
-        if ($job->status == JobStatusEnum::PUBLISHED) {
+        // IMPORTANT: Only trigger if job is published AND approved by admin
+        if ($job->status == JobStatusEnum::PUBLISHED && $job->moderation_status == ModerationStatusEnum::APPROVED) {
             // Reload job with relationships before triggering event
             try {
                 $job->load(['categories', 'jobTypes', 'skills', 'company', 'city', 'state', 'country', 'currency']);
-                \Log::info('Triggering JobPublishedEvent for job: ' . $job->id);
-                error_log('[JOB_CREATE] Triggering JobPublishedEvent for job: ' . $job->id . ' - ' . $job->name);
+                \Log::info('Triggering JobPublishedEvent for job: ' . $job->id . ' (Approved)');
+                error_log('[JOB_CREATE] Triggering JobPublishedEvent for job: ' . $job->id . ' - ' . $job->name . ' (Status: APPROVED)');
                 
                 event(new JobPublishedEvent($job));
             } catch (\Exception $e) {
@@ -561,8 +572,10 @@ class AccountJobController extends BaseController
                 // Continue even if event fails
             }
         } else {
-            \Log::info('JobPublishedEvent NOT triggered - Job status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
-            error_log('[JOB_CREATE] JobPublishedEvent NOT triggered - Status: ' . ($job->status ? $job->status->getValue() : 'null') . ', Moderation: ' . ($job->moderation_status ? $job->moderation_status->getValue() : 'null'));
+            $status = $job->status ? $job->status->getValue() : 'null';
+            $moderation = $job->moderation_status ? $job->moderation_status->getValue() : 'null';
+            \Log::info('JobPublishedEvent NOT triggered - Job status: ' . $status . ', Moderation: ' . $moderation);
+            error_log('[JOB_CREATE] JobPublishedEvent NOT triggered - Status: ' . $status . ', Moderation: ' . $moderation . ' (Job must be PUBLISHED and APPROVED)');
         }
 
         // Sync screening questions (from admin pool) with is_required, overrides, correct_answer per job
@@ -610,6 +623,27 @@ class AccountJobController extends BaseController
         // Check if job is published (use the model instance, not query again)
         if ($job->status == JobStatusEnum::PUBLISHED && $job->moderation_status == ModerationStatusEnum::APPROVED) {
             EmployerPostedJobEvent::dispatch($job, $account);
+        }
+
+        // Send notification to employer when job is posted successfully
+        try {
+            $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+            $notificationService->sendJobPostedNotification(
+                $account,
+                $job->name,
+                $job->id
+            );
+            \Log::info('[JOB_POST] Notification sent to employer for job posting', [
+                'job_id' => $job->id,
+                'job_title' => $job->name,
+                'employer_id' => $account->id,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('[JOB_POST] Failed to send notification to employer: ' . $e->getMessage(), [
+                'job_id' => $job->id,
+                'employer_id' => $account->id,
+            ]);
+            // Don't break the flow if notification fails
         }
 
         // Send notification to employer when job is posted successfully
@@ -998,6 +1032,16 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
                 ->update(['is_featured' => 1]);
         }
 
+        if ($this->hasFeaturedJobEntitlement($account = auth('account')->user())) {
+            $job->is_featured = 1;
+            $job->saveQuietly();
+            // Employer ne Featured Job buy kiya hai to is account ki saari jobs featured karo
+            Job::query()
+                ->where('author_id', $account->getKey())
+                ->where('author_type', Account::class)
+                ->update(['is_featured' => 1]);
+        }
+
         $customFields = CustomFieldValue::formatCustomFields($request->input('custom_fields') ?? []);
 
         $job->customFields()
@@ -1083,6 +1127,17 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
                 'final_emails' => !empty($slicedEmails) ? $slicedEmails : null,
             ]);
             
+            $slicedEmails = array_slice($emails, 0, 3);
+            // Fix: Empty array should be null, not []
+            $request->merge(['apply_internal_emails' => !empty($slicedEmails) ? $slicedEmails : null]);
+            
+            \Log::info('[JOB_POST] Processed apply_internal_emails', [
+                'original_emails' => $request->input('apply_internal_emails', []),
+                'filtered_emails' => $emails,
+                'sliced_emails' => $slicedEmails,
+                'final_emails' => !empty($slicedEmails) ? $slicedEmails : null,
+            ]);
+            
         // Process apply_internal_phones - format with country code and store
         $phones = array_filter(array_map('trim', (array) $request->input('apply_internal_phones', [])));
         $formattedPhones = [];
@@ -1114,6 +1169,9 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
         }
         
         // Store formatted phones (max 3)
+        // Fix: Empty array should be null, not []
+        $slicedPhones = array_slice($formattedPhones, 0, 3);
+        $request->merge(['apply_internal_phones' => !empty($slicedPhones) ? $slicedPhones : null]);
         // Fix: Empty array should be null, not []
         $slicedPhones = array_slice($formattedPhones, 0, 3);
         $request->merge(['apply_internal_phones' => !empty($slicedPhones) ? $slicedPhones : null]);
@@ -1394,6 +1452,16 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
         if (! $job->is_saved) {
             $account->savedJobs()->attach($job->id);
             $message = trans('plugins/job-board::messages.job_added_to_saved', ['job' => $job->name]);
+            
+            // Send notification to job seeker when job is saved
+            if (!$account->isEmployer()) {
+                try {
+                    $notificationService = app(\Botble\JobBoard\Services\NotificationService::class);
+                    $notificationService->sendJobSavedNotification($account, $job->name, $job->id);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send job saved notification: ' . $e->getMessage());
+                }
+            }
             
             // Send notification to job seeker when job is saved
             if (!$account->isEmployer()) {
