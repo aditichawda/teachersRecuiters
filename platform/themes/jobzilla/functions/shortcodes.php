@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 app()->booted(function (): void {
     ThemeSupport::registerGoogleMapsShortcode();
@@ -1488,16 +1489,20 @@ app()->booted(function (): void {
             // For blur + popup: employer must have bought a package to view candidate cards without lock
             $canViewCandidates = true;
             if (JobBoardHelper::isEnabledCreditsSystem()) {
-                $lastPurchase = Transaction::query()
+                $purchaseQuery = Transaction::query()
                     ->where('account_id', $account->getKey())
                     ->where(function ($q): void {
                         $q->whereNull('type')->orWhere('type', '!=', 'deduct');
                     })
-                    ->whereNotNull('payment_id')
-                    ->whereNotNull('package_id')
-                    ->latest()
-                    ->exists();
-                $canViewCandidates = $lastPurchase;
+                    ->whereNotNull('payment_id');
+
+                // Some installations don't have `package_id` on `jb_transactions` (older schema).
+                // Only add this constraint when the column exists.
+                if (Schema::hasColumn('jb_transactions', 'package_id')) {
+                    $purchaseQuery->whereNotNull('package_id');
+                }
+
+                $canViewCandidates = $purchaseQuery->latest()->exists();
             }
 
             return Theme::partial('shortcodes.candidates.index', compact('shortcode', 'candidates', 'layout', 'canViewCandidates'));

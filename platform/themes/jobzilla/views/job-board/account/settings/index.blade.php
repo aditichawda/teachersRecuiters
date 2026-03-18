@@ -1764,7 +1764,8 @@ document.addEventListener('DOMContentLoaded', function() {
         function loadCities(k) {
             suggestionsEl.innerHTML = '<div class="p-2 text-muted">Loading...</div>';
             suggestionsEl.style.display = 'block';
-            var url = '{{ route("ajax.search-cities") }}' + (k && k.length >= 2 ? '?k=' + encodeURIComponent(k) : '');
+            // When keyword is empty, ask backend for a default list (same behavior as employer settings)
+            var url = '{{ route("ajax.search-cities") }}' + (k && k.length >= 2 ? '?k=' + encodeURIComponent(k) : '?default_country=1&page=1');
             fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) {
                     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1773,8 +1774,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     return r.json();
                 })
                 .then(function(res) {
-                    var cities = Array.isArray(res.data) ? res.data : (res.data && res.data.data) ? res.data.data : [];
-                    if (!Array.isArray(cities) && res.data && !Array.isArray(res.data)) cities = [];
+                    // Support multiple response structures:
+                    // - Location plugin: { data: [ ... ] }
+                    // - Location plugin default_country: { data: { cities: [ ... ] } }
+                    // - Legacy: { data: { data: [ ... ] } }
+                    var raw = res && res.data;
+                    var cities = Array.isArray(raw)
+                        ? raw
+                        : (raw && Array.isArray(raw.cities) ? raw.cities : (raw && Array.isArray(raw.data) ? raw.data : []));
                     renderCities(cities);
                 })
                 .catch(function(err) {

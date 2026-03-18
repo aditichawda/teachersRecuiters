@@ -13,7 +13,7 @@
         li:last-child:not(:first-child) {
             a {
                 --bb-text-opacity: 1;
-                color: rgba(var(--bb-muted-rgb), var(--bb-text-opacity)) !important;
+                color: #fff !important;
             }
         }
     }

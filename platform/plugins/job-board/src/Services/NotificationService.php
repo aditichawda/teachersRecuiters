@@ -940,12 +940,12 @@ class NotificationService
             }
         } elseif (is_array($messageParams) && !isset($messageParams['body'])) {
             // Legacy format: simple array of parameters
-            $bodyParameters = [];
-            foreach ($messageParams as $param) {
-                $bodyParameters[] = [
-                    'type' => 'text',
-                    'text' => (string)$param
-                ];
+        $bodyParameters = [];
+        foreach ($messageParams as $param) {
+            $bodyParameters[] = [
+                'type' => 'text',
+                'text' => (string)$param
+            ];
             }
             if (!empty($bodyParameters)) {
                 $components[] = [
