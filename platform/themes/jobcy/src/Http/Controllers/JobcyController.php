@@ -20,11 +20,199 @@ use Botble\Theme\Http\Controllers\PublicController;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use Theme\Jobcy\Http\Resources\CityResource;
 use Theme\Jobcy\Http\Resources\LocationResource;
 
 class JobcyController extends PublicController
 {
+    /**
+     * /ajax/search-cities (name: ajax.search-cities)
+     *
+     * Response shapes supported by existing theme JS:
+     * - { error: false, data: [ ... ] }
+     * - { error: false, data: { cities: [ ... ], has_more: bool, page: int } }  (default_country=1)
+     */
+    public function ajaxSearchCities(Request $request)
+    {
+        $request->headers->set('Accept', 'application/json');
+
+        $keyword = BaseHelper::stringify($request->query('k') ?: $request->query('keyword'));
+        $defaultCountry = $request->query('default_country');
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = 10;
+
+        try {
+            if (! Schema::hasTable('cities')) {
+                return response()->json(['error' => false, 'data' => [], 'message' => null]);
+            }
+
+            // Use query builder instead of Eloquent because some installs have invalid enum values
+            // in status columns (e.g. 1), which can crash BaseStatusEnum casting.
+            $baseQuery = DB::table('cities')
+                ->select([
+                    'cities.id',
+                    'cities.name',
+                    'cities.state_id',
+                    'cities.country_id',
+                    DB::raw('states.name as state_name'),
+                    DB::raw('countries.name as country_name'),
+                    DB::raw('COALESCE(cities.country_id, states.country_id) as resolved_country_id'),
+                ])
+                ->leftJoin('states', 'states.id', '=', 'cities.state_id')
+                ->leftJoin('countries', 'countries.id', '=', DB::raw('COALESCE(cities.country_id, states.country_id)'));
+
+            // Default list on focus: India-first when requested
+            if (! $keyword || strlen($keyword) < 2) {
+                if (($defaultCountry === '1' || $defaultCountry === 'true') && Schema::hasTable('countries')) {
+                    $indiaId = DB::table('countries')
+                        ->whereRaw('LOWER(TRIM(name)) = ?', ['india'])
+                        ->value('id');
+
+                    if ($indiaId) {
+                        $query = (clone $baseQuery)->where(function ($q) use ($indiaId) {
+                            $q->where('cities.country_id', $indiaId)
+                                ->orWhere('states.country_id', $indiaId);
+                        });
+
+                        $total = (clone $query)->count();
+                        $rows = $query
+                            ->orderBy('cities.name')
+                            ->offset(($page - 1) * $perPage)
+                            ->limit($perPage)
+                            ->get();
+
+                        $mapped = $rows->map(function ($r) {
+                            return [
+                                'id' => $r->id,
+                                'name' => $r->name,
+                                'state_id' => $r->state_id,
+                                'state_name' => $r->state_name ?: '',
+                                'country_id' => $r->resolved_country_id,
+                                'country_name' => $r->country_name ?: '',
+                            ];
+                        })->values();
+
+                        return response()->json([
+                            'error' => false,
+                            'data' => [
+                                'cities' => $mapped,
+                                'has_more' => ($page * $perPage) < $total,
+                                'page' => $page,
+                            ],
+                            'message' => null,
+                        ]);
+                    }
+                }
+
+                $rows = (clone $baseQuery)->orderBy('cities.name')->limit(12)->get();
+            } else {
+                $k = trim($keyword);
+                $rows = (clone $baseQuery)->where('cities.name', 'LIKE', '%' . $k . '%')->orderBy('cities.name')->limit(20)->get();
+            }
+
+            $mapped = collect($rows)->map(function ($r) {
+                return [
+                    'id' => $r->id,
+                    'name' => $r->name,
+                    'state_id' => $r->state_id,
+                    'state_name' => $r->state_name ?: '',
+                    'country_id' => $r->resolved_country_id,
+                    'country_name' => $r->country_name ?: '',
+                ];
+            })->values();
+
+            return response()->json([
+                'error' => false,
+                'data' => $mapped,
+                'message' => null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[JOBCY][CITY_SEARCH] Error', [
+                'keyword' => $keyword,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => false,
+                'data' => [],
+                'message' => null,
+            ], 200);
+        }
+    }
+
+    /**
+     * /ajax/states-by-country (name: ajax.states-by-country)
+     * Returns { error: false, data: [ {id,name}, ... ] }
+     */
+    public function ajaxStatesByCountry(Request $request)
+    {
+        $request->headers->set('Accept', 'application/json');
+
+        try {
+            if (! Schema::hasTable('states')) {
+                return response()->json(['error' => false, 'data' => [], 'message' => null]);
+            }
+
+            $countryId = $request->query('country_id');
+
+            $q = DB::table('states')
+                ->select(['id', 'name'])
+                ->orderBy('name');
+
+            if ($countryId && $countryId !== 'null') {
+                $q->where('country_id', $countryId);
+            }
+
+            return response()->json([
+                'error' => false,
+                'data' => $q->get(),
+                'message' => null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[JOBCY][STATES_BY_COUNTRY] Error', ['error' => $e->getMessage()]);
+
+            return response()->json(['error' => false, 'data' => [], 'message' => null], 200);
+        }
+    }
+
+    /**
+     * /ajax/cities-by-state (name: ajax.cities-by-state)
+     * Returns { error: false, data: [ {id,name}, ... ] }
+     */
+    public function ajaxCitiesByState(Request $request)
+    {
+        $request->headers->set('Accept', 'application/json');
+
+        try {
+            if (! Schema::hasTable('cities')) {
+                return response()->json(['error' => false, 'data' => [], 'message' => null]);
+            }
+
+            $stateId = $request->query('state_id');
+
+            $q = DB::table('cities')
+                ->select(['id', 'name'])
+                ->orderBy('name');
+
+            if ($stateId && $stateId !== 'null') {
+                $q->where('state_id', $stateId);
+            }
+
+            return response()->json([
+                'error' => false,
+                'data' => $q->get(),
+                'message' => null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[JOBCY][CITIES_BY_STATE] Error', ['error' => $e->getMessage()]);
+
+            return response()->json(['error' => false, 'data' => [], 'message' => null], 200);
+        }
+    }
+
     public function ajaxGetCities(Request $request, BaseHttpResponse $response)
     {
         if (! $request->ajax() || ! $request->wantsJson()) {

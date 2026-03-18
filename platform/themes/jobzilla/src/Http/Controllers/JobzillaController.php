@@ -13,11 +13,196 @@ use Botble\Theme\Facades\Theme;
 use Botble\Theme\Http\Controllers\PublicController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Theme\Jobzilla\Http\Resources\CityResource;
 
 class JobzillaController extends PublicController
 {
+    /**
+     * Compatibility endpoint for theme JS: /ajax/search-cities (route name: ajax.search-cities).
+     *
+     * Returns:
+     * - { error: false, data: [ {id,name,state_id,state_name,country_id,country_name}, ... ] }
+     * - or when default_country=1 and no keyword: { error: false, data: { cities: [...], has_more: bool, page: int } }
+     */
+    public function ajaxSearchCities(Request $request)
+    {
+        // Force JSON
+        $request->headers->set('Accept', 'application/json');
+
+        $keyword = BaseHelper::stringify($request->query('k') ?: $request->query('keyword'));
+        $defaultCountry = $request->query('default_country');
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = 10;
+
+        // If location plugin exists, prefer its tables/structure but query directly (works even if plugin is disabled)
+        if (! Schema::hasTable('cities')) {
+            return response()->json(['error' => false, 'data' => [], 'message' => null]);
+        }
+
+        $citiesQ = DB::table('cities')
+            ->select([
+                'cities.id',
+                'cities.name',
+                'cities.state_id',
+                'cities.country_id',
+                DB::raw('states.name as state_name'),
+                DB::raw('countries.name as country_name'),
+                DB::raw('COALESCE(cities.country_id, states.country_id) as resolved_country_id'),
+            ])
+            ->leftJoin('states', 'states.id', '=', 'cities.state_id')
+            ->leftJoin('countries', function ($join) {
+                $join->on('countries.id', '=', 'cities.country_id')
+                    ->orOn('countries.id', '=', 'states.country_id');
+            })
+            ->where(function ($q) {
+                // allow common "published" variants
+                $q->where('cities.status', BaseStatusEnum::PUBLISHED)
+                    ->orWhere('cities.status', 1)
+                    ->orWhereNull('cities.status')
+                    ->orWhere('cities.status', 'published');
+            });
+
+        // Default listing (no keyword): show India first (if available), otherwise first 12
+        if (! $keyword || strlen($keyword) < 2) {
+            if ($defaultCountry === '1' || $defaultCountry === 'true') {
+                $indiaId = null;
+                if (Schema::hasTable('countries')) {
+                    $indiaId = DB::table('countries')
+                        ->whereRaw('LOWER(TRIM(name)) = ?', ['india'])
+                        ->value('id');
+                }
+
+                if ($indiaId) {
+                    $citiesQ->where(function ($q) use ($indiaId) {
+                        $q->where('cities.country_id', $indiaId)
+                            ->orWhere('states.country_id', $indiaId);
+                    });
+
+                    $total = (clone $citiesQ)->count();
+                    $rows = $citiesQ
+                        ->orderBy('cities.name')
+                        ->offset(($page - 1) * $perPage)
+                        ->limit($perPage)
+                        ->get();
+
+                    $mapped = $rows->map(function ($r) {
+                        return [
+                            'id' => $r->id,
+                            'name' => $r->name,
+                            'state_id' => $r->state_id,
+                            'state_name' => $r->state_name ?: '',
+                            'country_id' => $r->resolved_country_id,
+                            'country_name' => $r->country_name ?: '',
+                        ];
+                    })->values();
+
+                    return response()->json([
+                        'error' => false,
+                        'data' => [
+                            'cities' => $mapped,
+                            'has_more' => ($page * $perPage) < $total,
+                            'page' => $page,
+                        ],
+                        'message' => null,
+                    ]);
+                }
+            }
+
+            $rows = $citiesQ->orderBy('cities.name')->limit(12)->get();
+        } else {
+            $k = trim($keyword);
+            $rows = $citiesQ->where('cities.name', 'LIKE', '%' . $k . '%')->orderBy('cities.name')->limit(20)->get();
+        }
+
+        $mapped = collect($rows)->map(function ($r) {
+            return [
+                'id' => $r->id,
+                'name' => $r->name,
+                'state_id' => $r->state_id,
+                'state_name' => $r->state_name ?: '',
+                'country_id' => $r->resolved_country_id,
+                'country_name' => $r->country_name ?: '',
+            ];
+        })->values();
+
+        return response()->json([
+            'error' => false,
+            'data' => $mapped,
+            'message' => null,
+        ]);
+    }
+
+    /**
+     * Compatibility endpoint for work preference dropdown: /ajax/states-by-country.
+     * Returns { error: false, data: [ {id,name}, ... ] }.
+     */
+    public function ajaxStatesByCountry(Request $request)
+    {
+        $request->headers->set('Accept', 'application/json');
+
+        if (! Schema::hasTable('states')) {
+            return response()->json(['error' => false, 'data' => [], 'message' => null]);
+        }
+
+        $countryId = $request->query('country_id');
+        $q = DB::table('states')
+            ->select(['id', 'name'])
+            ->where(function ($q) {
+                $q->where('status', BaseStatusEnum::PUBLISHED)
+                    ->orWhere('status', 1)
+                    ->orWhereNull('status')
+                    ->orWhere('status', 'published');
+            })
+            ->orderBy('name');
+
+        if ($countryId && $countryId !== 'null') {
+            $q->where('country_id', $countryId);
+        }
+
+        return response()->json([
+            'error' => false,
+            'data' => $q->get(),
+            'message' => null,
+        ]);
+    }
+
+    /**
+     * Compatibility endpoint for work preference dropdown: /ajax/cities-by-state.
+     * Returns { error: false, data: [ {id,name}, ... ] }.
+     */
+    public function ajaxCitiesByState(Request $request)
+    {
+        $request->headers->set('Accept', 'application/json');
+
+        if (! Schema::hasTable('cities')) {
+            return response()->json(['error' => false, 'data' => [], 'message' => null]);
+        }
+
+        $stateId = $request->query('state_id');
+
+        $q = DB::table('cities')
+            ->select(['id', 'name'])
+            ->where(function ($q) {
+                $q->where('status', BaseStatusEnum::PUBLISHED)
+                    ->orWhere('status', 1)
+                    ->orWhereNull('status')
+                    ->orWhere('status', 'published');
+            })
+            ->orderBy('name');
+
+        if ($stateId && $stateId !== 'null') {
+            $q->where('state_id', $stateId);
+        }
+
+        return response()->json([
+            'error' => false,
+            'data' => $q->get(),
+            'message' => null,
+        ]);
+    }
+
     public function ajaxGetCities(Request $request, CityInterface $cityRepository, BaseHttpResponse $response)
     {
         // Force JSON response

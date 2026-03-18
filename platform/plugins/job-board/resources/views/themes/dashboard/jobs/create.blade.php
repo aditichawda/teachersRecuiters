@@ -12,6 +12,7 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         padding: 28px;
         margin-bottom: 24px;
+        overflow: visible; /* allow suggestion dropdowns to extend outside the card */
     }
     .jp-card-title {
         font-size: 18px;
@@ -53,14 +54,23 @@
     }
 
     /* Auto-suggest dropdown */
-    .jp-suggest-wrap { position: relative; }
+    .jp-suggest-wrap { position: relative; overflow: visible; }
+    .jp-suggest-wrap.jp-suggest-open { z-index: 100000; }
     .jp-suggest-list {
-        position: absolute; top: 100%; left: 0; right: 0;
+        position: absolute; top: calc(100% + 4px); left: 0; right: 0;
         background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
-        max-height: 220px; overflow-y: auto; z-index: 100;
-        display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        height: 240px;
+        overflow-y: auto;
+        z-index: 99999; /* keep above card sections and any overflow contexts */
+        display: none;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        padding: 6px 0;
+        min-height: 44px;
+        font-size: 14px;
+        line-height: 1.4;
     }
-    .jp-suggest-list.show { display: block; }
+    /* IMPORTANT: show class must override display:none above */
+    .jp-suggest-list.show { display: block !important; }
     .jp-suggest-item {
         padding: 10px 14px; cursor: pointer; font-size: 14px;
         border-bottom: 1px solid #f5f5f5;
@@ -142,6 +152,41 @@
         display: inline-block; background: #f0f4ff; color: #4a6cf7;
         padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;
     }
+    .jp-suggest-wrap {
+    position: relative;
+}
+
+.jp-suggest-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    
+}
+#job-city-suggestions {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 999999 !important;
+    position: absolute !important;
+}
+.jp-card,
+.jp-row,
+.jp-group,
+.tab-content,
+.card,
+.card-body {
+    overflow: visible !important;
+}
+.jp-suggest-wrap {
+    position: relative;
+    transform: none !important;
+}
+.jp-suggest-wrap {
+    position: relative;
+    transform: none !important;
+}
 </style>
 
 @if(!$canPost)
@@ -1005,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // ===== INTERNAL EMAILS (up to 3) – only add row after API deducts 100 credits; else show Buy credits popup =====
-    document.getElementById('add-internal-email-btn').addEventListener('click', function(e) {
+    document.getElementById('add-internal-email-btn')?.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         const list = document.getElementById('internal-emails-list');
@@ -1042,12 +1087,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(function() { showBuyCreditsPopup('{{ __("Request failed. Please try again or buy credits from Wallet.") }}'); })
         .finally(function() { btn.disabled = false; });
     });
-    document.getElementById('internal-emails-list').addEventListener('click', function(e) {
+    document.getElementById('internal-emails-list')?.addEventListener('click', function(e) {
         if (e.target.closest('.jp-remove-internal-email')) e.target.closest('.jp-internal-email-row').remove();
     });
 
     // ===== INTERNAL PHONES (up to 3) – only add row after API deducts 10 credits; else show Buy credits popup =====
-    document.getElementById('add-internal-phone-btn').addEventListener('click', function(e) {
+    document.getElementById('add-internal-phone-btn')?.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         const list = document.getElementById('internal-phones-list');
@@ -1084,49 +1129,243 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(function() { showBuyCreditsPopup('{{ __("Request failed. Please try again or buy credits from Wallet.") }}'); })
         .finally(function() { btn.disabled = false; });
     });
-    document.getElementById('internal-phones-list').addEventListener('click', function(e) {
+    document.getElementById('internal-phones-list')?.addEventListener('click', function(e) {
         if (e.target.closest('.jp-remove-internal-phone')) e.target.closest('.jp-internal-phone-row').remove();
     });
 
-    // ===== CITY SEARCH FOR JOB LOCATION =====
+    // ===== CITY SEARCH FOR JOB LOCATION (Registration-like) =====
     const cityInput = document.getElementById('job_city_search');
     const cityList = document.getElementById('job-city-suggestions');
+    const cityIdEl = document.getElementById('job_city_id');
+    const stateEl = document.getElementById('job_state');
+    const stateIdEl = document.getElementById('job_state_id');
+    const countryEl = document.getElementById('job_country');
+    const countryIdEl = document.getElementById('job_country_id');
     let cityTimeout = null;
 
-    cityInput.addEventListener('input', function() {
-        clearTimeout(cityTimeout);
-        const val = this.value.trim();
-        if (val.length < 2) { cityList.classList.remove('show'); return; }
+    function parseCityResults(res) {
+        const raw = res && res.data;
+        if (Array.isArray(raw)) return raw;
+        if (raw && Array.isArray(raw.cities)) return raw.cities;
+        if (raw && Array.isArray(raw.data)) return raw.data;
+        return [];
+    }
 
-        cityTimeout = setTimeout(() => {
-            fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
-                .then(r => r.json())
-                .then(data => {
-                    cityList.innerHTML = '';
-                    if (!data.length) { cityList.classList.remove('show'); return; }
-                    data.forEach(city => {
-                        const div = document.createElement('div');
-                        div.className = 'jp-suggest-item';
-                        div.textContent = city.full_name || city.name;
-                        div.addEventListener('click', function() {
-                            cityInput.value = city.name;
-                            document.getElementById('job_city_id').value = city.id;
-                            document.getElementById('job_state').value = city.state_name || '';
-                            document.getElementById('job_state_id').value = city.state_id || '';
-                            document.getElementById('job_country').value = city.country_name || '';
-                            document.getElementById('job_country_id').value = city.country_id || '';
-                            cityList.classList.remove('show');
-                        });
-                        cityList.appendChild(div);
-                    });
+    function clearLocationFields() {
+        if (cityIdEl) cityIdEl.value = '';
+        if (stateEl) stateEl.value = '';
+        if (stateIdEl) stateIdEl.value = '';
+        if (countryEl) countryEl.value = '';
+        if (countryIdEl) countryIdEl.value = '';
+    }
+
+    function openCityDropdown() {
+        cityList.classList.add('show');
+        cityList.style.display = 'block';
+        cityInput.closest('.jp-suggest-wrap')?.classList.add('jp-suggest-open');
+    }
+
+    function closeCityDropdown() {
+        cityList.classList.remove('show');
+        cityList.style.display = 'none';
+        cityInput.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
+    }
+
+    function renderCitySuggestions(list) {
+    cityList.innerHTML = '';
+    const wrap = cityInput.closest('.jp-suggest-wrap');
+
+    if (!list || !list.length) {
+        cityList.innerHTML = '<div class="jp-suggest-item">No cities found</div>';
+        
+        // 🔥 KEEP OPEN
+        cityList.classList.add('show');
+        wrap?.classList.add('jp-suggest-open');
+        return;
+    }
+
+    list.forEach(city => {
+        const div = document.createElement('div');
+        div.className = 'jp-suggest-item';
+        div.textContent = city.full_name || city.name;
+
+        div.addEventListener('click', function() {
+            cityInput.value = city.name;
+
+            cityIdEl.value = city.id || '';
+            stateEl.value = city.state_name || '';
+            stateIdEl.value = city.state_id || '';
+            countryEl.value = city.country_name || '';
+            countryIdEl.value = city.country_id || '';
+
+            cityList.classList.remove('show');
+            wrap?.classList.remove('jp-suggest-open');
+        });
+
+        cityList.appendChild(div);
+    });
+
+    // 🔥 ALWAYS OPEN AFTER RENDER
+    cityList.classList.add('show');
+    wrap?.classList.add('jp-suggest-open');
+}
+
+    function loadCities(keyword) {
+        const k = (keyword || '').trim();
+        const url = '{{ route("ajax.search-cities") }}' + (k.length >= 2
+            ? ('?k=' + encodeURIComponent(k))
+            : '?default_country=1&page=1');
+
+        // simple loading state
+        cityList.innerHTML = '<div class="jp-suggest-item" style="cursor:default;color:#6b7280;">Loading...</div>';
+        openCityDropdown();
+
+        fetch(url, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        })
+            .then(async (r) => {
+                const text = await r.text();
+                // Sometimes Laravel returns HTML error/login page; show a small snippet for debugging.
+                let json = null;
+                try {
+                    json = JSON.parse(text);
+                } catch (e) {
+                    json = null;
+                }
+
+                if (!r.ok || !json) {
+                    cityList.innerHTML =
+                        '<div class="jp-suggest-item" style="cursor:default;color:#b91c1c;">City search failed (' + r.status + ')</div>' +
+                        '<div class="jp-suggest-item" style="cursor:default;color:#6b7280;white-space:normal;">' +
+                        String(text || '').slice(0, 240) +
+                        '</div>';
                     cityList.classList.add('show');
-                });
-        }, 300);
-    });
+                    return null;
+                }
 
-    cityInput.addEventListener('blur', function() {
-        setTimeout(() => cityList.classList.remove('show'), 200);
-    });
+                return json;
+            })
+            .then((res) => {
+                if (!res) return;
+                try {
+                    renderCitySuggestions(parseCityResults(res));
+                } catch (e) {
+                    cityList.innerHTML =
+                        '<div class="jp-suggest-item" style="cursor:default;color:#b91c1c;">Render error</div>' +
+                        '<div class="jp-suggest-item" style="cursor:default;color:#6b7280;white-space:normal;">' +
+                        String(e && e.message ? e.message : e) +
+                        '</div>';
+                    cityList.classList.add('show');
+                }
+            })
+            .catch((e) => {
+                cityList.innerHTML =
+                    '<div class="jp-suggest-item" style="cursor:default;color:#b91c1c;">Network error</div>' +
+                    '<div class="jp-suggest-item" style="cursor:default;color:#6b7280;white-space:normal;">' +
+                    String(e && e.message ? e.message : e) +
+                    '</div>';
+                openCityDropdown();
+            });
+    }
+
+    if (cityInput && cityList) {
+
+        function forceOpenDropdown() {
+            cityList.style.display = 'block';
+            cityList.classList.add('show');
+            cityInput.closest('.jp-suggest-wrap')?.classList.add('jp-suggest-open');
+        }
+
+        function forceCloseDropdown() {
+            cityList.style.display = 'none';
+            cityList.classList.remove('show');
+            cityInput.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
+        }
+
+        let lastVal = '';
+
+        setInterval(function () {
+            const val = (cityInput.value || '').trim();
+
+            if (val === lastVal) return;
+            lastVal = val;
+
+            // ❌ less than 2 → close
+            if (val.length < 2) {
+                forceCloseDropdown();
+                return;
+            }
+
+            // ✅ ALWAYS OPEN
+            cityList.innerHTML = '<div class="jp-suggest-item">Searching...</div>';
+            forceOpenDropdown();
+
+            loadCities(val);
+
+        }, 200);
+
+        // 🔥 REMOVE BLUR EFFECT COMPLETELY (IMPORTANT)
+        cityInput.addEventListener('blur', function(e) {
+            e.stopImmediatePropagation();
+        }, true);
+
+        // 🔥 Prevent outside click close (temporary test)
+        document.addEventListener('click', function(e) {
+            if (cityInput.closest('.jp-suggest-wrap').contains(e.target)) {
+                forceOpenDropdown();
+            }
+        }, true);
+    }
+
+                document.addEventListener('click', function(e) {
+                    const wrap = cityInput.closest('.jp-suggest-wrap');
+                    if (wrap && !wrap.contains(e.target)) {
+                        closeCityDropdown();
+                    }
+                });
+
+                cityInput.addEventListener('blur', function() {
+            setTimeout(() => {
+                if (!cityList.matches(':hover')) {
+                    cityList.classList.remove('show');
+                    cityInput.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
+                }
+            }, 200);
+        });
+
+        /**
+         * Fallback: if some other script overrides/breaks input events,
+         * keep dropdown behavior working by polling the input value.
+         */
+        (function cityDropdownPollFallback() {
+            let lastVal = '';
+            setInterval(function() {
+                if (!document.body.contains(cityInput) || !document.body.contains(cityList)) return;
+                const val = (cityInput.value || '').trim();
+                if (val === lastVal) return;
+                lastVal = val;
+
+                // mark that poll is active
+                cityList.setAttribute('data-city-poll', '1');
+
+                if (!val.length) {
+                    closeCityDropdown();
+                    return;
+                }
+
+                if (val.length < 2) {
+                    closeCityDropdown();
+                    return;
+                }
+
+                cityList.innerHTML = '<div class="jp-suggest-item" style="cursor:default;color:#6b7280;">Searching...</div>';
+                openCityDropdown();
+                loadCities(val);
+            }, 200);
+        })();
+    }
 
     // ===== APPLICATION LOCATION CITY SEARCH =====
     document.querySelectorAll('.app-location-input').forEach(function(input) {
@@ -1136,12 +1375,17 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('input', function() {
             clearTimeout(timer);
             const val = this.value.trim();
+            // Requirement: show results after 2 characters
             if (val.length < 2) { suggest.classList.remove('show'); return; }
 
             timer = setTimeout(() => {
-                fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+                const url = '{{ route("ajax.search-cities") }}?k=' + encodeURIComponent(val);
+
+                fetch(url, { headers: { 'Accept': 'application/json' } })
                     .then(r => r.json())
-                    .then(data => {
+                    .then(res => {
+                        const raw = res && res.data;
+                        const data = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.cities) ? raw.cities : []);
                         suggest.innerHTML = '';
                         if (!data.length) { suggest.classList.remove('show'); return; }
                         data.forEach(city => {
@@ -1158,7 +1402,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         suggest.classList.add('show');
                     });
-            }, 300);
+            }, 200);
         });
 
         input.addEventListener('blur', function() {
@@ -1177,7 +1421,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ===== AI GENERATE DESCRIPTION – only job title + institution name/type sent to AI =====
-    document.getElementById('aiGenerateBtn').addEventListener('click', function() {
+    document.getElementById('aiGenerateBtn')?.addEventListener('click', function() {
         const title = document.getElementById('job_title').value.trim();
         if (!title) { alert('Please enter a job title first.'); return; }
 
@@ -1227,13 +1471,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    document.getElementById('aiClearBtn').addEventListener('click', function() {
+    document.getElementById('aiClearBtn')?.addEventListener('click', function() {
         var descEl = document.getElementById('job_description');
         if (descEl) descEl.value = '';
     });
 
     // ===== FORM VALIDATION =====
-    document.getElementById('jobPostForm').addEventListener('submit', function(e) {
+    document.getElementById('jobPostForm')?.addEventListener('submit', function(e) {
         if (this.dataset.canPost === '0') {
             e.preventDefault();
             alert('{{ addslashes(trans('plugins/job-board::messages.insufficient_credits')) }}');
