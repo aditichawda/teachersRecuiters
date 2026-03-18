@@ -10,11 +10,12 @@
 
 @include('plugins/job-board::themes.dashboard.layouts.header-meta')
 
-<link data-dashboard-css="1" href="{{ asset('vendor/core/plugins/job-board/css/dashboard/style.css') }}?v={{ $dashboardCssVersion }}" rel="stylesheet">
+{{-- Load critical CSS synchronously with proper attributes to prevent FOUC --}}
+<link data-dashboard-css="1" href="{{ asset('vendor/core/plugins/job-board/css/dashboard/style.css') }}?v={{ $dashboardCssVersion }}" rel="stylesheet" media="all">
 
 @if (session('locale_direction', 'ltr') == 'rtl')
-    <link href="{{ asset('vendor/core/core/base/css/core.rtl.css') }}" rel="stylesheet">
-    <link data-dashboard-css-rtl="1" href="{{ asset('vendor/core/plugins/job-board/css/dashboard/style-rtl.css') }}?v={{ $dashboardRtlCssVersion }}" rel="stylesheet">
+    <link href="{{ asset('vendor/core/core/base/css/core.rtl.css') }}" rel="stylesheet" media="all">
+    <link data-dashboard-css-rtl="1" href="{{ asset('vendor/core/plugins/job-board/css/dashboard/style-rtl.css') }}?v={{ $dashboardRtlCssVersion }}" rel="stylesheet" media="all">
 @endif
 
 @if (File::exists($styleIntegration = Theme::getStyleIntegrationPath()))
@@ -23,27 +24,54 @@
 
 <script>
     (function () {
-        function logCss(label, linkEl) {
-            if (!linkEl) return;
-            setTimeout(function () {
-                var loaded = !!linkEl.sheet;
-                console.log('[DASHBOARD_CSS_DEBUG]', label, {
-                    href: linkEl.href,
-                    loaded: loaded
-                });
-            }, 0);
-
-            linkEl.addEventListener('load', function () {
-                console.log('[DASHBOARD_CSS_DEBUG]', label, 'load', linkEl.href);
+        // Ensure CSS is loaded properly - if not loaded after delay, reload once
+        function verifyCssLoaded() {
+            var mainCss = document.querySelector('link[data-dashboard-css="1"]');
+            if (!mainCss) return;
+            
+            // Wait a bit for CSS to load
+            setTimeout(function() {
+                var cssLoaded = false;
+                try {
+                    // Check if stylesheet is accessible
+                    cssLoaded = !!mainCss.sheet || mainCss.styleSheet || (mainCss.href && mainCss.href.length > 0);
+                } catch(e) {
+                    // Cross-origin or other error - assume loaded if href exists
+                    cssLoaded = mainCss.href && mainCss.href.length > 0;
+                }
+                
+                // If CSS still not loaded and we haven't retried, reload once
+                if (!cssLoaded) {
+                    var retryKey = 'dashboard_css_retry';
+                    var hasRetried = sessionStorage.getItem(retryKey);
+                    if (!hasRetried) {
+                        sessionStorage.setItem(retryKey, '1');
+                        window.location.reload();
+                        return;
+                    }
+                } else {
+                    // CSS loaded successfully, clear retry flag
+                    sessionStorage.removeItem('dashboard_css_retry');
+                }
+            }, 300);
+        }
+        
+        // Verify CSS loading
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', verifyCssLoaded);
+        } else {
+            verifyCssLoaded();
+        }
+        
+        // Also listen for CSS load events
+        var mainCss = document.querySelector('link[data-dashboard-css="1"]');
+        if (mainCss) {
+            mainCss.addEventListener('load', function() {
+                sessionStorage.removeItem('dashboard_css_retry');
             });
-            linkEl.addEventListener('error', function () {
-                console.error('[DASHBOARD_CSS_DEBUG]', label, 'error', linkEl.href);
+            mainCss.addEventListener('error', function() {
+                verifyCssLoaded();
             });
         }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            logCss('style.css', document.querySelector('link[data-dashboard-css="1"]'));
-            logCss('style-rtl.css', document.querySelector('link[data-dashboard-css-rtl="1"]'));
-        });
     })();
 </script>

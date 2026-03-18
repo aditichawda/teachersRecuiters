@@ -1204,36 +1204,65 @@ document.addEventListener('DOMContentLoaded', function() {
     var cityList2 = document.getElementById('job-city-suggestions');
     var cityTimeout = null;
 
-    cityInput.addEventListener('input', function() {
-        clearTimeout(cityTimeout);
-        var val = this.value.trim();
-        if (val.length < 2) { cityList2.classList.remove('show'); return; }
+    function normalizeCityResponse(res) {
+        // Endpoint returns Botble httpResponse: { error: bool, message?: string, data: [...]|{cities:[...]} }
+        var raw = res && (res.data !== undefined ? res.data : res);
+        if (Array.isArray(raw)) return raw;
+        if (raw && Array.isArray(raw.cities)) return raw.cities;
+        return [];
+    }
 
-        cityTimeout = setTimeout(function() {
-            fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    cityList2.innerHTML = '';
-                    if (!data.length) { cityList2.classList.remove('show'); return; }
-                    data.forEach(function(city) {
-                        var div = document.createElement('div');
-                        div.className = 'jp-suggest-item';
-                        div.textContent = city.full_name || city.name;
-                        div.addEventListener('click', function() {
-                            cityInput.value = city.name;
-                            document.getElementById('job_city_id').value = city.id;
-                            document.getElementById('job_state').value = city.state_name || '';
-                            document.getElementById('job_state_id').value = city.state_id || '';
-                            document.getElementById('job_country').value = city.country_name || '';
-                            document.getElementById('job_country_id').value = city.country_id || '';
-                            cityList2.classList.remove('show');
+    function renderCitySuggestMessage(targetEl, message) {
+        if (!targetEl) return;
+        targetEl.innerHTML = '';
+        if (!message) { targetEl.classList.remove('show'); return; }
+        var div = document.createElement('div');
+        div.className = 'jp-suggest-item';
+        div.style.cursor = 'default';
+        div.style.color = '#6b7280';
+        div.textContent = message;
+        targetEl.appendChild(div);
+        targetEl.classList.add('show');
+    }
+
+    if (cityInput && cityList2) {
+        cityInput.addEventListener('input', function() {
+            clearTimeout(cityTimeout);
+            var val = this.value.trim();
+            if (val.length < 2) { cityList2.classList.remove('show'); return; }
+
+            cityTimeout = setTimeout(function() {
+                var url = '{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val);
+                renderCitySuggestMessage(cityList2, 'Loading...');
+                fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        var data = normalizeCityResponse(res);
+                        cityList2.innerHTML = '';
+                        if (!data.length) { renderCitySuggestMessage(cityList2, 'No cities found'); return; }
+                        data.forEach(function(city) {
+                            var div = document.createElement('div');
+                            div.className = 'jp-suggest-item';
+                            div.textContent = city.full_name || city.name;
+                            div.addEventListener('click', function() {
+                                cityInput.value = city.name;
+                                document.getElementById('job_city_id').value = city.id;
+                                document.getElementById('job_state').value = city.state_name || '';
+                                document.getElementById('job_state_id').value = city.state_id || '';
+                                document.getElementById('job_country').value = city.country_name || '';
+                                document.getElementById('job_country_id').value = city.country_id || '';
+                                cityList2.classList.remove('show');
+                            });
+                            cityList2.appendChild(div);
                         });
-                        cityList2.appendChild(div);
+                        cityList2.classList.add('show');
+                    })
+                    .catch(function() {
+                        renderCitySuggestMessage(cityList2, 'Error loading cities');
                     });
-                    cityList2.classList.add('show');
-                });
-        }, 300);
-    });
+            }, 300);
+        });
+    }
 
     cityInput.addEventListener('blur', function() {
         setTimeout(function() { cityList2.classList.remove('show'); }, 200);
@@ -1250,9 +1279,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (val.length < 2) { suggest.classList.remove('show'); return; }
 
             timer = setTimeout(function() {
-                fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+                var url = '{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val);
+                suggest.innerHTML = '';
+                var loading = document.createElement('div');
+                loading.className = 'jp-suggest-item';
+                loading.style.cursor = 'default';
+                loading.style.color = '#6b7280';
+                loading.textContent = 'Loading...';
+                suggest.appendChild(loading);
+                suggest.classList.add('show');
+
+                fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
-                    .then(function(data) {
+                    .then(function(res) {
+                        var data = normalizeCityResponse(res);
                         suggest.innerHTML = '';
                         if (!data.length) { suggest.classList.remove('show'); return; }
                         data.forEach(function(city) {
@@ -1268,6 +1308,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             suggest.appendChild(div);
                         });
                         suggest.classList.add('show');
+                    })
+                    .catch(function() {
+                        suggest.innerHTML = '';
+                        suggest.classList.remove('show');
                     });
             }, 300);
         });
