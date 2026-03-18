@@ -6,10 +6,10 @@
 @section('content')
     <style>
     /* Same blue card & package layout as employer wallet (wallet-em-page) */
-    .wallet-js-page .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 0.60rem 1.25rem !important; min-height: 265px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
+    .wallet-js-page .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 0.60rem 1.25rem !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
     .wallet-js-page .wallet-js-card-blue .card-body { padding: 0 !important; border: none !important; background: transparent !important; flex: 1 1 auto; min-height: 0; }
     .wallet-js-page .wallet-js-card-blue .card-footer { border: none !important; padding: 0.75rem 0 0 !important; background: transparent !important; flex-shrink: 0; }
-    .wallet-js-page .wallet-js-card-blue .wallet-js-coins-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.95; margin-bottom: 0.35rem; }
+    .wallet-js-page .wallet-js-card-blue .wallet-js-coins-title {color: #fff !important; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.95; margin-bottom: 0.35rem; }
     .wallet-js-page .wallet-js-card-blue .wallet-js-coins-value { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem; }
     .wallet-js-page .wallet-js-card-blue .wallet-js-coins-row { font-size: 0.8rem; opacity: 0.95; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.2rem; }
     .wallet-js-page .wallet-js-two-cols { display: flex !important; flex-wrap: wrap !important; gap: 0.75rem !important; width: 100% !important; }
@@ -68,6 +68,28 @@
 .wallet-consumption-invoice-section .wallet-consumption-table thead th.wallet-th-type { white-space: normal !important; }
 .wallet-consumption-invoice-section .wallet-consumption-table tbody td { padding: 0.85rem 0.5rem !important; vertical-align: top !important; border-bottom: 1px solid #f1f5f9 !important; font-size: 0.9rem !important; }
 .wallet-consumption-invoice-section .wallet-consumption-table .wallet-txn-description { display: block !important; line-height: 1.5 !important; word-break: break-word !important; white-space: normal !important; }
+    /* Recharge: white CTA on blue card + modal (matches package “Buy Now” feel) */
+    .wallet-js-card-blue .wallet-recharge-trigger { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 0; padding: 0.3rem 0.2rem; font-size: 14px; font-weight: 500; letter-spacing: 0.02em; color: #000; background: #f59e0b; border: none; border-radius: 5px; box-shadow: 0 4px 14px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease; }
+    .wallet-js-card-blue .wallet-recharge-trigger:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.22); background: #f8fbff; color: #0a58ca; }
+    .wallet-js-card-blue .wallet-recharge-trigger:active:not(:disabled) { transform: translateY(0); }
+    .wallet-js-card-blue .wallet-recharge-trigger:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+    .wallet-js-card-blue .wallet-recharge-trigger svg, .wallet-js-card-blue .wallet-recharge-trigger .icon { font-size: 1.15rem; flex-shrink: 0; }
+    .wallet-js-card-blue .wallet-recharge-hint { font-size: 0.75rem; opacity: 0.9; margin-top: 0.5rem; text-align: center; line-height: 1.35; }
+    .wallet-recharge-modal .modal-content { border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(13, 110, 253, 0.15), 0 8px 24px rgba(0,0,0,0.1); }
+    .wallet-recharge-modal .modal-header { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: #fff; border-bottom: none; padding: 1rem 1.25rem; }
+    .wallet-recharge-modal .modal-header .modal-title { color: #fff; font-weight: 700; font-size: 1.05rem; }
+    .wallet-recharge-modal .modal-header .modal-title .icon, .wallet-recharge-modal .modal-header .modal-title svg { color: #fde047 !important; filter: none; }
+    .wallet-recharge-modal .modal-header .btn-close { filter: brightness(0) invert(1); opacity: 0.92; }
+    .wallet-recharge-modal .modal-body { padding: 1.25rem 1.35rem; }
+    .wallet-recharge-modal .wallet-recharge-input { border-radius: 10px; border: 2px solid #e2e8f0; padding: 0.65rem 0.85rem; font-size: 1rem; font-weight: 600; }
+    .wallet-recharge-modal .wallet-recharge-input:focus { border-color: #0d6efd; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+    .wallet-recharge-modal .modal-footer { border-top: 1px solid #eef2f6; padding: 1rem 1.25rem; gap: 0.65rem; flex-wrap: wrap; justify-content: flex-end; }
+    .wallet-recharge-modal .btn-rc-cancel, .wallet-recharge-modal .btn-rc-pay { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.6rem 1.15rem; font-weight: 600; font-size: 0.9rem; border-radius: 10px; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+    .wallet-recharge-modal .btn-rc-cancel { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+    .wallet-recharge-modal .btn-rc-cancel:hover { background: #e2e8f0; color: #334155; }
+    .wallet-recharge-modal .btn-rc-pay { background: linear-gradient(180deg, #2563eb 0%, #0d6efd 100%); color: #fff !important; border: none; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.35); }
+    .wallet-recharge-modal .btn-rc-pay:hover { color: #fff !important; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(13, 110, 253, 0.45); }
+    .wallet-recharge-modal .wallet-recharge-err-alert { border-radius: 10px; font-size: 0.875rem; }
    </style>
     <div class="wallet-js-page">
         <div class="row mb-4">
@@ -81,11 +103,7 @@
                                     <x-core::icon name="ti ti-coin" class="d-block" style="font-size:1.25rem;" />
                                     {{ format_credits_short($account->credits ?? 0) }}
                                 </div>
-                                <div class="wallet-js-coins-row">
-                                    <x-core::icon name="ti ti-coin" />
-                                    {{ trans('plugins/job-board::dashboard.wallet_bonus') }} {{ format_credits_short($bonusCredits ?? 0) }}
-                                </div>
-                                <div class="wallet-js-coins-row">
+                               <div class="wallet-js-coins-row">
                                     <x-core::icon name="ti ti-coin" />
                                     {{ trans('plugins/job-board::dashboard.wallet_purchased') }} {{ format_credits_short($purchasedCredits ?? 0) }}
                                 </div>
@@ -95,13 +113,9 @@
                                         $used = $jobSeekerCtx->jobApplicationsUsed;
                                         $limit = $jobSeekerCtx->jobApplyLimit;
                                     @endphp
-                                    <hr class="my-2 border-light border-opacity-50" />
+                                    
                                     <div class="wallet-js-coins-row">
-                                        <span class="small opacity-95">{{ __('Current plan') }}:</span>
-                                        <span class="small fw-semibold ms-1">{{ $currentPlanName }}</span>
-                                    </div>
-                                    <div class="wallet-js-coins-row">
-                                        <span class="small opacity-95">{{ __('Validity') }}:</span>
+                                        <span class="small opacity-95">{{ __('Package expires on') }}:</span>
                                         <span class="small ms-1">
                                             @if(isset($packageExpiryAt) && $packageExpiryAt)
                                                 {{ $packageExpiryAt->format('M d, Y') }}
@@ -123,77 +137,13 @@
                                 @endif
                             </x-core::card.body>
                             <x-core::card.footer class="py-2">
-                                @if(isset($packageExpiryAt) && $packageExpiryAt)
-                                    <p class="small text-white mb-0 opacity-90">{{ trans('plugins/job-board::dashboard.wallet_package_expires') }}: <strong>{{ $packageExpiryAt->format('M d, Y') }}</strong></p>
-                                @endif
+                               
+                                <button type="button" class="wallet-recharge-trigger" data-bs-toggle="modal" data-bs-target="#walletRechargeModal"><x-core::icon name="ti ti-wallet" />{{ __('Recharge Wallet') }}</button>
+                                <div class="wallet-recharge-hint text-white">{{ __('Minimum recharge ₹100.') }}</div>
                             </x-core::card.footer>
                         </x-core::card>
                     </div>
-                    {{-- YOUR PLAN card (same content as sidebar, used/limit for job applications) --}}
-                    @if(isset($jobSeekerCtx) && $jobSeekerCtx && $jobSeekerCtx->hasPackage())
-                    <div class="wallet-js-col-blue">
-                        <div class="card border-0 h-100 shadow-sm rounded-3 overflow-hidden" style="background: #fff; border: 1px solid #e9ecef !important; min-height: 265px;">
-                            <div class="card-body p-3 d-flex flex-column">
-                                <h6 class="mb-2 small text-uppercase text-muted fw-bold">{{ __('Your Plan') }}</h6>
-                                <div class="small flex-grow-1">
-                                    @php
-                                        $used = $jobSeekerCtx->jobApplicationsUsed;
-                                        $limit = $jobSeekerCtx->jobApplyLimit;
-                                    @endphp
-                                    <div class="d-flex justify-content-between align-items-center py-1">
-                                        <span><i class="fa fa-briefcase me-1"></i> {{ __('Job applications') }}</span>
-                                        @if($limit === null)
-                                            <span class="text-success">{{ __('Unlimited') }}</span>
-                                        @else
-                                            <span>{{ $used }}/{{ $limit }}</span>
-                                        @endif
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center py-1">
-                                        <span><i class="fa fa-star me-1"></i> {{ __('Featured Profile') }}</span>
-                                        @if($jobSeekerCtx->hasFeaturedProfile())
-                                            <span class="text-success"><i class="fa fa-check"></i></span>
-                                        @else
-                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
-                                        @endif
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center py-1">
-                                        <span><i class="fa fa-address-card me-1"></i> {{ __('View contact info') }}</span>
-                                        @if($jobSeekerCtx->hasViewContactInfo())
-                                            <span class="text-success"><i class="fa fa-check"></i></span>
-                                        @else
-                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
-                                        @endif
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center py-1">
-                                        <span><i class="fa fa-whatsapp me-1"></i> {{ __('Job alerts on WhatsApp') }}</span>
-                                        @if($jobSeekerCtx->hasJobAlertsWhatsapp())
-                                            <span class="text-success"><i class="fa fa-check"></i></span>
-                                        @else
-                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
-                                        @endif
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center py-1">
-                                        <span><i class="fa fa-file-alt me-1"></i> {{ __('Basic CV') }}</span>
-                                        @if($jobSeekerCtx->hasBasicCv())
-                                            <span class="text-success"><i class="fa fa-check"></i></span>
-                                        @else
-                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
-                                        @endif
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center py-1">
-                                        <span><i class="fa fa-file-pdf me-1"></i> {{ __('Advance CV') }}</span>
-                                        @if($jobSeekerCtx->hasAdvanceCv())
-                                            <span class="text-success"><i class="fa fa-check"></i></span>
-                                        @else
-                                            <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-outline-primary py-0 px-2">{{ __('Upgrade') }}</a>
-                                        @endif
-                                    </div>
-                                </div>
-                                <a href="{{ $jobSeekerCtx->packagesUrl() }}" class="btn btn-sm btn-primary w-100 mt-2">{{ __('View plans & Upgrade') }}</a>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
+                   
                 </div>
             </div>
             <div class="col-lg-9 col-xl-9">
@@ -235,6 +185,30 @@
                             </div>
                         </div>
                     @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- Recharge Wallet Modal (Job Seeker) --}}
+        <div class="modal fade wallet-recharge-modal" id="walletRechargeModal" tabindex="-1" aria-labelledby="walletRechargeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title d-flex align-items-center gap-2 mb-0" id="walletRechargeModalLabel"><x-core::icon name="ti ti-wallet" />{{ __('Recharge Wallet') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                    </div>
+                    <x-core::form :url="route('public.account.wallet.recharge.start')" method="post" id="walletRechargeForm">
+                        <div class="modal-body">
+                            <p class="small text-muted mb-3 mb-0">{{ __('1 INR = 1 Coin. Minimum recharge ₹100.') }}</p>
+                            <label class="form-label fw-semibold mt-3" for="walletRechargeAmount">{{ __('Enter amount (INR)') }}</label>
+                            <input type="number" name="amount_inr" id="walletRechargeAmount" class="form-control wallet-recharge-input" min="100" step="1" value="{{ old('amount_inr', 100) }}" placeholder="100" required>
+                            <div class="invalid-feedback" id="walletRechargeError"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-rc-cancel" data-bs-dismiss="modal"><x-core::icon name="ti ti-x" />{{ __('Cancel') }}</button>
+                            <button type="submit" class="btn-rc-pay"><x-core::icon name="ti ti-credit-card" />{{ __('Proceed to Pay') }}</button>
+                        </div>
+                    </x-core::form>
                 </div>
             </div>
         </div>
@@ -416,6 +390,37 @@
                 });
             }
         });
+        </script>
+
+       
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var minAmount = 100;
+                var amountInput = document.getElementById('walletRechargeAmount');
+                var errorEl = document.getElementById('walletRechargeError');
+                var form = document.getElementById('walletRechargeForm');
+
+                if (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!amountInput) return;
+                        var val = parseInt(amountInput.value || '0', 10);
+                        if (!val || val < minAmount) {
+                            event.preventDefault();
+                            amountInput.classList.add('is-invalid');
+                            if (errorEl) {
+                                errorEl.textContent = '{{ __('Minimum recharge amount is ₹100.') }}';
+                            }
+                            amountInput.focus();
+                        }
+                    });
+
+                    amountInput?.addEventListener('input', function () {
+                        if (parseInt(this.value || '0', 10) >= minAmount) {
+                            this.classList.remove('is-invalid');
+                        }
+                    });
+                }
+            });
         </script>
 
         {{-- Coin consumption report: 12 col --}}

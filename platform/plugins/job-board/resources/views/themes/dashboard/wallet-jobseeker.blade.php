@@ -4,13 +4,14 @@
 @push('header')
     <style>
     /* Job seeker: blue card – same height as package cards, readable */
-    .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 0.85rem 1rem !important; height: 170px !important; max-height: 170px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; overflow: hidden !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
+    /* Increased height to fit 2 footer buttons (Recharge + Buy). */
+    .wallet-js-card-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca) !important; border: none !important; border-radius: 12px !important; color: #fff !important; padding: 0.85rem 1rem !important; min-height: 210px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; overflow: visible !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
     .wallet-js-card-blue .card-body { padding: 0 !important; border: none !important; background: transparent !important; flex: 1 1 auto; min-height: 0; }
-    .wallet-js-card-blue .card-footer { border: none !important; padding: 0.5rem 0 0 !important; background: transparent !important; flex-shrink: 0; }
+    .wallet-js-card-blue .card-footer { border: none !important; padding: 0.6rem 0 0 !important; background: transparent !important; flex-shrink: 0; }
     .wallet-js-card-blue .wallet-js-coins-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.95; margin-bottom: 0.25rem; }
     .wallet-js-card-blue .wallet-js-coins-value { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.3rem; }
     .wallet-js-card-blue .wallet-js-coins-row { font-size: 0.75rem; opacity: 0.95; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.15rem; }
-    .wallet-js-card-blue .btn-warning { background: #f59e0b !important; color: #1a1a2e !important; border: none !important; border-radius: 8px !important; font-weight: 600 !important; }
+    .wallet-js-card-blue .btn-warning { background: #f59e0b !important; color: #fff !important; border: none !important; border-radius: 8px !important; font-weight: 700 !important; }
     .wallet-js-card-orange { background: linear-gradient(135deg, #f59e0b, #fbbf24) !important; border: none !important; border-radius: 12px !important; height: 165px !important; max-height: 165px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 1.5rem !important; overflow: hidden !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
     .wallet-js-card-orange .card-body { padding: 0 !important; border: none !important; background: transparent !important; display: flex !important; align-items: center !important; justify-content: center !important; }
     .wallet-js-card-orange .wallet-js-graphic { font-size: 4rem; color: rgba(0,0,0,0.3); }
@@ -143,15 +144,40 @@
                                 @endif
                             </x-core::card.body>
                             <x-core::card.footer class="py-2">
-                                <x-core::button tag="a" href="#choose-plan" color="warning" size="sm" class="text-dark btn-sm">
-                                    <x-core::icon name="ti ti-shopping-cart" class="me-1" />
-                                    {{ trans('plugins/job-board::dashboard.wallet_buy_credits') }}
-                                </x-core::button>
+                                <div class="d-flex gap-2">
+                                    <x-core::button
+                                        type="button"
+                                        color="warning"
+                                        size="sm"
+                                        class="btn-sm flex-fill"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#walletRechargeModal"
+                                        :disabled="empty($canRechargeWallet)"
+                                    >
+                                        {{ __('Recharge Wallet') }}
+                                    </x-core::button>
+                                    <x-core::button tag="a" href="#choose-plan" color="warning" size="sm" class="btn-sm flex-fill">
+                                        <x-core::icon name="ti ti-shopping-cart" class="me-1" />
+                                        {{ trans('plugins/job-board::dashboard.wallet_buy_credits') }}
+                                    </x-core::button>
+                                </div>
+                                @if(empty($canRechargeWallet))
+                                    <div class="small text-white mt-1 opacity-90">
+                                        {{ __('Recharge is available after you purchase at least one package.') }}
+                                    </div>
+                                @else
+                                    <div class="small text-white mt-1 opacity-90">
+                                        {{ __('Minimum recharge ₹100.') }}
+                                    </div>
+                                @endif
                             </x-core::card.footer>
                         </x-core::card>
                     </div>
                 </div>
             </div>
+
+           
+            
             <div class="col-lg-9 col-xl-9">
             <div class="d-flex justify-content-between align-items-center mb-2" id="choose-plan">
                 <h5 class="mb-0">{{ trans('plugins/job-board::dashboard.wallet_choose_plan_jobseeker') }}</h5>
@@ -434,3 +460,45 @@
     </div>{{-- .wallet-consumption-invoice-section --}}
     </div>{{-- .wallet-js-page --}}
 @endsection
+
+@push('footer')
+<script>
+(function () {
+    var modalEl = document.getElementById('walletRechargeModal');
+    var formEl = document.getElementById('walletRechargeForm');
+    var amountEl = document.getElementById('walletRechargeAmount');
+    var errEl = document.getElementById('walletRechargeErr');
+
+    if (!modalEl || !formEl || !amountEl) {
+        return;
+    }
+
+    modalEl.addEventListener('shown.bs.modal', function () {
+        amountEl.focus();
+        amountEl.select();
+    });
+
+    function showErr(msg) {
+        if (!errEl) return;
+        errEl.textContent = msg;
+        errEl.classList.remove('d-none');
+    }
+    function clearErr() {
+        if (!errEl) return;
+        errEl.textContent = '';
+        errEl.classList.add('d-none');
+    }
+
+    amountEl.addEventListener('input', clearErr);
+
+    formEl.addEventListener('submit', function (e) {
+        clearErr();
+        var v = parseInt(amountEl.value || '0', 10);
+        if (!v || isNaN(v) || v < 100) {
+            e.preventDefault();
+            showErr('Minimum recharge amount is ₹100.');
+        }
+    });
+})();
+</script>
+@endpush

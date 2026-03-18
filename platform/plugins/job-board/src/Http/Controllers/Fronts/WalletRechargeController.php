@@ -20,7 +20,8 @@ use Razorpay\Api\Errors\SignatureVerificationError;
 
 class WalletRechargeController extends BaseController
 {
-    protected const MIN_RECHARGE_INR = 100;
+    protected const MIN_RECHARGE_INR_EMPLOYER = 1000;
+    protected const MIN_RECHARGE_INR_JOBSEEKER = 100;
     protected const INR_TO_CREDITS_RATE = 1; // 1 INR = 1 credit (can be changed later)
 
     protected function createRazorpayApi(): Api
@@ -31,12 +32,29 @@ class WalletRechargeController extends BaseController
         return new Api($apiKey, $apiSecret);
     }
 
-    protected function hasActivePlan(Account $account): bool
+    protected function hasPurchasedAnyPackage(Account $account): bool
     {
-        // Active hiring plan = canPostJob() (same logic used for posting).
-        $packageContext = PackageContext::forAccount($account);
+        // Requirement: recharge allowed only after purchasing at least one package (ever).
+        // We check both the pivot relation and package-purchase transactions for safety.
+        if ($account->packages()->exists()) {
+            return true;
+        }
 
-        return $packageContext->canPostJob($account);
+        return Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->whereNotNull('package_id')
+            ->whereNotNull('payment_id')
+            ->where(function ($q): void {
+                $q->whereNull('type')->orWhere('type', '!=', Transaction::TYPE_DEBIT);
+            })
+            ->exists();
+    }
+
+    protected function minRechargeInr(Account $account): int
+    {
+        return $account->isEmployer()
+            ? self::MIN_RECHARGE_INR_EMPLOYER
+            : self::MIN_RECHARGE_INR_JOBSEEKER;
     }
 
     public function start(Request $request)
@@ -45,22 +63,21 @@ class WalletRechargeController extends BaseController
 
         /** @var Account $account */
         $account = auth('account')->user();
-        if (! $account || ! $account->isEmployer()) {
+        if (! $account) {
             abort(403);
+        }
+        if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+            return redirect()->back()->with('error_msg', __('Wallet recharge is not available for consultancy accounts.'));
         }
 
         $amount = (int) $request->input('amount_inr', 0);
-        if ($amount < self::MIN_RECHARGE_INR) {
-            return redirect()->back()->with('error_msg', __('Minimum recharge amount is ₹:amount.', ['amount' => self::MIN_RECHARGE_INR]));
+        $min = $this->minRechargeInr($account);
+        if ($amount < $min) {
+            return redirect()->back()->with('error_msg', __('Minimum recharge amount is ₹:amount.', ['amount' => $min]));
         }
 
-        if (! $this->hasActivePlan($account)) {
-            return redirect()->back()->with('error_msg', __('Wallet recharge is available only with an active hiring plan.'));
-        }
-
-        // Only allow recharge when wallet has no credits (as per requirement).
-        if ((int) ($account->credits ?? 0) > 0) {
-            return redirect()->back()->with('error_msg', __('Wallet recharge is available when your wallet credits are exhausted.'));
+        if ($account->isEmployer() && ! $this->hasPurchasedAnyPackage($account)) {
+            return redirect()->back()->with('error_msg', __('Please purchase a package first to enable wallet recharge.'));
         }
 
         $credits = $amount * self::INR_TO_CREDITS_RATE;
@@ -188,13 +205,19 @@ class WalletRechargeController extends BaseController
 
                 return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Account not found.'));
             }
-
-            // Enforce active plan on crediting (if plan expired mid-payment, keep recharge pending/failed).
-            if (! $this->hasActivePlan($account)) {
+            if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
                 $recharge->status = 'failed';
                 $recharge->save();
 
-                return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Recharge is allowed only with an active hiring plan.'));
+                return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Wallet recharge is not available for consultancy accounts.'));
+            }
+
+            // Enforce package-purchased rule at credit time as well (employer only).
+            if ($account->isEmployer() && ! $this->hasPurchasedAnyPackage($account)) {
+                $recharge->status = 'failed';
+                $recharge->save();
+
+                return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Please purchase a package first to enable wallet recharge.'));
             }
 
             $existingPayment = Payment::query()
@@ -249,10 +272,17 @@ class WalletRechargeController extends BaseController
                 'user_details' => $userDetails,
                 'institution_name' => $institutionName,
                 'credits' => (int) $recharge->credits,
+                'type' => Transaction::TYPE_CREDIT,
                 'payment_id' => $payment->id,
                 'package_id' => null,
                 'package_name' => 'Wallet Recharge',
                 'description' => 'Wallet recharge (Razorpay) - Order: ' . $razorpayOrderId,
+                'meta' => [
+                    'kind' => 'wallet_recharge',
+                    'gateway' => 'razorpay',
+                    'razorpay_order_id' => $razorpayOrderId,
+                    'razorpay_payment_id' => $chargeId,
+                ],
             ]);
 
             $recharge->status = 'completed';
