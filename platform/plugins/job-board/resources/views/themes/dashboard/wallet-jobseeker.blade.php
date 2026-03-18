@@ -119,6 +119,28 @@
                                     <x-core::icon name="ti ti-coin" />
                                     {{ trans('plugins/job-board::dashboard.wallet_purchased') }} {{ format_credits_short($purchasedCredits ?? 0) }}
                                 </div>
+                                @if(isset($jobSeekerCtx) && $jobSeekerCtx && $jobSeekerCtx->hasPackage())
+                                    @php
+                                        $currentPlanName = $jobSeekerCtx->package->name ?? __('Basic Profile Plan');
+                                        $used = $jobSeekerCtx->jobApplicationsUsed;
+                                        $limit = $jobSeekerCtx->jobApplyLimit;
+                                    @endphp
+                                    <hr class="my-2 border-light border-opacity-50" />
+                                    <div class="wallet-js-coins-row">
+                                        <span class="small opacity-95">{{ __('Current plan') }}:</span>
+                                        <span class="small fw-semibold ms-1">{{ $currentPlanName }}</span>
+                                    </div>
+                                    <div class="wallet-js-coins-row">
+                                        <span class="small opacity-95">{{ __('Job applications') }}:</span>
+                                        <span class="small ms-1">
+                                            @if($limit === null)
+                                                {{ __('Unlimited') }}
+                                            @else
+                                                {{ $used }}/{{ $limit }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endif
                             </x-core::card.body>
                             <x-core::card.footer class="py-2">
                                 <x-core::button tag="a" href="#choose-plan" color="warning" size="sm" class="text-dark btn-sm">
@@ -156,16 +178,7 @@
                                     <div class="wallet-package-main-desc">{{ $package->description }}</div>
                                 @elseif($packageFeatures = $package->formatted_features)
                                     <div class="wallet-package-main-desc">
-                                        <ul class="list-unstyled small mb-0 ps-0">
-                                            @foreach($packageFeatures as $f)
-                                                @if($f)
-                                                    <li class="d-flex align-items-start gap-1 mb-1">
-                                                        <x-core::icon name="ti ti-check" class="text-success mt-0" style="font-size: 0.75rem; flex-shrink: 0;" />
-                                                        <span>{{ $f }}</span>
-                                                    </li>
-                                                @endif
-                                            @endforeach
-                                        </ul>
+                                        {{ is_array($packageFeatures) ? implode(' · ', array_filter($packageFeatures)) : $packageFeatures }}
                                     </div>
                                 @endif
                                 <div class="wallet-package-card-actions">

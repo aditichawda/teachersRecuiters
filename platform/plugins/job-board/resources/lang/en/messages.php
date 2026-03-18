@@ -317,7 +317,7 @@ return [
     'job_not_available' => 'This job is not available for apply.',
     'employers_cannot_apply' => 'Employers cannot apply for the job',
     'already_applied' => 'You have already applied for this job. Please wait for the employer to respond.',
-    'job_apply_limit_reached' => 'Your job application limit for this period has been reached. Upgrade your package to apply to more jobs.',
+    'job_apply_limit_reached' => 'Your job apply limit is finished for this plan. Please upgrade to apply more jobs.',
     'job_apply_upgrade_required' => 'Upgrade your package to apply for jobs.',
     'view_contact_info_locked' => 'View contact info is not included in your current plan.',
 

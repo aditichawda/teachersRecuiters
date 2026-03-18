@@ -9,9 +9,6 @@ use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\Company;
 use Botble\JobBoard\Models\CompanyAdmission;
 use Botble\JobBoard\Models\CreditConsumption;
-use Botble\JobBoard\Models\Transaction;
-use Botble\JobBoard\Supports\PackageContext;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
@@ -179,44 +176,6 @@ class AdmissionAccountController extends BaseController
      */
     private function hasAdmissionEnquiryAccess(Account $account): bool
     {
-        $packageContext = PackageContext::forAccount($account);
-        if ($packageContext->package && $packageContext->hasAdmissionFormOnProfile() && $packageContext->periodEnd && Carbon::now()->lte($packageContext->periodEnd)) {
-            return true;
-        }
-
-        if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
-            return false;
-        }
-
-        $debit = Transaction::query()
-            ->where('account_id', $account->getKey())
-            ->where('type', Transaction::TYPE_DEBIT)
-            ->where('feature_key', CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
-            ->latest()
-            ->first();
-
-        if (! $debit) {
-            return false;
-        }
-
-        $lastPurchase = Transaction::query()
-            ->where('account_id', $account->getKey())
-            ->where(function ($q): void {
-                $q->whereNull('type')->orWhere('type', '!=', 'deduct');
-            })
-            ->whereNotNull('payment_id')
-            ->whereNotNull('package_id')
-            ->with('package')
-            ->latest()
-            ->first();
-
-        if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days) {
-            $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
-            if (Carbon::now()->lte($packageExpiryAt)) {
-                return true;
-            }
-        }
-
-        return $debit->created_at->gte(Carbon::now()->subDays(365));
+        return CreditConsumption::hasAdmissionEnquiryAccess($account);
     }
 }

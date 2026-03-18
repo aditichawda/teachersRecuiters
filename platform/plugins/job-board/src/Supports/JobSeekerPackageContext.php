@@ -92,7 +92,13 @@ class JobSeekerPackageContext
                 ->first();
         }
 
-        $periodStart = $lastPurchase ? $lastPurchase->created_at : ($package ? $account->created_at : null);
+        $isDefaultPackage = ! $lastPurchase && $package && (bool) ($package->is_default ?? false);
+
+        // For default/free package: start a fresh period from "now" so old accounts don't get stuck in an expired window.
+        // For purchased packages: period starts from purchase time.
+        $periodStart = $lastPurchase
+            ? $lastPurchase->created_at
+            : ($package ? ($isDefaultPackage ? Carbon::now() : $account->created_at) : null);
         $periodEnd = null;
 
         if ($package && $periodStart) {

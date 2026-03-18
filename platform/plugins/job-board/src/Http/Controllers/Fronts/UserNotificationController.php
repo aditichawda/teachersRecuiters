@@ -110,19 +110,4 @@ class UserNotificationController extends BaseController
 
         return $response->setData($count);
     }
-
-    public function countUnread(BaseHttpResponse $response)
-    {
-        $account = Auth::guard('account')->user();
-        
-        if (!$account) {
-            return $response->setData(0);
-        }
-
-        $count = UserNotification::where('account_id', $account->id)
-            ->whereNull('read_at')
-            ->count();
-
-        return $response->setData($count);
-    }
 }

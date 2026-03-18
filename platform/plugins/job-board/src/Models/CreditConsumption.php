@@ -220,4 +220,58 @@ class CreditConsumption extends BaseModel
             return false;
         }
     }
+
+    /**
+     * Employer: admission enquiry form on profile — package includes it (valid period) OR unlocked with coins.
+     */
+    public static function hasAdmissionEnquiryAccess(Account $account): bool
+    {
+        if (! $account->isEmployer()) {
+            return false;
+        }
+
+        $packageContext = PackageContext::forAccount($account);
+        if ($packageContext->package && $packageContext->hasAdmissionFormOnProfile() && $packageContext->periodEnd && Carbon::now()->lte($packageContext->periodEnd)) {
+            return true;
+        }
+
+        if (! Schema::hasColumn('jb_transactions', 'feature_key')) {
+            return false;
+        }
+
+        $debit = Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->where('type', Transaction::TYPE_DEBIT)
+            ->where('feature_key', self::FEATURE_ADMISSION_ENQUIRY)
+            ->latest()
+            ->first();
+
+        if (! $debit) {
+            return false;
+        }
+
+        $lastPurchase = Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->where(function ($q): void {
+                $q->whereNull('type')->orWhere('type', '!=', 'deduct');
+            })
+            ->whereNotNull('payment_id')
+            ->whereNotNull('package_id')
+            ->with('package')
+            ->latest()
+            ->first();
+
+        if ($lastPurchase && $lastPurchase->package && $lastPurchase->package->validity_days && $lastPurchase->created_at) {
+            $packageExpiryAt = Carbon::parse($lastPurchase->created_at)->addDays($lastPurchase->package->validity_days);
+            if (Carbon::now()->lte($packageExpiryAt)) {
+                return true;
+            }
+        }
+
+        $debitAt = $debit->created_at instanceof \DateTimeInterface
+            ? Carbon::parse($debit->created_at)
+            : Carbon::parse((string) $debit->created_at);
+
+        return $debitAt->gte(Carbon::now()->subDays(365));
+    }
 }

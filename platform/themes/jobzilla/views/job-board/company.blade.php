@@ -546,13 +546,25 @@
                                 <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Standard Level') }}:</strong>
                                 <span style="color: #475569; font-size: 15px; margin-left: 10px;">
                                     @php
-                                        $levels = is_array($company->standard_level) 
-                                            ? $company->standard_level 
+                                        $levelsRaw = is_array($company->standard_level)
+                                            ? $company->standard_level
                                             : (is_string($company->standard_level) ? json_decode($company->standard_level, true) : [$company->standard_level]);
-                                        $levels = array_filter((array)$levels);
+                                        $levels = [];
+                                        foreach ((array) $levelsRaw as $lv) {
+                                            if (is_string($lv)) {
+                                                $t = trim($lv);
+                                            } elseif (is_array($lv)) {
+                                                $t = trim((string) ($lv['title'] ?? $lv['name'] ?? $lv['label'] ?? implode(', ', array_filter(array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $lv)))));
+                                            } else {
+                                                $t = trim((string) $lv);
+                                            }
+                                            if ($t !== '') {
+                                                $levels[] = ucfirst($t);
+                                            }
+                                        }
                                     @endphp
                                     @if (!empty($levels))
-                                        {{ implode(', ', array_map('ucfirst', array_map('trim', $levels))) }}
+                                        {{ implode(', ', $levels) }}
                                     @else
                                         {{ $company->standard_level }}
                                     @endif
@@ -565,13 +577,25 @@
                                 <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Awards') }}:</strong>
                                 <span style="color: #475569; font-size: 15px; margin-left: 10px;">
                                     @php
-                                        $awards = is_array($company->awards) 
-                                            ? $company->awards 
+                                        $awardsRaw = is_array($company->awards)
+                                            ? $company->awards
                                             : (is_string($company->awards) ? json_decode($company->awards, true) : [$company->awards]);
-                                        $awards = array_filter((array)$awards);
+                                        $awards = [];
+                                        foreach ((array) $awardsRaw as $aw) {
+                                            if (is_string($aw)) {
+                                                $t = trim($aw);
+                                            } elseif (is_array($aw)) {
+                                                $t = trim((string) ($aw['title'] ?? $aw['name'] ?? $aw['award'] ?? $aw['label'] ?? implode(', ', array_filter(array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $aw)))));
+                                            } else {
+                                                $t = trim((string) $aw);
+                                            }
+                                            if ($t !== '') {
+                                                $awards[] = $t;
+                                            }
+                                        }
                                     @endphp
                                     @if (!empty($awards))
-                                        {{ implode(', ', array_map('trim', $awards)) }}
+                                        {{ implode(', ', $awards) }}
                                     @else
                                         {{ $company->awards }}
                                     @endif
@@ -584,13 +608,25 @@
                                 <strong style="color: #0c1e3c; font-size: 15px;">{{ __('Affiliations') }}:</strong>
                                 <span style="color: #475569; font-size: 15px; margin-left: 10px;">
                                     @php
-                                        $affiliations = is_array($company->affiliations) 
-                                            ? $company->affiliations 
+                                        $affRaw = is_array($company->affiliations)
+                                            ? $company->affiliations
                                             : (is_string($company->affiliations) ? json_decode($company->affiliations, true) : [$company->affiliations]);
-                                        $affiliations = array_filter((array)$affiliations);
+                                        $affiliations = [];
+                                        foreach ((array) $affRaw as $af) {
+                                            if (is_string($af)) {
+                                                $t = trim($af);
+                                            } elseif (is_array($af)) {
+                                                $t = trim((string) ($af['title'] ?? $af['name'] ?? $af['label'] ?? implode(', ', array_filter(array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $af)))));
+                                            } else {
+                                                $t = trim((string) $af);
+                                            }
+                                            if ($t !== '') {
+                                                $affiliations[] = $t;
+                                            }
+                                        }
                                     @endphp
                                     @if (!empty($affiliations))
-                                        {{ implode(', ', array_map('trim', $affiliations)) }}
+                                        {{ implode(', ', $affiliations) }}
                                     @else
                                         {{ $company->affiliations }}
                                     @endif
