@@ -439,8 +439,12 @@ class AccountJobController extends BaseController
         }
 
         $jobValidityDays = null;
+        $packagePeriodEnd = null;
         if ($account->isEmployer() && class_exists(\Botble\JobBoard\Supports\PackageContext::class)) {
             $ctx = \Botble\JobBoard\Supports\PackageContext::forAccount($account);
+            if ($ctx->hasPackage() && $ctx->isPeriodValid() && $ctx->periodEnd) {
+                $packagePeriodEnd = $ctx->periodEnd;
+            }
             if ($ctx->hasPackage() && $ctx->isPeriodValid() && $ctx->package && \Illuminate\Support\Facades\Schema::hasColumn('jb_packages', 'job_validity_days')) {
                 $val = (int) ($ctx->package->job_validity_days ?? 0);
                 if ($val > 0) {
@@ -449,8 +453,14 @@ class AccountJobController extends BaseController
             }
         }
 
+        $jobExpireAt = Carbon::now()->addDays($jobValidityDays ?? JobBoardHelper::jobExpiredDays($account));
+        // Don't let job outlive the employer package period (when package is active).
+        if ($packagePeriodEnd && $jobExpireAt->gt($packagePeriodEnd)) {
+            $jobExpireAt = $packagePeriodEnd->copy();
+        }
+
         $request->merge([
-            'expire_date' => Carbon::now()->addDays($jobValidityDays ?? JobBoardHelper::jobExpiredDays($account)),
+            'expire_date' => $jobExpireAt,
             'author_id' => $account->getAuthIdentifier(),
             'author_type' => Account::class,
         ]);
@@ -975,7 +985,8 @@ if (! $request->has('hide_hiring_school_name')) {
 // Handle enable_whatsapp_notifications checkbox (same logic as store)
 if (! $request->has('enable_whatsapp_notifications')) {
     // If additional phones are provided, auto-enable WhatsApp notifications
-    if ($request->has('apply_internal_phones') && !empty(array_filter($request->input('apply_internal_phones', [])))) {
+    $phones = (array) $request->input('apply_internal_phones', []);
+    if ($request->has('apply_internal_phones') && ! empty(array_filter($phones))) {
         $request->merge(['enable_whatsapp_notifications' => 1]);
         \Log::info('[JOB_UPDATE] Auto-enabling WhatsApp notifications because additional phones are provided');
     } else {
@@ -1228,8 +1239,12 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
         }
 
         $days = null;
+        $packagePeriodEnd = null;
         if ($account->isEmployer() && class_exists(\Botble\JobBoard\Supports\PackageContext::class)) {
             $ctx = \Botble\JobBoard\Supports\PackageContext::forAccount($account);
+            if ($ctx->hasPackage() && $ctx->isPeriodValid() && $ctx->periodEnd) {
+                $packagePeriodEnd = $ctx->periodEnd;
+            }
             if ($ctx->hasPackage() && $ctx->isPeriodValid() && $ctx->package && \Illuminate\Support\Facades\Schema::hasColumn('jb_packages', 'job_validity_days')) {
                 $val = (int) ($ctx->package->job_validity_days ?? 0);
                 if ($val > 0) {
@@ -1238,7 +1253,11 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
             }
         }
 
-        $job->expire_date = $job->expire_date->addDays($days ?? JobBoardHelper::jobExpiredDays($account));
+        $newExpireAt = $job->expire_date->addDays($days ?? JobBoardHelper::jobExpiredDays($account));
+        if ($packagePeriodEnd && $newExpireAt->gt($packagePeriodEnd)) {
+            $newExpireAt = $packagePeriodEnd->copy();
+        }
+        $job->expire_date = $newExpireAt;
         $job->save();
 
         if (JobBoardHelper::isEnabledCreditsSystem() && $account->credits > 0) {

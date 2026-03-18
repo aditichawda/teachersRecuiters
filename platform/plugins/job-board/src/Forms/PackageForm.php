@@ -139,7 +139,9 @@ class PackageForm extends FormAbstract
                     $ids = array_values(array_filter(array_map('intval', $ids)));
 
                     if (! $ids) {
-                        return ['' => trans('plugins/job-board::package.visible_for_account_ids_search_hint')];
+                        // Don't inject a fake option like "" => "Type employer..." because it can be treated as a selected value
+                        // and fail validation (visible_for_account_ids.* must be integer).
+                        return [];
                     }
 
                     return Account::query()
@@ -167,10 +169,14 @@ class PackageForm extends FormAbstract
             ->add('feature_featured_profile', OnOffField::class, [
                 'label' => trans('plugins/job-board::package.feature_featured_profile'),
                 'wrapper' => ['class' => 'form-group col-md-6'],
+                // Feature flags are stored inside `features` JSON (text list), not as boolean columns.
+                // Pre-fill the toggle from the saved features so edit UI reflects the actual state.
+                'value' => $model instanceof Package ? $model->hasFeatureText('Featured Profile') : false,
             ])
             ->add('feature_admission_form_on_profile', OnOffField::class, [
                 'label' => trans('plugins/job-board::package.feature_admission_form_on_profile'),
                 'wrapper' => ['class' => 'form-group col-md-6'],
+                'value' => $model instanceof Package ? $model->hasFeatureText('Admission Form on Profile') : false,
             ])
             ->add('employer_features_wrap_close', 'html', [
                 'html' => '</div></div>',
@@ -186,26 +192,32 @@ class PackageForm extends FormAbstract
             ->add('feature_featured_profile_js', OnOffField::class, [
                 'label' => trans('plugins/job-board::package.feature_featured_profile'),
                 'wrapper' => ['class' => 'form-group col-md-6'],
+                'value' => $model instanceof Package ? $model->hasFeatureText('Featured Profile') : false,
             ])
             ->add('feature_resume_builder', OnOffField::class, [
                 'label' => trans('plugins/job-board::package.feature_resume_builder'),
                 'wrapper' => ['class' => 'form-group col-md-6'],
+                'value' => $model instanceof Package ? $model->hasFeatureText('Resume Builder') : false,
             ])
             ->add('feature_basic_cv', OnOffField::class, [
                 'label' => trans('plugins/job-board::package.feature_basic_cv'),
                 'wrapper' => ['class' => 'form-group col-md-6'],
+                'value' => $model instanceof Package ? $model->hasFeatureText('Basic CV') : false,
             ])
             ->add('feature_advance_cv', OnOffField::class, [
                 'label' => trans('plugins/job-board::package.feature_advance_cv'),
                 'wrapper' => ['class' => 'form-group col-md-6'],
+                'value' => $model instanceof Package ? $model->hasFeatureText('Advance CV') : false,
             ])
             ->add('feature_view_school_contact_info', OnOffField::class, [
                 'label' => trans('plugins/job-board::package.feature_view_school_contact_info'),
                 'wrapper' => ['class' => 'form-group col-md-6'],
+                'value' => $model instanceof Package ? $model->hasFeatureText('View School Contact Info') : false,
             ])
             ->add('feature_job_alerts_whatsapp', OnOffField::class, [
                 'label' => trans('plugins/job-board::package.feature_job_alerts_whatsapp'),
                 'wrapper' => ['class' => 'form-group col-md-6'],
+                'value' => $model instanceof Package ? $model->hasFeatureText('Job Alerts on WhatsApp') : false,
             ])
             ->add('jobseeker_features_wrap_close', 'html', [
                 'html' => '</div></div>',

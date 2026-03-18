@@ -24,17 +24,38 @@ class PackageController extends BaseController
      */
     private function mergePackageFeatures(PackageRequest $request): array
     {
-        $type = $request->input('package_type', 'employer');
+        $type = (string) $request->input('package_type', 'employer');
+        $type = trim($type);
+
+        // Normalize common variants so feature toggles always work.
+        if (in_array($type, ['job_seeker', 'jobseeker', 'job seeker', 'jobseeker-package'], true)) {
+            $type = 'job-seeker';
+        }
+        if (! in_array($type, ['employer', 'job-seeker'], true)) {
+            $type = 'employer';
+        }
 
         // Map of standard feature labels to their toggle booleans
         $standardMap = [];
 
-        if ($type === 'employer') {
+        // Even if package_type is mis-submitted, if these fields exist in the request
+        // we should still persist their values into `features`.
+        $hasEmployerToggles = $request->hasAny(['feature_featured_profile', 'feature_admission_form_on_profile']);
+        $hasJobSeekerToggles = $request->hasAny([
+            'feature_featured_profile_js',
+            'feature_resume_builder',
+            'feature_basic_cv',
+            'feature_advance_cv',
+            'feature_view_school_contact_info',
+            'feature_job_alerts_whatsapp',
+        ]);
+
+        if ($type === 'employer' || $hasEmployerToggles) {
             $standardMap['Featured Profile'] = $request->boolean('feature_featured_profile');
             $standardMap['Admission Form on Profile'] = $request->boolean('feature_admission_form_on_profile');
         }
 
-        if ($type === 'job-seeker') {
+        if ($type === 'job-seeker' || $hasJobSeekerToggles) {
             $standardMap['Featured Profile'] = $request->boolean('feature_featured_profile_js');
             $standardMap['Resume Builder'] = $request->boolean('feature_resume_builder');
             $standardMap['Basic CV'] = $request->boolean('feature_basic_cv');
@@ -129,8 +150,23 @@ class PackageController extends BaseController
 
             DB::table('jb_packages_translations')->updateOrInsert(
                 ['lang_code' => $langCode, 'jb_packages_id' => $package->getKey()],
-                ['name' => $package->getAttribute('name')]
+                [
+                    'name' => $package->getAttribute('name'),
+                    'description' => $package->getAttribute('description'),
+                ]
             );
+        }
+
+        // Persist translatable fields on create (language-advanced), otherwise admin edit may show old/blank values.
+        if (is_plugin_active('language-advanced') && LanguageAdvancedManager::isSupported($package)) {
+            if (! $request->has('language')) {
+                $request->merge(['language' => \Botble\Language\Facades\Language::getCurrentAdminLocaleCode() ?: \Botble\Language\Facades\Language::getDefaultLocaleCode()]);
+            }
+            $request->merge([
+                'name' => $package->name,
+                'description' => $package->description,
+            ]);
+            LanguageAdvancedManager::save($package, $request);
         }
 
         event(new CreatedContentEvent(PACKAGE_MODULE_SCREEN_NAME, $request, $package));
@@ -172,7 +208,10 @@ class PackageController extends BaseController
 
             DB::table('jb_packages_translations')->updateOrInsert(
                 ['lang_code' => $langCode, 'jb_packages_id' => $package->getKey()],
-                ['name' => $package->getAttribute('name')]
+                [
+                    'name' => $package->getAttribute('name'),
+                    'description' => $package->getAttribute('description'),
+                ]
             );
         }
 

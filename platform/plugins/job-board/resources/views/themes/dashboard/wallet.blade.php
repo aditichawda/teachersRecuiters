@@ -235,7 +235,7 @@
                                 <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
                                     <span>{{ is_array($item) ? ($item['label'] ?? $key) : $key }}</span>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="text-muted small">@if($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY) {{ __('Paid') }} @else{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }} @endif</span>
+                                        <span class="text-muted small">{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }}</span>
                                         @if($account->isEmployer() && is_array($item) && !empty($item['credits']))
                                             @php $featureActiveWithPackage = in_array($key, $activePackageFeatureKeys ?? []); @endphp
                                             @if($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING && isset($jobPostCreditsRequired) && $jobPostCreditsRequired > 0)
@@ -284,13 +284,27 @@
                                                     {{ __('Use credits') }}
                                                 </button>
                                             @elseif($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY)
-                                                @if($featureActiveWithPackage && isset($packageExpiryAt) && $packageExpiryAt)
-                                                    <span class="badge bg-success" title="{{ trans('plugins/job-board::dashboard.wallet_valid_till_package', ['date' => $packageExpiryAt->format('M d, Y')]) }}">{{ __('Unlocked') }}</span>
-                                                    <span class="text-muted small">{{ __('Included in your package') }}</span>
+                                                @if(!empty($admissionViaPackage))
+                                                    <span class="badge bg-success">{{ __('Unlocked') }}</span>
+                                                    @if(isset($packageExpiryAt) && $packageExpiryAt)
+                                                        <span class="text-muted small">{{ __('Included in package until') }} {{ $packageExpiryAt->format('M d, Y') }}</span>
+                                                    @else
+                                                        <span class="text-muted small">{{ __('Included in your package') }}</span>
+                                                    @endif
+                                                    <button type="button" class="btn btn-xs btn-outline-secondary" disabled title="{{ __('No coins needed — included in your plan') }}">{{ __('Use credits') }}</button>
+                                                @elseif(!empty($admissionEnquiryAccess))
+                                                    <span class="badge bg-success">{{ __('Unlocked') }}</span>
+                                                    <span class="text-muted small">{{ __('Active via coins / plan') }}</span>
+                                                    <button type="button" class="btn btn-xs btn-outline-secondary" disabled title="{{ __('Already unlocked') }}">{{ __('Use credits') }}</button>
                                                 @else
-                                                    <a href="{{ route('public.account.packages') }}#choose-plan" class="btn btn-xs btn-outline-success" title="{{ __('Unlock with payment (not coins)') }}">
-                                                        {{ __('Unlock with payment') }}
-                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-xs btn-outline-primary wallet-feature-use-credits-btn"
+                                                        data-feature-key="{{ $key }}"
+                                                        data-feature-label="{{ $item['label'] ?? $key }}"
+                                                        data-credits="{{ (int) ($item['credits'] ?? 0) }}"
+                                                        title="{{ __('Deduct coins to unlock Admission Enquiry Form for your profile') }}"
+                                                    >{{ __('Use credits') }}</button>
                                                 @endif
                                             @elseif($key !== \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING)
                                                 @if($featureActiveWithPackage && isset($packageExpiryAt) && $packageExpiryAt)
