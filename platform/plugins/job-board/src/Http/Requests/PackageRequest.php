@@ -73,6 +73,17 @@ class PackageRequest extends Request
                 if (is_int($v)) {
                     return $v;
                 }
+
+                // Some autocomplete widgets may submit objects/arrays like ['id' => 12, 'text' => 'Name']
+                if (is_array($v)) {
+                    $candidate = $v['id'] ?? $v['value'] ?? $v['key'] ?? null;
+                    if (is_int($candidate)) {
+                        return $candidate;
+                    }
+                    $candidate = trim((string) $candidate);
+                    return ctype_digit($candidate) ? (int) $candidate : null;
+                }
+
                 $v = trim((string) $v);
                 return ctype_digit($v) ? (int) $v : null;
             }, $visibleFor))));

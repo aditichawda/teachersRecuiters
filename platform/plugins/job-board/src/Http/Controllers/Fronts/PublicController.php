@@ -51,6 +51,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -692,7 +693,19 @@ class PublicController extends BaseController
                         ->httpResponse()
                         ->setError()
                         ->setMessage($message)
-                        ->setData(['upgrade_url' => $jsCtx->packagesUrl()]);
+                        ->setData([
+                            'upgrade_url' => $jsCtx->packagesUrl(),
+                            'apply_ctx' => [
+                                'hasPackage' => $jsCtx->hasPackage(),
+                                'isPeriodValid' => $jsCtx->isPeriodValid(),
+                                'jobApplicationsUsed' => $jsCtx->jobApplicationsUsed,
+                                'jobApplyLimit' => $jsCtx->jobApplyLimit,
+                                'jobApplyCreditsBalance' => $jsCtx->jobApplyCreditsBalance,
+                                'periodEnd' => $jsCtx->periodEnd?->toDateTimeString(),
+                                'packageId' => $jsCtx->package?->getKey(),
+                                'packageName' => $jsCtx->package?->name,
+                            ],
+                        ]);
                 }
             }
 
@@ -1455,11 +1468,12 @@ class PublicController extends BaseController
         if ($ownerAccount && JobBoardHelper::isEnabledCreditsSystem()) {
             $ctx = PackageContext::forAccount($ownerAccount);
             $showAdmissionFromPackage = $ctx->hasAdmissionFormOnProfile();
-            if (Schema::hasColumn('jb_transactions', 'feature_key')) {
-                $hasAdmissionEntitlement = CreditConsumption::hasEntitlement($ownerAccount, CreditConsumption::FEATURE_ADMISSION_ENQUIRY);
-            }
+            $hasAdmissionEntitlement = CreditConsumption::hasAdmissionEnquiryAccess($ownerAccount);
         }
-        $showAdmissionOnProfile = $hasAdmissionContent && ($showAdmissionFromPackage || $hasAdmissionEntitlement);
+        $showAdmissionOnProfile = $hasAdmissionContent && (
+            ! JobBoardHelper::isEnabledCreditsSystem()
+            || $hasAdmissionEntitlement
+        );
 
         $admissionFormLocked = $hasAdmissionContent && ! $showAdmissionOnProfile;
         $admissionUnlockCredits = 0;

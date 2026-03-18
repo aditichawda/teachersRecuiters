@@ -716,48 +716,8 @@
     @endif
 @endif
 
-{{-- Hero Section --}}
-<section class="cdt-hero">
-    <div class="container">
-        <div class="cdt-breadcrumb">
-            <a href="/">{{ __('Home') }}</a>
-            <span>→</span>
-            <span style="color: #475569;">{{ Str::limit($candidate->name ?? 'Candidate', 40) }}</span>
-        </div>
-        <div class="cdt-hero-content">
-            <div class="cdt-hero-avatar">
-                <img src="{{ $candidate->avatar_url ?? '' }}" alt="{{ $candidate->name ?? 'Candidate' }}">
-            </div>
-            <div class="cdt-hero-info">
-                <h1 class="d-flex align-items-center gap-2 flex-wrap">
-                    {{ $candidate->name ?? 'Candidate' }}
-                    @if($candidateIsFeatured)
-                        <span class="badge bg-warning text-dark" style="font-size: 12px; font-weight: 600;">{{ __('Featured') }}</span>
-                    @endif
-                </h1>
-                @if(!$profileLocked && ($candidate->description ?? null))
-                    <p class="cdt-hero-desc">{!! BaseHelper::clean($candidate->description) !!}</p>
-                @endif
-                @if($profileLocked)
-                    <p class="cdt-hero-desc text-muted">{{ trans('plugins/job-board::messages.candidate_profile_locked') }}</p>
-                @endif
-                @if(!$profileLocked && JobBoardHelper::canViewCandidateInformation())
-                    <div class="cdt-hero-actions">
-                        @if(isset($account) && $account && $account->isEmployer() && ($employerJobs ?? collect())->isNotEmpty())
-                            <button type="button" class="cdt-btn-primary" data-bs-toggle="modal" data-bs-target="#cdtInviteToApplyModal" title="{{ __('25 credits per invite') }}"><i class="feather-send"></i> {{ __('Invite to Apply') }}</button>
-                        @endif
-                        @if($candidate->phone ?? null)
-                            <a href="tel:{{ $candidate->phone }}" class="cdt-btn-primary"><i class="feather-phone"></i> {{ __('Hire Me Now') }}</a>
-                        @endif
-                        @if(($candidate->resume ?? null) && !($candidate->hide_cv ?? false))
-                            <a href="{{ $candidate->resume_url ?? '#' }}" download class="cdt-btn-outline"><i class="feather-download"></i> {{ __('Download CV') }}</a>
-                        @endif
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-</section>
+{{-- Candidate Header (updated layout) --}}
+<div style="height: 18px;"></div>
 
 @if(!$profileLocked)
 @php

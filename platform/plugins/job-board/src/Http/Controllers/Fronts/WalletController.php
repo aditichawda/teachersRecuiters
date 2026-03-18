@@ -16,6 +16,7 @@ use Botble\JobBoard\Models\SocialPromotionRequest;
 use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Models\WalkinDriveAdRequest;
 use Botble\JobBoard\Supports\PackageContext;
+use Botble\JobBoard\Supports\JobSeekerPackageContext;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
@@ -293,6 +294,15 @@ class WalletController extends BaseController
         }
 
         $isConsultancy = $account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy();
+        $admissionEnquiryAccess = false;
+        $admissionViaPackage = false;
+        if ($account->isEmployer() && $packageContext) {
+            $admissionEnquiryAccess = CreditConsumption::hasAdmissionEnquiryAccess($account);
+            $admissionViaPackage = (bool) ($packageContext->package
+                && $packageContext->hasAdmissionFormOnProfile()
+                && $packageContext->periodEnd
+                && Carbon::now()->lte($packageContext->periodEnd));
+        }
         $viewData = compact(
             'account',
             'transactions',
@@ -321,13 +331,17 @@ class WalletController extends BaseController
             'dedicatedRecruiterValidTill',
             'companies',
             'transactionStatusMap',
-            'isConsultancy'
+            'isConsultancy',
+            'admissionEnquiryAccess',
+            'admissionViaPackage'
         );
 
         if ($account->isEmployer()) {
             return JobBoardHelper::view('dashboard.wallet', $viewData);
         }
 
+        $jobSeekerCtx = JobSeekerPackageContext::forAccount($account);
+        $viewData['jobSeekerCtx'] = $jobSeekerCtx;
         $viewData['is_wallet_page'] = true;
         return JobBoardHelper::scope('dashboard.wallet-jobseeker', $viewData);
     }
@@ -477,6 +491,13 @@ class WalletController extends BaseController
             ], 422);
         }
 
+        if ($featureKey === CreditConsumption::FEATURE_ADMISSION_ENQUIRY && CreditConsumption::hasAdmissionEnquiryAccess($account)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Admission enquiry form is already unlocked for your account.'),
+            ], 422);
+        }
+
         $ok = CreditConsumption::deductForFeature(
             $account,
             $featureKey,
@@ -580,12 +601,12 @@ class WalletController extends BaseController
     }
 
     /**
-     * Admission Form is unlocked by payment only (not coins). Redirect to packages to purchase.
+     * Legacy route: admission unlock is via package or wallet coins.
      */
     public function unlockAdmissionForm(Request $request): RedirectResponse
     {
         return redirect()
-            ->to(route('public.account.packages') . '#choose-plan')
-            ->with('info_msg', __('Admission Form on Profile is unlocked by payment only, not coins. Please choose a package that includes it or purchase the add-on from Packages.'));
+            ->route('public.account.wallet')
+            ->with('info_msg', __('Unlock Admission Enquiry Form from Wallet using credits, or choose a package that includes it.'));
     }
 }
