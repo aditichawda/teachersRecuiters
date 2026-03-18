@@ -7,7 +7,7 @@
 .wallet-em-page .wallet-js-card-blue .wallet-js-coins-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.95; margin-bottom: 0.35rem; }
 .wallet-em-page .wallet-js-card-blue .wallet-js-coins-value { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem; }
 .wallet-em-page .wallet-js-card-blue .wallet-js-coins-row { font-size: 0.8rem; opacity: 0.95; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.2rem; }
-.wallet-em-page .wallet-js-card-blue .btn-warning { background: #f59e0b !important; color: #1a1a2e !important; border: none !important; border-radius: 8px !important; font-weight: 600 !important; }
+.wallet-em-page .wallet-js-card-blue .btn-warning { background: #f59e0b !important; color: #000 !important; border: none !important; border-radius: 8px !important; font-weight: 500 !important; }
 .wallet-em-page .wallet-js-card-orange { background: linear-gradient(135deg, #f59e0b, #fbbf24) !important; border: none !important; border-radius: 12px !important; min-height: 200px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 1.5rem !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
 .wallet-em-page .wallet-js-card-orange .card-body { padding: 0 !important; border: none !important; background: transparent !important; display: flex !important; align-items: center !important; justify-content: center !important; }
 .wallet-em-page .wallet-js-card-orange .wallet-js-graphic { font-size: 4rem; color: rgba(0,0,0,0.3); }
@@ -57,6 +57,44 @@
 .wallet-em-page .btn-outline-warning { color: #fff !important; background: #ffc107 !important; border-color: #ffc107 !important; }
 .wallet-em-page .btn-outline-info { color: #fff !important; background: #0dcaf0 !important; border-color: #0dcaf0 !important; }
 .wallet-em-page .btn-outline-success { color: #fff !important; background: #198754 !important; border-color: #198754 !important; }
+/* Recharge: same CTA + modal as job seeker wallet */
+.wallet-em-page .wallet-js-card-blue .wallet-recharge-trigger { width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.3rem 0.2rem;
+    font-size: 14px;
+    /* font-weight: 500; */
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: #f59e0b;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease; }
+.wallet-em-page .wallet-js-card-blue .wallet-recharge-trigger:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.22); background: #f8fbff; color: #0a58ca; }
+.wallet-em-page .wallet-js-card-blue .wallet-recharge-trigger:active:not(:disabled) { transform: translateY(0); }
+.wallet-em-page .wallet-js-card-blue .wallet-recharge-trigger:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+.wallet-em-page .wallet-js-card-blue .wallet-recharge-trigger svg, .wallet-em-page .wallet-js-card-blue .wallet-recharge-trigger .icon { font-size: 1.15rem; flex-shrink: 0; }
+.wallet-em-page .wallet-js-card-blue .wallet-recharge-hint { font-size: 0.75rem; opacity: 0.9; margin-top: 0.5rem; text-align: center; line-height: 1.35; color: #fff !important; }
+.wallet-recharge-modal .modal-content { border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(13, 110, 253, 0.15), 0 8px 24px rgba(0,0,0,0.1); }
+.wallet-recharge-modal .modal-header { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: #fff; border-bottom: none; padding: 1rem 1.25rem; }
+.wallet-recharge-modal .modal-header .modal-title { color: #fff; font-weight: 700; font-size: 1.05rem; }
+.wallet-recharge-modal .modal-header .modal-title .icon, .wallet-recharge-modal .modal-header .modal-title svg { color: #fde047 !important; }
+.wallet-recharge-modal .modal-header .btn-close { filter: brightness(0) invert(1); opacity: 0.92; }
+.wallet-recharge-modal .modal-body { padding: 1.25rem 1.35rem; }
+.wallet-recharge-modal .wallet-recharge-input { border-radius: 10px; border: 2px solid #e2e8f0; padding: 0.65rem 0.85rem; font-size: 1rem; font-weight: 600; }
+.wallet-recharge-modal .wallet-recharge-input:focus { border-color: #0d6efd; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
+.wallet-recharge-modal .modal-footer { border-top: 1px solid #eef2f6; padding: 1rem 1.25rem; gap: 0.65rem; flex-wrap: wrap; justify-content: flex-end; }
+.wallet-recharge-modal .btn-rc-cancel, .wallet-recharge-modal .btn-rc-pay { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.6rem 1.15rem; font-weight: 600; font-size: 0.9rem; border-radius: 10px; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.wallet-recharge-modal .btn-rc-cancel { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.wallet-recharge-modal .btn-rc-cancel:hover { background: #e2e8f0; color: #334155; }
+.wallet-recharge-modal .btn-rc-pay { background: linear-gradient(180deg, #2563eb 0%, #0d6efd 100%); color: #fff !important; border: none; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.35); }
+.wallet-recharge-modal .btn-rc-pay:hover { color: #fff !important; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(13, 110, 253, 0.45); }
+.wallet-recharge-modal .wallet-recharge-err-alert { border-radius: 10px; font-size: 0.875rem; }
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -199,6 +237,40 @@
                             <?php if(isset($profileViewsAllowed) && $profileViewsAllowed > 0): ?>
                                 <p class="small text-white mb-2 opacity-90"><?php echo e(trans('plugins/job-board::dashboard.wallet_profile_views_used_allowed', ['used' => $profileViewsUsed ?? 0, 'allowed' => $profileViewsAllowed])); ?></p>
                             <?php endif; ?>
+
+                            
+                            <?php if(empty($isConsultancy)): ?>
+                                <div class="mt-2">
+                                    <button type="button" class="wallet-recharge-trigger" data-bs-toggle="modal" data-bs-target="#walletRechargeModal" <?php if(empty($canRechargeWallet)): echo 'disabled'; endif; ?>>
+                                        <?php if (isset($component)) { $__componentOriginal73995948b3bd877b76251b40caf28170 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal73995948b3bd877b76251b40caf28170 = $attributes; } ?>
+<?php $component = Botble\Icon\View\Components\Icon::resolve(['name' => 'ti ti-wallet'] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::icon'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Botble\Icon\View\Components\Icon::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $attributes = $__attributesOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__attributesOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $component = $__componentOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__componentOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?><?php echo e(__('Recharge Wallet')); ?>
+
+                                    </button>
+                                    <?php if(empty($canRechargeWallet)): ?>
+                                        <div class="wallet-recharge-hint"><?php echo e(__('Recharge is available after you purchase at least one package.')); ?></div>
+                                    <?php else: ?>
+                                        <div class="wallet-recharge-hint"><?php echo e(__('Minimum recharge ₹1000.')); ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                          <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal00609f0158ec6107e317b89bf18d2d23)): ?>
@@ -221,6 +293,107 @@
 <?php endif; ?>
                 </div>
             </div>
+
+            
+            <?php if(empty($isConsultancy)): ?>
+                <div class="modal fade wallet-recharge-modal" id="walletRechargeModal" tabindex="-1" aria-labelledby="walletRechargeModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title d-flex align-items-center gap-2 mb-0" id="walletRechargeModalLabel"><?php if (isset($component)) { $__componentOriginal73995948b3bd877b76251b40caf28170 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal73995948b3bd877b76251b40caf28170 = $attributes; } ?>
+<?php $component = Botble\Icon\View\Components\Icon::resolve(['name' => 'ti ti-wallet'] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::icon'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Botble\Icon\View\Components\Icon::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $attributes = $__attributesOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__attributesOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $component = $__componentOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__componentOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?><?php echo e(__('Recharge Wallet')); ?></h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?php echo e(__('Close')); ?>"></button>
+                            </div>
+                            <?php if (isset($component)) { $__componentOriginald83dae5750a07af1a413e54a0071b325 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginald83dae5750a07af1a413e54a0071b325 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '8def1252668913628243c4d363bee1ef::form.index','data' => ['url' => route('public.account.wallet.recharge.start'),'method' => 'post','id' => 'walletRechargeForm']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::form'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('public.account.wallet.recharge.start')),'method' => 'post','id' => 'walletRechargeForm']); ?>
+                                <div class="modal-body">
+                                    <p class="small text-muted mb-3"><?php echo e(__('1 INR = 1 Coin. Minimum recharge ₹1000.')); ?></p>
+                                    <div class="alert alert-danger py-2 px-3 mb-3 d-none wallet-recharge-err-alert" id="walletRechargeErr" role="alert"></div>
+                                    <label class="form-label fw-semibold" for="walletRechargeAmount"><?php echo e(__('Enter amount (INR)')); ?></label>
+                                    <input type="number" name="amount_inr" id="walletRechargeAmount" class="form-control wallet-recharge-input" min="1000" step="1" value="<?php echo e(old('amount_inr', 1000)); ?>" placeholder="1000" required>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn-rc-cancel" data-bs-dismiss="modal"><?php if (isset($component)) { $__componentOriginal73995948b3bd877b76251b40caf28170 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal73995948b3bd877b76251b40caf28170 = $attributes; } ?>
+<?php $component = Botble\Icon\View\Components\Icon::resolve(['name' => 'ti ti-x'] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::icon'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Botble\Icon\View\Components\Icon::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $attributes = $__attributesOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__attributesOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $component = $__componentOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__componentOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?><?php echo e(__('Cancel')); ?></button>
+                                    <button type="submit" class="btn-rc-pay"><?php if (isset($component)) { $__componentOriginal73995948b3bd877b76251b40caf28170 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal73995948b3bd877b76251b40caf28170 = $attributes; } ?>
+<?php $component = Botble\Icon\View\Components\Icon::resolve(['name' => 'ti ti-credit-card'] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('core::icon'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Botble\Icon\View\Components\Icon::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $attributes = $__attributesOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__attributesOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal73995948b3bd877b76251b40caf28170)): ?>
+<?php $component = $__componentOriginal73995948b3bd877b76251b40caf28170; ?>
+<?php unset($__componentOriginal73995948b3bd877b76251b40caf28170); ?>
+<?php endif; ?><?php echo e(__('Proceed to Pay')); ?></button>
+                                </div>
+                             <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginald83dae5750a07af1a413e54a0071b325)): ?>
+<?php $attributes = $__attributesOriginald83dae5750a07af1a413e54a0071b325; ?>
+<?php unset($__attributesOriginald83dae5750a07af1a413e54a0071b325); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginald83dae5750a07af1a413e54a0071b325)): ?>
+<?php $component = $__componentOriginald83dae5750a07af1a413e54a0071b325; ?>
+<?php unset($__componentOriginald83dae5750a07af1a413e54a0071b325); ?>
+<?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <?php if($packageLeft): ?>
                 <?php $isCurrentPackage = in_array($packageLeft->id, $currentPackageIds ?? []); ?>
@@ -2404,6 +2577,57 @@
         <?php endif; ?>
     <?php endif; ?>
 <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('footer'); ?>
+<script>
+(function () {
+    var modalEl = document.getElementById('walletRechargeModal');
+    var formEl = document.getElementById('walletRechargeForm');
+    var amountEl = document.getElementById('walletRechargeAmount');
+    var errEl = document.getElementById('walletRechargeErr');
+
+    // Modal is not rendered for consultancy accounts.
+    if (!modalEl || !formEl || !amountEl) {
+        return;
+    }
+
+    if (modalEl) {
+        modalEl.addEventListener('shown.bs.modal', function () {
+            if (amountEl) {
+                amountEl.focus();
+                amountEl.select();
+            }
+        });
+    }
+
+    function showErr(msg) {
+        if (!errEl) return;
+        errEl.textContent = msg;
+        errEl.classList.remove('d-none');
+    }
+    function clearErr() {
+        if (!errEl) return;
+        errEl.textContent = '';
+        errEl.classList.add('d-none');
+    }
+
+    if (amountEl) {
+        amountEl.addEventListener('input', clearErr);
+    }
+
+    if (formEl) {
+        formEl.addEventListener('submit', function (e) {
+            clearErr();
+            var v = parseInt((amountEl && amountEl.value) ? amountEl.value : '0', 10);
+            if (!v || isNaN(v) || v < 1000) {
+                e.preventDefault();
+                showErr('Minimum recharge amount is ₹1000.');
+            }
+        });
+    }
+})();
+</script>
+<?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('footer'); ?>
 <script>

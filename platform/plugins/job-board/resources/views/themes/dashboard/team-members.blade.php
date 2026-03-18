@@ -15,7 +15,7 @@
         <x-core::card.body>
             @if($staff->isEmpty())
                 <div class="text-center py-5">
-                    <x-core::icon name="ti ti-users-off" class="text-muted" style="font-size: 3rem;" />
+                    <x-core::icon name="ti ti-users-group" class="text-muted" style="font-size: 3rem;" />
                     <p class="text-muted mt-3 mb-2">{{ __('No staff members yet.') }}</p>
                     <p class="small text-muted">{{ __('Add staff from Wallet → Use credits for Multiple Login (250 credits per staff).') }}</p>
                     <a href="{{ route('public.account.wallet') }}" class="btn btn-primary btn-sm mt-2">
