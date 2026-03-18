@@ -218,16 +218,16 @@
 
 /* Section Padding Responsive */
 .section-full {
-    padding: 60px 0;
+    padding: 6px 0;
 }
 @@media (max-width: 991px) {
     .section-full {
-        padding: 40px 0;
+        padding: 4px 0;
     }
 }
 @@media (max-width: 767px) {
     .section-full {
-        padding: 30px 0;
+        padding: 3px 0;
     }
 }
 

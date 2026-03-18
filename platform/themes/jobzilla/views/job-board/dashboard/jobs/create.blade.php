@@ -1513,17 +1513,48 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
     var cityList2 = document.getElementById('job-city-suggestions');
     var cityTimeout = null;
 
+    function renderCitySuggestEmpty(targetEl, message) {
+        if (!targetEl) return;
+        targetEl.innerHTML = '';
+        if (message) {
+            var div = document.createElement('div');
+            div.className = 'jp-suggest-item';
+            div.style.cursor = 'default';
+            div.style.color = '#6b7280';
+            div.textContent = message;
+            targetEl.appendChild(div);
+            targetEl.classList.add('show');
+        } else {
+            targetEl.classList.remove('show');
+        }
+    }
+
+    function normalizeCityResponse(res) {
+        // Endpoint returns Botble httpResponse: { error: bool, message?: string, data: [...]|{cities:[...]} }
+        var raw = res && (res.data !== undefined ? res.data : res);
+        if (Array.isArray(raw)) return raw;
+        if (raw && Array.isArray(raw.cities)) return raw.cities;
+        if (raw && Array.isArray(raw.data)) return raw.data; // extra safety
+        return [];
+    }
+
+    if (!cityInput || !cityList2) {
+        // Don't crash page JS if template changes
+    } else {
     cityInput.addEventListener('input', function() {
         clearTimeout(cityTimeout);
         var val = this.value.trim();
         if (val.length < 2) { cityList2.classList.remove('show'); return; }
 
         cityTimeout = setTimeout(function() {
-            fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+            var url = '{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val);
+            renderCitySuggestEmpty(cityList2, 'Loading...');
+            fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); })
-                .then(function(data) {
+                .then(function(res) {
+                    var data = normalizeCityResponse(res);
                     cityList2.innerHTML = '';
-                    if (!data.length) { cityList2.classList.remove('show'); return; }
+                    if (!data.length) { renderCitySuggestEmpty(cityList2, 'No cities found'); return; }
                     data.forEach(function(city) {
                         var div = document.createElement('div');
                         div.className = 'jp-suggest-item';
@@ -1540,9 +1571,13 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
                         cityList2.appendChild(div);
                     });
                     cityList2.classList.add('show');
+                })
+                .catch(function() {
+                    renderCitySuggestEmpty(cityList2, 'Error loading cities');
                 });
         }, 300);
     });
+    }
 
     cityInput.addEventListener('blur', function() {
         setTimeout(function() { cityList2.classList.remove('show'); }, 200);
@@ -1559,9 +1594,19 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
             if (val.length < 2) { suggest.classList.remove('show'); return; }
 
             timer = setTimeout(function() {
-                fetch('{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val))
+                var url = '{{ route("ajax.search-cities") }}?keyword=' + encodeURIComponent(val);
+                suggest.innerHTML = '';
+                var loading = document.createElement('div');
+                loading.className = 'jp-suggest-item';
+                loading.style.cursor = 'default';
+                loading.style.color = '#6b7280';
+                loading.textContent = 'Loading...';
+                suggest.appendChild(loading);
+                suggest.classList.add('show');
+                fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
-                    .then(function(data) {
+                    .then(function(res) {
+                        var data = normalizeCityResponse(res);
                         suggest.innerHTML = '';
                         if (!data.length) { suggest.classList.remove('show'); return; }
                         data.forEach(function(city) {
@@ -1577,6 +1622,10 @@ if (rechargeForm && rechargeAmount && rechargeHidden) {
                             suggest.appendChild(div);
                         });
                         suggest.classList.add('show');
+                    })
+                    .catch(function() {
+                        suggest.innerHTML = '';
+                        suggest.classList.remove('show');
                     });
             }, 300);
         });

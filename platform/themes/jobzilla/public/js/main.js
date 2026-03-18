@@ -17,40 +17,51 @@ All JavaScript fuctions Start
   document.ready ALL FUNCTION START
   ---------------------------------------------------------------------------------------------*/
   function select_picker_select() {
-    // Initialize select2 for selectpicker, but exclude keyword select (uses select2 with custom init)
-    $('.selectpicker').not('.selectpicker-keyword').select2();
-    var $singleLocation = $('.selectpicker-location');
-    if ($singleLocation.length) {
-      $singleLocation.select2({
-        placeholder: $singleLocation.data('placeholder') || 'Select Your Location',
-        allowClear: true,
-        minimumInputLength: 2,
-        ajax: {
-          url: $singleLocation.data('url') || window.siteUrl + '/ajax/cities',
-          dataType: 'json',
-          type: 'GET',
-          delay: 250,
-          data: function data(params) {
-            return {
-              k: params.term
-            };
-          },
-          processResults: function processResults(res) {
-            // Transforms the top-level key of the response object from 'items' to 'results'
-            return {
-              results: $.map(res.data, function (item) {
-                return Object.assign({
-                  text: item.label,
-                  id: item.id
-                }, item);
-              })
-            };
-          },
-          cache: true
+    $('.selectpicker').not('.selectpicker-keyword').each(function () {
+
+        // अगर पहले से select2 लगा है तो destroy करो
+        if ($(this).hasClass("select2-hidden-accessible")) {
+            $(this).select2('destroy');
         }
-      });
+
+        $(this).select2();
+    });
+
+    var $singleLocation = $('.selectpicker-location');
+
+    if ($singleLocation.length) {
+
+        if ($singleLocation.hasClass("select2-hidden-accessible")) {
+            $singleLocation.select2('destroy');
+        }
+
+        $singleLocation.select2({
+            placeholder: $singleLocation.data('placeholder') || 'Select Your Location',
+            allowClear: true,
+            minimumInputLength: 2,
+            ajax: {
+                url: $singleLocation.data('url') || window.siteUrl + '/ajax/cities',
+                dataType: 'json',
+                type: 'GET',
+                delay: 250,
+                data: function (params) {
+                    return { k: params.term };
+                },
+                processResults: function (res) {
+                    return {
+                        results: $.map(res.data, function (item) {
+                            return {
+                                text: item.label,
+                                id: item.id
+                            };
+                        })
+                    };
+                },
+                cache: true
+            }
+        });
     }
-  }
+}
 
   //  Home 1 Banner Carousel function by = owl.carousel.js ========================== //
   function twm_h1_bnr_carousal() {
@@ -67,7 +78,105 @@ All JavaScript fuctions Start
       mouseDrag: false
     });
   }
+  function initCustomUI() {
+    select_picker_select();
+}
 
+  // Make it globally accessible for body.blade.php AJAX navigation
+  window.initDashboardTomSelect = function() {
+    // PJAX navigation me `DOMContentLoaded` dobara fire nahi hota,
+    // aur employer-settings wali TomSelect inline init run nahi hoti.
+    // Isliye yahan on-demand TomSelect assets load karke re-init karte hain.
+    const TOMSELECT_CSS_HREF =
+      'https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css';
+    const TOMSELECT_JS_SRC =
+      'https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js';
+    const TOMSELECT_CSS_ID = 'tomselect-cdn-css';
+    const TOMSELECT_JS_ID = 'tomselect-cdn-js';
+
+    const ensureAssets = () => {
+      // Add CSS (styles ke liye)
+      if (!document.getElementById(TOMSELECT_CSS_ID)) {
+        const link = document.createElement('link');
+        link.id = TOMSELECT_CSS_ID;
+        link.rel = 'stylesheet';
+        link.href = TOMSELECT_CSS_HREF;
+        document.head.appendChild(link);
+      }
+
+      // Load JS
+      if (typeof window.TomSelect !== 'undefined') {
+        return Promise.resolve();
+      }
+
+      if (document.getElementById(TOMSELECT_JS_ID)) {
+        // Script tag already injected; wait until it defines TomSelect
+        return new Promise((resolve) => {
+          const check = () => {
+            if (typeof window.TomSelect !== 'undefined') {
+              resolve();
+              return;
+            }
+            setTimeout(check, 100);
+          };
+          check();
+        });
+      }
+
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.id = TOMSELECT_JS_ID;
+        script.src = TOMSELECT_JS_SRC;
+        script.onload = function () {
+          resolve();
+        };
+        script.onerror = function () {
+          reject(new Error('Failed to load TomSelect JS from CDN'));
+        };
+        document.head.appendChild(script);
+      });
+    };
+
+    const init = () => {
+      if (typeof window.TomSelect === 'undefined') return;
+
+      const initOne = (selector, options) => {
+        const el = document.querySelector(selector);
+        if (!el || el.tomselect) return; // already initialized
+        try {
+          new window.TomSelect(selector, options);
+        } catch (e) {
+          console.error('[TomSelect] init failed for', selector, e);
+        }
+      };
+
+      // employer-settings ke IDs
+      initOne('#institution_type', { plugins: ['remove_button'], maxItems: 4 });
+      initOne('#ts-standard-level', { plugins: ['remove_button'], maxItems: null });
+      initOne('#ts-staff-facilities', { plugins: ['remove_button'], maxItems: null });
+      initOne('#ts-working-days', { plugins: ['remove_button'], maxItems: 7 });
+    };
+
+    ensureAssets()
+      .then(init)
+      .catch(function () {
+        // CDN load fail ho to reason console me dekhna zaruri hai (PJAX me debugging).
+        console.error('[TomSelect] Failed to load/init', arguments);
+      });
+  }
+
+$(document).ready(function () {
+    initCustomUI();
+    initDashboardTomSelect();
+});
+
+$(document).on('pjax:complete ajaxComplete', function () {
+    initCustomUI();
+    initDashboardTomSelect();
+    setTimeout(function () {
+      initDashboardTomSelect();
+    }, 400);
+});
   // Home City Search Autocomplete function ========================== //
   function home_city_search() {
     var $cityInput = $('#home_city_search');

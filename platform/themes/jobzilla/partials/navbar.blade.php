@@ -1354,13 +1354,13 @@
 
 /* Reduce Section Background Height */
 .section-full.site-bg-gray {
-    padding-top: 60px !important;
-    padding-bottom: 50px !important;
+    padding-top: 6px !important;
+    padding-bottom: 5px !important;
 }
 
 .section-full.p-t120.p-b90 {
-    padding-top: 100px !important;
-    padding-bottom: 50px !important;
+    padding-top: 20px !important;
+    padding-bottom: 1-px !important;
 }
 
 /* Section Content Spacing */
