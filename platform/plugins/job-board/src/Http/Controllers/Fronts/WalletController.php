@@ -200,6 +200,20 @@ class WalletController extends BaseController
             }
         }
 
+        $hasPurchasedAnyPackage = Transaction::query()
+            ->where('account_id', $account->getKey())
+            ->whereNotNull('package_id')
+            ->whereNotNull('payment_id')
+            ->where(function ($q): void {
+                $q->whereNull('type')->orWhere('type', '!=', Transaction::TYPE_DEBIT);
+            })
+            ->exists();
+
+        $canRechargeWallet = $hasPurchasedAnyPackage;
+        if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+            $canRechargeWallet = false;
+        }
+
         $socialPromotionRequests = [];
         $dedicatedRecruiterRequests = [];
         $dedicatedRecruiterValidTill = null;
@@ -333,7 +347,8 @@ class WalletController extends BaseController
             'transactionStatusMap',
             'isConsultancy',
             'admissionEnquiryAccess',
-            'admissionViaPackage'
+            'admissionViaPackage',
+            'canRechargeWallet'
         );
 
         if ($account->isEmployer()) {
