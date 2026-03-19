@@ -2739,7 +2739,7 @@ ol li {
   /*--logo for header---*/
   display: table;
   float: left;
-  width: 250px;
+  width: 100%;
   height: 70px;
   vertical-align: middle;
   padding: 0;
@@ -2751,12 +2751,12 @@ ol li {
 }
 @media (max-width: 1199px) {
   .header-style-3 .logo-header {
-    width: 130px;
+    width:100%;
   }
 }
 @media (max-width: 400px) {
   .header-style-3 .logo-header {
-    width: 70px;
+    width: 100%;
   }
 }
 .header-style-3 .logo-header .logo-header-inner {

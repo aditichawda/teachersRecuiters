@@ -84,8 +84,8 @@
         <div class="main-bar">
             <div class="container-fluid clearfix">
                @if (Theme::getLogo())
-                    <div class="logo-header">
-                        <div class="logo-header-inner logo-header-one">
+                    <div class="logo-header" style="height: 100% !important;">
+                        <div class="logo-header-inner logo-header-one" style="height: 100% !important;">
                             <a href="{{ BaseHelper::getHomepageUrl()  }}">
                                 @if (Theme::get('header_css_class') == 'header-style-light')
                                     {!! Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo_light', 44) ?: Theme::getLogoImage(['class' => 'default-scroll-show'], 'logo', 44) !!}

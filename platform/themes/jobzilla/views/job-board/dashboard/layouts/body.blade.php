@@ -198,7 +198,7 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     position: sticky;
     top: 0;
-    z-index: 1000;
+    z-index: 998;
 }
 .enl-header-inner {
     max-width: 1200px;
@@ -317,9 +317,150 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
 .enl-header-dropdown a i { width: 18px; text-align: center; color: #888; }
 .enl-header-dropdown hr { margin: 4px 0; border: none; border-top: 1px solid #f0f0f0; }
 
+/* Navbar Mobile Toggle Button */
+.enl-navbar-toggle {
+    display: none;
+    background: transparent;
+    color: #333;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1002;
+    margin-left: 15px;
+}
+
+.enl-navbar-toggle:hover {
+    background: #f5f5f5;
+    border-color: #d1d5db;
+    color: #0073d1;
+}
+
+/* Navbar Right Side Drawer */
+.enl-navbar-drawer {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 320px;
+    max-width: 85vw;
+    height: 100vh;
+    background: #fff;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    z-index: 1001;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0;
+}
+
+.enl-navbar-drawer.show {
+    right: 0;
+}
+
+.enl-navbar-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #0073d1;
+    color: #fff;
+}
+
+.enl-navbar-drawer-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.enl-navbar-drawer-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.enl-navbar-drawer-close:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.enl-navbar-drawer-body {
+    padding: 20px;
+}
+
+.enl-navbar-drawer-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.enl-navbar-drawer-nav li {
+    margin-bottom: 8px;
+}
+
+.enl-navbar-drawer-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.enl-navbar-drawer-nav a:hover {
+    background: #f0f7ff;
+    color: #0073d1;
+}
+
+.enl-navbar-drawer-nav a i {
+    font-size: 20px;
+    width: 24px;
+    text-align: center;
+}
+
+.enl-navbar-drawer-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
+}
+
+.enl-navbar-drawer-overlay.show {
+    display: block;
+    opacity: 1;
+}
+
 @media (max-width: 768px) {
     .enl-header-nav { display: none; }
     .enl-header-user-btn span { display: none; }
+    .enl-navbar-toggle { display: flex; }
 }
 
 /* ===== LOGOUT MODAL (2nd screenshot - exact same UI) ===== */
@@ -582,9 +723,9 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
 .enl-sidebar-toggle {
     display: none;
     position: fixed;
-    top: 90px;
+    top: 70px;
     left: 15px;
-    z-index: 1001;
+    z-index: 1002;
     background: #0073d1;
     color: #fff;
     border: none;
@@ -606,6 +747,7 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
 
 .enl-sidebar-toggle.active {
     left: 265px;
+    z-index: 1003;
 }
 
 /* Sidebar Overlay */
@@ -617,9 +759,10 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     right: 0;
     bottom: 0;
     background: rgba(0,0,0,0.5);
-    z-index: 999;
+    z-index: 1000;
     opacity: 0;
     transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
 }
 
 .enl-sidebar-overlay.show {
@@ -754,6 +897,8 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     justify-content: space-between;
     margin-bottom: 15px;
     border-radius: 0 0 12px 12px;
+    position: relative;
+    z-index: 997;
 }
 .enl-mobile-header .enl-menu-toggle {
     background: none; border: none; font-size: 22px; color: #333; cursor: pointer;
@@ -845,14 +990,15 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
         left: -280px;
         top: 0;
         height: 100vh;
-        z-index: 1000;
+        z-index: 1001;
         background: #fff;
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        transition: left 0.3s ease;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         overflow-y: auto;
         padding: 20px;
         width: 280px;
         max-width: 280px;
+        -webkit-overflow-scrolling: touch;
     }
     
     .enl-sidebar-col.show {
@@ -878,41 +1024,66 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     /* Show sidebar toggle on mobile */
     .enl-sidebar-toggle {
         display: flex;
-        top: 70px;
-        left: 10px;
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
+        top: 15px;
+        left: 15px;
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+        z-index: 1002;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     
     .enl-sidebar-toggle.active {
-        left: 250px;
+        left: 245px;
+        z-index: 1003;
     }
     
     .enl-sidebar-col {
         width: 260px;
-        max-width: 260px;
+        max-width: 85vw;
         left: -260px;
+        z-index: 1001;
+        box-shadow: 2px 0 20px rgba(0,0,0,0.15);
     }
     
     .enl-sidebar-col.show {
         left: 0;
     }
     
-    .enl-mobile-header { display: flex; }
+    .enl-sidebar-overlay {
+        z-index: 1000;
+    }
+    
+    .enl-mobile-header { 
+        display: flex; 
+        position: sticky;
+        top: 0;
+        z-index: 999;
+    }
+    
     .enl-main { padding: 15px 0; }
     
     .emp-new-layout .container {
         padding: 15px 10px;
     }
     
+    .enl-header {
+        z-index: 997;
+    }
+    
     .enl-header-inner {
         padding: 0 10px;
         height: 60px;
+        position: relative;
     }
     
     .enl-header-nav {
         display: none;
+    }
+    
+    /* Ensure main content doesn't overlap with toggle button */
+    .enl-main-col {
+        padding-top: 0;
     }
 }
 
@@ -920,14 +1091,30 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
     .enl-sidebar-col {
         width: 100%;
         max-width: 100%;
+        left: -100%;
+    }
+    
+    .enl-sidebar-col.show {
+        left: 0;
+    }
+    
+    .enl-sidebar-toggle {
+        top: 45px;
+        left: 12px;
+        width: 30px;
+        height: 30px;
     }
     
     .enl-sidebar-toggle.active {
-        left: calc(100% - 50px);
+        left: calc(100% - 54px);
     }
     
     .enl-main {
         padding: 10px 0;
+    }
+    
+    .enl-mobile-header {
+        padding: 10px 12px;
     }
 }
 </style>
@@ -938,17 +1125,21 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
 <div class="enl-header">
     <div class="enl-header-inner">
         <!-- Logo -->
-        <div class="enl-header-logo">
+        <div class="enl-header-logo" style="display: flex; align-items: center; gap: 15px;">
         @if (Theme::getLogo())
                 <a href="{{ BaseHelper::getHomepageUrl() }}">
                                     {!! Theme::getLogoImage([], 'logo_light', 44) !!}
                             </a>
                 @endif
+            <!-- Navbar Toggle Button (Mobile Only) -->
+            <button class="enl-navbar-toggle" id="navbar-toggle-btn" aria-label="Toggle navigation menu">
+                <i class="fa fa-bars"></i>
+            </button>
         </div>
 
         <!-- Right -->
         <div class="enl-header-right" style="display: flex; align-items: center; gap: 20px;">
-            <!-- Nav Items Next to User -->
+            <!-- Nav Items Next to User (Desktop Only) -->
             <ul class="enl-header-nav" style="margin: 0; padding: 0;">
             <!-- Home Icon - Visible for Employers -->
             <li class="nav-item">
@@ -1001,6 +1192,92 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
 </div>
 
 <form id="logout-form-enl" style="display:none;" action="{{ route('public.account.logout') }}" method="POST">@csrf</form>
+
+<!-- Navbar Right Side Drawer (Mobile) -->
+<div class="enl-navbar-drawer-overlay" id="navbar-drawer-overlay"></div>
+<div class="enl-navbar-drawer" id="navbar-drawer">
+    <div class="enl-navbar-drawer-header">
+        <h3>{{ __('Menu') }}</h3>
+        <button class="enl-navbar-drawer-close" id="navbar-drawer-close" aria-label="Close menu">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+    <div class="enl-navbar-drawer-body">
+        <ul class="enl-navbar-drawer-nav">
+            <!-- Home -->
+            <li>
+                <a href="{{ BaseHelper::getHomepageUrl() }}">
+                    <i class="feather-home"></i>
+                    <span>{{ __('Home') }}</span>
+                </a>
+            </li>
+            <!-- FAQ -->
+            <li>
+                <a href="{{ route('public.faq') }}">
+                    <i class="fa fa-question-circle"></i>
+                    <span>{{ __('FAQ') }}</span>
+                </a>
+            </li>
+            <!-- Plans -->
+            <li>
+                <a href="{{ route('public.premium-service') }}">
+                    <i class="fa fa-crown"></i>
+                    <span>{{ __('Plans') }}</span>
+                </a>
+            </li>
+            <!-- Notifications -->
+            <li>
+                <a href="{{ route('public.notifications') }}">
+                    <i class="feather-bell"></i>
+                    <span>{{ __('Notifications') }}</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Navbar Right Side Drawer (Mobile) -->
+<div class="enl-navbar-drawer-overlay" id="navbar-drawer-overlay"></div>
+<div class="enl-navbar-drawer" id="navbar-drawer">
+    <div class="enl-navbar-drawer-header">
+        <h3>{{ __('Menu') }}</h3>
+        <button class="enl-navbar-drawer-close" id="navbar-drawer-close" aria-label="Close menu">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+    <div class="enl-navbar-drawer-body">
+        <ul class="enl-navbar-drawer-nav">
+            <!-- Home -->
+            <li>
+                <a href="{{ BaseHelper::getHomepageUrl() }}">
+                    <i class="feather-home"></i>
+                    <span>{{ __('Home') }}</span>
+                </a>
+            </li>
+            <!-- FAQ -->
+            <li>
+                <a href="{{ route('public.faq') }}">
+                    <i class="fa fa-question-circle"></i>
+                    <span>{{ __('FAQ') }}</span>
+                </a>
+            </li>
+            <!-- Plans -->
+            <li>
+                <a href="{{ route('public.premium-service') }}">
+                    <i class="fa fa-crown"></i>
+                    <span>{{ __('Plans') }}</span>
+                </a>
+            </li>
+            <!-- Notifications -->
+            <li>
+                <a href="{{ route('public.notifications') }}">
+                    <i class="feather-bell"></i>
+                    <span>{{ __('Notifications') }}</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
 
 <!-- Logout confirmation modal - reference UI (icon blue circle, Logout left / Cancel right) -->
 <div id="enl-logout-modal-overlay" class="enl-logout-overlay">
@@ -1107,6 +1384,83 @@ if ($account && $account->isEmployer() && JobBoardHelper::isEnabledCreditsSystem
         document.addEventListener('DOMContentLoaded', initDashboardSidebar);
     } else {
         initDashboardSidebar();
+    }
+})();
+</script>
+
+<script>
+// Navbar Toggle Drawer Functionality
+(function() {
+    function initNavbarDrawer() {
+        const toggleBtn = document.getElementById('navbar-toggle-btn');
+        const drawer = document.getElementById('navbar-drawer');
+        const overlay = document.getElementById('navbar-drawer-overlay');
+        const closeBtn = document.getElementById('navbar-drawer-close');
+        
+        if (!toggleBtn || !drawer || !overlay) return;
+        
+        function openDrawer() {
+            drawer.classList.add('show');
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeDrawer() {
+            drawer.classList.remove('show');
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        // Toggle button click
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (drawer.classList.contains('show')) {
+                closeDrawer();
+            } else {
+                openDrawer();
+            }
+        });
+        
+        // Close button click
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeDrawer();
+            });
+        }
+        
+        // Overlay click
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                closeDrawer();
+            }
+        });
+        
+        // Close on drawer link click
+        const drawerLinks = drawer.querySelectorAll('.enl-navbar-drawer-nav a');
+        drawerLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                // Small delay to allow navigation
+                setTimeout(function() {
+                    closeDrawer();
+                }, 100);
+            });
+        });
+        
+        // Close on window resize (if desktop)
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeDrawer();
+            }
+        });
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNavbarDrawer);
+    } else {
+        initNavbarDrawer();
     }
 })();
 </script>
