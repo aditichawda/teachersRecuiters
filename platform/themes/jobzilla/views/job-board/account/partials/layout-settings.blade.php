@@ -13,6 +13,12 @@
         $jobSeekerCtx = \Botble\JobBoard\Supports\JobSeekerPackageContext::forAccount($account);
     }
 
+
+    $jobSeekerCtx = null;
+    if (auth('account')->check() && ($account ?? null) && $account->isJobSeeker()) {
+        $jobSeekerCtx = \Botble\JobBoard\Supports\JobSeekerPackageContext::forAccount($account);
+    }
+
     // Profile completion with per-field reward points
     $profileFields = [
         ['field' => 'first_name', 'label' => 'Full Name', 'points' => 10, 'filled' => !empty($account->first_name)],
@@ -684,11 +690,14 @@
                     </div>
                     
                     <!-- Wallet (click opens Profile Completion popup with Credits) -->
+                    <!-- Wallet (click opens Profile Completion popup with Credits) -->
                     @if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
+                    <div class="js-wallet-badge js-wallet-open-profile-modal" style="cursor: pointer" onclick="document.getElementById('profileModal').style.display='flex'" title="{{ __('View credits & profile completion') }}">
                     <div class="js-wallet-badge js-wallet-open-profile-modal" style="cursor: pointer" onclick="document.getElementById('profileModal').style.display='flex'" title="{{ __('View credits & profile completion') }}">
                         <i class="fa fa-wallet"></i>
                         <span>{{__('Available Coins') }}:</span>
                         <span class="js-wallet-points">{{ format_credits_short($account->credits ?? 0) }}</span>
+                    </div>
                     </div>
                     @else
                     <div class="js-wallet-badge" onclick="document.getElementById('profileModal').style.display='flex'">
@@ -773,6 +782,7 @@
 </div>
 
 <!-- Profile Completion + Credits Modal (same style as image: Credits header, progress, checklist with Done/Pending) -->
+<!-- Profile Completion + Credits Modal (same style as image: Credits header, progress, checklist with Done/Pending) -->
 <div id="profileModal" class="pm-overlay" style="display:none;">
     <div class="pm-modal">
         <button type="button" class="pm-close" onclick="document.getElementById('profileModal').style.display='none'">&times;</button>
@@ -785,22 +795,35 @@
             <span class="pm-reward-points">{{ format_credits_short($account->credits ?? 0) }}</span>
         </div>
         @else
+        <!-- Credits / Reward Points Badge (orange bar like image) -->
+        @if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
+        <div class="pm-reward-badge pm-credits-badge">
+            <i class="fa fa-coins"></i>
+            <span>{{ __('Credits') }}:</span>
+            <span class="pm-reward-points">{{ format_credits_short($account->credits ?? 0) }}</span>
+        </div>
+        @else
         <div class="pm-reward-badge">
             <i class="fa fa-wallet"></i>
             <span>{{ __('Reward Points') }}:</span>
+            <span>{{ __('Reward Points') }}:</span>
             <span class="pm-reward-points">{{ $walletPoints }}</span>
         </div>
+        @endif
         @endif
 
         <!-- Profile Completion -->
         <div class="pm-completion-section">
             <h6 class="pm-completion-title">{{ __('Profile Completion') }}</h6>
+            <h6 class="pm-completion-title">{{ __('Profile Completion') }}</h6>
             <div class="pm-progress-bar">
                 <div class="pm-progress-fill" style="width: {{ $completion }}%"></div>
             </div>
             <span class="pm-completion-text">{{ $completion }}% {{ __('Complete') }}</span>
+            <span class="pm-completion-text">{{ $completion }}% {{ __('Complete') }}</span>
         </div>
 
+        <!-- Per-field checklist (Done / Pending like image) -->
         <!-- Per-field checklist (Done / Pending like image) -->
         <div class="pm-field-list">
             @foreach($profileFields as $pf)
@@ -811,6 +834,7 @@
                     </span>
                     <span class="pm-field-points {{ $pf['filled'] ? 'pm-earned' : 'pm-pending' }}">
                         {{ $pf['filled'] ? __('Done') : __('Pending') }}
+                        {{ $pf['filled'] ? __('Done') : __('Pending') }}
                     </span>
                 </div>
             @endforeach
@@ -819,12 +843,20 @@
         @if($completion < 100)
             <a href="{{ url(route('public.account.settings')) }}" target="_self" class="pm-complete-btn">
                 <i class="fa fa-user-edit"></i> {{ __('Complete Your Profile') }}
+                <i class="fa fa-user-edit"></i> {{ __('Complete Your Profile') }}
             </a>
         @else
             <div class="pm-congrats">
                 <i class="fa fa-trophy" style="color: #f59e0b; font-size: 20px;"></i>
                 <span>{{ __('Congratulations! Your profile is 100% complete.') }}</span>
+                <span>{{ __('Congratulations! Your profile is 100% complete.') }}</span>
             </div>
+        @endif
+
+        @if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
+        <a href="{{ url(route('public.account.jobseeker.wallet')) }}" target="_self" class="pm-wallet-link mt-2 d-block text-center small">
+            <i class="fa fa-wallet"></i> {{ __('Go to Wallet') }}
+        </a>
         @endif
 
         @if(\Botble\JobBoard\Facades\JobBoardHelper::isEnabledCreditsSystem())
@@ -877,6 +909,10 @@
 }
 .pm-reward-badge i { font-size: 18px; }
 .pm-reward-points { font-size: 18px; font-weight: 600; }
+.pm-credits-badge { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.pm-credits-badge i { font-size: 18px; }
+.pm-wallet-link { color: #0073d1 !important; font-weight: 500; text-decoration: none !important; }
+.pm-wallet-link:hover { text-decoration: underline !important; color: #005bb5 !important; }
 .pm-credits-badge { background: linear-gradient(135deg, #f59e0b, #f97316); }
 .pm-credits-badge i { font-size: 18px; }
 .pm-wallet-link { color: #0073d1 !important; font-weight: 500; text-decoration: none !important; }

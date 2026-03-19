@@ -525,6 +525,7 @@
                             }
                         }
                         $isConsultancy = method_exists($account, 'isConsultancy') ? $account->isConsultancy() : ($account->registration_type ?? null) === 'consultancy';
+                        $isConsultancy = method_exists($account, 'isConsultancy') ? $account->isConsultancy() : ($account->registration_type ?? null) === 'consultancy';
                     @endphp
                     <ul class="emp-sidebar-nav">
                         <li><a href="{{ route('public.account.dashboard') }}" @class(['active' => $currentUrl == route('public.account.dashboard')])><i class="fa fa-home"></i> {{ __('Dashboard') }}</a></li>
@@ -537,8 +538,21 @@
                                 <a href="#" @class(['emp-postjob-choice-trigger' => true, 'emp-nav-locked' => !$canPost, 'active' => $currentUrl == route('public.account.jobs.create')]) data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" data-credits-required="{{ $jobPostCreditsRequired }}" data-can-post="{{ $canPost ? '1' : '0' }}" title="{{ __('Choose how to post job') }}">@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-plus-circle"></i>@endif {{ __('Post Job') }}</a>
                             @endif
                         </li>
+                        <li>
+                            @if($isConsultancy)
+                                <a href="{{ route('public.account.jobs.create') }}" @class(['active' => $currentUrl == route('public.account.jobs.create')])>
+                                    <i class="fa fa-plus-circle"></i> {{ __('Post Job') }}
+                                </a>
+                            @else
+                                <a href="#" @class(['emp-postjob-choice-trigger' => true, 'emp-nav-locked' => !$canPost, 'active' => $currentUrl == route('public.account.jobs.create')]) data-wallet-url="{{ route('public.account.wallet') }}" data-job-create-url="{{ route('public.account.jobs.create') }}" data-purchase-url="{{ route('public.account.wallet.purchase_job_post_slot') }}" data-credits-required="{{ $jobPostCreditsRequired }}" data-can-post="{{ $canPost ? '1' : '0' }}" title="{{ __('Choose how to post job') }}">@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-plus-circle"></i>@endif {{ __('Post Job') }}</a>
+                            @endif
+                        </li>
                         <li><a href="{{ route('public.account.employer.settings.edit') }}" @class(['active' => $currentUrl == route('public.account.employer.settings.edit')])><i class="fa fa-building"></i> {{ __('Settings') }}</a></li>
                         <li><a href="{{ route('public.account.jobs.index') }}" @class(['active' => str_contains($currentUrl, '/jobs') && !str_contains($currentUrl, '/create')])><i class="fa fa-briefcase"></i> {{ __('Jobs') }}</a></li>
+                        @if(!$isConsultancy)
+                            <li><a href="{{ $canPost ? route('public.account.admission.edit') : route('public.account.wallet') }}" @class(['active' => $canPost && str_contains($currentUrl, 'admission'), 'emp-nav-locked' => !$canPost]) @if(!$canPost) title="{{ trans('plugins/job-board::messages.insufficient_credits') }}" @endif>@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-graduation-cap"></i>@endif {{ __('Admission') }}</a></li>
+                            <li><a href="{{ route('public.account.companies.index') }}" @class(['active' => str_contains($currentUrl, 'companies')])><i class="fa fa-university"></i> {{ __('Institution') }}</a></li>
+                        @endif
                         @if(!$isConsultancy)
                             <li><a href="{{ $canPost ? route('public.account.admission.edit') : route('public.account.wallet') }}" @class(['active' => $canPost && str_contains($currentUrl, 'admission'), 'emp-nav-locked' => !$canPost]) @if(!$canPost) title="{{ trans('plugins/job-board::messages.insufficient_credits') }}" @endif>@if(!$canPost)<span class="emp-nav-lock-icon"><i class="fa fa-lock"></i></span>@else<i class="fa fa-graduation-cap"></i>@endif {{ __('Admission') }}</a></li>
                             <li><a href="{{ route('public.account.companies.index') }}" @class(['active' => str_contains($currentUrl, 'companies')])><i class="fa fa-university"></i> {{ __('Institution') }}</a></li>
@@ -753,6 +767,67 @@
 </script>
 @endif
 
+@if($account->isEmployer())
+{{-- Post Job choice popup: Need assistant (→ Wallet) or Post by self (→ Job form) --}}
+<div id="empPostJobChoiceModal" class="emp-pm-overlay" style="display:none;">
+    <div class="emp-pm-modal" style="max-width:420px;">
+        <button type="button" class="emp-pm-close" onclick="document.getElementById('empPostJobChoiceModal').style.display='none'">&times;</button>
+        <h5 style="font-size:18px;font-weight:700;color:#333;margin-bottom:12px;">
+            <i class="fa fa-plus-circle" style="color:#0073d1;margin-right:8px;"></i>
+            {{ __('Post Job') }}
+        </h5>
+        <p style="font-size:14px;color:#555;line-height:1.5;margin-bottom:20px;">{{ __('Choose how you want to post a job:') }}</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <button type="button" id="empPostJobChoiceNeedAssistantBtn" style="padding:12px 18px;border:1.5px solid #0073d1;border-radius:8px;background:#fff;color:#0073d1;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+                <i class="fa fa-hand-holding-heart" style="margin-right:8px;"></i> {{ __('Need assistant for job posting') }}
+            </button>
+            <button type="button" id="empPostJobChoiceBySelfBtn" style="padding:12px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,#0073d1,#005bb5);color:#fff;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+                <i class="fa fa-edit" style="margin-right:8px;"></i> {{ __('Post a job by self') }}
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    var trigger = document.querySelector('a.emp-postjob-choice-trigger');
+    var choiceModal = document.getElementById('empPostJobChoiceModal');
+    var needAssistantBtn = document.getElementById('empPostJobChoiceNeedAssistantBtn');
+    var bySelfBtn = document.getElementById('empPostJobChoiceBySelfBtn');
+    var limitOverModal = document.getElementById('empLimitOverModal');
+    if (!trigger || !choiceModal) return;
+    trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        choiceModal.style.display = 'flex';
+    });
+    choiceModal.addEventListener('click', function(e) {
+        if (e.target === choiceModal) choiceModal.style.display = 'none';
+    });
+    if (needAssistantBtn) {
+        needAssistantBtn.addEventListener('click', function() {
+            var url = trigger.getAttribute('data-wallet-url');
+            if (url) window.location.href = url;
+        });
+    }
+    if (bySelfBtn) {
+        bySelfBtn.addEventListener('click', function() {
+            var canPost = trigger.getAttribute('data-can-post') === '1';
+            var jobCreateUrl = trigger.getAttribute('data-job-create-url');
+            if (canPost && jobCreateUrl) {
+                choiceModal.style.display = 'none';
+                window.location.href = jobCreateUrl;
+            } else if (limitOverModal) {
+                choiceModal.style.display = 'none';
+                limitOverModal.style.display = 'flex';
+            } else if (jobCreateUrl) {
+                choiceModal.style.display = 'none';
+                window.location.href = jobCreateUrl;
+            }
+        });
+    }
+})();
+</script>
+@endif
+
 @if($account->isEmployer() && $jobPostCreditsRequired > 0)
 <!-- Limit over popup: message + Use credits for 1 Job Post (no auto-deduct) -->
 <div id="empLimitOverModal" class="emp-pm-overlay" style="display:none;">
@@ -775,6 +850,7 @@
 </div>
 <script>
 (function() {
+    var trigger = document.querySelector('a.emp-postjob-choice-trigger[data-purchase-url]');
     var trigger = document.querySelector('a.emp-postjob-choice-trigger[data-purchase-url]');
     var modal = document.getElementById('empLimitOverModal');
     var useCreditsBtn = document.getElementById('empLimitOverUseCreditsBtn');

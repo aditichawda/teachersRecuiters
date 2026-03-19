@@ -40,10 +40,23 @@
         padding: 8px 14px;
         height: 40px;
         font-size: 14px;
+        background-color: #fff !important;
     }
     .form-control:focus, .form-select:focus {
         border-color: #0073d1;
         box-shadow: 0 0 0 3px rgba(0,115,209,0.1);
+    }
+
+    /* All native selects: force light/white look (matches employer settings page) */
+    .profile-section-body select.form-select,
+    .profile-section-body select,
+    .profile-section-body .form-select {
+        background-color: #fff !important;
+        color: #111 !important;
+    }
+    .profile-section-body select option {
+        background-color: #fff !important;
+        color: #111 !important;
     }
     .form-check-input:checked {
         background-color: #0073d1;
@@ -189,6 +202,14 @@
         border-radius: 8px;
         background: #fff;
     }
+    /* TomSelect single dropdown: show down-arrow like Bootstrap form-select */
+    .ts-wrapper.single .ts-control {
+        padding-right: 2.5rem !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 0.75rem center !important;
+        background-size: 16px 12px !important;
+    }
     .ts-wrapper .ts-control input {
         font-size: 14px;
     }
@@ -218,6 +239,7 @@
         box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         z-index: 9999;
         margin-top: 4px;
+        background-color: #fff !important;
     }
     .ts-dropdown .optgroup-header {
         background: #f0f7ff;
@@ -232,6 +254,7 @@
         padding: 10px 14px;
         font-size: 14px;
         color: #333;
+        background-color: #fff !important;
     }
     .ts-dropdown .option:hover,
     .ts-dropdown .option.active {
@@ -1081,6 +1104,37 @@ Recruiters often read this section before downloading resumes.
             <div id="work_location_preferences_wrapper" class="mb-3" style="display: {{ $workLocationPreferenceType == 'other' ? 'block' : 'none' }};">
                 <label class="form-label">{{ __('Add preferred locations (set priority)') }}</label>
                 <p class="form-text">{{ $useLocationDropdowns ? __('Default country is same as current location; you can select other countries.') : __('Enter Country, State, City and Locality for each preferred location.') }}</p>
+
+                <style>
+                    /* Job Post-like city suggest dropdown for Preferred Work Locations */
+                    .jp-suggest-wrap { position: relative; overflow: visible; }
+                    .jp-suggest-wrap.jp-suggest-open { z-index: 100000; }
+                    .jp-suggest-list {
+                        position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+                        background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+                        max-height: 220px; overflow-y: auto;
+                        z-index: 99999;
+                        display: none;
+                        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                        padding: 6px 0;
+                        min-height: 44px;
+                        font-size: 14px;
+                        line-height: 1.4;
+                    }
+                    .jp-suggest-list.show { display: block !important; }
+                    .jp-suggest-item {
+                        padding: 10px 14px; cursor: pointer; font-size: 14px;
+                        border-bottom: 1px solid #f5f5f5;
+                    }
+                    .jp-suggest-item:last-child { border-bottom: none; }
+                    .jp-suggest-item:hover, .jp-suggest-item.active { background: #fff5f5; color: #E32526; }
+                    .jp-suggest-item .muted { display:block; font-size: 12px; color:#94a3b8; margin-top:2px; }
+
+                    /* Hide old selects when City-search UI is enabled */
+                    #work_location_preferences_wrapper[data-city-search="1"] .work-pref-country,
+                    #work_location_preferences_wrapper[data-city-search="1"] .work-pref-state,
+                    #work_location_preferences_wrapper[data-city-search="1"] .work-pref-city { display: none !important; }
+                </style>
                 <div id="work-locations-container">
                     @foreach($workLocations as $index => $loc)
                     <div class="removable-item work-location-item" data-state-id="{{ $loc['state_id'] ?? '' }}" data-city-id="{{ $loc['city_id'] ?? '' }}">
@@ -1116,6 +1170,23 @@ Recruiters often read this section before downloading resumes.
                                         <option value="{{ $cid }}" @selected(($loc['city_id'] ?? '') == $cid)>{{ $cname }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+
+                            {{-- Job Post-style City search (auto-fills hidden Country/State/City selects above) --}}
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label small">{{ __('City') }}</label>
+                                <div class="jp-suggest-wrap">
+                                    <input type="text" class="form-control form-control-sm work-city-search" value="{{ $loc['city_name'] ?? '' }}" placeholder="{{ __('Search city...') }}" autocomplete="off" data-index="{{ $index }}">
+                                    <div class="jp-suggest-list work-city-suggestions" data-index="{{ $index }}"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label small">{{ __('State') }}</label>
+                                <input type="text" class="form-control form-control-sm work-state-display" value="{{ $loc['state_name'] ?? '' }}" readonly style="background:#f5f5f5;">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label small">{{ __('Country') }}</label>
+                                <input type="text" class="form-control form-control-sm work-country-display" value="{{ $loc['country_name'] ?? '' }}" readonly style="background:#f5f5f5;">
                             </div>
                             @else
                             <div class="col-md-3 mb-2">
@@ -1531,6 +1602,57 @@ document.addEventListener('DOMContentLoaded', function() {
     // TomSelect Dropdowns Initialization
     // ==========================================
 
+    // Expose helpers globally so dynamically-added rows can reuse them
+    window.TR = window.TR || {};
+    window.TR.initTomSelectSingle = window.TR.initTomSelectSingle || function (selectEl, extraOptions) {
+        if (!selectEl || !window.TomSelect) return null;
+        if (selectEl.tomselect) return selectEl.tomselect;
+
+        // Ensure empty option is allowed when select has placeholder-ish first option
+        var baseOptions = {
+            create: false,
+            allowEmptyOption: true,
+            persist: false,
+            plugins: ['dropdown_input'],
+        };
+
+        try {
+            return new TomSelect(selectEl, Object.assign(baseOptions, extraOptions || {}));
+        } catch (e) {
+            // Fail silently (don’t break page if TomSelect can’t init for any one select)
+            return null;
+        }
+    };
+
+    window.TR.setNativeAndTomSelectOptions = window.TR.setNativeAndTomSelectOptions || function (selectEl, options, selectedValue) {
+        if (!selectEl) return;
+
+        // Update native <select> (keeps form submit correct even if TomSelect fails)
+        var html = '';
+        (options || []).forEach(function (opt) {
+            var value = (opt && opt.value != null) ? String(opt.value) : '';
+            var text = (opt && opt.text != null) ? String(opt.text) : '';
+            var selectedAttr = (selectedValue != null && String(selectedValue) === value) ? ' selected' : '';
+            html += '<option value="' + value.replace(/"/g, '&quot;') + '"' + selectedAttr + '>' + text + '</option>';
+        });
+        selectEl.innerHTML = html;
+
+        // Sync TomSelect instance (if already initialized)
+        if (selectEl.tomselect) {
+            var ts = selectEl.tomselect;
+            ts.clearOptions();
+            (options || []).forEach(function (opt) {
+                ts.addOption({ value: String((opt && opt.value != null) ? opt.value : ''), text: String((opt && opt.text != null) ? opt.text : '') });
+            });
+            ts.refreshOptions(false);
+            if (selectedValue != null && selectedValue !== '') {
+                ts.setValue(String(selectedValue), true);
+            } else {
+                ts.setValue('', true);
+            }
+        }
+    };
+
     // Teaching Certifications (unlimited)
     if (document.getElementById('ts-teaching-certifications')) {
         new TomSelect('#ts-teaching-certifications', {
@@ -1606,6 +1728,44 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // ==========================================================
+    // Select2 for single-select dropdowns (NO CDN; theme already bundles it)
+    // This makes dropdowns look like "div based" dropdown (2nd screenshot)
+    // ==========================================================
+    function initSelect2Single(selectEl) {
+        if (!selectEl || !window.jQuery) return;
+        var $ = window.jQuery;
+        if (!$.fn || typeof $.fn.select2 !== 'function') return;
+
+        var $el = $(selectEl);
+        // Mark as selectpicker so theme scripts/styles apply consistently
+        $el.addClass('selectpicker');
+
+        // Avoid double-init
+        if ($el.hasClass('select2-hidden-accessible')) return;
+
+        try {
+            $el.select2({ width: '100%' });
+        } catch (e) {}
+    }
+
+    function refreshSelect2(selectEl) {
+        if (!selectEl || !window.jQuery) return;
+        var $ = window.jQuery;
+        if (!$.fn || typeof $.fn.select2 !== 'function') return;
+        var $el = $(selectEl);
+        if ($el.hasClass('select2-hidden-accessible')) {
+            // Force Select2 to re-read options
+            $el.trigger('change.select2');
+        } else {
+            initSelect2Single(selectEl);
+        }
+    }
+
+    // Apply Select2 to all single selects in the form (excluding TomSelect multi-selects)
+    document.querySelectorAll('#profile-form select.form-select:not([multiple]):not(#ts-institution-types):not(#ts-teaching-subjects):not(#ts-non-teaching):not(#ts-job-type):not(#ts-teaching-certifications)')
+        .forEach(function (sel) { initSelect2Single(sel); });
 
     // ==========================================
     // Introductory Audio - 1.5 MB validation
@@ -1764,7 +1924,8 @@ document.addEventListener('DOMContentLoaded', function() {
         function loadCities(k) {
             suggestionsEl.innerHTML = '<div class="p-2 text-muted">Loading...</div>';
             suggestionsEl.style.display = 'block';
-            var url = '{{ route("ajax.search-cities") }}' + (k && k.length >= 2 ? '?k=' + encodeURIComponent(k) : '');
+            // When keyword is empty, ask backend for a default list (same behavior as employer settings)
+            var url = '{{ route("ajax.search-cities") }}' + (k && k.length >= 2 ? '?k=' + encodeURIComponent(k) : '?default_country=1&page=1');
             fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) {
                     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1773,8 +1934,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     return r.json();
                 })
                 .then(function(res) {
-                    var cities = Array.isArray(res.data) ? res.data : (res.data && res.data.data) ? res.data.data : [];
-                    if (!Array.isArray(cities) && res.data && !Array.isArray(res.data)) cities = [];
+                    // Support multiple response structures:
+                    // - Location plugin: { data: [ ... ] }
+                    // - Location plugin default_country: { data: { cities: [ ... ] } }
+                    // - Legacy: { data: { data: [ ... ] } }
+                    var raw = res && res.data;
+                    var cities = Array.isArray(raw)
+                        ? raw
+                        : (raw && Array.isArray(raw.cities) ? raw.cities : (raw && Array.isArray(raw.data) ? raw.data : []));
                     renderCities(cities);
                 })
                 .catch(function(err) {
@@ -1815,6 +1982,15 @@ document.addEventListener('DOMContentLoaded', function() {
         var stateDisplay = document.getElementById('js-native-state-display');
         var countryDisplay = document.getElementById('js-native-country-display');
         if (!searchEl || !suggestionsEl) return;
+
+        function extractCities(res) {
+            var raw = res && (res.data !== undefined ? res.data : res);
+            if (Array.isArray(raw)) return raw;
+            if (raw && Array.isArray(raw.cities)) return raw.cities;
+            if (raw && Array.isArray(raw.data)) return raw.data;
+            return [];
+        }
+
         var searchTimeout = null;
         searchEl.addEventListener('input', function() {
             var k = this.value.trim();
@@ -1826,10 +2002,15 @@ document.addEventListener('DOMContentLoaded', function() {
             searchTimeout = setTimeout(function() {
                 suggestionsEl.innerHTML = '<div class="p-2 text-muted">Searching...</div>';
                 suggestionsEl.style.display = 'block';
-                fetch('{{ route("ajax.search-cities") }}?k=' + encodeURIComponent(k))
-                    .then(function(r) { return r.json(); })
+                fetch('{{ route("ajax.search-cities") }}?k=' + encodeURIComponent(k), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function(r) {
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        var ct = r.headers.get('Content-Type') || '';
+                        if (!ct.includes('application/json')) throw new Error('Invalid response');
+                        return r.json();
+                    })
                     .then(function(res) {
-                        var cities = res.data || [];
+                        var cities = extractCities(res);
                         if (cities.length === 0) { suggestionsEl.innerHTML = '<div class="p-2 text-muted">No cities found</div>'; return; }
                         var html = '';
                         cities.forEach(function(c) {
@@ -1872,22 +2053,30 @@ document.addEventListener('DOMContentLoaded', function() {
         var citySel = row.querySelector('.work-pref-city');
         var stateId = row.getAttribute('data-state-id');
         var cityId = row.getAttribute('data-city-id');
+
+        // Ensure Select2 is applied to these selects too (so dropdown looks consistent)
+        initSelect2Single(countrySel);
+        initSelect2Single(stateSel);
+        initSelect2Single(citySel);
+
         if (countrySel && countrySel.value && stateSel) {
             fetch('{{ route("ajax.states-by-country") }}?country_id=' + countrySel.value, { headers: ajaxHeaders })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     var list = getStatesCities(data);
-                    var html = '<option value="">{{ __("Select") }}</option>';
-                    list.forEach(function(s) { if (s && s.id && s.id != 0) html += '<option value="' + s.id + '"' + (s.id == stateId ? ' selected' : '') + '>' + (s.name || '') + '</option>'; });
-                    stateSel.innerHTML = html;
+                    var opts = [{ value: '', text: '{{ __("Select") }}' }];
+                    list.forEach(function(s) { if (s && s.id && s.id != 0) opts.push({ value: s.id, text: (s.name || '') }); });
+                    window.TR.setNativeAndTomSelectOptions(stateSel, opts, stateId);
+                    refreshSelect2(stateSel);
                     if (stateId && stateSel.value && citySel) {
                         fetch('{{ route("ajax.cities-by-state") }}?state_id=' + stateSel.value, { headers: ajaxHeaders })
                             .then(function(r2) { return r2.json(); })
                             .then(function(data2) {
                                 var list2 = getStatesCities(data2);
-                                var html2 = '<option value="">{{ __("Select") }}</option>';
-                                list2.forEach(function(c) { if (c && c.id && c.id != 0) html2 += '<option value="' + c.id + '"' + (c.id == cityId ? ' selected' : '') + '>' + (c.name || '') + '</option>'; });
-                                citySel.innerHTML = html2;
+                                var opts2 = [{ value: '', text: '{{ __("Select") }}' }];
+                                list2.forEach(function(c) { if (c && c.id && c.id != 0) opts2.push({ value: c.id, text: (c.name || '') }); });
+                                window.TR.setNativeAndTomSelectOptions(citySel, opts2, cityId);
+                                refreshSelect2(citySel);
                             })
                             .catch(function() {});
                     }
@@ -1904,37 +2093,188 @@ document.addEventListener('DOMContentLoaded', function() {
                 var row = e.target.closest('.work-location-item');
                 var stateSel = row ? row.querySelector('.work-pref-state') : null;
                 var citySel = row ? row.querySelector('.work-pref-city') : null;
-                if (stateSel) stateSel.innerHTML = '<option value="">{{ __("Select") }}</option>';
-                if (citySel) citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+                if (stateSel) window.TR.setNativeAndTomSelectOptions(stateSel, [{ value: '', text: '{{ __("Select") }}' }], '');
+                if (citySel) window.TR.setNativeAndTomSelectOptions(citySel, [{ value: '', text: '{{ __("Select") }}' }], '');
+                if (stateSel) refreshSelect2(stateSel);
+                if (citySel) refreshSelect2(citySel);
                 if (e.target.value && stateSel) {
                     fetch('{{ route("ajax.states-by-country") }}?country_id=' + e.target.value, { headers: ajaxHeaders })
                         .then(function(r) { return r.json(); })
                         .then(function(data) {
                             var list = getStatesCities(data);
-                            var html = '<option value="">{{ __("Select") }}</option>';
-                            list.forEach(function(s) { if (s && s.id && s.id != 0) html += '<option value="' + s.id + '">' + (s.name || '') + '</option>'; });
-                            stateSel.innerHTML = html;
+                            var opts = [{ value: '', text: '{{ __("Select") }}' }];
+                            list.forEach(function(s) { if (s && s.id && s.id != 0) opts.push({ value: s.id, text: (s.name || '') }); });
+                            window.TR.setNativeAndTomSelectOptions(stateSel, opts, '');
+                            refreshSelect2(stateSel);
                         })
                         .catch(function() {});
                 }
             } else if (e.target.classList.contains('work-pref-state')) {
                 var row = e.target.closest('.work-location-item');
                 var citySel = row ? row.querySelector('.work-pref-city') : null;
-                if (citySel) citySel.innerHTML = '<option value="">{{ __("Select") }}</option>';
+                if (citySel) window.TR.setNativeAndTomSelectOptions(citySel, [{ value: '', text: '{{ __("Select") }}' }], '');
+                if (citySel) refreshSelect2(citySel);
                 if (e.target.value && citySel) {
                     fetch('{{ route("ajax.cities-by-state") }}?state_id=' + e.target.value, { headers: ajaxHeaders })
                         .then(function(r) { return r.json(); })
                         .then(function(data) {
                             var list = getStatesCities(data);
-                            var html = '<option value="">{{ __("Select") }}</option>';
-                            list.forEach(function(c) { if (c && c.id && c.id != 0) html += '<option value="' + c.id + '">' + (c.name || '') + '</option>'; });
-                            citySel.innerHTML = html;
+                            var opts = [{ value: '', text: '{{ __("Select") }}' }];
+                            list.forEach(function(c) { if (c && c.id && c.id != 0) opts.push({ value: c.id, text: (c.name || '') }); });
+                            window.TR.setNativeAndTomSelectOptions(citySel, opts, '');
+                            refreshSelect2(citySel);
                         })
                         .catch(function() {});
                 }
             }
         });
     }
+
+    // Preferred Work Locations: Job Post-like City search (works for existing + newly added rows)
+    (function initPreferredWorkLocationCitySearch() {
+        var wrapper = document.getElementById('work_location_preferences_wrapper');
+        if (!wrapper) return;
+        // enable CSS that hides old selects
+        wrapper.setAttribute('data-city-search', useLocationDropdowns ? '1' : '0');
+        if (!useLocationDropdowns) return;
+
+        function initRow(row) {
+            if (!row) return;
+            var input = row.querySelector('.work-city-search');
+            var list = row.querySelector('.work-city-suggestions');
+            var stateDisplay = row.querySelector('.work-state-display');
+            var countryDisplay = row.querySelector('.work-country-display');
+            var countrySel = row.querySelector('.work-pref-country');
+            var stateSel = row.querySelector('.work-pref-state');
+            var citySel = row.querySelector('.work-pref-city');
+            if (!input || !list || !countrySel || !stateSel || !citySel) return;
+
+            var timer = null;
+
+            function openDropdown() {
+                list.classList.add('show');
+                input.closest('.jp-suggest-wrap')?.classList.add('jp-suggest-open');
+            }
+
+            function closeDropdown() {
+                list.classList.remove('show');
+                input.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
+            }
+
+            function setOption(selectEl, value, label) {
+                if (!selectEl || value == null || value === '') return;
+                var v = String(value);
+                var opt = selectEl.querySelector('option[value="' + v.replace(/"/g, '\\"') + '"]');
+                if (!opt) {
+                    opt = document.createElement('option');
+                    opt.value = v;
+                    opt.textContent = label || v;
+                    selectEl.appendChild(opt);
+                }
+                selectEl.value = v;
+            }
+
+            function triggerChange(el) {
+                if (!el) return;
+                try {
+                    if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
+                        window.jQuery(el).trigger('change');
+                        return;
+                    }
+                } catch (e) {}
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            function renderItems(cities) {
+                if (!Array.isArray(cities) || cities.length === 0) {
+                    list.innerHTML = '<div class="jp-suggest-item" style="cursor:default;color:#6b7280;">{{ __("No cities found") }}</div>';
+                    openDropdown();
+                    return;
+                }
+                var html = '';
+                cities.forEach(function(c) {
+                    var parts = [];
+                    if (c.state_name) parts.push(c.state_name);
+                    if (c.country_name) parts.push(c.country_name);
+                    html += '<div class="jp-suggest-item work-city-item" ' +
+                        'data-city-id="' + (c.id || '') + '" ' +
+                        'data-city-name="' + (c.name || '') + '" ' +
+                        'data-state-id="' + (c.state_id || '') + '" ' +
+                        'data-state-name="' + (c.state_name || '') + '" ' +
+                        'data-country-id="' + (c.country_id || '') + '" ' +
+                        'data-country-name="' + (c.country_name || '') + '">' +
+                        '<div style="font-weight:600;">' + (c.name || '') + '</div>' +
+                        (parts.length ? '<span class="muted">' + parts.join(', ') + '</span>' : '') +
+                        '</div>';
+                });
+                list.innerHTML = html;
+                openDropdown();
+            }
+
+            function fetchCities(keyword) {
+                var k = String(keyword || '').trim();
+                var url = '{{ route("ajax.search-cities") }}' + (k.length >= 2 ? ('?k=' + encodeURIComponent(k)) : '?default_country=1&page=1');
+                list.innerHTML = '<div class="jp-suggest-item" style="cursor:default;color:#6b7280;">' + (k.length >= 2 ? '{{ __("Searching...") }}' : '{{ __("Loading...") }}') + '</div>';
+                openDropdown();
+                fetch(url, { headers: ajaxHeaders })
+                    .then(function(r) { return r.json().catch(function(){ return null; }); })
+                    .then(function(res) {
+                        var raw = res && res.data;
+                        var cities = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.cities) ? raw.cities : []);
+                        renderItems(cities);
+                    })
+                    .catch(function() {
+                        list.innerHTML = '<div class="jp-suggest-item" style="cursor:default;color:#6b7280;">{{ __("Error loading cities") }}</div>';
+                        openDropdown();
+                    });
+            }
+
+            input.addEventListener('focus', function() {
+                fetchCities(this.value);
+            });
+
+            input.addEventListener('input', function() {
+                clearTimeout(timer);
+                if (stateDisplay) stateDisplay.value = '';
+                if (countryDisplay) countryDisplay.value = '';
+                timer = setTimeout(function() { fetchCities(input.value); }, 250);
+            });
+
+            list.addEventListener('mousedown', function(e) {
+                var item = e.target.closest('.work-city-item');
+                if (!item) return;
+                e.preventDefault();
+                var cityId = item.getAttribute('data-city-id');
+                var cityName = item.getAttribute('data-city-name');
+                var stateId = item.getAttribute('data-state-id');
+                var stateName = item.getAttribute('data-state-name');
+                var countryId = item.getAttribute('data-country-id');
+                var countryName = item.getAttribute('data-country-name');
+
+                input.value = cityName || '';
+                if (stateDisplay) stateDisplay.value = stateName || '';
+                if (countryDisplay) countryDisplay.value = countryName || '';
+
+                setOption(countrySel, countryId, countryName);
+                triggerChange(countrySel);
+                setOption(stateSel, stateId, stateName);
+                triggerChange(stateSel);
+                setOption(citySel, cityId, cityName);
+                triggerChange(citySel);
+
+                closeDropdown();
+            });
+
+            document.addEventListener('click', function(e) {
+                var wrap = input.closest('.jp-suggest-wrap');
+                if (wrap && !wrap.contains(e.target)) closeDropdown();
+            });
+        }
+
+        document.querySelectorAll('.work-location-item').forEach(function(row) { initRow(row); });
+        window.TR = window.TR || {};
+        window.TR.initPreferredWorkLocationRow = initRow;
+    })();
 });
 
 // Add qualification (specialization always as dropdown from jb_specializations)
@@ -1967,6 +2307,14 @@ function addQualification() {
         </div>
     `;
     container.insertAdjacentHTML('beforeend', html);
+    // Apply TomSelect to newly-added selects (so dropdown UI matches)
+    var newItem = container.lastElementChild;
+    if (newItem) {
+        // Prefer Select2 (bundled) for single selects
+        if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
+            window.jQuery(newItem).find('select.form-select:not([multiple])').addClass('selectpicker').select2({ width: '100%' });
+        }
+    }
     qualificationIndex++;
 }
 
@@ -2003,6 +2351,14 @@ function addLanguage() {
         </div>
     `;
     container.insertAdjacentHTML('beforeend', html);
+    // Apply TomSelect to newly-added selects (so dropdown UI matches)
+    var newItem = container.lastElementChild;
+    if (newItem) {
+        // Prefer Select2 (bundled) for single selects
+        if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
+            window.jQuery(newItem).find('select.form-select:not([multiple])').addClass('selectpicker').select2({ width: '100%' });
+        }
+    }
     languageIndex++;
 }
 
@@ -2032,19 +2388,54 @@ function addWorkLocation() {
             '<select class="form-select form-select-sm work-pref-city" name="work_location_preferences[' + idx + '][city_id]" data-index="' + idx + '"><option value="">{{ __("Select") }}</option></select></div>' +
             '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("Locality") }}</label>' +
             '<input type="text" class="form-control form-control-sm" name="work_location_preferences[' + idx + '][locality]" placeholder="{{ __("Locality") }}"></div>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("City") }}</label>' +
+            '<div class="jp-suggest-wrap"><input type="text" class="form-control form-control-sm work-city-search" placeholder="{{ __("Search city...") }}" autocomplete="off" data-index="' + idx + '">' +
+            '<div class="jp-suggest-list work-city-suggestions" data-index="' + idx + '"></div></div></div>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("State") }}</label>' +
+            '<input type="text" class="form-control form-control-sm work-state-display" readonly style="background:#f5f5f5;"></div>' +
+            '<div class="col-md-3 mb-2"><label class="form-label small">{{ __("Country") }}</label>' +
+            '<input type="text" class="form-control form-control-sm work-country-display" readonly style="background:#f5f5f5;"></div>' +
             '</div></div>';
         document.getElementById('work-locations-container').insertAdjacentHTML('beforeend', html);
+        // Apply Select2 to newly-added work location selects (div based dropdown)
+        var newRow = document.getElementById('work-locations-container').lastElementChild;
+        if (newRow) {
+            var cSel = newRow.querySelector('.work-pref-country');
+            var sSel = newRow.querySelector('.work-pref-state');
+            var ciSel = newRow.querySelector('.work-pref-city');
+            if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
+                var $ = window.jQuery;
+                if (cSel) $(cSel).addClass('selectpicker').select2({ width: '100%' });
+                if (sSel) $(sSel).addClass('selectpicker').select2({ width: '100%' });
+                if (ciSel) $(ciSel).addClass('selectpicker').select2({ width: '100%' });
+            }
+
+            // Init city search UI
+            if (window.TR && typeof window.TR.initPreferredWorkLocationRow === 'function') {
+                window.TR.initPreferredWorkLocationRow(newRow);
+            }
+        }
         if (defaultCountryId) {
-            var newRow = document.getElementById('work-locations-container').lastElementChild;
             var stateSel = newRow ? newRow.querySelector('.work-pref-state') : null;
             if (stateSel) {
                 fetch('{{ route("ajax.states-by-country") }}?country_id=' + defaultCountryId, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         var list = (data && data.data) ? data.data : (Array.isArray(data) ? data : []);
-                        var h = '<option value="">{{ __("Select") }}</option>';
-                        list.forEach(function(s) { if (s && s.id && s.id != 0) h += '<option value="' + s.id + '">' + (s.name || '') + '</option>'; });
-                        stateSel.innerHTML = h;
+                        var opts = [{ value: '', text: '{{ __("Select") }}' }];
+                        list.forEach(function(s) { if (s && s.id && s.id != 0) opts.push({ value: s.id, text: (s.name || '') }); });
+                        // Keep TomSelect (if initialized) synced too
+                        if (window.TR && typeof window.TR.setNativeAndTomSelectOptions === 'function') {
+                            window.TR.setNativeAndTomSelectOptions(stateSel, opts, '');
+                            if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
+                                window.jQuery(stateSel).trigger('change.select2');
+                            }
+                        } else {
+                            // Fallback if this function isn't in scope for any reason
+                            var h = '<option value="">{{ __("Select") }}</option>';
+                            list.forEach(function(s) { if (s && s.id && s.id != 0) h += '<option value="' + s.id + '">' + (s.name || '') + '</option>'; });
+                            stateSel.innerHTML = h;
+                        }
                     })
                     .catch(function() {});
             }

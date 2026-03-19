@@ -173,6 +173,9 @@ class AdmissionAccountController extends BaseController
      * Admission access when credits system enabled:
      * (1) Package me "Admission Form on Profile" hai aur package valid hai → access.
      * (2) Nahi to credits se unlock (debit) – valid while package not expired, else 365 days from debit.
+     * Admission access when credits system enabled:
+     * (1) Package me "Admission Form on Profile" hai aur package valid hai → access.
+     * (2) Nahi to credits se unlock (debit) – valid while package not expired, else 365 days from debit.
      */
     private function hasAdmissionEnquiryAccess(Account $account): bool
     {

@@ -6,6 +6,7 @@
     $formatLabel = function($v) { return ucwords(str_replace('_', ' ', (string)$v)); };
     $profileLocked = $profileLocked ?? false;
     $candidateIsFeatured = $candidateIsFeatured ?? false;
+    $candidateIsFeatured = $candidateIsFeatured ?? false;
 @endphp
 
 {!! Theme::partial('candidate-card-styles') !!}
@@ -238,6 +239,114 @@
     .cdt-summary-top { grid-template-columns: 70px 1fr; }
     .cdt-summary-avatar { width: 70px; height: 70px; }
     .cdt-summary-meta { grid-template-columns: 1fr; }
+    background: #ffffff;
+}
+.cdt-summary-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+    padding: 22px 22px;
+    margin-bottom: 18px;
+}
+.cdt-summary-card:hover { box-shadow: 0 8px 24px rgba(15, 23, 42, .06); border-color: #dbe4f0; }
+.cdt-summary-top {
+    display: grid;
+    grid-template-columns: 86px 1fr;
+    gap: 16px;
+    align-items: center;
+}
+.cdt-summary-avatar {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #f1f5f9;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cdt-summary-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.cdt-summary-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.cdt-summary-subtitle {
+    color: #64748b;
+    font-size: 14px;
+    margin: 0;
+}
+.cdt-summary-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+.cdt-summary-actions .cdt-btn-primary,
+.cdt-summary-actions .cdt-btn-outline {
+    padding: 10px 18px;
+    border-radius: 10px;
+}
+.cdt-btn-outline { background: #fff; }
+.cdt-btn-outline:hover { background: #f1f7ff; }
+.cdt-btn-soft {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #0f172a !important;
+    font-weight: 700;
+    text-decoration: none;
+}
+.cdt-btn-soft:hover { background: #eef2f7; color: #0b1220 !important; }
+.cdt-summary-meta {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+.cdt-meta-item {
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 14px 14px;
+    background: #fff;
+}
+.cdt-meta-label {
+    font-size: 11px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+.cdt-meta-value {
+    font-size: 14px;
+    color: #0f172a;
+    font-weight: 700;
+    line-height: 1.35;
+    word-break: break-word;
+}
+@media (max-width: 991px) {
+    .cdt-summary-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 575px) {
+    .cdt-summary-top { grid-template-columns: 70px 1fr; }
+    .cdt-summary-avatar { width: 70px; height: 70px; }
+    .cdt-summary-meta { grid-template-columns: 1fr; }
 }
 .cdt-back-btn {
     display: inline-flex;
@@ -261,6 +370,37 @@
     transition: box-shadow .2s, border-color .2s;
     border-left: 4px solid #0066cc;
 }
+.cdt-card { padding: 24px 26px; }
+.cdt-card .cdt-block-heading { margin-bottom: 12px; }
+.cdt-card .cdt-block-heading i { opacity: .9; }
+.cdt-empty-msg { color: #94a3b8; }
+.cdt-detail-row { padding: 12px 0; }
+.cdt-detail-label { min-width: 180px; }
+
+.cdt-subcard {
+    border: 1px solid #eef2f7;
+    border-radius: 14px;
+    padding: 18px 18px;
+    background: #fff;
+    margin-top: 12px;
+}
+.cdt-subcard + .cdt-subcard { margin-top: 14px; }
+.cdt-subcard-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cdt-subrow {
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.cdt-subrow:last-child { border-bottom: none; padding-bottom: 0; }
+.cdt-subrow .title { font-weight: 800; color: #0f172a; }
+.cdt-subrow .meta { color: #64748b; font-weight: 700; margin-top: 2px; }
 .cdt-card { padding: 24px 26px; }
 .cdt-card .cdt-block-heading { margin-bottom: 12px; }
 .cdt-card .cdt-block-heading i { opacity: .9; }
@@ -718,6 +858,8 @@
 
 {{-- Candidate Header (updated layout) --}}
 <div style="height: 18px;"></div>
+{{-- Candidate Header (updated layout) --}}
+<div style="height: 18px;"></div>
 
 @if(!$profileLocked)
 @php
@@ -803,10 +945,69 @@
                                 <a href="tel:{{ $candidate->phone }}" class="cdt-btn-soft"><i class="feather-phone"></i> {{ __('Call') }}</a>
                             @endif
                         </div>
+
+        {{-- Summary card (matches updated screenshots) --}}
+        <div class="cdt-summary-card">
+            <div class="cdt-summary-top">
+                <div class="cdt-summary-avatar">
+                    <img src="{{ $candidate->avatar_url ?? '' }}" alt="{{ $candidate->name ?? 'Candidate' }}">
+                </div>
+                <div>
+                    <h1 class="cdt-summary-name">
+                        <span>{{ $candidate->name ?? 'Candidate' }}</span>
+                        @if($candidateIsFeatured)
+                            <span class="badge bg-warning text-dark" style="font-size: 12px; font-weight: 700;">{{ __('Featured') }}</span>
+                        @endif
+                    </h1>
+                    @if(!$profileLocked && ($candidate->description ?? null))
+                        <p class="cdt-summary-subtitle">{!! BaseHelper::clean($candidate->description) !!}</p>
+                    @elseif($profileLocked)
+                        <p class="cdt-summary-subtitle">{{ trans('plugins/job-board::messages.candidate_profile_locked') }}</p>
+                    @endif
+
+                    @if(!$profileLocked && JobBoardHelper::canViewCandidateInformation())
+                        <div class="cdt-summary-actions">
+                            @if(isset($account) && $account && $account->isEmployer() && ($employerJobs ?? collect())->isNotEmpty())
+                                <button type="button" class="cdt-btn-primary" data-bs-toggle="modal" data-bs-target="#cdtInviteToApplyModal" title="{{ __('25 credits per invite') }}"><i class="feather-send"></i> {{ __('Invite to Apply') }}</button>
+                            @endif
+                            @if($candidate->email ?? null)
+                                <a href="mailto:{{ $candidate->email }}" class="cdt-btn-primary"><i class="feather-mail"></i> {{ __('Send Email') }}</a>
+                            @endif
+                            @if(($candidate->resume ?? null) && !($candidate->hide_cv ?? false))
+                                <a href="{{ $candidate->resume_url ?? '#' }}" download class="cdt-btn-outline"><i class="feather-download"></i> {{ __('Download Resume') }}</a>
+                            @endif
+                            @if($candidate->phone ?? null)
+                                <a href="tel:{{ $candidate->phone }}" class="cdt-btn-soft"><i class="feather-phone"></i> {{ __('Call') }}</a>
+                            @endif
+                        </div>
                     @endif
                 </div>
             </div>
+                </div>
+            </div>
 
+            <div class="cdt-summary-meta">
+                <div class="cdt-meta-item">
+                    <div class="cdt-meta-label">{{ __('Current Location') }}</div>
+                    <div class="cdt-meta-value">{{ $currentLocStr ?: '—' }}</div>
+                </div>
+                <div class="cdt-meta-item">
+                    <div class="cdt-meta-label">{{ __('Date of Birth') }}</div>
+                    <div class="cdt-meta-value">{{ $candidate->dob ? $candidate->dob->format('M d, Y') : '—' }}</div>
+                </div>
+                <div class="cdt-meta-item">
+                    <div class="cdt-meta-label">{{ __('Profile Created') }}</div>
+                    <div class="cdt-meta-value">{{ $candidate->created_at ? $candidate->created_at->format('M d, Y') : '—' }}</div>
+                </div>
+                <div class="cdt-meta-item">
+                    <div class="cdt-meta-label">{{ __('Last Updated') }}</div>
+                    <div class="cdt-meta-value">{{ $candidate->updated_at ? $candidate->updated_at->diffForHumans() : '—' }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                {{-- Availability and Location Preferences --}}
             <div class="cdt-summary-meta">
                 <div class="cdt-meta-item">
                     <div class="cdt-meta-label">{{ __('Current Location') }}</div>
@@ -835,8 +1036,14 @@
                         <span class="cdt-detail-label">{{ __('Current Location') }}</span>
                         <span class="cdt-detail-value">{{ $currentLocStr ?: '—' }}</span>
                     </div>
+                    <h4 class="cdt-block-heading"><i class="ti ti-map-pin me-2"></i>{{ __('Availability and Location Preferences') }}</h4>
+                    <div class="cdt-detail-row">
+                        <span class="cdt-detail-label">{{ __('Current Location') }}</span>
+                        <span class="cdt-detail-value">{{ $currentLocStr ?: '—' }}</span>
+                    </div>
                 </div>
 
+                {{-- About --}}
                 {{-- About --}}
                 <div class="cdt-card">
                     <h4 class="cdt-block-heading"><i class="ti ti-info-circle me-2"></i>{{ __('About') }}</h4>
@@ -844,13 +1051,41 @@
                         <div class="ck-content">{!! BaseHelper::clean($candidate->bio) !!}</div>
                     @elseif($candidate->description ?? null)
                         <div class="ck-content">{!! BaseHelper::clean($candidate->description) !!}</div>
+                    <h4 class="cdt-block-heading"><i class="ti ti-info-circle me-2"></i>{{ __('About') }}</h4>
+                    @if($candidate->bio ?? null)
+                        <div class="ck-content">{!! BaseHelper::clean($candidate->bio) !!}</div>
+                    @elseif($candidate->description ?? null)
+                        <div class="ck-content">{!! BaseHelper::clean($candidate->description) !!}</div>
                     @else
+                        <p class="cdt-empty-msg">— {{ __('No description added') }}</p>
                         <p class="cdt-empty-msg">— {{ __('No description added') }}</p>
                     @endif
                 </div>
 
                 {{-- Professional Information --}}
+                {{-- Professional Information --}}
                 <div class="cdt-card">
+                    <h4 class="cdt-block-heading"><i class="ti ti-briefcase me-2"></i>{{ __('Professional Information') }}</h4>
+
+                    {{-- Experience --}}
+                    <div class="cdt-subcard">
+                        <div class="cdt-subcard-title"><i class="ti ti-building-skyscraper"></i>{{ __('Experience') }}</div>
+                        @if(isset($experiences) && $experiences->isNotEmpty())
+                            @foreach($experiences as $experience)
+                                <div class="cdt-subrow">
+                                    <div class="title">{{ $experience->company ?? '—' }}</div>
+                                    <div class="meta">
+                                        {{ $experience->position ? ucwords($experience->position) : '—' }}
+                                        @if($experience->started_at)
+                                            <span style="font-weight:700;"> ({{ $experience->started_at->format('Y') }}{{ ($experience->is_current || ! $experience->ended_at) ? ' - ' . __('Present') : ' - ' . $experience->ended_at?->format('Y') }})</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <p class="cdt-empty-msg">— {{ __('No work experience added') }}</p>
+                        @endif
+                    </div>
                     <h4 class="cdt-block-heading"><i class="ti ti-briefcase me-2"></i>{{ __('Professional Information') }}</h4>
 
                     {{-- Experience --}}
@@ -891,9 +1126,28 @@
                         @else
                             <p class="cdt-empty-msg">— {{ __('No education added') }}</p>
                         @endif
+                    {{-- Education --}}
+                    <div class="cdt-subcard">
+                        <div class="cdt-subcard-title"><i class="ti ti-school"></i>{{ __('Education') }}</div>
+                        @if(isset($educations) && $educations->isNotEmpty())
+                            @foreach($educations as $education)
+                                <div class="cdt-subrow">
+                                    <div class="title">{{ $education->school ? ucwords($education->school) : '—' }}</div>
+                                    <div class="meta">
+                                        {{ $education->specialized ? ucwords($education->specialized) : '—' }}
+                                        @if($education->started_at)
+                                            <span style="font-weight:700;"> ({{ $education->started_at->format('Y') }}{{ ($education->is_current || ! $education->ended_at) ? ' - ' . __('Present') : ' - ' . $education->ended_at?->format('Y') }})</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <p class="cdt-empty-msg">— {{ __('No education added') }}</p>
+                        @endif
                     </div>
                 </div>
 
+                {{-- Footer actions --}}
                 {{-- Footer actions --}}
                 @if(JobBoardHelper::canViewCandidateInformation() && ($candidate->resume ?? null) && !($candidate->hide_cv ?? false))
                     <div class="cdt-footer-actions">
@@ -974,8 +1228,77 @@
         </div>
     </div>
 </div>
+{{-- Invite to Apply modal (employer: select job, 25 credits per invite) --}}
+@if(isset($account) && $account && $account->isEmployer() && ($employerJobs ?? collect())->isNotEmpty())
+<div class="modal fade" id="cdtInviteToApplyModal" tabindex="-1" aria-labelledby="cdtInviteToApplyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cdtInviteToApplyModalLabel">{{ __('Invite to Apply') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cdtInviteToApplyForm">
+                @csrf
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">{{ __('25 credits will be deducted. An email will be sent to the candidate.') }}</p>
+                    <input type="hidden" name="candidate_id" value="{{ $candidate->id }}">
+                    <div class="mb-2">
+                        <label for="cdt_invite_job_id" class="form-label">{{ __('Select Job') }} <span class="text-danger">*</span></label>
+                        <select name="job_id" id="cdt_invite_job_id" class="form-select form-select-sm" required>
+                            <option value="">{{ __('— Select job —') }}</option>
+                            @foreach($employerJobs as $job)
+                                <option value="{{ $job->id }}">{{ $job->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary" id="cdtInviteToApplySubmitBtn">{{ __('Send Invite') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <script>
 (function() {
+    var form = document.getElementById('cdtInviteToApplyForm');
+    if (!form) return;
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var btn = document.getElementById('cdtInviteToApplySubmitBtn');
+        if (btn) btn.disabled = true;
+        var body = {
+            job_id: parseInt(document.getElementById('cdt_invite_job_id').value, 10),
+            candidate_id: parseInt(form.querySelector('input[name="candidate_id"]').value, 10)
+        };
+        fetch('{{ route('public.account.invite-candidate.store') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]') ? document.querySelector('input[name="_token"]').value : '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(body)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var ok = data.error === false || (data.data && data.data.error === false);
+            if (ok) {
+                var modal = document.getElementById('cdtInviteToApplyModal');
+                if (modal && typeof bootstrap !== 'undefined') {
+                    var m = bootstrap.Modal.getInstance(modal);
+                    if (m) m.hide();
+                }
+                alert(data.message || (data.data && data.data.message) || '{{ __('Invite sent.') }}');
+                if (typeof window.location !== 'undefined') window.location.reload();
+            } else {
+                alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+            }
+        })
+        .catch(function() { alert('{{ __('Something went wrong.') }}'); })
+        .finally(function() { if (btn) btn.disabled = false; });
     var form = document.getElementById('cdtInviteToApplyForm');
     if (!form) return;
     form.addEventListener('submit', function(e) {

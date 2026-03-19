@@ -18,6 +18,8 @@
 .wallet-em-page .wallet-js-two-cols .wallet-js-col-orange { flex: 1 1 calc(50% - 0.375rem) !important; min-width: 140px; max-width: none; }
 .wallet-em-page .wallet-js-packages-row { align-items: stretch !important; }
 .wallet-em-page .wallet-js-packages-row > .wallet-js-package-col { display: flex !important; }
+.wallet-em-page .wallet-js-packages-row { align-items: stretch !important; }
+.wallet-em-page .wallet-js-packages-row > .wallet-js-package-col { display: flex !important; }
 .wallet-em-page .wallet-js-packages-row .wallet-package-card { display: flex !important; flex-direction: column !important; flex: 1 1 100% !important; min-height: 200px !important; background: #fff !important; border-radius: 12px !important; box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important; border: 1px solid rgba(0,0,0,0.06) !important; }
 .wallet-em-page .wallet-js-packages-row .wallet-package-card .card-body { flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; padding: 1rem 1.25rem !important; }
 .wallet-em-page .wallet-js-packages-row .wallet-package-card .card-body .wallet-package-card-actions { margin-top: auto !important; padding-top: 0.75rem !important; }
@@ -103,6 +105,16 @@
 @section('content')
     {{-- Employer wallet page (same card layout as job seeker) --}}
     <div class="wallet-em-page">
+    @php
+        $packagesList = $packages ?? collect();
+        $packagesCount = is_countable($packagesList) ? count($packagesList) : 0;
+        $packagesRight = $packagesList;
+        $packageLeft = null;
+        if ($packagesCount === 4) {
+            $packagesRight = $packagesList->take(3);
+            $packageLeft = $packagesList->skip(3)->first();
+        }
+    @endphp
     @php
         $packagesList = $packages ?? collect();
         $packagesCount = is_countable($packagesList) ? count($packagesList) : 0;
@@ -231,7 +243,9 @@
             </div>
             <div class="row wallet-js-packages-row g-3">
                 @foreach($packagesRight ?? [] as $package)
+                @foreach($packagesRight ?? [] as $package)
                     @php $isCurrentPackage = in_array($package->id, $currentPackageIds ?? []); @endphp
+                    <div class="col-12 col-md-6 col-lg-4 wallet-js-package-col">
                     <div class="col-12 col-md-6 col-lg-4 wallet-js-package-col">
                         <div @class(['card wallet-package-card', 'border-warning' => $package->is_default, 'wallet-package-card-current' => $isCurrentPackage])>
                             @if($isCurrentPackage)
@@ -290,6 +304,8 @@
         </div>
         @php $isConsultancy = $isConsultancy ?? ($account && method_exists($account, 'isConsultancy') && $account->isConsultancy()); @endphp
         @unless($isConsultancy)
+        @php $isConsultancy = $isConsultancy ?? ($account && method_exists($account, 'isConsultancy') && $account->isConsultancy()); @endphp
+        @unless($isConsultancy)
         <div class="col-lg-12 col-md-12">
             <x-core::card class="h-100">
                 <x-core::card.header>
@@ -313,7 +329,7 @@
                                 <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
                                     <span>{{ is_array($item) ? ($item['label'] ?? $key) : $key }}</span>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="text-muted small">{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }}</span>
+                                        <span class="text-muted small">@if($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY) {{ __('Paid') }} @else{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }} @endif</span>
                                         @if($account->isEmployer() && is_array($item) && !empty($item['credits']))
                                             @php $featureActiveWithPackage = in_array($key, $activePackageFeatureKeys ?? []); @endphp
                                             @if($key === \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING && isset($jobPostCreditsRequired) && $jobPostCreditsRequired > 0)
@@ -430,8 +446,11 @@
             </x-core::card>
         </div>
         @endunless
+        @endunless
     </div>
 
+    {{-- Modal: Use credits for a feature (generic) – like Features & Coins list, confirm before deduct --}}
+    @if($account->isEmployer() && !(method_exists($account, 'isConsultancy') && $account->isConsultancy()))
     {{-- Modal: Use credits for a feature (generic) – like Features & Coins list, confirm before deduct --}}
     @if($account->isEmployer() && !(method_exists($account, 'isConsultancy') && $account->isConsultancy()))
         <div class="modal fade" id="walletFeaturePurchaseModal" tabindex="-1" aria-labelledby="walletFeaturePurchaseModalLabel" aria-hidden="true">
@@ -439,14 +458,18 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="walletFeaturePurchaseModalLabel">{{ __('Features & Coins Consumption') }}</h5>
+                        <h5 class="modal-title" id="walletFeaturePurchaseModalLabel">{{ __('Features & Coins Consumption') }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p class="mb-1 fw-medium" id="walletFeaturePurchaseModalFeatureName"></p>
                         <p class="mb-0 text-muted small" id="walletFeaturePurchaseModalMsg"></p>
+                        <p class="mb-1 fw-medium" id="walletFeaturePurchaseModalFeatureName"></p>
+                        <p class="mb-0 text-muted small" id="walletFeaturePurchaseModalMsg"></p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="button" class="btn btn-primary" id="walletFeaturePurchaseConfirmBtn">{{ __('Use credits') }}</button>
                         <button type="button" class="btn btn-primary" id="walletFeaturePurchaseConfirmBtn">{{ __('Use credits') }}</button>
                     </div>
                 </div>
@@ -821,6 +844,332 @@
     </div>
     @endif
 
+    {{-- Modal: Social Promotion – confirm deduct first --}}
+    @if($account->isEmployer())
+    <div class="modal fade" id="walletSocialPromotionConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Post/Promote on LinkedIn') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">{{ __('3000 credits will be deducted first. Then the form will open. Continue?') }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="walletSocialPromotionConfirmBtn">{{ __('Continue') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Social Promotion request form (open after deduct) --}}
+    @if($account->isEmployer())
+    <div class="modal fade" id="walletSocialPromotionModal" tabindex="-1" aria-labelledby="walletSocialPromotionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletSocialPromotionModalLabel">{{ __('Post/Promote on LinkedIn/Other Social Pages') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletSocialPromotionForm">
+                    @csrf
+                    <input type="hidden" name="credits_already_deducted" id="social_promotion_credits_deducted" value="0">
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3">{{ __('Credits already deducted. Fill the form and submit.') }}</p>
+                        <div class="mb-2">
+                            <label for="social_promotion_company_id" class="form-label">{{ __('Institution') }}</label>
+                            <select name="company_id" id="social_promotion_company_id" class="form-select form-select-sm">
+                                <option value="">{{ __('— Select —') }}</option>
+                                @foreach($companies ?? [] as $company)
+                                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label for="social_promotion_title" class="form-label">{{ __('Title') }}</label>
+                                <input type="text" name="title" id="social_promotion_title" class="form-control form-control-sm" maxlength="255" placeholder="{{ __('Title') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="social_promotion_tag" class="form-label">{{ __('Tag') }}</label>
+                                <input type="text" name="tag" id="social_promotion_tag" class="form-control form-control-sm" maxlength="255" placeholder="{{ __('Tag') }}">
+                            </div>
+                        </div>
+                        <div class="mb-2 mt-2">
+                            <label for="social_promotion_platform" class="form-label">{{ __('Platform') }} <span class="text-danger">*</span></label>
+                            <select name="platform" id="social_promotion_platform" class="form-select form-select-sm" required>
+                                <option value="">{{ __('— Select —') }}</option>
+                                <option value="LinkedIn">LinkedIn</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="Twitter">Twitter</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="social_promotion_message" class="form-label">{{ __('Message') }}</label>
+                            <textarea name="message" id="social_promotion_message" class="form-control form-control-sm" rows="3" maxlength="2000" placeholder="{{ __('Message / Description') }}"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label for="social_promotion_image" class="form-label">{{ __('Image') }}</label>
+                            <input type="file" name="image" id="social_promotion_image" class="form-control form-control-sm" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
+                            <small class="text-muted">{{ __('Optional. JPG, PNG, GIF, WebP. Max 5MB.') }}</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary" id="walletSocialPromotionSubmitBtn">{{ __('Submit request') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Job Posting Assistance – 250 credits deducted, request to admin --}}
+    @if($account->isEmployer())
+    <div class="modal fade" id="walletJobPostingAssistanceModal" tabindex="-1" aria-labelledby="walletJobPostingAssistanceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletJobPostingAssistanceModalLabel">{{ __('Job Posting Assistance') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletJobPostingAssistanceForm">
+                    @csrf
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3">{{ __('250 credits will be deducted. Request will go to admin. After approval, admin can create job for your institution.') }}</p>
+                        <div class="mb-2">
+                            <label for="jpa_company_id" class="form-label">{{ __('Institution') }}</label>
+                            <select name="company_id" id="jpa_company_id" class="form-select form-select-sm">
+                                <option value="">{{ __('— Select —') }}</option>
+                                @foreach($companies ?? [] as $company)
+                                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="jpa_message" class="form-label">{{ __('Message') }}</label>
+                            <textarea name="message" id="jpa_message" class="form-control form-control-sm" rows="3" maxlength="2000" placeholder="{{ __('Optional note for admin') }}"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary" id="walletJobPostingAssistanceSubmitBtn">{{ __('Submit request') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Walk-in Drive Ad – confirm deduct first --}}
+    @if($account->isEmployer())
+    <div class="modal fade" id="walletWalkinDriveAdConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Walk-in Drive Ad Space') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">{{ __('2500 credits will be deducted first. Then the form will open. Continue?') }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="walletWalkinDriveAdConfirmBtn">{{ __('Continue') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Walk-in Drive Ad Space – form (open after deduct) --}}
+    @if($account->isEmployer())
+    <div class="modal fade" id="walletWalkinDriveAdModal" tabindex="-1" aria-labelledby="walletWalkinDriveAdModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletWalkinDriveAdModalLabel">{{ __('Walk-in Drive Ad Space (Home & Job Listing Page)') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletWalkinDriveAdForm" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="credits_already_deducted" id="walkin_drive_ad_credits_deducted" value="0">
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3">{{ __('Credits already deducted. Upload banner and choose where to show (Home page, Job Listing page, or both). Admin will approve to display.') }}</p>
+                        <div class="mb-2">
+                            <label for="wda_company_id" class="form-label">{{ __('Institution') }}</label>
+                            <select name="company_id" id="wda_company_id" class="form-select form-select-sm">
+                                <option value="">{{ __('— Select —') }}</option>
+                                @foreach($companies ?? [] as $company)
+                                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="wda_banner_image" class="form-label">{{ __('Banner image') }} <span class="text-danger">*</span></label>
+                            <input type="file" name="banner_image" id="wda_banner_image" class="form-control form-control-sm" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" required>
+                            <small class="text-muted">{{ __('JPEG, PNG, GIF or WebP. Max 5MB.') }}</small>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">{{ __('Show ad on') }} <span class="text-danger">*</span></label>
+                            <div class="form-check">
+                                <input type="radio" name="placement" id="wda_placement_home" value="home" class="form-check-input" required>
+                                <label for="wda_placement_home" class="form-check-label">{{ __('Home page') }}</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" name="placement" id="wda_placement_job_listing" value="job_listing" class="form-check-input">
+                                <label for="wda_placement_job_listing" class="form-check-label">{{ __('Job Listing page') }}</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" name="placement" id="wda_placement_both" value="both" class="form-check-input">
+                                <label for="wda_placement_both" class="form-check-label">{{ __('Both (Home & Job Listing)') }}</label>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label for="wda_message" class="form-label">{{ __('Message') }}</label>
+                            <textarea name="message" id="wda_message" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="{{ __('Optional note for admin') }}"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary" id="walletWalkinDriveAdSubmitBtn">{{ __('Submit') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Dedicated Recruiter – confirm deduct first --}}
+    @if($account->isEmployer())
+    <div class="modal fade" id="walletDedicatedRecruiterConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Dedicated Recruiter') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">{{ __('2500 credits will be deducted first. Then the form will open. Valid for 1 month. Continue?') }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="walletDedicatedRecruiterConfirmBtn">{{ __('Continue') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Dedicated Recruiter request form (open after deduct) --}}
+    <div class="modal fade" id="walletDedicatedRecruiterModal" tabindex="-1" aria-labelledby="walletDedicatedRecruiterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletDedicatedRecruiterModalLabel">{{ __('Dedicated Recruiter / Personal Account Manager') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="walletDedicatedRecruiterForm">
+                    @csrf
+                    <input type="hidden" name="credits_already_deducted" id="dedicated_recruiter_credits_deducted" value="0">
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3">{{ __('Credits already deducted. Fill the form. Valid for 1 month from start date.') }}</p>
+                        <div class="mb-2">
+                            <label for="dr_duration_months" class="form-label">{{ __('Duration (months)') }} <span class="text-danger">*</span></label>
+                            <select name="duration_months" id="dr_duration_months" class="form-select form-select-sm" required>
+                                @for($i = 1; $i <= 24; $i++)
+                                    <option value="{{ $i }}">{{ $i }} {{ $i === 1 ? __('month') : __('months') }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="dr_company_id" class="form-label">{{ __('Institution') }}</label>
+                            <select name="company_id" id="dr_company_id" class="form-select form-select-sm">
+                                <option value="">{{ __('— Select —') }}</option>
+                                @foreach($companies ?? [] as $company)
+                                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label for="dr_start_date" class="form-label">{{ __('Start date') }}</label>
+                                <input type="date" name="start_date" id="dr_start_date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label for="dr_end_date" class="form-label">{{ __('End date') }}</label>
+                                <input type="date" name="end_date" id="dr_end_date" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        <div class="mb-2 mt-2">
+                            <label for="dr_note" class="form-label">{{ __('Note') }}</label>
+                            <textarea name="note" id="dr_note" class="form-control form-control-sm" rows="2" maxlength="1000" placeholder="{{ __('e.g. Need assistance for bulk teacher hiring') }}"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary" id="walletDedicatedRecruiterSubmitBtn">{{ __('Submit request') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Multiple Login – Step 1: Deduct 250 credits, Step 2: Fill form --}}
+    <div class="modal fade" id="walletMultipleLoginModal" tabindex="-1" aria-labelledby="walletMultipleLoginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walletMultipleLoginModalLabel">{{ __('Multiple Login / Add Sub-Account') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="walletMultipleLoginStep1" class="modal-body">
+                    <p class="mb-3">{{ __('250 credits will be deducted first. Then you can fill the form to add a sub-account.') }}</p>
+                    <div class="modal-footer px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="button" class="btn btn-primary" id="walletMultipleLoginDeductBtn">{{ __('Continue') }}</button>
+                    </div>
+                </div>
+                <div id="walletMultipleLoginStep2" class="modal-body" style="display:none;">
+                <form id="walletMultipleLoginForm">
+                    @csrf
+                        <input type="hidden" name="credits_already_deducted" value="1">
+                        <p class="small text-muted mb-3">{{ __('Credits deducted. Add sub-account details.') }}</p>
+                        <div class="mb-2">
+                            <label for="ml_email" class="form-label">{{ __('Email') }} <span class="text-danger">*</span></label>
+                            <input type="email" name="email" id="ml_email" class="form-control form-control-sm" required placeholder="hr@school.com">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_name" class="form-label">{{ __('Name') }} <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="ml_name" class="form-control form-control-sm" required maxlength="255" placeholder="{{ __('e.g. HR Manager') }}">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_role" class="form-label">{{ __('Role') }}</label>
+                            <input type="text" name="role" id="ml_role" class="form-control form-control-sm" maxlength="60" placeholder="{{ __('e.g. Recruiter') }}">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_password" class="form-label">{{ __('Password') }} <span class="text-danger">*</span></label>
+                            <input type="password" name="password" id="ml_password" class="form-control form-control-sm" required minlength="6" placeholder="••••••">
+                        </div>
+                        <div class="mb-2">
+                            <label for="ml_password_confirmation" class="form-label">{{ __('Confirm Password') }} <span class="text-danger">*</span></label>
+                            <input type="password" name="password_confirmation" id="ml_password_confirmation" class="form-control form-control-sm" required minlength="6" placeholder="••••••">
+                        </div>
+                        <div class="modal-footer px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary" id="walletMultipleLoginSubmitBtn">{{ __('Add Sub-Account') }}</button>
+                    </div>
+                </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     @push('footer')
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -841,7 +1190,12 @@
                 if (featureNameEl) {
                     featureNameEl.textContent = activeLabel;
                 }
+                var featureNameEl = document.getElementById('walletFeaturePurchaseModalFeatureName');
+                if (featureNameEl) {
+                    featureNameEl.textContent = activeLabel;
+                }
                 if (featureMsg) {
+                    featureMsg.textContent = activeCredits + ' {{ trans('plugins/job-board::credit-consumption.credits') }} {{ __('will be deducted. Continue?') }}';
                     featureMsg.textContent = activeCredits + ' {{ trans('plugins/job-board::credit-consumption.credits') }} {{ __('will be deducted. Continue?') }}';
                 }
                 if (featureModalEl && window.bootstrap) {
@@ -1316,9 +1670,417 @@
                 .finally(function() { if (submitBtn) submitBtn.disabled = false; });
             });
         }
+
+        var walletSocialPromotionBtn = document.getElementById('walletSocialPromotionBtn');
+        var walletSocialPromotionConfirmModal = document.getElementById('walletSocialPromotionConfirmModal');
+        if (walletSocialPromotionBtn && walletSocialPromotionConfirmModal && window.bootstrap) {
+            walletSocialPromotionBtn.addEventListener('click', function() {
+                (new bootstrap.Modal(walletSocialPromotionConfirmModal)).show();
+            });
+        }
+        var walletSocialPromotionConfirmBtn = document.getElementById('walletSocialPromotionConfirmBtn');
+        if (walletSocialPromotionConfirmBtn) {
+            walletSocialPromotionConfirmBtn.addEventListener('click', function() {
+                walletSocialPromotionConfirmBtn.disabled = true;
+                fetch('{{ route('public.account.social-promotion.deduct') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var confirmModal = document.getElementById('walletSocialPromotionConfirmModal');
+                        if (confirmModal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(confirmModal);
+                            if (m) m.hide();
+                        }
+                        var hid = document.getElementById('social_promotion_credits_deducted');
+                        if (hid) hid.value = '1';
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Credits deducted.') }}');
+                        var formModal = document.getElementById('walletSocialPromotionModal');
+                        if (formModal && window.bootstrap) {
+                            (new bootstrap.Modal(formModal)).show();
+                        }
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() { alert('{{ __('Something went wrong.') }}'); })
+                .finally(function() { walletSocialPromotionConfirmBtn.disabled = false; });
+            });
+        }
+
+        var socialPromotionForm = document.getElementById('walletSocialPromotionForm');
+        if (socialPromotionForm) {
+            socialPromotionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletSocialPromotionSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(socialPromotionForm);
+                fetch('{{ route('public.account.social-promotion-request.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletSocialPromotionModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request submitted.') }}');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() {
+                    alert('{{ __('Something went wrong.') }}');
+                })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
+
+        var walletDedicatedRecruiterBtn = document.getElementById('walletDedicatedRecruiterBtn');
+        var walletDedicatedRecruiterConfirmModal = document.getElementById('walletDedicatedRecruiterConfirmModal');
+        if (walletDedicatedRecruiterBtn && walletDedicatedRecruiterConfirmModal && window.bootstrap) {
+            walletDedicatedRecruiterBtn.addEventListener('click', function() {
+                (new bootstrap.Modal(walletDedicatedRecruiterConfirmModal)).show();
+            });
+        }
+        var walletDedicatedRecruiterConfirmBtn = document.getElementById('walletDedicatedRecruiterConfirmBtn');
+        if (walletDedicatedRecruiterConfirmBtn) {
+            walletDedicatedRecruiterConfirmBtn.addEventListener('click', function() {
+                walletDedicatedRecruiterConfirmBtn.disabled = true;
+                fetch('{{ route('public.account.dedicated-recruiter.deduct') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var confirmModal = document.getElementById('walletDedicatedRecruiterConfirmModal');
+                        if (confirmModal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(confirmModal);
+                            if (m) m.hide();
+                        }
+                        var hid = document.getElementById('dedicated_recruiter_credits_deducted');
+                        if (hid) hid.value = '1';
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Credits deducted.') }}');
+                        var formModal = document.getElementById('walletDedicatedRecruiterModal');
+                        if (formModal && window.bootstrap) {
+                            (new bootstrap.Modal(formModal)).show();
+                        }
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() { alert('{{ __('Something went wrong.') }}'); })
+                .finally(function() { walletDedicatedRecruiterConfirmBtn.disabled = false; });
+            });
+        }
+
+        var dedicatedRecruiterForm = document.getElementById('walletDedicatedRecruiterForm');
+        if (dedicatedRecruiterForm) {
+            dedicatedRecruiterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletDedicatedRecruiterSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(dedicatedRecruiterForm);
+                fetch('{{ route('public.account.dedicated-recruiter-request.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletDedicatedRecruiterModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request submitted.') }}');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() {
+                    alert('{{ __('Something went wrong.') }}');
+                })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
+
+        var jobPostingAssistanceForm = document.getElementById('walletJobPostingAssistanceForm');
+        if (jobPostingAssistanceForm) {
+            jobPostingAssistanceForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletJobPostingAssistanceSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(jobPostingAssistanceForm);
+                fetch('{{ route('public.account.job-posting-assistance-request.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletJobPostingAssistanceModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request submitted.') }}');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() { alert('{{ __('Something went wrong.') }}'); })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
+
+        var walletWalkinDriveAdBtn = document.getElementById('walletWalkinDriveAdBtn');
+        var walletWalkinDriveAdConfirmModal = document.getElementById('walletWalkinDriveAdConfirmModal');
+        if (walletWalkinDriveAdBtn && walletWalkinDriveAdConfirmModal && window.bootstrap) {
+            walletWalkinDriveAdBtn.addEventListener('click', function() {
+                (new bootstrap.Modal(walletWalkinDriveAdConfirmModal)).show();
+            });
+        }
+        var walletWalkinDriveAdConfirmBtn = document.getElementById('walletWalkinDriveAdConfirmBtn');
+        if (walletWalkinDriveAdConfirmBtn) {
+            walletWalkinDriveAdConfirmBtn.addEventListener('click', function() {
+                walletWalkinDriveAdConfirmBtn.disabled = true;
+                fetch('{{ route('public.account.walkin-drive-ad.deduct') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var confirmModal = document.getElementById('walletWalkinDriveAdConfirmModal');
+                        if (confirmModal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(confirmModal);
+                            if (m) m.hide();
+                        }
+                        var hid = document.getElementById('walkin_drive_ad_credits_deducted');
+                        if (hid) hid.value = '1';
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Credits deducted.') }}');
+                        var formModal = document.getElementById('walletWalkinDriveAdModal');
+                        if (formModal && window.bootstrap) {
+                            (new bootstrap.Modal(formModal)).show();
+                        }
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() { alert('{{ __('Something went wrong.') }}'); })
+                .finally(function() { walletWalkinDriveAdConfirmBtn.disabled = false; });
+            });
+        }
+
+        var walletWalkinDriveAdForm = document.getElementById('walletWalkinDriveAdForm');
+        if (walletWalkinDriveAdForm) {
+            walletWalkinDriveAdForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletWalkinDriveAdSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(walletWalkinDriveAdForm);
+                var csrf = document.querySelector('#walletWalkinDriveAdForm input[name="_token"]');
+                if (csrf) formData.set('_token', csrf.value);
+                fetch('{{ route('public.account.walkin-drive-ad-request.store') }}', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletWalkinDriveAdModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request submitted.') }}');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() { alert('{{ __('Something went wrong.') }}'); })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
+
+        var walletMultipleLoginBtn = document.getElementById('walletMultipleLoginBtn');
+        var walletMultipleLoginModal = document.getElementById('walletMultipleLoginModal');
+        if (walletMultipleLoginBtn && walletMultipleLoginModal && window.bootstrap) {
+            walletMultipleLoginModal.addEventListener('show.bs.modal', function() {
+                var s1 = document.getElementById('walletMultipleLoginStep1');
+                var s2 = document.getElementById('walletMultipleLoginStep2');
+                if (s1) s1.style.display = 'block';
+                if (s2) s2.style.display = 'none';
+            });
+            walletMultipleLoginBtn.addEventListener('click', function() {
+                (new bootstrap.Modal(walletMultipleLoginModal)).show();
+            });
+        }
+        var walletMultipleLoginDeductBtn = document.getElementById('walletMultipleLoginDeductBtn');
+        if (walletMultipleLoginDeductBtn) {
+            walletMultipleLoginDeductBtn.addEventListener('click', function() {
+                walletMultipleLoginDeductBtn.disabled = true;
+                fetch('{{ route('public.account.wallet.deduct_multiple_login') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        document.getElementById('walletMultipleLoginStep1').style.display = 'none';
+                        document.getElementById('walletMultipleLoginStep2').style.display = 'block';
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() { alert('{{ __('Something went wrong.') }}'); })
+                .finally(function() { walletMultipleLoginDeductBtn.disabled = false; });
+            });
+        }
+
+        var multipleLoginForm = document.getElementById('walletMultipleLoginForm');
+        if (multipleLoginForm) {
+            multipleLoginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitBtn = document.getElementById('walletMultipleLoginSubmitBtn');
+                if (submitBtn) submitBtn.disabled = true;
+                var formData = new FormData(multipleLoginForm);
+                var body = {};
+                formData.forEach(function(v, k) { body[k] = v; });
+                fetch('{{ route('public.account.team-members.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var ok = data.error === false || (data.data && data.data.error === false);
+                    if (ok) {
+                        var modal = document.getElementById('walletMultipleLoginModal');
+                        if (modal && window.bootstrap) {
+                            var m = bootstrap.Modal.getInstance(modal);
+                            if (m) m.hide();
+                        }
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Sub-account created.') }}');
+                        if (typeof window.location !== 'undefined') window.location.reload();
+                    } else {
+                        alert(data.message || (data.data && data.data.message) || '{{ __('Request failed.') }}');
+                    }
+                })
+                .catch(function() {
+                    alert('{{ __('Something went wrong.') }}');
+                })
+                .finally(function() { if (submitBtn) submitBtn.disabled = false; });
+            });
+        }
     });
     </script>
     @endpush
+
+    {{-- Pending credit requests (Social Promotion + Dedicated Recruiter: credits deducted when admin approves) --}}
+    @php
+        $hasPendingSocial = $account->isEmployer() && isset($socialPromotionRequests) && $socialPromotionRequests->where('status', 'pending')->isNotEmpty();
+        $hasPendingDR = $account->isEmployer() && isset($dedicatedRecruiterRequests) && $dedicatedRecruiterRequests->where('status', 'pending')->isNotEmpty();
+        $hasAnyPending = $hasPendingSocial || $hasPendingDR;
+    @endphp
+    @if($hasAnyPending)
+    <x-core::card class="mb-4">
+        <x-core::card.header>
+            <x-core::card.title>
+                <x-core::icon name="ti ti-clock" class="me-2" />
+                {{ __('Pending requests') }}
+            </x-core::card.title>
+        </x-core::card.header>
+        <x-core::card.body class="p-0">
+            <p class="small text-muted px-3 pt-2 mb-0">{{ __('Credits will be deducted when admin approves.') }}</p>
+            <ul class="list-group list-group-flush">
+                @foreach(($socialPromotionRequests ?? collect())->where('status', 'pending') as $req)
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            {{ __('Social Promotion') }} – {{ $req->platform ?: __('Social') }}
+                            @if($req->title)<span class="text-muted">({{ \Illuminate\Support\Str::limit($req->title, 40) }})</span>@endif
+                            <br><small class="text-muted">{{ __('Requested') }}: {{ $req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—' }}</small>
+                        </span>
+                        <span class="badge bg-warning text-dark">{{ __('Pending') }}</span>
+                    </li>
+                @endforeach
+                @foreach(($dedicatedRecruiterRequests ?? collect())->where('status', 'pending') as $req)
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            {{ __('Dedicated Recruiter / Personal Account Manager') }} – {{ $req->duration_months }} {{ __('month(s)') }}
+                            <br><small class="text-muted">{{ __('Requested') }}: {{ $req->requested_at ? $req->requested_at->format('M d, Y H:i') : '—' }}</small>
+                        </span>
+                        <span class="badge bg-warning text-dark">{{ __('Pending') }}</span>
+                    </li>
+                @endforeach
+            </ul>
+        </x-core::card.body>
+    </x-core::card>
+    @endif
 
     {{-- Pending credit requests (Social Promotion + Dedicated Recruiter: credits deducted when admin approves) --}}
     @php
@@ -1372,6 +2134,16 @@
         $hasTransactions = $transactions->isNotEmpty();
         $showConsumptionTable = $hasTransactions || $hasRequestRows;
     @endphp
+    {{-- Consumption Report (includes pending requests) – hidden for consultancy --}}
+    @unless($isConsultancy)
+    @php
+        $transactionStatusMap = $transactionStatusMap ?? [];
+        $allSocialRequests = ($account->isEmployer() && isset($socialPromotionRequests) && $socialPromotionRequests) ? $socialPromotionRequests : collect();
+        $allDRRequests = ($account->isEmployer() && isset($dedicatedRecruiterRequests) && $dedicatedRecruiterRequests) ? $dedicatedRecruiterRequests : collect();
+        $hasRequestRows = $allSocialRequests->isNotEmpty() || $allDRRequests->isNotEmpty();
+        $hasTransactions = $transactions->isNotEmpty();
+        $showConsumptionTable = $hasTransactions || $hasRequestRows;
+    @endphp
     <x-core::card class="mb-4">
         <x-core::card.header>
             <x-core::card.title>
@@ -1380,6 +2152,7 @@
             </x-core::card.title>
         </x-core::card.header>
         <x-core::card.body class="p-0">
+            @if($showConsumptionTable)
             @if($showConsumptionTable)
                 <div class="table-responsive">
                     <table class="table table-vcenter table-hover card-table mb-0 wallet-consumption-table" style="table-layout: fixed; width: 100%;">
@@ -1392,6 +2165,7 @@
                                 <th>{{ trans('plugins/job-board::dashboard.wallet_valid_till') }}</th>
                                 <th class="text-end">{{ trans('plugins/job-board::dashboard.wallet_amount_coins') }}</th>
                                 <th>{{ trans('plugins/job-board::dashboard.wallet_status') }}</th>
+                                <th>{{ trans('plugins/job-board::dashboard.wallet_status') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1401,7 +2175,44 @@
                                 $packageValidFeatures = [\Botble\JobBoard\Models\CreditConsumption::FEATURE_FEATURED_JOB, \Botble\JobBoard\Models\CreditConsumption::FEATURE_FEATURED_PROFILE_EMPLOYER, \Botble\JobBoard\Models\CreditConsumption::FEATURE_ADMISSION_ENQUIRY, \Botble\JobBoard\Models\CreditConsumption::FEATURE_JOB_POSTING_ASSISTANCE];
                                 $socialPromotionCredits = 3000;
                                 $dedicatedRecruiterCredits = 2500;
+                                $socialPromotionCredits = 3000;
+                                $dedicatedRecruiterCredits = 2500;
                             @endphp
+                            {{-- Social Promotion & Dedicated Recruiter: sab dikhao – Pending / Approved / Rejected --}}
+                            @foreach($allSocialRequests as $req)
+                                @php
+                                    $sn++;
+                                    $reqStatus = $req->status ?? 'pending';
+                                    $statusBadge = $reqStatus === 'accepted' ? 'bg-success' : ($reqStatus === 'rejected' ? 'bg-danger' : 'bg-warning');
+                                    $statusLabel = $reqStatus === 'accepted' ? __('Approved') : ($reqStatus === 'rejected' ? __('Rejected') : __('Pending'));
+                                @endphp
+                                <tr>
+                                    <td>{{ $sn }}</td>
+                                    <td class="text-nowrap">{{ $req->requested_at ? $req->requested_at->format('M d, Y') : '—' }}</td>
+                                    <td class="wallet-txn-description">{{ __('Post/Promote on LinkedIn/Other Social Pages') }}@if($req->title) – {{ \Illuminate\Support\Str::limit($req->title, 30) }}@endif</td>
+                                    <td>—</td>
+                                    <td class="text-nowrap small">—</td>
+                                    <td class="text-end"><span class="text-warning fw-medium">-{{ format_credits_short($socialPromotionCredits) }}</span></td>
+                                    <td><span class="badge {{ $statusBadge }} text-white">{{ $statusLabel }}</span></td>
+                                </tr>
+                            @endforeach
+                            @foreach($allDRRequests as $req)
+                                @php
+                                    $sn++;
+                                    $reqStatus = $req->status ?? 'pending';
+                                    $statusBadge = $reqStatus === 'accepted' ? 'bg-success' : ($reqStatus === 'rejected' ? 'bg-danger' : 'bg-warning');
+                                    $statusLabel = $reqStatus === 'accepted' ? __('Approved') : ($reqStatus === 'rejected' ? __('Rejected') : __('Pending'));
+                                @endphp
+                                <tr>
+                                    <td>{{ $sn }}</td>
+                                    <td class="text-nowrap">{{ $req->requested_at ? $req->requested_at->format('M d, Y') : '—' }}</td>
+                                    <td class="wallet-txn-description">{{ __('Dedicated Recruiter / Personal Account Manager') }} – {{ $req->duration_months }} {{ __('month(s)') }}</td>
+                                    <td>—</td>
+                                    <td class="text-nowrap small">—</td>
+                                    <td class="text-end"><span class="text-warning fw-medium">-{{ format_credits_short($dedicatedRecruiterCredits) }}</span></td>
+                                    <td><span class="badge {{ $statusBadge }} text-white">{{ $statusLabel }}</span></td>
+                                </tr>
+                            @endforeach
                             {{-- Social Promotion & Dedicated Recruiter: sab dikhao – Pending / Approved / Rejected --}}
                             @foreach($allSocialRequests as $req)
                                 @php
@@ -1445,12 +2256,19 @@
                                     @continue
                                 @endif
                                 @php
+                                    $skipTxn = !$txn->isCredit() && in_array($txn->feature_key ?? '', [\Botble\JobBoard\Models\CreditConsumption::FEATURE_SOCIAL_PROMOTION, \Botble\JobBoard\Models\CreditConsumption::FEATURE_DEDICATED_RECRUITER], true);
+                                @endphp
+                                @if($skipTxn)
+                                    @continue
+                                @endif
+                                @php
                                     $sn++;
                                     $runningBalance += $txn->isCredit() ? $txn->credits : -$txn->credits;
                                     $showValidTill = !$txn->isCredit() && isset($packageExpiryAt) && $packageExpiryAt && in_array($txn->feature_key ?? '', $packageValidFeatures);
                                 @endphp
                                 <tr>
                                     <td>{{ $sn }}</td>
+                                    <td class="text-nowrap">{{ $txn->created_at->format('M d, Y') }}</td>
                                     <td class="text-nowrap">{{ $txn->created_at->format('M d, Y') }}</td>
                                     <td class="wallet-txn-description">{!! BaseHelper::clean($txn->getDescription()) !!}</td>
                                     <td>{{ $txn->package_name ?? '—' }}</td>
@@ -1466,6 +2284,20 @@
                                             <span class="text-success fw-medium">+{{ format_credits_short($txn->credits) }}</span>
                                         @else
                                             <span class="text-danger fw-medium">-{{ format_credits_short($txn->credits) }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @php
+                                            $txnStatus = $transactionStatusMap[$txn->id] ?? null;
+                                        @endphp
+                                        @if($txnStatus === 'approved')
+                                            <span class="badge bg-success text-white">{{ __('Approved') }}</span>
+                                        @elseif($txnStatus === 'rejected')
+                                            <span class="badge bg-danger text-white">{{ __('Rejected') }}</span>
+                                        @elseif($txnStatus === 'pending')
+                                            <span class="badge bg-warning text-white">{{ __('Pending') }}</span>
+                                        @else
+                                            —
                                         @endif
                                     </td>
                                     <td>
@@ -1503,6 +2335,7 @@
             @endif
         </x-core::card.body>
     </x-core::card>
+    @endunless
     @endunless
 
     {{-- Invoice details (employer only) --}}

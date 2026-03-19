@@ -284,6 +284,32 @@
                 @if(is_plugin_active('location'))
                     <div class="col-md-4 mb-3">
                         <label class="form-label">{{ __('City') }}</label>
+                        <style>
+                            /* Job Post-like dropdown */
+                            .jp-suggest-wrap { position: relative; overflow: visible; }
+                            .jp-suggest-wrap.jp-suggest-open { z-index: 100000; }
+                            .jp-suggest-list {
+                                position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+                                background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+                                max-height: 220px; overflow-y: auto;
+                                z-index: 99999;
+                                display: none;
+                                box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                                padding: 6px 0;
+                                min-height: 44px;
+                                font-size: 14px;
+                                line-height: 1.4;
+                            }
+                            .jp-suggest-list.show { display: block !important; }
+                            .jp-suggest-item {
+                                padding: 10px 14px; cursor: pointer; font-size: 14px;
+                                border-bottom: 1px solid #f5f5f5;
+                            }
+                            .jp-suggest-item:last-child { border-bottom: none; }
+                            .jp-suggest-item:hover, .jp-suggest-item.active { background: #fff5f5; color: #E32526; }
+                            .jp-suggest-item .muted { display:block; font-size: 12px; color:#94a3b8; margin-top:2px; }
+                        </style>
+
                         <div class="emp-city-wrapper" style="position:relative;">
                             <input type="text" id="emp-city-search" class="form-control" value="{{ $empCityName }}" placeholder="{{ __('Type city name to search...') }}" autocomplete="off">
                             <div id="emp-city-suggestions" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:1050; margin-top:2px; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
@@ -443,7 +469,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const parts = [];
             if (c.state_name) parts.push(c.state_name);
             if (c.country_name) parts.push(c.country_name);
-            html += '<div class="emp-city-item p-2 border-bottom" style="cursor:pointer;" data-id="' + (c.id || '') + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '"><strong>' + (c.name || '') + '</strong>' + (parts.length ? ' <span class="text-muted">' + parts.join(', ') + '</span>' : '') + '</div>';
+            html += '<div class="emp-city-item jp-suggest-item" data-id="' + (c.id || '') + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '">' +
+                '<div style="font-weight:600;">' + (c.name || '') + '</div>' +
+                (parts.length ? '<span class="muted">' + parts.join(', ') + '</span>' : '') +
+                '</div>';
         });
         return html;
     }
@@ -454,7 +483,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (empCountryId) empCountryId.value = el.getAttribute('data-country-id');
         if (empStateDisplay) empStateDisplay.value = el.getAttribute('data-state-name') || '';
         if (empCountryDisplay) empCountryDisplay.value = el.getAttribute('data-country-name') || '';
-        empCitySuggestions.style.display = 'none';
+        empCitySuggestions.classList.remove('show');
+        empCitySearch.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
     }
     function loadEmpCities(keyword, page) {
         page = page || 1;
@@ -465,8 +495,9 @@ document.addEventListener('DOMContentLoaded', function() {
             url += '?default_country=1&page=' + page;
         }
         empCitySuggestions.innerHTML = '<div class="p-2 text-muted">{{ __("Loading...") }}</div>';
-        empCitySuggestions.style.display = 'block';
-        fetch(url)
+        empCitySuggestions.classList.add('show');
+        empCitySearch.closest('.jp-suggest-wrap')?.classList.add('jp-suggest-open');
+        fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) {
                 if (!r.ok) return { data: [] };
                 return r.json().catch(function() { return { data: [] }; });
@@ -503,7 +534,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (empCountryId) empCountryId.value = '';
             if (empStateDisplay) empStateDisplay.value = '';
             if (empCountryDisplay) empCountryDisplay.value = '';
-            empCitySuggestions.style.display = 'none';
+            empCitySuggestions.classList.remove('show');
+            empCitySearch.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
             empCitySuggestions.innerHTML = '';
             if (k.length < 2) return;
             empSearchTimeout = setTimeout(function() { loadEmpCities(k); }, 300);
@@ -511,14 +543,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function(e) {
             const wrapper = document.querySelector('.emp-city-wrapper');
             if (wrapper && !wrapper.contains(e.target)) {
-                empCitySuggestions.style.display = 'none';
+                empCitySuggestions.classList.remove('show');
+                empCitySearch.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
             }
         });
     }
 
     updateAwardCount();
 });
-
 // Dynamic Awards (Consultancy)
 let awardIndex = {{ isset($awards) && is_array($awards) ? count($awards) : 0 }};
 function addAward() {

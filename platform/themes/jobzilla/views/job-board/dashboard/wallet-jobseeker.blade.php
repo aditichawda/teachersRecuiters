@@ -99,6 +99,7 @@
                         <x-core::card class="border-0 wallet-js-card-blue">
                             <x-core::card.body class="p-0">
                                 <h6 class="wallet-js-coins-title mb-0 text-uppercase">{{ trans('plugins/job-board::dashboard.wallet_available_coins') }}</h6>
+                                <h6 class="wallet-js-coins-title mb-0 text-uppercase">{{ trans('plugins/job-board::dashboard.wallet_available_coins') }}</h6>
                                 <div class="wallet-js-coins-value">
                                     <x-core::icon name="ti ti-coin" class="d-block" style="font-size:1.25rem;" />
                                     {{ format_credits_short($account->credits ?? 0) }}
@@ -166,6 +167,8 @@
                                 @endif
                                 <x-core::card.body class="pb-2">
                                     <h6 class="text-uppercase">{{ $package->name }}</h6>
+                                    <p class="wallet-em-credits-validity">{{ format_credits_short($package->credits_included ?? $package->number_of_listings) }} {{ trans('plugins/job-board::dashboard.credits') }}@if($package->validity_days) · {{ trans('plugins/job-board::dashboard.package_validity_days', ['days' => $package->validity_days]) }}@else · {{ __('Unlimited validity') }}@endif</p>
+                                    <p class="wallet-package-price">@if((float)($package->price ?? 0) == 0){{ __('Free') }}@else{{ $package->price_text }}@endif</p>
                                     <p class="wallet-em-credits-validity">{{ format_credits_short($package->credits_included ?? $package->number_of_listings) }} {{ trans('plugins/job-board::dashboard.credits') }}@if($package->validity_days) · {{ trans('plugins/job-board::dashboard.package_validity_days', ['days' => $package->validity_days]) }}@else · {{ __('Unlimited validity') }}@endif</p>
                                     <p class="wallet-package-price">@if((float)($package->price ?? 0) == 0){{ __('Free') }}@else{{ $package->price_text }}@endif</p>
                                     @if(trim((string) $package->description) !== '')
@@ -254,6 +257,12 @@
                                 @foreach($consumptionList as $key => $item)
                                     <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
                                         <span>{{ is_array($item) ? ($item['label'] ?? $key) : $key }}</span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="text-muted small">{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }}</span>
+                                            @if(is_array($item) && isset($item['credits']))
+                                            <button type="button" class="btn btn-xs btn-outline-primary js-wallet-feature-btn" data-feature-key="{{ $key }}" data-feature-label="{{ $item['label'] ?? $key }}" data-credits="{{ (int)($item['credits'] ?? 0) }}">{{ __('Use credits') }}</button>
+                                            @endif
+                                        </div>
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="text-muted small">{{ is_array($item) ? ($item['credits'] ?? 0) . ' ' . trans('plugins/job-board::credit-consumption.credits') : $item }}</span>
                                             @if(is_array($item) && isset($item['credits']))

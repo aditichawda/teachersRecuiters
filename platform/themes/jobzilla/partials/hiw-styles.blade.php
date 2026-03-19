@@ -26,8 +26,8 @@
 .hiw-info-list li{font-size:15px;color:#475569;line-height:1.7;padding:10px 0 10px 28px;position:relative;border-bottom:1px solid #f1f5f9}
 .hiw-info-list li:last-child{border-bottom:none}
 .hiw-info-list li::before{content:'';position:absolute;left:0;top:18px;width:8px;height:8px;background:var(--primary-color,#1967d2);border-radius:50%;opacity:.6}
-.hiw-process-section{padding:70px 0;background:#f8fafc}
-.how-it-works-page .hiw-process-section{padding:70px 0;background:#ffffff}
+.hiw-process-section{padding:10px 0;background:#f8fafc}
+.how-it-works-page .hiw-process-section{padding:10px 0;background:#ffffff}
 .hiw-step-card{background:#fff;border-radius:16px;padding:35px 30px;text-align:center;height:100%;border:1px solid #e2e8f0;transition:all .3s;position:relative;box-shadow:0 4px 15px rgba(0,0,0,.04)}
 .hiw-step-card:hover{transform:translateY(-6px);box-shadow:0 12px 35px rgba(25,103,210,.12);border-color:var(--primary-color,#1967d2)}
 .hiw-step-number{display:inline-flex;align-items:center;justify-content:center;min-width:56px;width:auto;padding:0 12px;height:56px;background:linear-gradient(135deg,var(--primary-color,#1967d2) 0%,#3b82f6 100%);color:#fff;font-size:20px;font-weight:800;border-radius:16px;margin-bottom:20px;box-shadow:0 8px 20px rgba(25,103,210,.25)}
@@ -132,7 +132,7 @@
 .how-it-works-page .hiw-info-boxes-section{padding:70px 0;background:#fff}
 .how-it-works-page .hiw-info-box{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:35px 30px;height:100%;transition:all .3s;box-shadow:0 4px 15px rgba(0,0,0,.04)}
 .how-it-works-page .hiw-info-box:hover{border-color:var(--primary-color,#1967d2);box-shadow:0 8px 30px rgba(25,103,210,.1);transform:translateY(-4px)}
-.how-it-works-page .hiw-process-section{padding:70px 0;background:#ffffff}
+.how-it-works-page .hiw-process-section{padding:10px 0;background:#ffffff}
 .how-it-works-page .hiw-alternating-section{padding:70px 0;background:#fff}
 .how-it-works-page .hiw-features-section{padding:70px 0;background:#f8fafc}
 .how-it-works-page .hiw-stats-section{padding:70px 0;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%)}

@@ -17,6 +17,7 @@ use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Forms\FormAbstract;
 use Botble\JobBoard\Http\Requests\PackageRequest;
 use Botble\JobBoard\Models\Account;
+use Botble\JobBoard\Models\Account;
 use Botble\JobBoard\Models\Currency;
 use Botble\JobBoard\Models\Package;
 
@@ -27,6 +28,12 @@ class PackageForm extends FormAbstract
         Assets::addScripts(['input-mask']);
 
         $currencies = Currency::query()->pluck('title', 'id')->all();
+
+        $model = $this->getModel();
+        if (! $model || ! $model->getKey()) {
+            $this->setupModel(new Package());
+        }
+        $model = $this->getModel();
 
         $model = $this->getModel();
         if (! $model || ! $model->getKey()) {
@@ -262,6 +269,16 @@ document.addEventListener("DOMContentLoaded", function() {
                     'min' => 0,
                 ],
             ])
+            ->add('job_validity_days', 'number', [
+                'label' => trans('plugins/job-board::package.job_validity_days'),
+                'wrapper' => [
+                    'class' => 'form-group col-md-4',
+                ],
+                'attr' => [
+                    'placeholder' => 'e.g. 45',
+                    'min' => 0,
+                ],
+            ])
             ->add('credits_included', 'number', [
                 'label' => trans('plugins/job-board::package.credits_included'),
                 'wrapper' => [
@@ -317,6 +334,13 @@ document.addEventListener("DOMContentLoaded", function() {
             ->add('order', NumberField::class, SortOrderFieldOption::make())
             ->add('status', SelectField::class, StatusFieldOption::make())
             ->setBreakFieldPoint('status');
+
+        if ($model && $model->getKey()) {
+            $this->setUrl(route('packages.update', $model));
+            $this->setMethod('PUT');
+        } else {
+            $this->setUrl(route('packages.store'));
+        }
 
         if ($model && $model->getKey()) {
             $this->setUrl(route('packages.update', $model));

@@ -13,7 +13,10 @@ use Botble\JobBoard\Http\Requests\PackageRequest;
 use Botble\JobBoard\Models\Package;
 use Botble\JobBoard\Tables\PackageTable;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
+use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -118,6 +121,10 @@ class PackageController extends BaseController
             return $table->ajax();
         }
 
+        if (request()->has('draw') || request()->ajax() || request()->wantsJson()) {
+            return $table->ajax();
+        }
+
         return $table->renderTable();
     }
 
@@ -196,6 +203,8 @@ class PackageController extends BaseController
         $package->fill($request->input());
         $package->features = $this->mergePackageFeatures($request);
         $package->job_apply_limit = $request->input('job_apply_limit');
+        $package->features = $this->mergePackageFeatures($request);
+        $package->job_apply_limit = $request->input('job_apply_limit');
         $package->save();
 
         // Ensure package name is editable/persisted even when translations table is used
@@ -232,9 +241,18 @@ class PackageController extends BaseController
         event(new UpdatedContentEvent(PACKAGE_MODULE_SCREEN_NAME, $request, $package));
 
         $response = $this
+        $response = $this
             ->httpResponse()
             ->setPreviousUrl(route('packages.index'))
             ->withUpdatedSuccessMessage();
+
+        // When "Save and continue" is used, redirect to the correct edit URL (packages/{id}/edit)
+        // so we never redirect to a wrong URL like packages/edit/{id} which would 404.
+        if ($request->input('submitter') === 'apply') {
+            $response->setNextUrl(route('packages.edit', $package));
+        }
+
+        return $response;
 
         // When "Save and continue" is used, redirect to the correct edit URL (packages/{id}/edit)
         // so we never redirect to a wrong URL like packages/edit/{id} which would 404.

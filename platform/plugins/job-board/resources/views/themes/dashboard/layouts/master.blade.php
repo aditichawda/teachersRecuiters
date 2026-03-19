@@ -42,6 +42,7 @@
         @include('plugins/job-board::themes.dashboard.layouts.footer')
 
         {!! Assets::renderFooter() !!}
+        <script src="{{ asset('vendor/core/plugins/job-board/js/app.js') }}"></script>
         @stack('scripts')
         @stack('footer')
         {!! apply_filters(THEME_FRONT_FOOTER, null) !!}

@@ -1933,44 +1933,271 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
+                // Extract ALL scripts from the entire response (DataTables scripts are in @stack('footer'))
+                // These scripts are in the body, not in .enl-main
+                const allResponseScripts = doc.body.querySelectorAll('script');
+                const scriptsToExecute = [];
+                
+                allResponseScripts.forEach(function(script) {
+                    // Skip scripts that are already in mainContent (we'll handle those separately)
+                    const isInMain = responseMain.contains(script);
+                    if (!isInMain) {
+                        scriptsToExecute.push({
+                            src: script.getAttribute('src'),
+                            id: script.getAttribute('id'),
+                            innerHTML: script.innerHTML,
+                            attributes: Array.from(script.attributes).reduce(function(acc, attr) {
+                                acc[attr.name] = attr.value;
+                                return acc;
+                            }, {})
+                        });
+                    }
+                });
+                
                 // Update content
                 mainContent.innerHTML = contentHTML;
                 
                 // Update URL
                 window.history.pushState({}, '', href);
                 
-                // Re-run scripts
-                const scripts = mainContent.querySelectorAll('script');
-                scripts.forEach(function(oldScript) {
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(function(attr) {
-                        newScript.setAttribute(attr.name, attr.value);
-                    });
-                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                });
+                // Force browser to recalculate styles (ensures CSS is applied)
+                void mainContent.offsetHeight;
                 
-                // Reinitialize jQuery
-                if (typeof $ !== 'undefined') {
-                    $(document).ready(function() {
-                        $(document).trigger('contentLoaded');
+                // Wait a bit for DOM to settle, then re-run scripts
+                setTimeout(function() {
+                    // Re-run scripts from main content first
+                    const mainScripts = mainContent.querySelectorAll('script');
+                    mainScripts.forEach(function(oldScript) {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(function(attr) {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
-                }
+                    
+                    // Then execute scripts from footer/body (DataTables initialization, etc.)
+                    scriptsToExecute.forEach(function(scriptData) {
+                        // Skip if script is already loaded
+                        if (scriptData.src) {
+                            const existing = document.querySelector('script[src="' + scriptData.src + '"]');
+                            if (existing) return;
+                        }
+                        if (scriptData.id) {
+                            const existing = document.getElementById(scriptData.id);
+                            if (existing) return;
+                        }
+                        
+                        try {
+                            const newScript = document.createElement('script');
+                            // Set all attributes
+                            Object.keys(scriptData.attributes).forEach(function(attrName) {
+                                newScript.setAttribute(attrName, scriptData.attributes[attrName]);
+                            });
+                            
+                            if (scriptData.innerHTML && scriptData.innerHTML.trim()) {
+                                // Inline script - wrap in jQuery ready if it uses $(function)
+                                let scriptContent = scriptData.innerHTML;
+                                // If script uses $(function(){...}), ensure it executes
+                                if (scriptContent.includes('$(function') || scriptContent.includes('$(document).ready')) {
+                                    // Force execution by wrapping in immediate function
+                                    scriptContent = '(function() { ' + scriptContent + ' })();';
+                                }
+                                
+                                newScript.appendChild(document.createTextNode(scriptContent));
+                                document.body.appendChild(newScript);
+                            } else if (scriptData.src) {
+                                // External script - load it
+                                newScript.src = scriptData.src;
+                                newScript.onload = function() {
+                                    console.log('[AJAX] Loaded external script:', scriptData.src);
+                                    // After external script loads, trigger jQuery ready
+                                    if (typeof $ !== 'undefined') {
+                                        $(document).trigger('ready');
+                                    }
+                                };
+                                newScript.onerror = function() {
+                                    console.error('[AJAX] Failed to load script:', scriptData.src);
+                                };
+                                document.body.appendChild(newScript);
+                            }
+                        } catch(e) {
+                            console.error('[AJAX] Failed to execute script:', e, scriptData);
+                        }
+                    });
+                    
+                    // Force jQuery ready handlers to execute (for DataTables initialization)
+                    if (typeof $ !== 'undefined') {
+                        // Trigger ready event manually
+                        $(document).ready(function() {
+                            // This ensures all $(function(){}) handlers execute
+                        });
+                        // Also trigger the ready event directly
+                        $(document).trigger('ready');
+                    }
+                }, 150);
+                
+                // Wait a bit for CSS to load, then reinitialize everything
+                setTimeout(function() {
+                    // Reinitialize jQuery and trigger events
+                    if (typeof $ !== 'undefined') {
+                        $(document).ready(function() {
+                            // Trigger contentLoaded event for page-specific scripts
+                            $(document).trigger('contentLoaded');
+                        });
+                    }
+                    
+                    // Re-initialize common UI components
+                    setTimeout(function() {
+                        // Re-init Select2 if present
+                        if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+                            $('.selectpicker').not('.selectpicker-keyword').each(function() {
+                                if ($(this).hasClass("select2-hidden-accessible")) {
+                                    $(this).select2('destroy');
+                                }
+                                $(this).select2();
+                            });
+                        }
+                        
+                        // Re-init TomSelect if present (from main.js)
+                        if (typeof window.initDashboardTomSelect === 'function') {
+                            window.initDashboardTomSelect();
+                        }
+                        
+                        // Re-init Bootstrap tooltips
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                            const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                            tooltipEls.forEach(function(el) {
+                                const existing = bootstrap.Tooltip.getInstance(el);
+                                if (existing) existing.dispose();
+                                new bootstrap.Tooltip(el);
+                            });
+                        }
+                        
+                        // Re-init DataTables if present (for applicants table, etc.)
+                        // Wait a bit more for DataTables scripts to execute, then manually check and initialize
+                        setTimeout(function() {
+                            if (typeof $ !== 'undefined' && typeof $.fn.DataTable !== 'undefined') {
+                                // Find all tables that should have DataTables
+                                $('table[data-table]').each(function() {
+                                    const $table = $(this);
+                                    const tableId = $table.attr('id');
+                                    if (!tableId) return;
+                                    
+                                    // Check if DataTable is already initialized
+                                    if ($.fn.DataTable.isDataTable('#' + tableId)) {
+                                        // Already initialized, just reload data
+                                        if (window.LaravelDataTables && window.LaravelDataTables[tableId]) {
+                                            try {
+                                                window.LaravelDataTables[tableId].ajax.reload(null, false);
+                                                console.log('[DataTables] Reloaded data for', tableId);
+                                            } catch(e) {
+                                                console.error('[DataTables] Reload failed for', tableId, e);
+                                            }
+                                        }
+                                    } else {
+                                        // Not initialized - try to find and execute the initialization script
+                                        console.log('[DataTables] Table not initialized:', tableId);
+                                        
+                                        // Check if LaravelDataTables namespace exists
+                                        if (!window.LaravelDataTables) {
+                                            window.LaravelDataTables = {};
+                                        }
+                                        
+                                        // Try to find the table's AJAX URL from data attributes or form
+                                        const ajaxUrl = $table.data('ajax-url') || $table.closest('form').attr('action');
+                                        
+                                        // Scripts didn't initialize - try manual initialization
+                                        console.warn('[DataTables] Table', tableId, 'not initialized - attempting manual init');
+                                        
+                                        // Try to find the initialization script in the executed scripts
+                                        // Look for script that contains DataTable initialization for this table
+                                        const tableScripts = Array.from(document.querySelectorAll('script')).filter(function(script) {
+                                            return script.innerHTML && script.innerHTML.includes(tableId) && script.innerHTML.includes('DataTable');
+                                        });
+                                        
+                                        if (tableScripts.length > 0) {
+                                            // Found script, try to execute it again
+                                            console.log('[DataTables] Found initialization script, re-executing...');
+                                            tableScripts.forEach(function(script) {
+                                                try {
+                                                    // Create new script and execute
+                                                    const newScript = document.createElement('script');
+                                                    newScript.innerHTML = script.innerHTML;
+                                                    document.body.appendChild(newScript);
+                                                    // Remove after execution
+                                                    setTimeout(function() {
+                                                        if (newScript.parentNode) {
+                                                            newScript.parentNode.removeChild(newScript);
+                                                        }
+                                                    }, 100);
+                                                } catch(e) {
+                                                    console.error('[DataTables] Failed to re-execute script:', e);
+                                                }
+                                            });
+                                            
+                                            // Check again after a delay
+                                            setTimeout(function() {
+                                                if (!$.fn.DataTable.isDataTable('#' + tableId)) {
+                                                    console.error('[DataTables] Manual re-execution failed for', tableId);
+                                                } else {
+                                                    console.log('[DataTables] Successfully initialized', tableId, 'after re-execution');
+                                                }
+                                            }, 500);
+                                        } else {
+                                            console.error('[DataTables] No initialization script found for', tableId);
+                                        }
+                                    }
+                                });
+                            } else {
+                                // DataTables not loaded yet, wait a bit more
+                                console.log('[AJAX] Waiting for DataTables library to load...');
+                                // Retry after delay (max 3 times)
+                                let retryCount = 0;
+                                const maxRetries = 3;
+                                const retryInterval = setInterval(function() {
+                                    retryCount++;
+                                    if (typeof $ !== 'undefined' && typeof $.fn.DataTable !== 'undefined') {
+                                        clearInterval(retryInterval);
+                                        // Retry initialization
+                                        setTimeout(arguments.callee, 100);
+                                    } else if (retryCount >= maxRetries) {
+                                        clearInterval(retryInterval);
+                                        console.error('[DataTables] Library failed to load after', maxRetries, 'retries');
+                                    }
+                                }, 300);
+                            }
+                        }, 600);
+                        
+                        // Force CSS recalculation again after JS init
+                        void mainContent.offsetHeight;
+                        
+                        // Show content after everything is initialized
+                        if (mainContent) {
+                            mainContent.style.opacity = '1';
+                            mainContent.style.pointerEvents = 'auto';
+                        }
+                    }, 150);
+                    
+                    // Also trigger a custom event for vanilla JS listeners
+                    const event = new CustomEvent('dashboardContentLoaded', { 
+                        detail: { url: href, content: mainContent } 
+                    });
+                    document.dispatchEvent(event);
+                }, 200);
             })
             .catch(function(error) {
                 // On any error, do normal navigation
                 window.location.href = href;
             })
             .finally(function() {
-                // Hide loader
-                const loader = document.getElementById('page-loading');
-                if (loader) {
-                    loader.classList.remove('show');
-                }
-                if (mainContent) {
-                    mainContent.style.opacity = '1';
-                    mainContent.style.pointerEvents = 'auto';
-                }
+                // Hide loader after a delay to ensure CSS/JS is initialized
+                setTimeout(function() {
+                    const loader = document.getElementById('page-loading');
+                    if (loader) {
+                        loader.classList.remove('show');
+                    }
+                }, 300);
             });
         }
     });

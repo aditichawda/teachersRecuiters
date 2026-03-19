@@ -26,7 +26,7 @@
             </div>
             <div class="col-lg-5">
                 <div class="hiw-hero-image">
-                    <img src="/themes/jobzilla/images/Find-your-dream-teaching-job.png" alt="Teaching Career" class="img-fluid rounded-4">
+                    <img src="{{ Theme::asset()->url('/images/Find-Your-Dream-teaching-Job.png') }}" alt="Teaching Career" class="img-fluid rounded-4">
                 </div>
             </div>
         </div>
@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="row align-items-center hiw-alt-row">
             <div class="col-lg-6">
                 <div class="hiw-alt-image">
-                    <img src="/themes/jobzilla/images/Why-teachers-love-us.png" alt="For Teachers" class="img-fluid rounded-4">
+                    <img src="{{ Theme::asset()->url('/images/Why-Teachers-Love-us.png') }}" alt="For Teachers" class="img-fluid rounded-4">
                 </div>
             </div>
             <div class="col-lg-6">
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="row align-items-center hiw-alt-row flex-lg-row-reverse">
             <div class="col-lg-6">
                 <div class="hiw-alt-image">
-                    <img src="/themes/jobzilla/images/Hire-quality-teachers-fast.png" alt="For Schools" class="img-fluid rounded-4">
+                    <img src="{{ Theme::asset()->url('/images/Hire-Quality-Teachers-Fast.png') }}" alt="For Schools" class="img-fluid rounded-4">
                 </div>
             </div>
             <div class="col-lg-6">

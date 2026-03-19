@@ -1402,6 +1402,20 @@ img.flag {
             color: #fff;
         }
 
+        // Ensure all descriptive/muted texts are readable on the blue active background
+        .text-muted,
+        p,
+        .small,
+        small {
+            color: #fff !important;
+        }
+
+        .text-muted,
+        .small,
+        small {
+            opacity: 0.9;
+        }
+
         .box-package-price {
             span {
                 color: #fff !important;

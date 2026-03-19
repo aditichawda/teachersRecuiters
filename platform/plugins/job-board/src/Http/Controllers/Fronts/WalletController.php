@@ -13,7 +13,11 @@ use Botble\JobBoard\Models\Package;
 use Botble\JobBoard\Models\DedicatedRecruiterRequest;
 use Botble\JobBoard\Models\JobPostingAssistanceRequest;
 use Botble\JobBoard\Models\SocialPromotionRequest;
+use Botble\JobBoard\Models\DedicatedRecruiterRequest;
+use Botble\JobBoard\Models\JobPostingAssistanceRequest;
+use Botble\JobBoard\Models\SocialPromotionRequest;
 use Botble\JobBoard\Models\Transaction;
+use Botble\JobBoard\Models\WalkinDriveAdRequest;
 use Botble\JobBoard\Models\WalkinDriveAdRequest;
 use Botble\JobBoard\Supports\PackageContext;
 use Botble\JobBoard\Supports\JobSeekerPackageContext;
@@ -23,9 +27,11 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Schema;
 
 class WalletController extends BaseController
@@ -112,6 +118,19 @@ class WalletController extends BaseController
         $packages = Package::query()
             ->wherePublished()
             ->where('package_type', $packageType)
+            ->when($packageType === 'employer' && Schema::hasColumn('jb_packages', 'show_for_consultancy'), function ($query) use ($account) {
+                if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
+                    $query->where('show_for_consultancy', true);
+                } else {
+                    $query->where('show_for_school_institution', true);
+                }
+            })
+            ->when($packageType === 'employer' && Schema::hasColumn('jb_packages', 'visible_for_account_ids'), function ($query) use ($account) {
+                $query->where(function ($sub) use ($account) {
+                    $sub->whereNull('visible_for_account_ids')
+                        ->orWhereJsonContains('visible_for_account_ids', (int) $account->getKey());
+                });
+            })
             ->when($packageType === 'employer' && Schema::hasColumn('jb_packages', 'show_for_consultancy'), function ($query) use ($account) {
                 if (method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
                     $query->where('show_for_consultancy', true);

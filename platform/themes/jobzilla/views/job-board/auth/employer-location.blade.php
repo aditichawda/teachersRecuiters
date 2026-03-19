@@ -441,8 +441,11 @@ $(document).ready(function() {
                 url: '{{ route("ajax.search-cities") }}',
                 type: 'GET',
                 data: { k: keyword },
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 dataType: 'json',
                 success: function(response) {
+                    const raw = response.data != null ? response.data : [];
+                    const cities = Array.isArray(raw) ? raw : (raw.cities || []);
                     console.log('City search response:', response);
                     
                     // Handle different response structures

@@ -31,6 +31,7 @@ use Botble\JobBoard\Models\CreditConsumption;
 use Botble\JobBoard\Models\Transaction;
 use Botble\JobBoard\Repositories\Interfaces\JobInterface;
 use Botble\JobBoard\Supports\JobSeekerPackageContext;
+use Botble\JobBoard\Supports\JobSeekerPackageContext;
 use Botble\JobBoard\Supports\PackageContext;
 use Botble\Language\Facades\Language;
 use Botble\Location\Facades\Location;
@@ -49,6 +50,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -500,6 +502,7 @@ class PublicController extends BaseController
             ])
             ->withAvg('reviews', 'star')
             ->with(['slugable', 'accounts'])
+            ->with(['slugable', 'accounts'])
             ->pinFeatured();
 
         // Filter by company ID (institution name)
@@ -855,6 +858,18 @@ class PublicController extends BaseController
             
             $jobApplication->fill($fillableData);
             $jobApplication->save();
+
+            if ($account && $account->isJobSeeker()) {
+                // Used wallet-purchased job apply slot when package limit was already reached
+                if (Schema::hasColumn('jb_accounts', 'job_apply_credits_balance')) {
+                    $bal = (int) ($account->getAttribute('job_apply_credits_balance') ?? 0);
+                    if ($bal > 0 && $jsCtx->jobApplyLimit !== null && $jsCtx->jobApplicationsUsed >= $jsCtx->jobApplyLimit) {
+                        $account->job_apply_credits_balance = $bal - 1;
+                        $account->save();
+                    }
+                }
+                JobSeekerPackageContext::clearCache((int) $account->getKey());
+            }
 
             if ($account && $account->isJobSeeker()) {
                 // Used wallet-purchased job apply slot when package limit was already reached
@@ -1516,14 +1531,30 @@ class PublicController extends BaseController
                 'canViewSchoolContactInfo',
                 'contactInfoUpgradeUrl',
             ),
+            compact(
+                'company',
+                'jobs',
+                'canReview',
+                'canReviewCompany',
+                'showAdmissionOnProfile',
+                'admissionFormLocked',
+                'admissionUnlockCredits',
+                'isOwner',
+                'canUnlockAdmission',
+                'canViewSchoolContactInfo',
+                'contactInfoUpgradeUrl',
+            ),
             'plugins/job-board::themes.company'
         )->render();
     }
 
     public function getCandidate(string $slugParam)
+    public function getCandidate(string $slugParam)
     {
         abort_if(JobBoardHelper::isDisabledPublicProfile(), 404);
 
+        $prefix = SlugHelper::getPrefix(Account::class, 'candidates');
+        $slug = SlugHelper::getSlug($slugParam, $prefix);
         $prefix = SlugHelper::getPrefix(Account::class, 'candidates');
         $slug = SlugHelper::getSlug($slugParam, $prefix);
 
@@ -1538,7 +1569,46 @@ class PublicController extends BaseController
 
         /**
          * @var Account|null $candidate
+         * @var Account|null $candidate
          */
+        $candidate = null;
+
+        if ($slug) {
+            $candidate = Account::query()
+                ->where(array_merge($condition, [['id', '=', $slug->reference_id]]))
+                ->first();
+        }
+
+        // Fallback: find by unique_id or numeric id when slug record is missing
+        if (! $candidate && Schema::hasColumn('jb_accounts', 'unique_id')) {
+            $candidate = Account::query()
+                ->where($condition)
+                ->where(function (Builder $q) use ($slugParam): void {
+                    $q->where('unique_id', $slugParam);
+                    if (is_numeric($slugParam)) {
+                        $q->orWhere('id', (int) $slugParam);
+                    }
+                })
+                ->first();
+            if ($candidate && ! $slug) {
+                $slug = \Botble\Slug\Models\Slug::query()->firstOrCreate(
+                    [
+                        'reference_type' => Account::class,
+                        'reference_id' => $candidate->getKey(),
+                        'prefix' => $prefix,
+                    ],
+                    ['key' => Str::slug($slugParam ?: $candidate->full_name ?: (string) $candidate->id)]
+                );
+            }
+        }
+
+        if (! $candidate) {
+            $candidate = $slug
+                ? Account::query()->where($condition)->where('id', $slug->reference_id)->first()
+                : null;
+        }
+
+        abort_unless($candidate, 404);
         $candidate = null;
 
         if ($slug) {
@@ -1708,8 +1778,23 @@ class PublicController extends BaseController
             ? JobSeekerPackageContext::forAccount($candidate)->hasFeaturedProfile()
             : false;
 
+        $employerJobs = collect();
+        if ($account && $account->isEmployer()) {
+            $companyIds = $account->companies()->pluck('jb_companies.id')->all();
+            $employerJobs = JobModel::query()
+                ->whereIn('company_id', $companyIds)
+                ->where('status', JobStatusEnum::PUBLISHED)
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
+
+        $candidateIsFeatured = $candidate->isJobSeeker()
+            ? JobSeekerPackageContext::forAccount($candidate)->hasFeaturedProfile()
+            : false;
+
         return Theme::scope(
             'job-board.candidate',
+            compact('candidate', 'experiences', 'educations', 'account', 'canReview', 'profileLocked', 'employerJobs', 'candidateIsFeatured'),
             compact('candidate', 'experiences', 'educations', 'account', 'canReview', 'profileLocked', 'employerJobs', 'candidateIsFeatured'),
             'plugins/job-board::themes.candidate'
         )->render();
