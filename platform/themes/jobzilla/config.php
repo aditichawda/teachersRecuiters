@@ -89,8 +89,14 @@ return [
             $theme->asset()->container('footer')->usePath()->add('style', 'css/style.css' . $cacheBuster, [], [], $version);
             // Add dialog alert CSS in header for immediate availability
             $theme->asset()->usePath()->add('dialog-alert-css', 'css/dialog-alert.css', [], [], $version);
-            // Add modal enhancements CSS
-            $theme->asset()->usePath()->add('modal-enhancements-css', 'css/modal-enhancements.css', [], [], $version);
+            // Modal enhancements must load AFTER main.css or theme rules win the cascade
+            $theme->asset()->usePath()->add(
+                'modal-enhancements-css',
+                'css/modal-enhancements.css' . $cacheBuster,
+                ['main'],
+                [],
+                $version
+            );
 
             $theme->asset()->container('footer')->scriptUsingPath('jquery', $scriptPrefix . 'jquery-3.6.0.min.js');
             $theme->asset()->container('footer')->scriptUsingPath('popper', $scriptPrefix . 'popper.min.js');

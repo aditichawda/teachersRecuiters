@@ -17,10 +17,18 @@ use Botble\SeoHelper\Facades\SeoHelper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\ConnectionException;
+use CURL_IPRESOLVE;
+use CURL_IPRESOLVE_V4;
+use CURLOPT_IPRESOLVE;
+use CURLOPT_SSLVERSION;
+use CURL_SSLVERSION_TLSv1_2;
+use CURLOPT_SSL_VERIFYPEER;
+use CURLOPT_SSL_VERIFYHOST;
 
 class ApplicantController extends BaseController
 {
@@ -181,7 +189,7 @@ class ApplicantController extends BaseController
         return DeleteResourceAction::make($jobApplication);
     }
 
-    public function sendEmail(int|string $applicant, Request $request): Response
+    public function sendEmail(int|string $applicant, Request $request): JsonResponse
     {
         $id = $applicant instanceof JobApplication ? $applicant->getKey() : $applicant;
         /**
@@ -268,7 +276,7 @@ class ApplicantController extends BaseController
         }
     }
 
-    public function sendWhatsApp(int|string $applicant, Request $request): Response
+    public function sendWhatsApp(int|string $applicant, Request $request): JsonResponse
     {
         $id = $applicant instanceof JobApplication ? $applicant->getKey() : $applicant;
         /**
@@ -286,7 +294,7 @@ class ApplicantController extends BaseController
             ->firstOrFail();
 
         $request->validate([
-            'message' => 'required|string',
+            'message' => 'required|string|max:300',
         ]);
 
         try {
@@ -301,7 +309,7 @@ class ApplicantController extends BaseController
             }
 
             // Clean phone number
-            $jobSeekerPhone = preg_replace('/[^0-9]/', '', $jobSeekerPhone);
+            $jobSeekerPhone = preg_replace('/[^0-9]/', '', (string) $jobSeekerPhone);
             
             if (strlen($jobSeekerPhone) < 10) {
                 return response()->json([
@@ -310,52 +318,74 @@ class ApplicantController extends BaseController
                 ], 422);
             }
 
-            // Extract 10-digit phone number (same logic as OTP)
-            if (strlen($jobSeekerPhone) == 12 && substr($jobSeekerPhone, 0, 2) == '91') {
-                $jobSeekerPhone = substr($jobSeekerPhone, 2);
-            } elseif (strlen($jobSeekerPhone) > 10) {
-                $jobSeekerPhone = substr($jobSeekerPhone, -10);
+            /**
+             * Normalize phone for WhatsApp gateway (MsgClub).
+             *
+             * IMPORTANT: Your Postman example uses a 10-digit number (no country code).
+             * Some gateways error (500) if you pass E.164 here. So default is "national10".
+             *
+             * Supported formats via settings:
+             * - whatsapp_api_phone_format = national10 (default): 9109459959
+             * - whatsapp_api_phone_format = e164: 919109459959 (digits only, no +)
+             */
+            $digits = $jobSeekerPhone;
+            $phone10 = substr($digits, -10);
+            $defaultCountryCode = (string) setting('whatsapp_default_country_code', '91');
+            $phoneFormat = (string) setting('whatsapp_api_phone_format', 'national10');
+
+            $jobSeekerPhoneForApi = $phone10;
+            if ($phoneFormat === 'e164') {
+                $jobSeekerPhoneForApi = $defaultCountryCode . $phone10;
             }
 
-            // Get WhatsApp API configuration
-            $apiUrl = setting('whatsapp_api_url', env('WHATSAPP_API_URL', config('services.msgclub.url', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate')));
-            $authKey = setting('whatsapp_api_key', env('WHATSAPP_API_KEY', config('services.msgclub.key', '4625770ffb62853af287cedec7f50b0')));
-            $senderId = setting('whatsapp_sender_id', env('WHATSAPP_SENDER_ID', '919039632383'));
+            // For manual WhatsApp deep link, wa.me expects country code
+            $jobSeekerPhoneForWhatsAppLink = $defaultCountryCode . $phone10;
 
-            if (!$apiUrl || !$authKey) {
+            // Get WhatsApp API configuration
+            $apiUrl = setting('whatsapp_api_url', env('WHATSAPP_API_URL', config('services.msgclub.url')));
+            $authKey = setting('whatsapp_api_key', env('WHATSAPP_API_KEY', config('services.msgclub.key')));
+            $senderId = setting('whatsapp_sender_id', env('WHATSAPP_SENDER_ID', config('services.msgclub.sender_id')));
+            $templateName = setting('whatsapp_template_custom_message', config('services.msgclub.template_custom_message', 'school_custom_message_to_applicant'));
+            $buttonParam = setting('whatsapp_template_custom_message_button_param', config('services.msgclub.template_custom_message_button_param', 'login/'));
+
+            if (!$apiUrl || !$authKey || !$senderId) {
                 return response()->json([
                     'error' => true,
                     'message' => 'WhatsApp API configuration missing',
                 ], 500);
             }
 
-            // Use a simple template or direct message format
-            // For now, using a generic template - you can customize this
-            $templateName = 'otp_signup_login'; // Using existing template for custom messages
-            $message = $request->input('message');
+            $message = (string) $request->input('message');
+            $employerName = (string) ($account->name ?? 'Employer');
+            $schoolName = (string) (data_get($jobApplication, 'job.company.name') ?? data_get($jobApplication, 'job.name') ?? 'School');
 
-            // Build payload (using OTP template structure for custom messages)
+            // Always provide a manual WhatsApp deep link as a fallback (works even when API gateway is down)
+            $manualWhatsAppUrl = 'https://wa.me/' . $jobSeekerPhoneForWhatsAppLink . '?text=' . rawurlencode($message);
+
+            // Build payload (MsgClub WhatsApp template API)
+            // Template: school_custom_message_to_applicant
+            // Body params: [employer_name, school_name, custom_message]
+            // Button param: url suffix (e.g. "login/")
             $requestBody = [
-                'mobileNumbers' => $jobSeekerPhone,
+                'mobileNumbers' => $jobSeekerPhoneForApi,
                 'senderId' => $senderId,
                 'component' => [
                     'messaging_product' => 'whatsapp',
                     'recipient_type' => 'individual',
                     'type' => 'template',
                     'template' => [
-                        'name' => $templateName,
+                        'name' => 'school_custom_message_to_applicant',
                         'language' => [
                             'code' => 'en'
                         ],
                         'components' => [
                             [
                                 'type' => 'body',
-                                'index' => 0,
                                 'parameters' => [
-                                    [
-                                        'type' => 'text',
-                                        'text' => $message
-                                    ]
+                                    ['type' => 'text', 'text' => $jobApplication->full_name ?? 'Candidate'],
+                                    ['type' => 'text', 'text' => $jobApplication->job->company->name ?? 'School'],
+                                    ['type' => 'text', 'text' => $jobApplication->job->name ?? 'Job'],
+                                    ['type' => 'text', 'text' => $request->input('message')],
                                 ]
                             ],
                             [
@@ -363,10 +393,7 @@ class ApplicantController extends BaseController
                                 'sub_type' => 'url',
                                 'index' => 0,
                                 'parameters' => [
-                                    [
-                                        'type' => 'text',
-                                        'text' => $message
-                                    ]
+                                    ['type' => 'text', 'text' => 'login/']
                                 ]
                             ]
                         ]
@@ -374,14 +401,38 @@ class ApplicantController extends BaseController
                 ],
                 'qrImageUrl' => false,
                 'qrLinkUrl' => false,
-                'to' => $jobSeekerPhone
+                'to' => $jobSeekerPhoneForApi
             ];
 
             // Make API call
+            $endpoint = $apiUrl . '?AUTH_KEY=' . $authKey;
+            $proxy = setting('whatsapp_api_proxy');
+            $verifySetting = setting('whatsapp_api_verify_ssl');
+            $verify = is_null($verifySetting) ? ! app()->environment('local') : (bool) $verifySetting;
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($apiUrl . '?AUTH_KEY=' . $authKey, $requestBody);
+            ])
+                ->withOptions([
+                    // Some environments resolve to IPv6 first and can hang; force IPv4 for reliability.
+                    'curl' => [
+                        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                        // Some older cURL builds hang on TLS negotiation; force TLS 1.2 for MsgClub.
+                        CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2,
+                        // Local XAMPP often has broken CA bundle config; allow HTTPS calls in local env.
+                        CURLOPT_SSL_VERIFYPEER => $verify ? 1 : 0,
+                        CURLOPT_SSL_VERIFYHOST => $verify ? 2 : 0,
+                    ],
+                    // If local CA store is problematic, allow toggling SSL verify via settings.
+                    'verify' => $verify,
+                    // If your server/network requires an outbound proxy, set it in settings (e.g. http://user:pass@host:port)
+                    'proxy' => $proxy ?: null,
+                ])
+                ->connectTimeout((int) setting('whatsapp_api_connect_timeout', 30))
+                ->timeout((int) setting('whatsapp_api_timeout', 30))
+                // Disable "throw" so 4xx/5xx responses don't become exceptions (we handle via $response->successful()).
+                ->retry(2, 250, throw: false)
+                ->post($endpoint, $requestBody);
 
             if ($response->successful()) {
                 $responseData = $response->json();
@@ -389,39 +440,135 @@ class ApplicantController extends BaseController
                 if (isset($responseData['responseCode']) && $responseData['responseCode'] == '3001') {
                     Log::info('[APPLICANT_WHATSAPP] WhatsApp message sent successfully', [
                         'application_id' => $jobApplication->id,
-                        'phone' => $jobSeekerPhone,
+                        'phone' => $jobSeekerPhoneForApi,
+                        'phone_format' => $phoneFormat,
                         'response' => $responseData,
                     ]);
 
                     return response()->json([
                         'error' => false,
                         'message' => 'WhatsApp message sent successfully',
+                        'manual_url' => $manualWhatsAppUrl,
                     ]);
                 } else {
                     Log::warning('[APPLICANT_WHATSAPP] WhatsApp API returned non-success response', [
                         'application_id' => $jobApplication->id,
-                        'phone' => $jobSeekerPhone,
+                        'phone' => $jobSeekerPhoneForApi,
+                        'phone_format' => $phoneFormat,
                         'response' => $responseData,
                     ]);
 
                     return response()->json([
                         'error' => true,
-                        'message' => 'Failed to send WhatsApp message',
-                    ], 500);
+                        'message' => 'WhatsApp gateway could not send the message. You can still send it manually.',
+                        'manual_url' => $manualWhatsAppUrl,
+                    ], 503);
                 }
             } else {
                 Log::error('[APPLICANT_WHATSAPP] WhatsApp API request failed', [
                     'application_id' => $jobApplication->id,
-                    'phone' => $jobSeekerPhone,
+                    'phone' => $jobSeekerPhoneForApi,
+                    'phone_format' => $phoneFormat,
                     'status' => $response->status(),
-                    'body' => $response->body(),
+                    'api_host' => parse_url((string) $apiUrl, PHP_URL_HOST),
+                    'response_headers' => $response->headers(),
+                    // Body can be empty for 500s; keep it small if present
+                    'body' => mb_substr((string) $response->body(), 0, 1000),
+                    // Helpful request context (avoid logging full message/auth key)
+                    'template' => $templateName,
+                    'sender_id' => $senderId,
+                    'message_len' => mb_strlen($message),
                 ]);
 
                 return response()->json([
                     'error' => true,
-                    'message' => 'Failed to send WhatsApp message',
-                ], 500);
+                    'message' => 'WhatsApp gateway returned an error (' . $response->status() . '). You can still send it manually.',
+                    'manual_url' => $manualWhatsAppUrl,
+                ], 503);
             }
+        } catch (ConnectionException $e) {
+            // Network/gateway issue (timeouts, DNS, connection refused, etc). Don't hard-fail the UI.
+            Log::warning('[APPLICANT_WHATSAPP] WhatsApp gateway connection failed', [
+                'application_id' => $jobApplication->id,
+                'phone' => $jobSeekerPhoneForApi ?? null,
+                'phone_format' => $phoneFormat ?? null,
+                'error' => $e->getMessage(),
+                // Don't log AUTH_KEY in URLs
+                'api_host' => parse_url((string) $apiUrl, PHP_URL_HOST),
+            ]);
+
+            /**
+             * Workaround for local XAMPP environments where PHP cURL/SSL stack is broken or times out,
+             * but the system curl works (e.g. Postman works too). We'll try sending via the curl CLI.
+             */
+            try {
+                if (function_exists('exec')) {
+                    $curlBin = trim((string) exec('command -v curl'));
+
+                    if ($curlBin) {
+                        $endpointForCurl = $apiUrl . '?AUTH_KEY=' . $authKey;
+
+                        $payloadJson = json_encode($requestBody, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                        if ($payloadJson !== false) {
+                            $cmd = escapeshellcmd($curlBin)
+                                . ' --silent --show-error'
+                                . ' --connect-timeout 15 --max-time 30'
+                                . ' -H ' . escapeshellarg('Content-Type: application/json')
+                                . ' -H ' . escapeshellarg('Accept: application/json')
+                                . ' -X POST'
+                                . ' --data ' . escapeshellarg($payloadJson)
+                                . ' ' . escapeshellarg($endpointForCurl);
+
+                            $out = [];
+                            $exitCode = 0;
+                            exec($cmd, $out, $exitCode);
+                            $raw = trim(implode("\n", $out));
+
+                            $decoded = $raw !== '' ? json_decode($raw, true) : null;
+
+                            if ($exitCode === 0 && is_array($decoded) && (($decoded['responseCode'] ?? null) === '3001')) {
+                                Log::info('[APPLICANT_WHATSAPP] WhatsApp message sent successfully (curl CLI fallback)', [
+                                    'application_id' => $jobApplication->id,
+                                    'phone' => $jobSeekerPhoneForApi,
+                                    'phone_format' => $phoneFormat,
+                                    'response' => $decoded,
+                                ]);
+
+                                return response()->json([
+                                    'error' => false,
+                                    'message' => 'WhatsApp message sent successfully',
+                                    'manual_url' => $manualWhatsAppUrl,
+                                ]);
+                            }
+
+                            Log::warning('[APPLICANT_WHATSAPP] curl CLI fallback failed', [
+                                'application_id' => $jobApplication->id,
+                                'phone' => $jobSeekerPhoneForApi,
+                                'phone_format' => $phoneFormat,
+                                'exit_code' => $exitCode,
+                                'raw' => mb_substr((string) $raw, 0, 500),
+                            ]);
+                        }
+                    }
+                }
+            } catch (\Throwable $t) {
+                Log::warning('[APPLICANT_WHATSAPP] curl CLI fallback crashed', [
+                    'application_id' => $jobApplication->id,
+                    'error' => $t->getMessage(),
+                ]);
+            }
+
+            $message = (string) $request->input('message');
+            $manualWhatsAppUrl = !empty($jobSeekerPhoneForWhatsAppLink)
+                ? ('https://wa.me/' . $jobSeekerPhoneForWhatsAppLink . '?text=' . rawurlencode($message))
+                : null;
+
+            return response()->json([
+                'error' => true,
+                'message' => 'WhatsApp gateway is unreachable right now. Please try again, or send manually via WhatsApp.',
+                'manual_url' => $manualWhatsAppUrl,
+                'manual' => true,
+            ], 503);
         } catch (\Exception $e) {
             Log::error('[APPLICANT_WHATSAPP] Failed to send WhatsApp', [
                 'application_id' => $jobApplication->id,

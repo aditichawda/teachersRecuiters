@@ -234,6 +234,7 @@ class JobController extends BaseController
         // Get related jobs based on same category or company
         $relatedJobs = Job::query()
             ->where('status', JobStatusEnum::PUBLISHED)
+            ->notExpired()
             ->where('id', '!=', $id)
             ->where(function ($query) use ($job): void {
                 $query->where('company_id', $job->company_id)
@@ -299,7 +300,19 @@ class JobController extends BaseController
                     ->setError()
                     ->setCode(422)
                     ->setMessage($message)
-                    ->setData(['upgrade_url' => $jsCtx->packagesUrl()]);
+                    ->setData([
+                        'upgrade_url' => $jsCtx->packagesUrl(),
+                        'apply_ctx' => [
+                            'hasPackage' => $jsCtx->hasPackage(),
+                            'isPeriodValid' => $jsCtx->isPeriodValid(),
+                            'jobApplicationsUsed' => $jsCtx->jobApplicationsUsed,
+                            'jobApplyLimit' => $jsCtx->jobApplyLimit,
+                            'jobApplyCreditsBalance' => $jsCtx->jobApplyCreditsBalance,
+                            'periodEnd' => $jsCtx->periodEnd?->toDateTimeString(),
+                            'packageId' => $jsCtx->package?->getKey(),
+                            'packageName' => $jsCtx->package?->name,
+                        ],
+                    ]);
             }
         }
 

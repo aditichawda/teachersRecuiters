@@ -79,11 +79,17 @@
     .wallet-recharge-modal .modal-header { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: #fff; border-bottom: none; padding: 1rem 1.25rem; }
     .wallet-recharge-modal .modal-header .modal-title { color: #fff; font-weight: 700; font-size: 1.05rem; }
     .wallet-recharge-modal .modal-header .modal-title .icon, .wallet-recharge-modal .modal-header .modal-title svg { color: #fde047 !important; filter: none; }
-    .wallet-recharge-modal .modal-header .btn-close { filter: brightness(0) invert(1); opacity: 0.92; }
-    .wallet-recharge-modal .modal-body { padding: 1.25rem 1.35rem; }
+    .wallet-recharge-modal .modal-header .btn-close { filter: none; opacity: 0.92; box-shadow: none !important; }
+    .wallet-recharge-modal .modal-header .btn-close:hover,
+    .wallet-recharge-modal .modal-header .btn-close:focus,
+    .wallet-recharge-modal .modal-header .btn-close:focus-visible {color:white; opacity: 0.92; box-shadow: none !important; }
+    .wallet-recharge-modal .modal-content { background: #fff !important; color: #212529 !important; }
+    .wallet-recharge-modal .modal-body { padding: 1.25rem 1.35rem; background: #fff !important; color: #212529 !important; }
+    .wallet-recharge-modal .modal-body .form-label,
+    .wallet-recharge-modal .modal-body .text-muted { color: #6c757d !important; }
     .wallet-recharge-modal .wallet-recharge-input { border-radius: 10px; border: 2px solid #e2e8f0; padding: 0.65rem 0.85rem; font-size: 1rem; font-weight: 600; }
     .wallet-recharge-modal .wallet-recharge-input:focus { border-color: #0d6efd; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15); }
-    .wallet-recharge-modal .modal-footer { border-top: 1px solid #eef2f6; padding: 1rem 1.25rem; gap: 0.65rem; flex-wrap: wrap; justify-content: flex-end; }
+    .wallet-recharge-modal .modal-footer {background: #fff !important;   padding: 1rem 1.25rem; gap: 0.65rem; flex-wrap: wrap; justify-content: flex-end; }
     .wallet-recharge-modal .btn-rc-cancel, .wallet-recharge-modal .btn-rc-pay { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.6rem 1.15rem; font-weight: 600; font-size: 0.9rem; border-radius: 10px; transition: transform 0.12s ease, box-shadow 0.12s ease; }
     .wallet-recharge-modal .btn-rc-cancel { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
     .wallet-recharge-modal .btn-rc-cancel:hover { background: #e2e8f0; color: #334155; }
@@ -197,12 +203,13 @@
                         <h5 class="modal-title d-flex align-items-center gap-2 mb-0" id="walletRechargeModalLabel"><x-core::icon name="ti ti-wallet" />{{ __('Recharge Wallet') }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
                     </div>
-                    <x-core::form :url="route('public.account.wallet.recharge.start')" method="post" id="walletRechargeForm">
+                    <x-core::form :url="route('public.account.jobseeker.wallet.recharge.start')" method="post" id="walletRechargeForm">
                         <div class="modal-body">
-                            <p class="small text-muted mb-3 mb-0">{{ __('1 INR = 1 Coin. Minimum recharge ₹100.') }}</p>
-                            <label class="form-label fw-semibold mt-3" for="walletRechargeAmount">{{ __('Enter amount (INR)') }}</label>
+                            <p class="small text-muted mb-3">{{ __('1 INR = 1 Coin. Minimum recharge ₹100.') }}</p>
+                            <div class="alert alert-danger py-2 px-3 mb-3 d-none wallet-recharge-err-alert" id="walletRechargeErr" role="alert"></div>
+                            <label class="form-label fw-semibold" for="walletRechargeAmount">{{ __('Enter amount (INR)') }}</label>
                             <input type="number" name="amount_inr" id="walletRechargeAmount" class="form-control wallet-recharge-input" min="100" step="1" value="{{ old('amount_inr', 100) }}" placeholder="100" required>
-                            <div class="invalid-feedback" id="walletRechargeError"></div>
+                            <div class="invalid-feedback d-block" id="walletRechargeError" style="min-height:0;"></div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn-rc-cancel" data-bs-dismiss="modal"><x-core::icon name="ti ti-x" />{{ __('Cancel') }}</button>
@@ -398,23 +405,40 @@
                 var minAmount = 100;
                 var amountInput = document.getElementById('walletRechargeAmount');
                 var errorEl = document.getElementById('walletRechargeError');
+                var errBanner = document.getElementById('walletRechargeErr');
                 var form = document.getElementById('walletRechargeForm');
+
+                function clearRechargeErr() {
+                    if (errBanner) {
+                        errBanner.textContent = '';
+                        errBanner.classList.add('d-none');
+                    }
+                    if (errorEl) {
+                        errorEl.textContent = '';
+                    }
+                }
 
                 if (form) {
                     form.addEventListener('submit', function (event) {
                         if (!amountInput) return;
+                        clearRechargeErr();
                         var val = parseInt(amountInput.value || '0', 10);
                         if (!val || val < minAmount) {
                             event.preventDefault();
                             amountInput.classList.add('is-invalid');
-                            if (errorEl) {
-                                errorEl.textContent = '{{ __('Minimum recharge amount is ₹100.') }}';
+                            var msg = '{{ __('Minimum recharge amount is ₹100.') }}';
+                            if (errBanner) {
+                                errBanner.textContent = msg;
+                                errBanner.classList.remove('d-none');
+                            } else if (errorEl) {
+                                errorEl.textContent = msg;
                             }
                             amountInput.focus();
                         }
                     });
 
                     amountInput?.addEventListener('input', function () {
+                        clearRechargeErr();
                         if (parseInt(this.value || '0', 10) >= minAmount) {
                             this.classList.remove('is-invalid');
                         }

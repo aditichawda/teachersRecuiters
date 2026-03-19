@@ -157,7 +157,7 @@
                                 </a>
                             </li>
                             <li class="nav-item" style="position: relative;">
-                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                                <a class="nav-link" style="color: black; font-size: 20px !important;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
                                     {{-- Desktop icon --}}
                                     <i class="feather-bell notification-icon-desktop" style="font-size: 20px !important"></i>
 
@@ -182,7 +182,7 @@
                                 </a>
                             </li>
                             <li class="nav-item" style="position: relative;">
-                                <a class="nav-link" style="color: black; font-size: 20px; !important" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                                <a class="nav-link" style="color: black; font-size: 20px !important;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
                                     <i class="feather-bell" style="font-size: 20px !important"></i>
                                     @if($notificationBadge)
                                         <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #dc3545; color: white; border-radius: 10px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height: 1; padding: 0 4px; white-space: nowrap;">{{ $notificationBadge }}</span>
@@ -1354,13 +1354,13 @@
 
 /* Reduce Section Background Height */
 .section-full.site-bg-gray {
-    padding-top: 60px !important;
-    padding-bottom: 50px !important;
+    padding-top: 6px !important;
+    padding-bottom: 5px !important;
 }
 
 .section-full.p-t120.p-b90 {
-    padding-top: 100px !important;
-    padding-bottom: 50px !important;
+    padding-top: 20px !important;
+    padding-bottom: 1-px !important;
 }
 
 /* Section Content Spacing */

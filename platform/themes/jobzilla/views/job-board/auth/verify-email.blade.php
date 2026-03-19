@@ -472,6 +472,9 @@
         const verifyBtn = document.getElementById('verify-code-btn');
         const resendBtn = document.getElementById('resend-code-btn');
         const errorDiv = document.getElementById('verification-code-error');
+        const successMsgEl = document.getElementById('verify-form-success-msg');
+        const successTextEl = document.getElementById('verify-form-success-text');
+        const successCloseBtn = document.getElementById('verify-form-success-close');
         
         // OTP Input handling
         otpInputs.forEach((input, index) => {
@@ -573,32 +576,38 @@
         // Resend button click
         resendBtn.addEventListener('click', function() {
             resendBtn.disabled = true;
-            
+
             const savedData = localStorage.getItem('registrationFormData');
             let formData = {};
             if (savedData) {
-                try { formData = JSON.parse(savedData); } catch(e) {}
+                try { formData = JSON.parse(savedData); } catch (e) {}
             }
-            
-            const sendData = new FormData();
-            sendData.append('_token', csrfToken);
-            sendData.append('email', email);
-            Object.keys(formData).forEach(key => {
-                if (formData[key] !== null && formData[key] !== undefined) {
-                    sendData.append('form_data[' + key + ']', formData[key]);
-                }
-            });
-            
+
             fetch(sendVerificationCodeUrl, {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: sendData
+                body: JSON.stringify({
+                    email: email,
+                    form_data: formData
+                })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(function(res) {
+                return res.json().then(function(data) {
+                    return { ok: res.ok, data: data };
+                }).catch(function() {
+                    return {
+                        ok: false,
+                        data: { error: true, message: 'Failed to resend code' }
+                    };
+                });
+            })
+            .then(function(result) {
+                var data = result.data || {};
                 var isSuccess = data.error === false || data.resend_success === true || (data.data && data.data.resend_success === true);
                 if (isSuccess) {
                     successTextEl.textContent = @if(!empty($isWhatsappAvailable) && !empty($phone))
@@ -631,7 +640,7 @@
                     resendBtn.disabled = false;
                 }
             })
-            .catch(err => {
+            .catch(function() {
                 successTextEl.textContent = 'Failed to resend code';
                 successMsgEl.style.display = 'flex';
                 successMsgEl.style.background = '#fef2f2';
@@ -652,9 +661,6 @@
         }
 
         // Success message form ke andar dikhao (toast upar alag nahi)
-        var successMsgEl = document.getElementById('verify-form-success-msg');
-        var successTextEl = document.getElementById('verify-form-success-text');
-        var successCloseBtn = document.getElementById('verify-form-success-close');
         @if(!empty($isWhatsappAvailable) && !empty($phone))
             successTextEl.textContent = 'Verification code sent to your WhatsApp & Email. Please enter the 6-digit code below.';
         @else

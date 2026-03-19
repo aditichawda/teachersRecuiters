@@ -11,7 +11,7 @@ use Botble\JobBoard\Http\Requests\CompanyRequest;
 use Botble\JobBoard\Models\Company;
 use Botble\Location\Fields\Options\SelectLocationFieldOption;
 use Botble\Location\Fields\SelectLocationField;
-
+use Botble\Base\Forms\Fields\HtmlField;
 class CompanyForm extends FormAbstract
 {
     public function setup(): void
@@ -117,6 +117,13 @@ class CompanyForm extends FormAbstract
                 'colspan' => 4,
             ])
             ->when(is_plugin_active('location'), function (FormAbstract $form): void {
+                // City-first search (auto-fills Country/State/City selects below)
+                $form->add('company_city_search_ui', HtmlField::class, [
+                    'html' => view(
+                        JobBoardHelper::viewPath('dashboard.forms.partials.company-city-search'),
+                        ['company' => $this->getModel()]
+                    )->render(),
+                ]);
                 $form->add(
                     'location_data',
                     SelectLocationField::class,

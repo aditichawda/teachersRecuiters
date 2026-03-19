@@ -340,7 +340,7 @@ class RegisterController extends BaseController
             }
             
             // Email exists but NOT verified - resend OTP (user on verify step clicked Resend)
-            $code = '123456';
+            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
             $expiresAt = now()->addMinutes(10);
             $existingAccount->verification_code = $code;
             $existingAccount->verification_code_expires_at = $expiresAt;
@@ -368,13 +368,44 @@ class RegisterController extends BaseController
             try {
                 $existingAccount->notify(new EmailVerificationNotification($code));
             } catch (\Exception $e) {
-                Log::warning('Resend OTP failed for existing unverified account: ' . $e->getMessage());
+                Log::warning('Resend OTP failed for existing unverified account: ' . $e->getMessage(), [
+                    'email' => $email,
+                    'account_id' => $existingAccount->id,
+                ]);
+
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setMessage('Unable to resend OTP right now. Please try again in a moment.');
+            }
+
+            // If WhatsApp is enabled for this account, resend OTP there too.
+            $whatsappSent = false;
+            if (! empty($existingAccount->is_whatsapp_available) && ! empty($existingAccount->phone)) {
+                try {
+                    $cleanPhone = preg_replace('/[^0-9]/', '', (string) $existingAccount->phone);
+                    if (strlen($cleanPhone) === 10) {
+                        $cleanPhone = '91' . $cleanPhone;
+                    }
+
+                    if ($cleanPhone) {
+                        $whatsappSent = (bool) $this->sendWhatsAppMessage($cleanPhone, $code);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Resend WhatsApp OTP failed for existing unverified account: ' . $e->getMessage(), [
+                        'email' => $email,
+                        'account_id' => $existingAccount->id,
+                    ]);
+                }
             }
             
             return $this
                 ->httpResponse()
                 ->setError(false)
-                ->setData(['resend_success' => true])
+                ->setData([
+                    'resend_success' => true,
+                    'whatsapp_sent' => $whatsappSent,
+                ])
                 ->setMessage(trans('plugins/job-board::messages.verification_code_resent'))
                 ->setNextUrl(route('public.account.register.verifyEmailPage'));
         }

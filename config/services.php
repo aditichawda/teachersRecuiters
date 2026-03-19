@@ -37,7 +37,10 @@ return [
 
     'msgclub' => [
         'url' => env('MSGCLUB_WHATSAPP_URL', 'https://msg.msgclub.net/rest/services/sendSMS/v2/sendtemplate'),
-        'key' => env('MSGCLUB_AUTH_KEY', env('WHATSAPP_API_KEY', '4625770ffb62853af287cedec7f50b0')),
+        'key' => env('MSGCLUB_AUTH_KEY', env('WHATSAPP_API_KEY')),
+        'sender_id' => env('MSGCLUB_SENDER_ID', env('WHATSAPP_SENDER_ID')),
+        'template_custom_message' => env('MSGCLUB_TEMPLATE_CUSTOM_MESSAGE', 'school_custom_message_to_applicant'),
+        'template_custom_message_button_param' => env('MSGCLUB_TEMPLATE_CUSTOM_MESSAGE_BUTTON_PARAM', 'login/'),
     ],
 
 ];

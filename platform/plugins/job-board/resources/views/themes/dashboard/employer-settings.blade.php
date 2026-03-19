@@ -530,10 +530,35 @@
                 {{-- City first: type to search city then State & Country auto-fill (no required) --}}
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ __('City') }}<span class="field-help-icon" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover focus click" title="{{ __('Type city name to search. State and Country will auto-fill.') }}"><i class="fa fa-question-circle"></i></span></label>
-                    <div class="emp-city-wrapper" style="position:relative;">
+                    <style>
+                        /* Job Post-like dropdown */
+                        .jp-suggest-wrap { position: relative; overflow: visible; }
+                        .jp-suggest-wrap.jp-suggest-open { z-index: 100000; }
+                        .jp-suggest-list {
+                            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+                            background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+                            max-height: 220px; overflow-y: auto;
+                            z-index: 99999;
+                            display: none;
+                            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                            padding: 6px 0;
+                            min-height: 44px;
+                            font-size: 14px;
+                            line-height: 1.4;
+                        }
+                        .jp-suggest-list.show { display: block !important; }
+                        .jp-suggest-item {
+                            padding: 10px 14px; cursor: pointer; font-size: 14px;
+                            border-bottom: 1px solid #f5f5f5;
+                        }
+                        .jp-suggest-item:last-child { border-bottom: none; }
+                        .jp-suggest-item:hover, .jp-suggest-item.active { background: #fff5f5; color: #E32526; }
+                        .jp-suggest-item .muted { display:block; font-size: 12px; color:#94a3b8; margin-top:2px; }
+                    </style>
+
+                    <div class="emp-city-wrapper jp-suggest-wrap">
                         <input type="text" id="emp-city-search" class="form-control" value="{{ $empCityName }}" placeholder="{{ __('Type city name to search...') }}" autocomplete="off">
-                        <div id="emp-city-suggestions" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:1050; margin-top:2px; background:#fff; border:1px solid #dee2e6; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
-                    </div>
+                        <div id="emp-city-suggestions" class="jp-suggest-list"></div>                    </div>
                     <small class="text-muted">{{ __('Type city name to search. State and Country will auto-fill.') }}</small>
                     <input type="hidden" name="city_id" id="emp-city-id" value="{{ old('city_id', $company->city_id ?? '') }}">
                 </div>
@@ -729,64 +754,116 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+function initEmployerSettings() {
     // Bootstrap tooltips (hover + click for mobile) - same as job seeker profile
     const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     if (typeof bootstrap !== 'undefined' && tooltipEls.length) {
         tooltipEls.forEach(function(el) {
+            // Destroy existing tooltip if any
+            const existingTooltip = bootstrap.Tooltip.getInstance(el);
+            if (existingTooltip) {
+                existingTooltip.dispose();
+            }
             new bootstrap.Tooltip(el, { trigger: 'hover focus click' });
         });
     }
 
     // TomSelect: Institution Type (max 4, no validation message)
-    if (document.getElementById('institution_type')) {
-        new TomSelect('#institution_type', {
-            plugins: ['remove_button'],
-            maxItems: 4,
-        });
+    const instTypeEl = document.getElementById('institution_type');
+    if (instTypeEl && !instTypeEl.tomselect) {
+        try {
+            new TomSelect('#institution_type', {
+                plugins: ['remove_button'],
+                maxItems: 4,
+            });
+        } catch(e) {
+            console.error('[TomSelect] Failed to init #institution_type:', e);
+        }
     }
 
     // TomSelect: Standard Level
-    if (document.getElementById('ts-standard-level')) {
-        new TomSelect('#ts-standard-level', {
-            plugins: ['remove_button'],
-            maxItems: null,
-        });
+    const stdLevelEl = document.getElementById('ts-standard-level');
+    if (stdLevelEl && !stdLevelEl.tomselect) {
+        try {
+            new TomSelect('#ts-standard-level', {
+                plugins: ['remove_button'],
+                maxItems: null,
+            });
+        } catch(e) {
+            console.error('[TomSelect] Failed to init #ts-standard-level:', e);
+        }
     }
 
     // TomSelect: Staff Facilities
-    if (document.getElementById('ts-staff-facilities')) {
-        new TomSelect('#ts-staff-facilities', {
-            plugins: ['remove_button'],
-            maxItems: null,
-        });
+    const staffFacEl = document.getElementById('ts-staff-facilities');
+    if (staffFacEl && !staffFacEl.tomselect) {
+        try {
+            new TomSelect('#ts-staff-facilities', {
+                plugins: ['remove_button'],
+                maxItems: null,
+            });
+        } catch(e) {
+            console.error('[TomSelect] Failed to init #ts-staff-facilities:', e);
+        }
     }
 
     // TomSelect: Working Days
-    if (document.getElementById('ts-working-days')) {
-        new TomSelect('#ts-working-days', {
-            plugins: ['remove_button'],
-            maxItems: 7,
-        });
+    const workingDaysEl = document.getElementById('ts-working-days');
+    if (workingDaysEl && !workingDaysEl.tomselect) {
+        try {
+            new TomSelect('#ts-working-days', {
+                plugins: ['remove_button'],
+                maxItems: 7,
+            });
+        } catch(e) {
+            console.error('[TomSelect] Failed to init #ts-working-days:', e);
+        }
     }
+}
+// Run on DOMContentLoaded (initial page load)
+document.addEventListener('DOMContentLoaded', initEmployerSettings);
 
-    // Logo preview
+// Also run immediately (for AJAX-loaded content where DOMContentLoaded already fired)
+if (document.readyState === 'loading') {
+    // DOM is still loading, wait for DOMContentLoaded
+} else {
+    // DOM already loaded, run immediately
+    setTimeout(initEmployerSettings, 100);
+}
+
+// Also listen for custom 'contentLoaded' event triggered by body.blade.php after AJAX navigation
+$(document).on('contentLoaded', function() {
+    setTimeout(initEmployerSettings, 200);
+});
+
+// Also listen for jQuery ready (in case content is loaded via other means)
+$(document).ready(function() {
+    setTimeout(initEmployerSettings, 150);
+});
+
+// Logo preview - can run multiple times safely
+function initLogoPreview() {
     const logoInput = document.getElementById('logo-input');
-    if (logoInput) {
+    if (logoInput && !logoInput.hasAttribute('data-listener-attached')) {
+        logoInput.setAttribute('data-listener-attached', '1');
         logoInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(ev) {
                     const preview = document.getElementById('logo-preview');
-                    preview.innerHTML = '<img src="' + ev.target.result + '" alt="Logo" id="logo-img">';
+                    if (preview) {
+                        preview.innerHTML = '<img src="' + ev.target.result + '" alt="Logo" id="logo-img">';
+                    }
                 };
                 reader.readAsDataURL(file);
             }
         });
     }
+}
 
-    // City-first: search city then auto-fill State & Country
+// City search initialization - can run multiple times safely
+function initCitySearch() {
     const empCitySearch = document.getElementById('emp-city-search');
     const empCitySuggestions = document.getElementById('emp-city-suggestions');
     const empCityId = document.getElementById('emp-city-id');
@@ -802,7 +879,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const parts = [];
             if (c.state_name) parts.push(c.state_name);
             if (c.country_name) parts.push(c.country_name);
-            html += '<div class="emp-city-item p-2 border-bottom" style="cursor:pointer;" data-id="' + (c.id || '') + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '"><strong>' + (c.name || '') + '</strong>' + (parts.length ? ' <span class="text-muted">' + parts.join(', ') + '</span>' : '') + '</div>';
+            html += '<div class="emp-city-item jp-suggest-item" data-id="' + (c.id || '') + '" data-name="' + (c.name || '') + '" data-state-id="' + (c.state_id || '') + '" data-state-name="' + (c.state_name || '') + '" data-country-id="' + (c.country_id || '') + '" data-country-name="' + (c.country_name || '') + '">' +
+                '<div style="font-weight:600;">' + (c.name || '') + '</div>' +
+                (parts.length ? '<span class="muted">' + parts.join(', ') + '</span>' : '') +
+                '</div>';
         });
         return html;
     }
@@ -813,7 +893,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (empCountryId) empCountryId.value = el.getAttribute('data-country-id');
         if (empStateDisplay) empStateDisplay.value = el.getAttribute('data-state-name') || '';
         if (empCountryDisplay) empCountryDisplay.value = el.getAttribute('data-country-name') || '';
-        empCitySuggestions.style.display = 'none';
+        empCitySuggestions.classList.remove('show');
+        empCitySearch.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
     }
     function loadEmpCities(keyword, page) {
         page = page || 1;
@@ -824,8 +905,9 @@ document.addEventListener('DOMContentLoaded', function() {
             url += '?default_country=1&page=' + page;
         }
         empCitySuggestions.innerHTML = '<div class="p-2 text-muted">{{ __("Loading...") }}</div>';
-        empCitySuggestions.style.display = 'block';
-        fetch(url)
+        empCitySuggestions.classList.add('show');
+        empCitySearch.closest('.jp-suggest-wrap')?.classList.add('jp-suggest-open');
+        fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) {
                 if (!r.ok) return { data: [] };
                 return r.json().catch(function() { return { data: [] }; });
@@ -847,7 +929,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    if (empCitySearch && empCitySuggestions) {
+    if (empCitySearch && empCitySuggestions && !empCitySearch.hasAttribute('data-listener-attached')) {
+        empCitySearch.setAttribute('data-listener-attached', '1');
         let empSearchTimeout = null;
         empCitySearch.addEventListener('focus', function() {
             const k = this.value.trim();
@@ -865,7 +948,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (empCountryId) empCountryId.value = '';
             if (empStateDisplay) empStateDisplay.value = '';
             if (empCountryDisplay) empCountryDisplay.value = '';
-            empCitySuggestions.style.display = 'none';
+            empCitySuggestions.classList.remove('show');
+            empCitySearch.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
             empCitySuggestions.innerHTML = '';
             if (k.length < 2) return;
             empSearchTimeout = setTimeout(function() { loadEmpCities(k); }, 300);
@@ -873,12 +957,38 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function(e) {
             const wrapper = document.querySelector('.emp-city-wrapper');
             if (wrapper && !wrapper.contains(e.target)) {
-                empCitySuggestions.style.display = 'none';
+                empCitySuggestions.classList.remove('show');
+                empCitySearch.closest('.jp-suggest-wrap')?.classList.remove('jp-suggest-open');
             }
         });
     }
+}
+function initAllEmployerSettings() {
+    initEmployerSettings();
+    initLogoPreview();
+    initCitySearch();
+}
+
+// Run on DOMContentLoaded (initial page load)
+document.addEventListener('DOMContentLoaded', initAllEmployerSettings);
+
+// Also run immediately (for AJAX-loaded content where DOMContentLoaded already fired)
+if (document.readyState === 'loading') {
+    // DOM is still loading, wait for DOMContentLoaded
+} else {
+    // DOM already loaded, run immediately
+    setTimeout(initAllEmployerSettings, 100);
+}
+
+// Also listen for custom 'contentLoaded' event triggered by body.blade.php after AJAX navigation
+$(document).on('contentLoaded', function() {
+    setTimeout(initAllEmployerSettings, 200);
 });
 
+// Also listen for jQuery ready (in case content is loaded via other means)
+$(document).ready(function() {
+    setTimeout(initAllEmployerSettings, 150);
+});
 // Dynamic Awards
 let awardIndex = {{ isset($awards) && is_array($awards) ? count($awards) : 0 }};
 function addAward() {

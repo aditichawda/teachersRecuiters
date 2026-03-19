@@ -1700,6 +1700,7 @@ class PublicController extends BaseController
             $employerJobs = JobModel::query()
                 ->whereIn('company_id', $companyIds)
                 ->where('status', JobStatusEnum::PUBLISHED)
+                ->notExpired()
                 ->orderBy('name')
                 ->get(['id', 'name']);
         }

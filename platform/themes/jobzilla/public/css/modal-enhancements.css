@@ -499,11 +499,16 @@
         border-bottom-color: rgba(226, 232, 240, 0.1);
     }
 
+    /*
+     * Do not use background-clip + transparent text-fill on .modal-title:
+     * nested spans inherit transparent fill and become unreadable on light panels.
+     */
     .modal-title {
-        background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: #f1f5f9;
+        background: none;
+        -webkit-background-clip: unset;
+        background-clip: unset;
+        -webkit-text-fill-color: #f1f5f9;
     }
 
     .modal-body {
@@ -521,6 +526,148 @@
     }
 
     .btn-close::before {
+        color: #cbd5e1;
+    }
+}
+
+/* Light-panel modals: keep white chrome when OS prefers dark */
+@media (prefers-color-scheme: dark) {
+    #signupLoginModal .modal-content {
+        background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    #signupLoginModal .modal-header {
+        background: transparent;
+        border-bottom-color: transparent;
+    }
+
+    #signupLoginModal .modal-title {
+        color: #0f172a;
+        -webkit-text-fill-color: #0f172a;
+    }
+
+    #signupLoginModal .signup-login-welcome {
+        color: #64748b !important;
+        -webkit-text-fill-color: #64748b;
+    }
+
+    #signupLoginModal .signup-login-title {
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a;
+    }
+
+    #signupLoginModal .modal-body {
+        color: #64748b;
+    }
+
+    #signupLoginModal .btn-close {
+        background: rgba(241, 245, 249, 0.8);
+        border: none;
+    }
+
+    #signupLoginModal .btn-close::before {
+        color: #666666;
+    }
+
+    #applyNow .modal-content,
+    #applyExternalJob .modal-content {
+        background: #ffffff;
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    #applyNow .modal-header,
+    #applyExternalJob .modal-header {
+        background: #ffffff;
+        border-bottom-color: #e9ecef;
+    }
+
+    #applyNow .modal-title,
+    #applyNow .modal-title *,
+    #applyExternalJob .modal-title,
+    #applyExternalJob .modal-title * {
+        color: #212529 !important;
+        -webkit-text-fill-color: #212529;
+        background: none;
+        -webkit-background-clip: unset;
+        background-clip: unset;
+    }
+
+    #applyNow .modal-body,
+    #applyExternalJob .modal-body {
+        background: #ffffff;
+        color: #212529;
+    }
+
+    #applyNow .modal-footer,
+    #applyExternalJob .modal-footer {
+        background: #ffffff;
+        border-top-color: #e9ecef;
+    }
+
+    #applyNow .btn-close,
+    #applyExternalJob .btn-close {
+        background: rgba(241, 245, 249, 0.8);
+        border: none;
+    }
+
+    #applyNow .btn-close::before,
+    #applyExternalJob .btn-close::before {
+        color: #666666;
+    }
+}
+
+/*
+ * Jobzilla main.scss: .twm-sign-up / .twm-model-popup .modal-content beats flat .modal-content.
+ * Match that specificity so enhancements actually apply.
+ */
+.twm-sign-up .modal-content,
+.twm-model-popup .modal-content {
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+    border: none;
+    border-radius: 20px;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.twm-sign-up .modal-header,
+.twm-model-popup .modal-header {
+    border-bottom: none;
+    background: transparent;
+}
+
+.twm-sign-up .modal-title,
+.twm-model-popup .modal-title {
+    color: #1a1a1a;
+    -webkit-text-fill-color: #1a1a1a;
+}
+
+.twm-sign-up .modal-body,
+.twm-model-popup .modal-body {
+    color: #666666;
+}
+
+@media (prefers-color-scheme: dark) {
+    .twm-sign-up .modal-content,
+    .twm-model-popup .modal-content {
+        background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+        border-color: rgba(226, 232, 240, 0.1);
+    }
+
+    .twm-sign-up .modal-title,
+    .twm-model-popup .modal-title {
+        color: #f1f5f9;
+        -webkit-text-fill-color: #f1f5f9;
+        background: none;
+        -webkit-background-clip: unset;
+        background-clip: unset;
+    }
+
+    .twm-sign-up .modal-body,
+    .twm-model-popup .modal-body {
         color: #cbd5e1;
     }
 }

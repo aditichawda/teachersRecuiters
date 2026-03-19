@@ -496,7 +496,7 @@
         var v = parseInt(amountEl.value || '0', 10);
         if (!v || isNaN(v) || v < 100) {
             e.preventDefault();
-            showErr('Minimum recharge amount is ₹100.');
+            showErr('Minimum recharge amount is ₹1000.');
         }
     });
 })();

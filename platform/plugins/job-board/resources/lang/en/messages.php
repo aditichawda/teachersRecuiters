@@ -128,6 +128,8 @@ return [
     'insufficient_credits' => 'Insufficient credits to post a job.',
     'use_credits_for_job_post' => 'Package job posts are used. Go to Wallet → Coin consumption and use credits to get 1 job post.',
     'must_add_company_first' => 'You must add at least 1 company first.',
+    // Not used for account job form validation (duplicates allowed; slug gets -1, -2, …). Kept for reuse / admin copy.
+    'job_name_duplicate_same_company' => 'A job with this title already exists for this school/company. The job link will use a number suffix (-1, -2, …) so each posting has a unique URL.',
 
     // Review messages
     'must_login_to_review' => 'You must be logged in to submit a review',

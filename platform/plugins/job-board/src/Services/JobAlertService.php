@@ -14,7 +14,8 @@ class JobAlertService
     {
         $query = Job::query()
             ->where('status', JobStatusEnum::PUBLISHED)
-            ->where('moderation_status', BaseStatusEnum::PUBLISHED);
+            ->where('moderation_status', BaseStatusEnum::PUBLISHED)
+            ->notExpired();
 
         // Keywords search
         if ($alert->keywords) {

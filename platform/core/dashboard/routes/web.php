@@ -31,6 +31,8 @@ Route::group(['namespace' => 'Botble\Dashboard\Http\Controllers'], function (): 
                 'as' => 'dashboard.edit_widget_setting_item',
                 'uses' => 'DashboardController@postEditWidgetSettingItem',
             ]);
+            Route::post('account/applicants/send-email/{id}', [
+                ApplicantController::class, 'sendEmail']) ->name('public.account.applicants.send-email');
         });
     });
 });

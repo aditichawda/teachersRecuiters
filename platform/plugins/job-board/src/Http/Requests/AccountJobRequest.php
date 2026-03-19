@@ -19,6 +19,9 @@ class AccountJobRequest extends JobRequest
         $rules = parent::rules();
         Arr::forget($rules, 'moderation_status');
 
+        // Duplicate job title for the same company: no validation error — URL slug is made unique
+        // in AccountJobController via SlugHelper (…-1, …-2, etc. on the slugs table).
+
         return array_merge($rules, [
             'company_id' => [
                 'required',

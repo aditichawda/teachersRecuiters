@@ -11,6 +11,256 @@
 {!! Theme::partial('candidate-card-styles') !!}
 
 <style>
+/* ===== DASHBOARD HEADER (Same as Employer Dashboard) ===== */
+.enl-header {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    position: sticky;
+    top: 0;
+    z-index: 998;
+}
+.enl-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 82px;
+}
+
+.enl-header-logo {
+    display: flex;
+    align-items: center;
+}
+.enl-header-logo a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+.enl-header-logo img {
+    max-height: 44px;
+    width: auto;
+}
+.enl-header-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.enl-header-nav li {
+    display: inline-block;
+}
+.enl-header-nav a,
+.enl-header-nav .nav-link {
+    padding: 8px 14px;
+    color: #555;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.enl-header-nav a:hover,
+.enl-header-nav .nav-link:hover { background: #f0f7ff; color: #0073d1; }
+.enl-header-nav a.enl-h-active,
+.enl-header-nav .nav-link.active { color: #0073d1; background: #e8f4fc; }
+
+.enl-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.enl-header-user {
+    position: relative;
+}
+.enl-header-user-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: none; cursor: pointer;
+    padding: 6px 10px; border-radius: 8px; transition: background 0.2s;
+}
+.enl-header-user-btn:hover { background: #f5f5f5; }
+.enl-header-user-btn img {
+    width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;
+}
+.enl-header-user-btn span { font-size: 13px; font-weight: 500; color: #333; }
+.enl-header-user-btn i { font-size: 12px; color: #888; }
+
+.enl-header-dropdown {
+    position: absolute; top: 100%; right: 0;
+    background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 200px; padding: 8px 0;
+    display: none; z-index: 1001;
+}
+.enl-header-dropdown.show { display: block; }
+.enl-header-dropdown a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px; color: #333; text-decoration: none;
+    font-size: 14px; transition: background 0.15s;
+}
+.enl-header-dropdown a:hover { background: #f5f7fa; color: #0073d1; }
+.enl-header-dropdown a i { width: 18px; text-align: center; color: #888; }
+.enl-header-dropdown hr { margin: 4px 0; border: none; border-top: 1px solid #f0f0f0; }
+
+/* Navbar Mobile Toggle Button */
+.enl-navbar-toggle {
+    display: none;
+    background: transparent;
+    color: #333;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1002;
+    margin-left: 15px;
+}
+
+.enl-navbar-toggle:hover {
+    background: #f5f5f5;
+    border-color: #d1d5db;
+    color: #0073d1;
+}
+
+/* Navbar Right Side Drawer */
+.enl-navbar-drawer {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 320px;
+    max-width: 85vw;
+    height: 100vh;
+    background: #fff;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    z-index: 1001;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0;
+}
+
+.enl-navbar-drawer.show {
+    right: 0;
+}
+
+.enl-navbar-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #0073d1;
+    color: #fff;
+}
+
+.enl-navbar-drawer-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.enl-navbar-drawer-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.enl-navbar-drawer-close:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.enl-navbar-drawer-body {
+    padding: 20px;
+}
+
+.enl-navbar-drawer-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.enl-navbar-drawer-nav li {
+    margin-bottom: 8px;
+}
+
+.enl-navbar-drawer-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.enl-navbar-drawer-nav a:hover {
+    background: #f0f7ff;
+    color: #0073d1;
+}
+
+.enl-navbar-drawer-nav a i {
+    font-size: 20px;
+    width: 24px;
+    text-align: center;
+}
+
+.enl-navbar-drawer-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
+}
+
+.enl-navbar-drawer-overlay.show {
+    display: block;
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .enl-header-nav { display: none; }
+    .enl-header-user-btn span { display: none; }
+    .enl-navbar-toggle { display: flex; }
+    .enl-header {
+        z-index: 997;
+    }
+    .enl-header-inner {
+        padding: 0 10px;
+        height: 60px;
+    }
+}
+
 /* Candidate profile — Indeed / Jobs in Education inspired */
 .cdt-hero {
     background: linear-gradient(165deg, #e8f4fc 0%, #d4ebf7 35%, #b8dff0 100%);
@@ -716,6 +966,127 @@
     @endif
 @endif
 
+{{-- Dashboard Header (Same as Employer Dashboard) --}}
+<div class="enl-header">
+    <div class="enl-header-inner">
+        <!-- Logo -->
+        <div class="enl-header-logo" style="display: flex; align-items: center; gap: 15px;">
+            @if (Theme::getLogo())
+                <a href="{{ BaseHelper::getHomepageUrl() }}">
+                    {!! Theme::getLogoImage([], 'logo_light', 44) !!}
+                </a>
+            @endif
+            <!-- Navbar Toggle Button (Mobile Only) -->
+            <button class="enl-navbar-toggle" id="navbar-toggle-btn" aria-label="Toggle navigation menu">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Right -->
+        <div class="enl-header-right" style="display: flex; align-items: center; gap: 20px;">
+            <!-- Nav Items Next to User (Desktop Only) -->
+            <ul class="enl-header-nav" style="margin: 0; padding: 0;">
+                <!-- Home Icon -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black; font-size: 20px !important; padding: 8px 12px;" href="{{ BaseHelper::getHomepageUrl() }}" title="{{ __('Home') }}">
+                        <i class="feather-home" style="font-size: 20px !important;"></i>
+                    </a>
+                </li>
+                
+                <!-- FAQ -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black;" href="{{ route('public.faq') }}">
+                        <span>{{ __('FAQ') }}</span>
+                    </a>
+                </li>
+
+                <!-- Plans -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black;" href="{{ route('public.premium-service') }}">
+                        <span>{{ __('Plans') }}</span>
+                    </a>
+                </li>
+
+                <!-- Notifications -->
+                <li class="nav-item">
+                    <a class="nav-link" style="color: black; font-size: 20px !important;" href="{{ route('public.notifications') }}" title="{{ __('Notifications') }}">
+                        <i class="feather-bell" style="font-size: 20px !important;"></i>
+                    </a>
+                </li>
+            </ul>
+
+            @auth('account')
+            <div class="enl-header-user">
+                <button class="enl-header-user-btn" onclick="document.getElementById('enlUserDropdown').classList.toggle('show')">
+                    @php
+                        $account = auth('account')->user();
+                        $company = $account->companies->first() ?? null;
+                    @endphp
+                    @if($company && $company->logo)
+                        <img src="{{ RvMedia::getImageUrl($company->logo) }}" alt="{{ $account->name }}">
+                    @else
+                        <img src="{{ $account->avatar_url }}" alt="{{ $account->name }}">
+                    @endif
+                    <span>{{ $account->first_name ?? $account->name }}</span>
+                    <i class="fa fa-chevron-down enl-chevron"></i>
+                </button>
+                <div class="enl-header-dropdown" id="enlUserDropdown">
+                    <a href="{{ route('public.account.dashboard') }}"><i class="fa fa-home"></i> Dashboard</a>
+                    @if($account->isEmployer())
+                        <a href="{{ route('public.account.employer.settings.edit') }}"><i class="fa fa-cog"></i> Account Settings</a>
+                    @endif
+                    <hr>
+                    <a href="{{ route('public.account.logout') }}"><i class="fa fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+            @endauth
+        </div>
+    </div>
+</div>
+
+<!-- Navbar Right Side Drawer (Mobile) -->
+<div class="enl-navbar-drawer-overlay" id="navbar-drawer-overlay"></div>
+<div class="enl-navbar-drawer" id="navbar-drawer">
+    <div class="enl-navbar-drawer-header">
+        <h3>{{ __('Menu') }}</h3>
+        <button class="enl-navbar-drawer-close" id="navbar-drawer-close" aria-label="Close menu">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+    <div class="enl-navbar-drawer-body">
+        <ul class="enl-navbar-drawer-nav">
+            <!-- Home -->
+            <li>
+                <a href="{{ BaseHelper::getHomepageUrl() }}">
+                    <i class="feather-home"></i>
+                    <span>{{ __('Home') }}</span>
+                </a>
+            </li>
+            <!-- FAQ -->
+            <li>
+                <a href="{{ route('public.faq') }}">
+                    <i class="fa fa-question-circle"></i>
+                    <span>{{ __('FAQ') }}</span>
+                </a>
+            </li>
+            <!-- Plans -->
+            <li>
+                <a href="{{ route('public.premium-service') }}">
+                    <i class="fa fa-crown"></i>
+                    <span>{{ __('Plans') }}</span>
+                </a>
+            </li>
+            <!-- Notifications -->
+            <li>
+                <a href="{{ route('public.notifications') }}">
+                    <i class="feather-bell"></i>
+                    <span>{{ __('Notifications') }}</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
 {{-- Candidate Header (updated layout) --}}
 <div style="height: 18px;"></div>
 
@@ -774,13 +1145,13 @@
             <div class="cdt-summary-top">
                 <div class="cdt-summary-avatar">
                     <img src="{{ $candidate->avatar_url ?? '' }}" alt="{{ $candidate->name ?? 'Candidate' }}">
-                </div>
+                                </div>
                 <div>
                     <h1 class="cdt-summary-name">
                         <span>{{ $candidate->name ?? 'Candidate' }}</span>
                         @if($candidateIsFeatured)
                             <span class="badge bg-warning text-dark" style="font-size: 12px; font-weight: 700;">{{ __('Featured') }}</span>
-                        @endif
+                            @endif
                     </h1>
                     @if(!$profileLocked && ($candidate->description ?? null))
                         <p class="cdt-summary-subtitle">{!! BaseHelper::clean($candidate->description) !!}</p>
@@ -801,11 +1172,11 @@
                             @endif
                             @if($candidate->phone ?? null)
                                 <a href="tel:{{ $candidate->phone }}" class="cdt-btn-soft"><i class="feather-phone"></i> {{ __('Call') }}</a>
-                            @endif
-                        </div>
                     @endif
                 </div>
-            </div>
+                    @endif
+                </div>
+                </div>
 
             <div class="cdt-summary-meta">
                 <div class="cdt-meta-item">
@@ -856,7 +1227,7 @@
                     {{-- Experience --}}
                     <div class="cdt-subcard">
                         <div class="cdt-subcard-title"><i class="ti ti-building-skyscraper"></i>{{ __('Experience') }}</div>
-                        @if(isset($experiences) && $experiences->isNotEmpty())
+                            @if(isset($experiences) && $experiences->isNotEmpty())
                             @foreach($experiences as $experience)
                                 <div class="cdt-subrow">
                                     <div class="title">{{ $experience->company ?? '—' }}</div>
@@ -865,18 +1236,18 @@
                                         @if($experience->started_at)
                                             <span style="font-weight:700;"> ({{ $experience->started_at->format('Y') }}{{ ($experience->is_current || ! $experience->ended_at) ? ' - ' . __('Present') : ' - ' . $experience->ended_at?->format('Y') }})</span>
                                         @endif
+                                        </div>
                                     </div>
-                                </div>
-                            @endforeach
-                        @else
-                            <p class="cdt-empty-msg">— {{ __('No work experience added') }}</p>
-                        @endif
-                    </div>
+                                @endforeach
+                            @else
+                                <p class="cdt-empty-msg">— {{ __('No work experience added') }}</p>
+                            @endif
+                        </div>
 
                     {{-- Education --}}
                     <div class="cdt-subcard">
                         <div class="cdt-subcard-title"><i class="ti ti-school"></i>{{ __('Education') }}</div>
-                        @if(isset($educations) && $educations->isNotEmpty())
+                            @if(isset($educations) && $educations->isNotEmpty())
                             @foreach($educations as $education)
                                 <div class="cdt-subrow">
                                     <div class="title">{{ $education->school ? ucwords($education->school) : '—' }}</div>
@@ -885,12 +1256,12 @@
                                         @if($education->started_at)
                                             <span style="font-weight:700;"> ({{ $education->started_at->format('Y') }}{{ ($education->is_current || ! $education->ended_at) ? ' - ' . __('Present') : ' - ' . $education->ended_at?->format('Y') }})</span>
                                         @endif
+                                        </div>
                                     </div>
-                                </div>
-                            @endforeach
-                        @else
-                            <p class="cdt-empty-msg">— {{ __('No education added') }}</p>
-                        @endif
+                                @endforeach
+                            @else
+                                <p class="cdt-empty-msg">— {{ __('No education added') }}</p>
+                            @endif
                     </div>
                 </div>
 
@@ -1021,5 +1392,79 @@
 <script>
 (function() {
     // Tabs removed in updated UI; keep script as a no-op for safety.
+})();
+
+// Navbar Toggle Drawer Functionality
+(function() {
+    function initNavbarDrawer() {
+        const toggleBtn = document.getElementById('navbar-toggle-btn');
+        const drawer = document.getElementById('navbar-drawer');
+        const overlay = document.getElementById('navbar-drawer-overlay');
+        const closeBtn = document.getElementById('navbar-drawer-close');
+        
+        if (!toggleBtn || !drawer || !overlay) return;
+        
+        function openDrawer() {
+            drawer.classList.add('show');
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeDrawer() {
+            drawer.classList.remove('show');
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        // Toggle button click
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (drawer.classList.contains('show')) {
+                closeDrawer();
+            } else {
+                openDrawer();
+            }
+        });
+        
+        // Close button click
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeDrawer();
+            });
+        }
+        
+        // Overlay click
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                closeDrawer();
+            }
+        });
+        
+        // Close on drawer link click
+        const drawerLinks = drawer.querySelectorAll('.enl-navbar-drawer-nav a');
+        drawerLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                setTimeout(function() {
+                    closeDrawer();
+                }, 100);
+            });
+        });
+        
+        // Close on window resize (if desktop)
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeDrawer();
+            }
+        });
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNavbarDrawer);
+    } else {
+        initNavbarDrawer();
+    }
 })();
 </script>

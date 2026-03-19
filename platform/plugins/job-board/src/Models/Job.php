@@ -337,6 +337,11 @@ class Job extends BaseModel
 
     public function canShowApplyJob(): bool
     {
+        // Hide apply when job is not published, past expire_date, or past application_closing_date
+        if (! $this->isJobOpen()) {
+            return false;
+        }
+
         if (! auth('account')->check()) {
             return true;
         }

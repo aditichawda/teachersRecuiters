@@ -24,6 +24,15 @@ class WalletRechargeController extends BaseController
     protected const MIN_RECHARGE_INR_JOBSEEKER = 100;
     protected const INR_TO_CREDITS_RATE = 1; // 1 INR = 1 credit (can be changed later)
 
+    protected function walletDashboardRoute(?Account $account = null): string
+    {
+        if ($account && ! $account->isEmployer()) {
+            return route('public.account.jobseeker.wallet');
+        }
+
+        return route('public.account.wallet');
+    }
+
     protected function createRazorpayApi(): Api
     {
         $apiKey = get_payment_setting('key', RAZORPAY_PAYMENT_METHOD_NAME);
@@ -152,11 +161,19 @@ class WalletRechargeController extends BaseController
 
         $recharge = WalletRecharge::query()->where('token', $token)->first();
         if (! $recharge) {
-            return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Recharge not found.'));
+            $logged = auth('account')->user();
+            $fallback = $logged instanceof Account
+                ? $this->walletDashboardRoute($logged)
+                : route('public.index');
+
+            return redirect()->to($fallback)->with('error_msg', __('Recharge not found.'));
         }
 
+        $rechargeAccount = Account::query()->find($recharge->account_id);
+        $walletRoute = $this->walletDashboardRoute($rechargeAccount);
+
         if ($recharge->status === 'completed') {
-            return redirect()->to(route('public.account.wallet'))->with('success_msg', __('Wallet recharged successfully.'));
+            return redirect()->to($walletRoute)->with('success_msg', __('Wallet recharged successfully.'));
         }
 
         $chargeId = (string) $request->input('razorpay_payment_id', '');
@@ -167,7 +184,7 @@ class WalletRechargeController extends BaseController
             $recharge->status = 'failed';
             $recharge->save();
 
-            return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Payment failed or cancelled.'));
+            return redirect()->to($walletRoute)->with('error_msg', __('Payment failed or cancelled.'));
         }
 
         try {
@@ -185,7 +202,7 @@ class WalletRechargeController extends BaseController
             $recharge->razorpay_signature = $signature;
             $recharge->save();
 
-            return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Payment verification failed.'));
+            return redirect()->to($walletRoute)->with('error_msg', __('Payment verification failed.'));
         } catch (\Throwable $e) {
             BaseHelper::logError($e);
             $recharge->status = 'failed';
@@ -193,23 +210,24 @@ class WalletRechargeController extends BaseController
             $recharge->razorpay_signature = $signature;
             $recharge->save();
 
-            return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Payment verification failed.'));
+            return redirect()->to($walletRoute)->with('error_msg', __('Payment verification failed.'));
         }
 
-        return DB::transaction(function () use ($recharge, $chargeId, $razorpayOrderId, $signature) {
+        return DB::transaction(function () use ($recharge, $chargeId, $razorpayOrderId, $signature, $walletRoute) {
             /** @var Account|null $account */
             $account = Account::query()->find($recharge->account_id);
             if (! $account) {
                 $recharge->status = 'failed';
                 $recharge->save();
 
-                return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Account not found.'));
+                return redirect()->to($walletRoute)->with('error_msg', __('Account not found.'));
             }
+            $redirectWallet = $this->walletDashboardRoute($account);
             if ($account->isEmployer() && method_exists($account, 'isConsultancy') && $account->isConsultancy()) {
                 $recharge->status = 'failed';
                 $recharge->save();
 
-                return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Wallet recharge is not available for consultancy accounts.'));
+                return redirect()->to($redirectWallet)->with('error_msg', __('Wallet recharge is not available for consultancy accounts.'));
             }
 
             // Enforce package-purchased rule at credit time as well (employer only).
@@ -217,7 +235,7 @@ class WalletRechargeController extends BaseController
                 $recharge->status = 'failed';
                 $recharge->save();
 
-                return redirect()->to(route('public.account.wallet'))->with('error_msg', __('Please purchase a package first to enable wallet recharge.'));
+                return redirect()->to($redirectWallet)->with('error_msg', __('Please purchase a package first to enable wallet recharge.'));
             }
 
             $existingPayment = Payment::query()
@@ -291,7 +309,7 @@ class WalletRechargeController extends BaseController
             $recharge->razorpay_signature = $signature;
             $recharge->save();
 
-            return redirect()->to(route('public.account.wallet'))->with('success_msg', __('Wallet recharged successfully.'));
+            return redirect()->to($redirectWallet)->with('success_msg', __('Wallet recharged successfully.'));
         });
     }
 }

@@ -71,18 +71,52 @@ class JobSeekerPackageContext
             return $result;
         }
 
+        // Any latest row with a job-seeker package_id counts (credit or debit).
+        // Wallet / internal flows may log package purchase as TYPE_DEBIT; excluding debits broke entitlement.
         $lastPurchase = Transaction::query()
             ->where('account_id', $account->getKey())
-            ->where(function ($q): void {
-                $q->whereNull('type')->orWhere('type', '!=', 'deduct');
-            })
             ->whereNotNull('package_id')
             ->whereHas('package', fn ($q) => $q->where('package_type', 'job-seeker'))
             ->with('package')
             ->latest()
             ->first();
 
-        $package = $lastPurchase?->package;
+        // Subscription / admin attach: jb_account_packages (may be newer than an old wallet transaction).
+        $pivotAttachedPackage = $account->packages()
+            ->where('jb_packages.package_type', 'job-seeker')
+            ->where('jb_packages.status', 'published')
+            ->orderByDesc('jb_account_packages.created_at')
+            ->first();
+
+        $pivotCreated = $pivotAttachedPackage?->pivot?->created_at
+            ? Carbon::parse($pivotAttachedPackage->pivot->created_at)
+            : null;
+        $purchaseCreated = $lastPurchase?->created_at
+            ? Carbon::parse($lastPurchase->created_at)
+            : null;
+
+        // Prefer whichever entitlement was granted most recently so a new pivot plan is not ignored
+        // when an older jb_transactions row still exists (wrongly showed "upgrade" / expired period).
+        $usePivotAsPrimary = $pivotCreated && (! $purchaseCreated || $pivotCreated->greaterThan($purchaseCreated));
+
+        $package = null;
+        $periodStart = null;
+
+        if ($usePivotAsPrimary && $pivotAttachedPackage) {
+            $package = $pivotAttachedPackage;
+            $periodStart = $pivotCreated;
+        } elseif ($lastPurchase) {
+            $package = $lastPurchase->package;
+            if ($package) {
+                $periodStart = $purchaseCreated;
+            } elseif ($pivotAttachedPackage) {
+                $package = $pivotAttachedPackage;
+                $periodStart = $pivotCreated;
+            }
+        } elseif ($pivotAttachedPackage) {
+            $package = $pivotAttachedPackage;
+            $periodStart = $pivotCreated;
+        }
 
         if (! $package) {
             $package = Package::query()
@@ -92,19 +126,21 @@ class JobSeekerPackageContext
                 ->first();
         }
 
-        $isDefaultPackage = ! $lastPurchase && $package && (bool) ($package->is_default ?? false);
+        $hasPivotJobSeekerPackage = $pivotAttachedPackage !== null;
 
-        // For default/free package: start a fresh period from "now" so old accounts don't get stuck in an expired window.
-        // For purchased packages: period starts from purchase time.
-        $periodStart = $lastPurchase
-            ? $lastPurchase->created_at
-            : ($package ? ($isDefaultPackage ? Carbon::now() : $account->created_at) : null);
+        $isDefaultPackage = ! $lastPurchase && ! $hasPivotJobSeekerPackage && $package && (bool) ($package->is_default ?? false);
+
+        // Default/free: fresh period from now. Otherwise use periodStart from pivot/purchase above, or account age.
+        if ($package && $periodStart === null) {
+            $periodStart = $isDefaultPackage ? Carbon::now() : $account->created_at;
+        }
+
         $periodEnd = null;
 
         if ($package && $periodStart) {
             $periodStart = Carbon::parse($periodStart);
             if ($package->validity_days) {
-                $periodEnd = $periodStart->copy()->addDays($package->validity_days);
+                $periodEnd = $periodStart->copy()->addDays((int) $package->validity_days);
             }
         }
 

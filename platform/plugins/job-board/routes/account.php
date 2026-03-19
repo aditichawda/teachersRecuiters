@@ -389,6 +389,10 @@ Route::group(['namespace' => 'Botble\JobBoard\Http\Controllers'], function (): v
                     'as' => 'jobseeker.wallet.purchase_feature',
                     'uses' => 'WalletController@purchaseFeatureJobSeeker',
                 ])->middleware(['account:' . AccountTypeEnum::JOB_SEEKER, 'enable-credits', LocaleMiddleware::class]);
+                Route::post('jobseeker/wallet/recharge', [
+                    'as' => 'jobseeker.wallet.recharge.start',
+                    'uses' => 'WalletRechargeController@start',
+                ])->middleware(['account:' . AccountTypeEnum::JOB_SEEKER, 'enable-credits', LocaleMiddleware::class]);
 
                 // Job seeker packages (upgrade / buy) – same view as employer packages, filtered by job-seeker type
                 Route::get('jobseeker/packages', [

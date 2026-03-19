@@ -539,10 +539,8 @@ class AccountJobController extends BaseController
 
         if (SlugHelper::isSupportedModel(Job::class)) {
             try {
-                $existing = SlugHelper::getSlug(null, SlugHelper::getPrefix(Job::class), Job::class, $job->id);
-                if (! $existing) {
-                    SlugHelper::createSlug($job);
-                }
+                // Always (re)build slug from current name; SlugHelper makes key unique (…-1, …-2, …) globally.
+                SlugHelper::createSlug($job);
             } catch (\Throwable $e) {
                 Log::warning('JobBoard: Failed to create slug for job ' . $job->id, ['error' => $e->getMessage()]);
             }
@@ -1034,6 +1032,15 @@ if (JobBoardHelper::isEnabledCreditsSystem() && ! empty($applyEmailsUpdate)) {
 
         $job->fill($request->input());
         $job->save();
+
+        if (SlugHelper::isSupportedModel(Job::class)) {
+            try {
+                $job->refresh();
+                SlugHelper::createSlug($job);
+            } catch (\Throwable $e) {
+                Log::warning('JobBoard: Failed to update slug for job ' . $job->id, ['error' => $e->getMessage()]);
+            }
+        }
 
         if ($this->hasFeaturedJobEntitlement($account = auth('account')->user())) {
             $job->is_featured = 1;

@@ -538,6 +538,25 @@
     </div>
 </section>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // If job can't be applied (expired/closed/limit), show a clear message on click.
+    document.body.addEventListener('click', function(e) {
+        var el = e.target && e.target.closest ? e.target.closest('.jd-apply-btn.disabled') : null;
+        if (!el) return;
+        // Only when it's the disabled "Apply Now" state (not the "Applied" one)
+        if ((el.textContent || '').toLowerCase().indexOf('apply') === -1) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('warning', '{{ __("This job is expired or no longer accepting applications.") }}', '{{ __("Job expired") }}');
+        } else {
+            alert('{{ __("This job is expired or no longer accepting applications.") }}');
+        }
+    }, true);
+});
+</script>
+
 {{-- Main Content --}}
 <div class="jd-main">
     <div class="container">

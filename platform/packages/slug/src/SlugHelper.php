@@ -151,7 +151,7 @@ class SlugHelper
     }
 
     /**
-     * Ensure slug key is unique within the same prefix (same name => abc-school, abc-school-2, abc-school-3 ...).
+     * Ensure slug key is unique within the same prefix (same name => abc-school, abc-school-1, abc-school-2 …).
      */
     protected function makeUniqueSlugKey(string $prefix, string $baseKey, string $modelClass, $referenceId): string
     {
@@ -173,8 +173,8 @@ class SlugHelper
                 return $key;
             }
 
-            $suffix++;
             $key = $baseKey . '-' . $suffix;
+            $suffix++;
         }
     }
 

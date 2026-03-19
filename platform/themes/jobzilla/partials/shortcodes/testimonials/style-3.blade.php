@@ -5,8 +5,8 @@
 
 <style>
 .twm-testimonial-v-area {
-    padding-top: 60px !important;
-    padding-bottom: 60px !important;
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
 }
 .twm-testimonial-v-area .container {
     max-width: 100% !important;
@@ -19,14 +19,14 @@
 .testimonial-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    /* gap: 30px; */
 }
 .twm-explore-top-section {
     margin-bottom: 20px;
 }
 .v-testimonial-wrap {
     position: relative;
-    padding: 15px 0;
+    padding: 1px 0;
     display: flex;
     flex-direction: column;
     align-items: center;

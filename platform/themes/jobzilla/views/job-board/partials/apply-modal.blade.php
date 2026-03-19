@@ -1,13 +1,5 @@
 @if (auth('account')->check() && $account && ! $account->isEmployer())
 <style>
-/* Hide success alerts to prevent navbar overlap and page shift */
-.dialog-alert-overlay {
-    display: none !important;
-}
-.dialog-alert-box {
-    display: none !important;
-}
-
 /* Prevent page shift when button changes to "Applied" */
 .jd-apply-btn {
     transition: all 0.2s ease;
@@ -25,6 +17,111 @@ document.addEventListener('DOMContentLoaded', function() {
     var applyNow = document.getElementById('applyNow');
     if (!applyNow) return;
     var screeningUrl = '{{ url("ajax/jobs/screening-questions") }}';
+
+    function getAppliedJobsMap() {
+        try {
+            var raw = localStorage.getItem('applied_jobs_map');
+            return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function setAppliedJob(jobId) {
+        if (!jobId) return;
+        var map = getAppliedJobsMap();
+        map[String(jobId)] = true;
+        try { localStorage.setItem('applied_jobs_map', JSON.stringify(map)); } catch (e) {}
+    }
+
+    function applyAppliedUIToButtons(jobId) {
+        if (!jobId) return;
+        var selectors = [
+            '.jd-apply-btn[data-job-id="' + jobId + '"]',
+            'a.jd-apply-btn[data-job-id="' + jobId + '"]',
+            '.site-button[data-job-id="' + jobId + '"]',
+            'a.site-button[data-job-id="' + jobId + '"]'
+        ];
+        selectors.forEach(function(sel) {
+            document.querySelectorAll(sel).forEach(function(btn) {
+                try {
+                    if (btn.classList) btn.classList.add('disabled');
+                    btn.removeAttribute('data-bs-toggle');
+                    btn.removeAttribute('href');
+                    btn.style.pointerEvents = 'none';
+                    btn.style.cursor = 'not-allowed';
+                    btn.style.opacity = '0.7';
+                    if (btn.tagName === 'A') {
+                        btn.setAttribute('role', 'button');
+                    }
+                    // Preserve inner span style if present
+                    var hasSpan = btn.querySelector && btn.querySelector('span');
+                    if (hasSpan) {
+                        btn.querySelector('span').textContent = '{{ __("Applied") }}';
+                    } else {
+                        btn.textContent = '{{ __("Applied") }}';
+                        btn.innerHTML = '{{ __("Applied") }}';
+                    }
+                } catch (e) { /* ignore */ }
+            });
+        });
+    }
+
+    // On page load, if we already applied, reflect it immediately (even before refresh)
+    (function syncAppliedButtonsFromStorage() {
+        var map = getAppliedJobsMap();
+        Object.keys(map || {}).forEach(function(jobId) {
+            if (map[jobId]) {
+                applyAppliedUIToButtons(jobId);
+            }
+        });
+    })();
+
+    function forceCloseApplyNowModal() {
+        var modalEl = document.getElementById('applyNow');
+        if (!modalEl) {
+            return;
+        }
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            try {
+                var inst = bootstrap.Modal.getInstance(modalEl);
+                if (inst) {
+                    inst.hide();
+                }
+            } catch (e) { /* ignore */ }
+        }
+        if (typeof $ !== 'undefined' && $.fn.modal) {
+            try {
+                $(modalEl).modal('hide');
+            } catch (e) { /* ignore */ }
+        }
+        modalEl.classList.remove('show');
+        modalEl.style.display = 'none';
+        modalEl.setAttribute('aria-hidden', 'true');
+        modalEl.removeAttribute('aria-modal');
+        document.body.classList.remove('modal-open');
+        document.querySelectorAll('.modal-backdrop').forEach(function(b) {
+            b.remove();
+        });
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+    }
+
+    function showJobApplyBlockedDialog(message, upgradeUrl) {
+        var upgradeText = '{{ __("View packages") }}';
+        var title = '{{ __("Cannot apply") }}';
+        var html = message ? String(message) : '{{ __("Application failed. Please try again.") }}';
+        if (upgradeUrl) {
+            html += ' <br><a href="' + upgradeUrl + '" class="btn btn-primary btn-sm mt-2">' + upgradeText + '</a>';
+        }
+        if (typeof window.showDialogAlert === 'function') {
+            window.showDialogAlert('warning', html, title);
+        } else if (typeof Botble !== 'undefined' && Botble.showError) {
+            Botble.showError(message);
+        } else {
+            alert(message);
+        }
+    }
 
     // Store reference to the button that opened the modal
     var modalTriggerButton = null;
@@ -263,24 +360,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 var requestTime = Date.now() - requestStartTime;
                 console.log('[JOB_APPLY] Response received in', requestTime + 'ms');
                 console.log('[JOB_APPLY] Response status:', r.status, r.statusText);
-                console.log('[JOB_APPLY] Response headers:', Object.fromEntries(r.headers.entries()));
-                
-                if (!r.ok) {
-                    return r.json().then(function(d) { 
-                        console.error('[JOB_APPLY] ❌ Response error:', d);
-                        console.error('[JOB_APPLY] Error details:', {
-                            status: r.status,
-                            statusText: r.statusText,
-                            error: d.error,
-                            message: d.message,
-                            data: d.data
-                        });
-                        throw new Error(d && d.message ? d.message : 'Request failed'); 
-                    });
-                }
-                return r.json();
+                return r.json().then(function(d) {
+                    return { ok: r.ok, status: r.status, data: d };
+                }).catch(function() {
+                    return {
+                        ok: r.ok,
+                        status: r.status,
+                        data: {
+                            error: true,
+                            message: '{{ __("Application failed. Please try again.") }}',
+                        },
+                    };
+                });
             })
-            .then(function(data) {
+            .then(function(result) {
+                var data = result.data || {};
                 console.log('[JOB_APPLY] ========== Response Data Received ==========');
                 console.log('[JOB_APPLY] Full response:', data);
                 console.log('[JOB_APPLY] Response structure:', {
@@ -289,9 +383,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     'data.message': data ? data.message : 'N/A',
                     'data.data': data ? data.data : 'N/A',
                     'data type': typeof data,
-                    'data keys': data ? Object.keys(data) : 'no keys'
+                    'data keys': data ? Object.keys(data) : 'no keys',
+                    httpOk: result.ok,
+                    httpStatus: result.status,
                 });
-                
+
+                if (!result.ok || data.error === true) {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        if (submitBtn.tagName === 'BUTTON') {
+                            submitBtn.innerHTML = originalLabel;
+                        }
+                    }
+                    var errMsg = data.message || '{{ __("Application failed. Please try again.") }}';
+                    var up = data.data && data.data.upgrade_url;
+                    console.error('[JOB_APPLY] Apply failed — closing modal, showing dialog. upgrade_url:', up);
+                    forceCloseApplyNowModal();
+                    setTimeout(function() {
+                        showJobApplyBlockedDialog(errMsg, up);
+                    }, 250);
+                    return;
+                }
+
                 // Check multiple possible success formats
                 var isSuccess = false;
                 if (data) {
@@ -461,6 +574,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!buttonUpdated) {
                         console.error('❌ Could not update button! jobId:', jobId, 'modalTriggerButton:', modalTriggerButton);
                     }
+
+                    // Persist applied state and update any other apply buttons on page
+                    setAppliedJob(jobId);
+                    applyAppliedUIToButtons(jobId);
                     
                     // Update submit button
                     if (submitBtn) {
@@ -542,8 +659,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }, 1500);
                     }
+
+                    // Refresh page after apply success so UI shows "Applied" / updated state from server
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1100);
                     
-                    // Reset submit button after modal closes
+                    // Reset submit button after modal closes (only matters if reload is slow/cancelled)
                     setTimeout(function() {
                         if (submitBtn) {
                             submitBtn.disabled = false;
@@ -551,31 +673,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }, 500);
                 } else {
-                    // Reset button on error
-                    console.error('[JOB_APPLY] ❌ ========== APPLICATION FAILED ==========');
-                    console.error('[JOB_APPLY] ❌ Full error response:', data);
-                    console.error('[JOB_APPLY] ❌ Error details:', {
-                        error: data ? data.error : 'unknown',
-                        message: data ? data.message : 'No message',
-                        data: data ? data.data : null,
-                        errors: data ? data.errors : null
-                    });
-                    
+                    // Unusual success HTTP but failed payload (e.g. wrong success detection)
                     if (submitBtn) {
                         submitBtn.disabled = false;
-                        if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
-                        console.log('[JOB_APPLY] Submit button re-enabled');
+                        if (submitBtn.tagName === 'BUTTON') {
+                            submitBtn.innerHTML = originalLabel;
+                        }
                     }
-                    
                     var errorMsg = (data && data.message) ? data.message : '{{ __("Application failed. Please try again.") }}';
-                    console.error('[JOB_APPLY] Error message to display:', errorMsg);
-                    
-                    if (typeof Botble !== 'undefined') {
-                        Botble.showError(errorMsg);
-                        console.log('[JOB_APPLY] Error displayed to user via Botble.showError');
-                    } else {
-                        console.warn('[JOB_APPLY] Botble is not defined, cannot show error message');
-                    }
+                    var up = data && data.data && data.data.upgrade_url;
+                    forceCloseApplyNowModal();
+                    setTimeout(function() {
+                        showJobApplyBlockedDialog(errorMsg, up);
+                    }, 250);
                 }
             })
             .catch(function(error) {
@@ -586,11 +696,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('[JOB_APPLY] ❌ Full error object:', error);
                 if (submitBtn) {
                     submitBtn.disabled = false;
-                    if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
+                    if (submitBtn.tagName === 'BUTTON') {
+                        submitBtn.innerHTML = originalLabel;
+                    }
                 }
                 var errorMsg = error && error.message ? error.message : '{{ __("Application failed. Please try again.") }}';
-                console.error('Showing error to user:', errorMsg);
-                if (typeof Botble !== 'undefined') Botble.showError(errorMsg);
+                forceCloseApplyNowModal();
+                setTimeout(function() {
+                    showJobApplyBlockedDialog(errorMsg, null);
+                }, 250);
             });
         });
     }
@@ -638,26 +752,62 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(function(r) {
                     console.log('External response status:', r.status);
-                    if (!r.ok) {
-                        return r.json().then(function(d) { 
-                            console.error('External response error:', d);
-                            throw new Error(d && d.message ? d.message : 'Request failed'); 
-                        });
-                    }
-                    return r.json();
+                    return r.json().then(function(d) {
+                        return { ok: r.ok, data: d };
+                    }).catch(function() {
+                        return {
+                            ok: r.ok,
+                            data: {
+                                error: true,
+                                message: '{{ __("Application failed. Please try again.") }}',
+                            },
+                        };
+                    });
                 })
-                .then(function(data) {
+                .then(function(result) {
+                    var data = result.data || {};
                     console.log('External response data:', data);
-                    
+
+                    if (!result.ok || data.error === true) {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            if (submitBtn.tagName === 'BUTTON') {
+                                submitBtn.innerHTML = originalLabel;
+                            }
+                        }
+                        var errMsg = data.message || '{{ __("Application failed. Please try again.") }}';
+                        var up = data.data && data.data.upgrade_url;
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            var extInst = bootstrap.Modal.getInstance(applyExternalJob);
+                            if (extInst) {
+                                extInst.hide();
+                            }
+                        }
+                        if (typeof $ !== 'undefined' && $.fn.modal) {
+                            $(applyExternalJob).modal('hide');
+                        }
+                        applyExternalJob.classList.remove('show');
+                        applyExternalJob.style.display = 'none';
+                        document.body.classList.remove('modal-open');
+                        document.querySelectorAll('.modal-backdrop').forEach(function(b) {
+                            b.remove();
+                        });
+                        document.body.style.removeProperty('overflow');
+                        setTimeout(function() {
+                            showJobApplyBlockedDialog(errMsg, up);
+                        }, 250);
+                        return;
+                    }
+
                     // Check success (same logic as internal form)
                     var isSuccess = false;
                     if (data) {
-                        if (data.error === false || data.success === true || 
+                        if (data.error === false || data.success === true ||
                             (data.error === undefined && (data.message || data.data))) {
                             isSuccess = true;
                         }
                     }
-                    
+
                     if (isSuccess) {
                         console.log('✅ External application successful');
                         
@@ -705,6 +855,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             var btn = document.querySelector('.jd-apply-btn[data-job-id="' + jobId + '"]');
                             if (btn) updateApplyButton(btn);
                         }
+
+                        // Persist applied state and update any other apply buttons on page
+                        setAppliedJob(jobId);
+                        applyAppliedUIToButtons(jobId);
                         
                         // Don't show success alert - button change is enough feedback
                         // if (typeof Botble !== 'undefined') {
@@ -726,26 +880,61 @@ document.addEventListener('DOMContentLoaded', function() {
                             var backdrops = document.querySelectorAll('.modal-backdrop');
                             backdrops.forEach(function(b) { b.remove(); });
                         }, 800);
+
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1100);
                     } else {
                         console.error('❌ External application failed:', data);
                         if (submitBtn) {
                             submitBtn.disabled = false;
-                            if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
+                            if (submitBtn.tagName === 'BUTTON') {
+                                submitBtn.innerHTML = originalLabel;
+                            }
                         }
-                        if (typeof Botble !== 'undefined') {
-                            Botble.showError((data && data.message) ? data.message : '{{ __("Application failed. Please try again.") }}');
+                        var failMsg = (data && data.message) ? data.message : '{{ __("Application failed. Please try again.") }}';
+                        var failUp = data && data.data && data.data.upgrade_url;
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            var fi = bootstrap.Modal.getInstance(applyExternalJob);
+                            if (fi) {
+                                fi.hide();
+                            }
                         }
+                        applyExternalJob.classList.remove('show');
+                        applyExternalJob.style.display = 'none';
+                        document.body.classList.remove('modal-open');
+                        document.querySelectorAll('.modal-backdrop').forEach(function(b) {
+                            b.remove();
+                        });
+                        setTimeout(function() {
+                            showJobApplyBlockedDialog(failMsg, failUp);
+                        }, 250);
                     }
                 })
                 .catch(function(error) {
                     console.error('❌ External fetch error:', error);
                     if (submitBtn) {
                         submitBtn.disabled = false;
-                        if (submitBtn.tagName === 'BUTTON') submitBtn.innerHTML = originalLabel;
+                        if (submitBtn.tagName === 'BUTTON') {
+                            submitBtn.innerHTML = originalLabel;
+                        }
                     }
-                    if (typeof Botble !== 'undefined') {
-                        Botble.showError(error && error.message ? error.message : '{{ __("Application failed. Please try again.") }}');
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        var fi2 = bootstrap.Modal.getInstance(applyExternalJob);
+                        if (fi2) {
+                            fi2.hide();
+                        }
                     }
+                    applyExternalJob.classList.remove('show');
+                    applyExternalJob.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    document.querySelectorAll('.modal-backdrop').forEach(function(b) {
+                        b.remove();
+                    });
+                    var em = error && error.message ? error.message : '{{ __("Application failed. Please try again.") }}';
+                    setTimeout(function() {
+                        showJobApplyBlockedDialog(em, null);
+                    }, 250);
                 });
             });
         }
@@ -780,15 +969,18 @@ document.addEventListener('DOMContentLoaded', function() {
         z-index: 10050 !important;
         margin: 1.75rem auto;
     }
+    /* Force light modal (ignore site dark theme / brown tints on modal) */
     #applyNow .modal-content {
         border: none;
         border-radius: 12px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
         overflow: hidden;
+        background: #ffffff !important;
+        color: #212529 !important;
     }
     #applyNow .modal-header {
-        background: #fff;
-        color: #333;
+        background: #ffffff !important;
+        color: #212529 !important;
         padding: 1.25rem 1.5rem;
         border-bottom: 1px solid #e9ecef;
         border-radius: 12px 12px 0 0;
@@ -797,10 +989,11 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 1.25rem;
         font-weight: 600;
         margin: 0;
-        color: #333;
+        color: #212529 !important;
     }
     #applyNow .modal-header .btn-close {
-        opacity: 0.5;
+        opacity: 0.55;
+        filter: none;
     }
     #applyNow .modal-header .btn-close:hover {
         opacity: 1;
@@ -809,13 +1002,20 @@ document.addEventListener('DOMContentLoaded', function() {
         padding: 1.5rem;
         max-height: calc(100vh - 200px);
         overflow-y: auto;
+        background: #ffffff !important;
+        color: #212529 !important;
+    }
+    #applyNow .modal-footer {
+        background: #ffffff !important;
+        color: #212529 !important;
+        border-top: 1px solid #e9ecef;
     }
     /* Form Styling */
     .apl-job-inpopup .form-label {
         font-size: 0.9rem;
         margin-bottom: 0.25rem;
         font-weight: 500;
-        color: #333;
+        color: #212529 !important;
     }
     .apl-job-inpopup .form-control,
     .apl-job-inpopup .form-select {
@@ -836,6 +1036,32 @@ document.addEventListener('DOMContentLoaded', function() {
     .apl-job-inpopup textarea.form-control {
         min-height: 60px;
         resize: vertical;
+    }
+    #applyNow .apl-job-inpopup,
+    #applyNow .job-apply-form,
+    #applyNow .job-apply-form-compact {
+        background: transparent !important;
+        color: #212529 !important;
+    }
+    #applyNow .apl-job-inpopup small,
+    #applyNow .apl-job-inpopup .text-muted,
+    #applyNow .job-apply-form small {
+        color: #6c757d !important;
+    }
+    #applyNow .apl-job-inpopup .form-check-label {
+        color: #212529 !important;
+    }
+    /* External apply modal: same white shell */
+    #applyExternalJob .modal-content {
+        background: #ffffff !important;
+        color: #212529 !important;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+    #applyExternalJob .modal-body {
+        background: #ffffff !important;
+        color: #212529 !important;
     }
     /* Submit Button Styling - Reverted to original */
     #applyNow .job-apply-form button[type="submit"] {
@@ -875,9 +1101,9 @@ document.addEventListener('DOMContentLoaded', function() {
         width: 100% !important;
         height: 100% !important;
         min-height: 200px !important;
-        background: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(3px) !important;
-        -webkit-backdrop-filter: blur(3px) !important;
+        background: #ffffff !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
         z-index: 10 !important;
         border-radius: 8px !important;
         display: block !important;

@@ -389,41 +389,19 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showToast(type, msg) {
-    // Use showDialogAlert if available, otherwise fall back to showAlert or toast
-    if (typeof window.showDialogAlert === 'function') {
-        var alertType = type === 'text-success' ? 'success' : 'error';
-        var title = type === 'text-success' ? 'Success' : 'Error';
-        window.showDialogAlert(alertType, msg, title);
+    // Employer verification: show messages INSIDE this page (no toast/dialog overlays).
+    var successMsgEl = document.getElementById('employer-verify-form-success-msg');
+    var successTextEl = document.getElementById('employer-verify-form-success-text');
+    if (!successMsgEl || !successTextEl) {
         return;
     }
-    if (typeof window.showAlert === 'function') {
-        window.showAlert(type, msg);
-        return;
-    }
-    var container = document.getElementById('alert-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'alert-container';
-        container.className = 'toast-container';
-        container.style.cssText = 'position:fixed;right:5px;top:20vh;z-index:9999999;';
-        document.body.appendChild(container);
-    }
-    var id = 'toast-' + Math.floor(Math.random() * 10000);
-    var icon = type === 'text-success' ? 'feather-check-circle' : 'feather-alert-triangle';
-    var html = '<div class="toast align-items-center ' + type + '" id="' + id + '" role="alert">' +
-        '<div class="d-flex"><div class="toast-body">' +
-        '<i class="' + icon + ' message-icon"></i><span>' + (msg || '').replace(/</g, '&lt;') + '</span>' +
-        '</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>';
-    container.insertAdjacentHTML('beforeend', html);
-    var el = document.getElementById(id);
-    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-        var toast = new bootstrap.Toast(el);
-        toast.show();
-        el.addEventListener('hidden.bs.toast', function() { el.remove(); });
-    } else {
-        el.classList.add('show');
-        setTimeout(function() { el.remove(); }, 5000);
-    }
+
+    var isSuccess = type === 'text-success' || type === 'success';
+    successTextEl.textContent = msg || (isSuccess ? 'Success' : 'Something went wrong');
+    successMsgEl.style.display = 'flex';
+    successMsgEl.style.background = isSuccess ? '#ecfdf5' : '#fef2f2';
+    successMsgEl.style.borderColor = isSuccess ? '#a7f3d0' : '#fecaca';
+    successTextEl.style.color = isSuccess ? '#047857' : '#b91c1c';
 }
 
 document.addEventListener('DOMContentLoaded', function() {

@@ -814,13 +814,14 @@ class JobBoardHelper
         return (bool) setting('job_board_accessible_expired_job', false);
     }
 
+    /**
+     * Expired jobs must never appear in public job lists / search / AJAX listings.
+     * (Admin "listing expired job" is ignored — single job URL may still work per
+     * {@see self::isExpiredJobAccessible()}.)
+     */
     public function isExpiredJobListing(): bool
     {
-        if (! $this->isExpiredJobAccessible()) {
-            return false;
-        }
-
-        return setting('job_board_listing_expired_job', false);
+        return false;
     }
 
     public function isClosedJobAccessible(): bool

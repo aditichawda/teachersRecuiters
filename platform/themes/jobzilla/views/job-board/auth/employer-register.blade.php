@@ -280,6 +280,49 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
+
+    function enforceNumericPhoneInputs(scope) {
+        const root = scope || document;
+        const inputs = root.querySelectorAll('input[name="phone"], input[name="phone_display"], input[type="tel"]');
+        inputs.forEach((input) => {
+            try {
+                input.setAttribute('inputmode', 'numeric');
+                input.setAttribute('pattern', '[0-9]*');
+                input.setAttribute('autocomplete', 'tel');
+            } catch (e) {}
+
+            const sanitize = () => {
+                const v = String(input.value || '');
+                const digits = v.replace(/[^0-9]/g, '');
+                if (digits !== v) {
+                    input.value = digits;
+                }
+            };
+
+            input.addEventListener('input', sanitize);
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pasted = (e.clipboardData || window.clipboardData).getData('text') || '';
+                const digits = String(pasted).replace(/[^0-9]/g, '');
+                const start = input.selectionStart || 0;
+                const end = input.selectionEnd || 0;
+                const current = String(input.value || '');
+                input.value = current.slice(0, start) + digits + current.slice(end);
+                sanitize();
+            });
+            input.addEventListener('keydown', function(e) {
+                const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                if (allowed.includes(e.key)) return;
+                if (e.ctrlKey || e.metaKey) return;
+                if (!/^[0-9]$/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    }
+
+    enforceNumericPhoneInputs(form || document);
+
     if (form) {
         form.addEventListener('submit', function(e) {
             const submitBtn = form.querySelector('button[type="submit"]');

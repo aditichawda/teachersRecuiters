@@ -151,7 +151,7 @@
         .footer-screenshot-style .footer-legal a:hover {
             color: #ffffff !important;
         }
-        @media (max-width: 767px) {
+        @@media (max-width: 767px) {
             .footer-screenshot-style .footer-bottom-inner {
                 flex-direction: column;
                 text-align: center;
