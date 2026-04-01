@@ -1,0 +1,547 @@
+form.auth-form {
+    svg {
+        stroke-width: 1.25;
+        width: 24px;
+        height: 24px;
+    }
+
+    .auth-input-icon {
+        position: absolute;
+        top: 3px;
+        left: 1px;
+        z-index: 10;
+        background: transparent;
+        border: 0;
+    }
+
+    .form-control {
+        background-color: #fff;
+    }
+
+    .text-end {
+        text-align: right !important;
+    }
+
+    .text-decoration-underline {
+        text-decoration: underline !important;
+    }
+
+    .gap-3 {
+        gap: 1rem !important;
+    }
+
+    .pb-0 {
+        padding-bottom: 0 !important;
+    }
+
+    .ps-5 {
+        padding-left: 3rem !important;
+    }
+
+    .form-check {
+        display: block;
+        min-height: 1.5rem;
+        padding-left: 1.5em;
+        margin-bottom: 0.125rem;
+
+        &.form-check-inline {
+            display: inline-block;
+            margin-right: 1rem;
+        }
+
+        .form-check-input {
+            margin-left: -1.5em;
+
+            &:checked {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+        }
+    }
+
+    .text-primary {
+        color: var(--primary-color) !important;
+    }
+
+    // Reduce vertical gap between bootstrap rows inside auth form
+    .row > [class^="col-"],
+    .row > [class*=" col-"] {
+        margin-top: 0.35rem; // default bootstrap uses var(--bs-gutter-y) ≈ .75rem
+    }
+}
+
+// ===== Register page layout & visual enhancements =====
+// Main auth section background (desktop + mobile)
+.section-full.site-bg-white {
+    background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%, #000000 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+.section-full.site-bg-white > .container-fluid > .row {
+    justify-content: center;
+}
+
+// Compact centered auth card inspired by modern blue layouts
+.twm-log-reg-form-wrap {
+    position: relative;
+    max-width: 920px;
+    margin: 32px auto;
+    border-radius: 24px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #020617 0%, #0b1220 45%, #1d4ed8 100%);
+    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.8);
+    padding: 0;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+// Inner content (form) – semi‑transparent panel
+.twm-log-reg-inner {
+    background: rgba(15, 23, 42, 0.92);
+    border-radius: 0;
+    padding: 26px 32px 30px;
+    color: #e5e7eb;
+}
+
+// Dark form fields & labels to match card
+.twm-log-reg-inner .form-label {
+    color: #e5e7eb;
+    font-weight: 500;
+}
+
+.twm-log-reg-inner .form-control,
+.twm-log-reg-inner .form-select {
+    background-color: #020617;
+    border-radius: 10px;
+    border: 1px solid #1f2937;
+    color: #e5e7eb;
+    padding: 11px 14px;
+}
+
+.twm-log-reg-inner .form-control::placeholder {
+    color: #6b7280;
+}
+
+.twm-log-reg-inner .form-control:focus,
+.twm-log-reg-inner .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.7);
+    outline: none;
+}
+
+.twm-log-reg-head .log-reg-form-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f9fafb;
+}
+
+// Mobile / tablet: hide left image section and give form full-width, comfortable padding
+@media (max-width: 991.98px) {
+    .twm-log-reg-media-wrap {
+        display: none !important;
+    }
+
+    .twm-log-reg-form-wrap {
+        margin: 18px 12px 24px;
+        border-radius: 22px;
+    }
+
+    .twm-log-reg-inner {
+        padding: 22px 18px 26px;
+    }
+}
+
+// Remove left illustration column on auth pages and center the form
+.section-full.site-bg-white .twm-log-reg-media-wrap {
+    display: none;
+}
+
+.section-full.site-bg-white > .container-fluid > .row {
+    justify-content: center;
+}
+
+body[dir="rtl"] {
+    .auth-card form .auth-input-icon {
+        left: auto;
+        right: 1px;
+    }
+
+    svg.icon.svg-icon-ti-ti-arrow-narrow-right {
+        transform: rotate(180deg);
+    }
+}
+
+.account-type-selection {
+    .account-type-option {
+        margin-bottom: 15px;
+        position: relative;
+
+        input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+    }
+
+    .account-type-label {
+        cursor: pointer;
+        margin-bottom: 0;
+        width: 100%;
+        display: block;
+    }
+
+    .account-type-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 24px 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #fff;
+        position: relative;
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        &:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.1);
+            transform: translateY(-2px);
+        }
+    }
+
+    .account-type-option input[type="radio"]:checked + .account-type-label .account-type-card {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 16px rgba(var(--primary-color-rgb), 0.15);
+        transform: translateY(-2px);
+
+        .account-type-check {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .account-type-icon svg {
+            color: var(--primary-color);
+        }
+    }
+
+    .account-type-check {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 24px;
+        height: 24px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s ease;
+
+        svg {
+            width: 14px;
+            height: 14px;
+            color: white;
+        }
+    }
+
+    .account-type-icon {
+        margin-bottom: 16px;
+
+        svg {
+            width: 40px;
+            height: 40px;
+            color: #6c757d;
+            transition: color 0.3s ease;
+        }
+    }
+
+    .account-type-content {
+        h6 {
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        p {
+            margin-bottom: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+    }
+}
+
+// Account Type Modal Styles
+.account-type-modal {
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f1f3f4;
+        padding: 24px 32px 20px;
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+    }
+
+    .modal-body {
+        padding: 20px 32px 32px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #f1f3f4;
+        padding: 20px 32px 24px;
+        gap: 12px;
+
+        .btn {
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 500;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #6c757d;
+
+            &:hover {
+                background: #e9ecef;
+                border-color: #dee2e6;
+            }
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: 1px solid var(--primary-color);
+
+            &:hover {
+                background: rgba(var(--primary-color-rgb), 0.9);
+                border-color: rgba(var(--primary-color-rgb), 0.9);
+            }
+        }
+    }
+}
+
+.account-type-confirmation {
+    margin: 24px 0;
+
+    .confirmation-card {
+        background: rgba(var(--primary-color-rgb), 0.05);
+        border: 2px solid var(--primary-color);
+        border-radius: 12px;
+        padding: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 200px;
+
+        .account-type-icon-confirm svg {
+            width: 24px;
+            height: 24px;
+            color: var(--primary-color);
+        }
+
+        .account-type-text-confirm {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+    }
+}
+
+.modal-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(var(--primary-color-rgb), 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+
+    svg {
+        width: 32px;
+        height: 32px;
+        color: var(--primary-color);
+    }
+}
+
+@media (max-width: 768px) {
+    .account-type-selection {
+        .account-type-card {
+            min-height: 140px;
+            padding: 20px 16px;
+        }
+
+        .account-type-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .account-type-content {
+            h6 {
+                font-size: 1rem;
+            }
+
+            p {
+                font-size: 0.85rem;
+            }
+        }
+    }
+}
+
+@keyframes checkmarkAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.account-type-option input[type="radio"]:checked + .account-type-label .account-type-check {
+    animation: checkmarkAppear 0.3s ease-out;
+}
+
+.account-type-option input[type="radio"]:focus + .account-type-label .account-type-card {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+@media (prefers-contrast: high) {
+    .account-type-card {
+        border-width: 3px;
+    }
+
+    .account-type-option input[type="radio"]:checked + .account-type-label .account-type-card {
+        border-width: 3px;
+        background-color: #fff;
+    }
+}
+
+// ===== New register header & steps styling =====
+.tr-register-shell {
+    position: relative;
+}
+
+.tr-register-header {
+    margin-bottom: 1.25rem;
+}
+
+.tr-register-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: rgba(var(--primary-color-rgb), 0.08);
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+}
+
+.tr-register-title {
+    font-size: 23px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: .35rem;
+}
+
+.tr-register-subtitle {
+    font-size: 13px;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.tr-register-steps {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    margin-bottom: 1.5rem;
+}
+
+.tr-register-step {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    padding: 6px 8px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.tr-register-step .step-index {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+.tr-register-step .step-label {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tr-register-step.is-active {
+    background: rgba(59, 130, 246, 0.22);
+    color: #e5e7eb;
+}
+
+.tr-register-step.is-active .step-index {
+    background: #3b82f6;
+    color: #fff;
+}
+
+@media (max-width: 767.98px) {
+    .tr-register-title {
+        font-size: 22px;
+    }
+
+    .tr-register-subtitle {
+        font-size: 13px;
+    }
+
+    .tr-register-steps {
+        gap: 6px;
+    }
+
+    .tr-register-step {
+        padding-inline: 10px;
+    }
+
+    .tr-register-step .step-label {
+        font-size: 11px;
+    }
+}

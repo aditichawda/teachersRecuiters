@@ -1,0 +1,50 @@
+@import 'bootstrap';
+@import 'icons';
+
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+@import 'variables';
+@import '~bootstrap/scss/mixins';
+
+$primary: var(--primary-color);
+$primaryRgb: var(--primary-color-rgb);
+
+// Structure
+@import 'structure/topbar';
+@import 'structure/page-title';
+@import 'structure/footer';
+
+// Components
+@import 'components/helper';
+@import 'components/components';
+@import 'components/form';
+
+// Plugins
+@import 'plugins/select';
+@import 'plugins/glight-box';
+
+// Pages
+@import 'pages/home';
+@import 'pages/categories';
+@import 'pages/job-list';
+@import 'pages/cta';
+@import 'pages/process';
+@import 'pages/testimonial';
+@import 'pages/blog';
+@import 'pages/about';
+@import 'pages/service';
+@import 'pages/team';
+@import 'pages/pricing';
+@import 'pages/faq';
+@import 'pages/job-grid';
+@import 'pages/job-details';
+@import 'pages/candidate-list';
+@import 'pages/candidate-datails';
+@import 'pages/authentication';
+@import 'pages/coming-soon';
+@import 'pages/profile';
+@import 'pages/company-profile';
+@import 'pages/switcher';
+@import 'pages/company';
+@import 'custom';
+@import 'accessibility';

@@ -1,0 +1,1941 @@
+/* =====================================
+All JavaScript fuctions Start
+======================================*/
+(function ($) {
+    'use strict';
+
+    /*--------------------------------------------------------------------------------------------
+	document.ready ALL FUNCTION START
+---------------------------------------------------------------------------------------------*/
+
+    function select_picker_select() {
+
+        // Initialize select2 for selectpicker, but exclude keyword select (uses select2 with custom init)
+        $('.selectpicker').not('.selectpicker-keyword').select2();
+        const $singleLocation = $('.selectpicker-location');
+        if ($singleLocation.length) {
+            $singleLocation.select2({
+                placeholder: $singleLocation.data('placeholder') || 'Select Your Location',
+                allowClear: true,
+                minimumInputLength: 2,
+                ajax: {
+                    url: $singleLocation.data('url') || (window.siteUrl + '/ajax/cities'),
+                    dataType: 'json',
+                    type: 'GET',
+                    delay: 250,
+                    data: function (params) {
+                        return {k: params.term};
+                    },
+                    processResults: function (res) {
+                        // Transforms the top-level key of the response object from 'items' to 'results'
+                        return {
+                            results: $.map(res.data, function (item) {
+                                return Object.assign(
+                                    {
+                                        text: item.label,
+                                        id: item.id
+                                    },
+                                    item
+                                );
+                            }),
+                        };
+                    },
+                    cache: true
+                }
+            });
+        }
+    }
+
+    //  Home 1 Banner Carousel function by = owl.carousel.js ========================== //
+    function twm_h1_bnr_carousal() {
+        $('.twm-h1-bnr-carousal').owlCarousel({
+            animateIn: 'fadeIn',
+            animateOut: 'fadeOut',
+            items: 1,
+            loop: true,
+            nav: false,
+            dots: false,
+            autoplay: true,
+            autoplayHoverPause: false,
+            touchDrag: false,
+            mouseDrag: false,
+        });
+    }
+
+    // Home City Search Autocomplete function ========================== //
+    function home_city_search() {
+        const $cityInput = $('#home_city_search');
+        const $cityId = $('#home_city_id');
+        const $suggestions = $('#home-city-suggestions');
+        let searchTimeout = null;
+        let activeSuggestionIndex = -1;
+
+        if (!$cityInput.length) return;
+
+        // City search autocomplete
+        $cityInput.on('input', function() {
+            const keyword = $(this).val().trim();
+            activeSuggestionIndex = -1;
+
+            // Clear city selection when user types
+            $cityId.val('');
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (keyword.length < 2) {
+                $suggestions.hide().empty();
+                return;
+            }
+
+            $suggestions.html('<div class="home-city-loading">Searching...</div>').show();
+
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: window.siteUrl + '/ajax/search-cities',
+                    type: 'GET',
+                    data: { k: keyword },
+                    success: function(response) {
+                        const cities = response.data || [];
+                        
+                        if (cities.length === 0) {
+                            $suggestions.html('<div class="home-city-no-results">No cities found</div>');
+                            return;
+                        }
+
+                        let html = '';
+                        cities.forEach(function(city) {
+                            const locationParts = [];
+                            if (city.state_name) locationParts.push(city.state_name);
+                            if (city.country_name) locationParts.push(city.country_name);
+                            
+                            html += '<div class="home-city-suggestion-item" ' +
+                                'data-id="' + city.id + '" ' +
+                                'data-name="' + city.name + '">' +
+                                '<div class="city-name">' + city.name + '</div>' +
+                                (locationParts.length ? '<div class="city-location">' + locationParts.join(', ') + '</div>' : '') +
+                                '</div>';
+                        });
+
+                        $suggestions.html(html);
+                    },
+                    error: function() {
+                        $suggestions.html('<div class="home-city-no-results">Error searching cities</div>');
+                    }
+                });
+            }, 300);
+        });
+
+        // Keyboard navigation for suggestions
+        $cityInput.on('keydown', function(e) {
+            const $items = $suggestions.find('.home-city-suggestion-item');
+
+            if (!$suggestions.is(':visible') || $items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+                $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeSuggestionIndex >= 0) {
+                    $items.eq(activeSuggestionIndex).trigger('click');
+                }
+            } else if (e.key === 'Escape') {
+                $suggestions.hide();
+            }
+        });
+
+        // Select city from suggestions
+        $(document).on('click', '.home-city-suggestion-item', function() {
+            const $item = $(this);
+            const cityId = $item.data('id');
+            const cityName = $item.data('name');
+
+            // Set city
+            $cityInput.val(cityName);
+            $cityId.val(cityId);
+            $suggestions.hide();
+        });
+
+        // Close suggestions on outside click
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.home-city-search-wrapper').length) {
+                $suggestions.hide();
+            }
+        });
+
+        // Load city name if city_id is already set
+        const existingCityId = $cityId.val();
+        if (existingCityId) {
+            $.ajax({
+                url: window.siteUrl + '/ajax/search-cities',
+                type: 'GET',
+                data: { city_id: existingCityId },
+                success: function(response) {
+                    const cities = response.data || [];
+                    if (cities.length > 0) {
+                        $cityInput.val(cities[0].name);
+                    }
+                }
+            });
+        }
+    }
+
+    // Home Category Search Autocomplete function ========================== //
+    function home_category_search() {
+        const $categoryInput = $('#home_category_search');
+        const $categoryId = $('#home_keyword_id');
+        const $suggestions = $('#home-category-suggestions');
+        let searchTimeout = null;
+        let activeSuggestionIndex = -1;
+
+        if (!$categoryInput.length) {
+            console.log('[JOB_ROLES] Category input not found');
+            return;
+        }
+
+        console.log('[JOB_ROLES] Initializing job roles search...', {
+            inputExists: $categoryInput.length > 0,
+            suggestionsExists: $suggestions.length > 0,
+            jobCategoriesExists: typeof window.jobCategories !== 'undefined',
+            jobCategoriesCount: window.jobCategories ? window.jobCategories.length : 0
+        });
+
+        // Function to show all categories (defined before use)
+        function showAllCategories() {
+            console.log('[JOB_ROLES] showAllCategories() called');
+            console.log('[JOB_ROLES] $suggestions element:', $suggestions[0]);
+            console.log('[JOB_ROLES] $suggestions length:', $suggestions.length);
+            
+            if (!window.jobCategories || window.jobCategories.length === 0) {
+                console.warn('[JOB_ROLES] No job categories available');
+                $suggestions.html('<div class="home-category-no-results">No job roles available</div>')
+                    .addClass('show')
+                    .css({
+                        'display': 'block !important',
+                        'visibility': 'visible !important',
+                        'opacity': '1 !important'
+                    })
+                    .show();
+                return;
+            }
+            
+            activeSuggestionIndex = -1;
+            let html = '';
+            window.jobCategories.forEach(function(category) {
+                html += '<div class="home-category-suggestion-item" ' +
+                    'data-id="' + category.id + '" ' +
+                    'data-name="' + category.name + '">' +
+                    '<div class="city-name">' + category.name + '</div>' +
+                    '</div>';
+            });
+
+            console.log('[JOB_ROLES] Generated HTML for', window.jobCategories.length, 'items');
+            console.log('[JOB_ROLES] Setting suggestions HTML and showing...');
+            
+            $suggestions.html(html)
+                .addClass('show')
+                .removeAttr('style')
+                .attr('style', 'display: block !important; visibility: visible !important; opacity: 1 !important; position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important; z-index: 10000 !important;')
+                .show();
+            
+            // Add active class to wrapper to rotate arrow
+            $categoryInput.closest('.home-category-search-wrapper').addClass('active');
+            
+            console.log('[JOB_ROLES] Dropdown displayed with', window.jobCategories.length, 'items');
+            console.log('[JOB_ROLES] $suggestions after show:', $suggestions.is(':visible'), $suggestions.css('display'));
+        }
+        
+        // Attach click handler to dropdown arrow
+        const $dropdownArrow = $('#home-category-dropdown-arrow');
+        if ($dropdownArrow.length) {
+            $dropdownArrow.css({
+                'pointer-events': 'auto',
+                'cursor': 'pointer'
+            }).on('click', function(e) {
+                console.log('[JOB_ROLES] ===== ARROW CLICKED =====');
+                e.stopPropagation();
+                e.preventDefault();
+                $categoryInput.focus();
+                showAllCategories();
+            });
+        }
+        
+        // Attach click handler immediately (even before categories load)
+        // Remove any existing handlers first to avoid duplicates
+        $categoryInput.off('click.categorySearch').on('click.categorySearch', function(e) {
+            console.log('[JOB_ROLES] ===== INPUT CLICKED =====');
+            console.log('[JOB_ROLES] Input element:', this);
+            console.log('[JOB_ROLES] Suggestions element:', $suggestions[0]);
+            console.log('[JOB_ROLES] Suggestions visible?', $suggestions.is(':visible'));
+            console.log('[JOB_ROLES] window.jobCategories:', window.jobCategories);
+            console.log('[JOB_ROLES] Categories count:', window.jobCategories ? window.jobCategories.length : 0);
+            
+            e.stopPropagation(); // Prevent event bubbling
+            
+            // Check if categories are loaded
+            if (!window.jobCategories || window.jobCategories.length === 0) {
+                console.log('[JOB_ROLES] Categories not loaded yet, waiting...');
+                // Wait a bit and try again
+                const checkCategories = setInterval(function() {
+                    if (window.jobCategories && window.jobCategories.length > 0) {
+                        clearInterval(checkCategories);
+                        console.log('[JOB_ROLES] Categories loaded, showing dropdown');
+                        showAllCategories();
+                    }
+                }, 100);
+                // Stop checking after 5 seconds
+                setTimeout(function() {
+                    clearInterval(checkCategories);
+                }, 5000);
+                return;
+            }
+            
+            // Always show all job roles on click
+            console.log('[JOB_ROLES] Categories available, calling showAllCategories()');
+            showAllCategories();
+        });
+        
+        // Wait for categories to be loaded (they're set in inline script)
+        function waitForCategories() {
+            if (!window.jobCategories || window.jobCategories.length === 0) {
+                console.log('[JOB_ROLES] Job categories not loaded yet, retrying...');
+                setTimeout(waitForCategories, 100);
+                return;
+            }
+            
+            console.log('[JOB_ROLES] Job roles search initialized with', window.jobCategories.length, 'roles');
+            initializeSearch();
+        }
+        
+        function initializeSearch() {
+            // Function to show job roles
+            function showCategories(keyword) {
+                console.log('[JOB_ROLES] showCategories called with keyword:', keyword);
+                
+                if (!window.jobCategories || window.jobCategories.length === 0) {
+                    console.warn('[JOB_ROLES] No job categories available');
+                    $suggestions.html('<div class="home-category-no-results">No job roles available</div>').css({
+                        'display': 'block',
+                        'visibility': 'visible',
+                        'opacity': '1'
+                    });
+                    return;
+                }
+
+                keyword = (keyword || '').trim().toLowerCase();
+                activeSuggestionIndex = -1;
+
+                let filtered;
+                if (keyword.length === 0) {
+                    // Show all job roles when no keyword
+                    filtered = window.jobCategories;
+                    console.log('[JOB_ROLES] Showing all', filtered.length, 'job roles');
+                } else {
+                    // Filter job roles locally
+                    filtered = window.jobCategories.filter(function(cat) {
+                        return cat.name.toLowerCase().includes(keyword);
+                    });
+                    console.log('[JOB_ROLES] Filtered to', filtered.length, 'job roles');
+                }
+
+                if (filtered.length === 0) {
+                    $suggestions.html('<div class="home-category-no-results">No job roles found</div>').css({
+                        'display': 'block',
+                        'visibility': 'visible',
+                        'opacity': '1'
+                    });
+                    return;
+                }
+
+                let html = '';
+                filtered.forEach(function(category) {
+                    html += '<div class="home-category-suggestion-item" ' +
+                        'data-id="' + category.id + '" ' +
+                        'data-name="' + category.name + '">' +
+                        '<div class="city-name">' + category.name + '</div>' +
+                        '</div>';
+                });
+
+                $suggestions.html(html)
+                    .addClass('show')
+                    .attr('style', 'display: block !important; visibility: visible !important; opacity: 1 !important; position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important; z-index: 10000 !important;')
+                    .show();
+                
+                // Add active class to wrapper to rotate arrow
+                $categoryInput.closest('.home-category-search-wrapper').addClass('active');
+                
+                console.log('[JOB_ROLES] Dropdown displayed with', filtered.length, 'items');
+            }
+
+            // Click handler is already attached above (line 210), this is just for focus
+            
+            // On focus, also show all categories if field is empty
+            $categoryInput.on('focus', function() {
+                console.log('[JOB_ROLES] Input focused');
+                const currentVal = $(this).val();
+                if (!currentVal) {
+                    console.log('[JOB_ROLES] Showing all categories on focus');
+                    showCategories('');
+                } else {
+                    // If there's a value, show filtered results
+                    console.log('[JOB_ROLES] Showing filtered categories for:', currentVal);
+                    showCategories(currentVal);
+                }
+            });
+
+            // Disable typing - only show dropdown on click
+            // Remove input event handler - we want dropdown to show on click only
+            $categoryInput.on('input', function(e) {
+                e.preventDefault();
+                // Don't allow typing - just show dropdown
+                return false;
+            });
+            
+            // Prevent typing in the field - it's a select dropdown
+            $categoryInput.on('keydown', function(e) {
+                // Allow backspace, delete, and arrow keys for navigation
+                if (e.key === 'Backspace' || e.key === 'Delete' || e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Escape') {
+                    return true;
+                }
+                // Prevent all other typing
+                e.preventDefault();
+                return false;
+            });
+
+            // Keyboard navigation for suggestions
+            $categoryInput.on('keydown', function(e) {
+                const $items = $suggestions.find('.home-category-suggestion-item');
+
+                if (!$suggestions.is(':visible') || $items.length === 0) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, $items.length - 1);
+                    $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                    $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+                    $items.removeClass('active').eq(activeSuggestionIndex).addClass('active');
+                    $suggestions.scrollTop($items.eq(activeSuggestionIndex).position().top + $suggestions.scrollTop() - 50);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (activeSuggestionIndex >= 0) {
+                        $items.eq(activeSuggestionIndex).trigger('click');
+                    }
+                } else if (e.key === 'Escape') {
+                    $suggestions.hide();
+                }
+            });
+
+            // Select job role from suggestions
+            $(document).on('click', '.home-category-suggestion-item', function() {
+                const $item = $(this);
+                const roleId = $item.data('id');
+                const roleName = $item.data('name');
+
+                // Set job role name as keyword text
+                $categoryInput.val(roleName);
+                // Set job role ID in hidden field for form submission
+                $categoryId.val(roleId);
+                $suggestions.attr('style', 'display: none !important; visibility: hidden !important; opacity: 0 !important;').removeClass('show');
+                $categoryInput.closest('.home-category-search-wrapper').removeClass('active');
+            });
+
+            // Close suggestions on outside click
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.home-category-search-wrapper').length) {
+                    $suggestions.attr('style', 'display: none !important; visibility: hidden !important; opacity: 0 !important;').removeClass('show');
+                    $categoryInput.closest('.home-category-search-wrapper').removeClass('active');
+                }
+            });
+            
+            // Attach click handler to dropdown arrow
+            const $dropdownArrow = $('#home-category-dropdown-arrow');
+            if ($dropdownArrow.length) {
+                $dropdownArrow.css({
+                    'pointer-events': 'auto',
+                    'cursor': 'pointer'
+                }).on('click', function(e) {
+                    console.log('[JOB_ROLES] ===== ARROW CLICKED =====');
+                    e.stopPropagation();
+                    e.preventDefault();
+                    $categoryInput.focus();
+                    showCategories('');
+                });
+            }
+
+            // Load job role name if keyword is already set
+            const existingKeyword = $categoryId.val();
+            if (existingKeyword && window.jobCategories) {
+                const role = window.jobCategories.find(function(cat) {
+                    return cat.name == existingKeyword || cat.id == existingKeyword;
+                });
+                if (role) {
+                    $categoryInput.val(role.name);
+                }
+            }
+        }
+        
+        // Start waiting for categories
+        waitForCategories();
+    }
+
+    //  Job Categories Carousel function by = owl.carousel.js ========================== //
+    function job_categories_carousel() {
+        $('.job-categories-carousel').owlCarousel({
+            loop: true,
+            nav: true,
+            dots: false,
+            center: false,
+            margin: 30,
+            autoplay: true,
+            navText: [
+                '<i class="feather-chevron-left"></i>',
+                '<i class="feather-chevron-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 1,
+                },
+                480: {
+                    items: 1,
+                },
+                767: {
+                    items: 2,
+                    margin: 0,
+                },
+                991: {
+                    items: 2,
+                },
+                1024: {
+                    items: 3,
+                },
+            },
+        });
+    }
+
+    // > Video responsive function by = custom.js ========================= //
+    function video_responsive() {
+        $('iframe[src*="youtube.com"]').wrap(
+            '<div class="embed-responsive embed-responsive-16by9"></div>'
+        );
+        $('iframe[src*="vimeo.com"]').wrap(
+            '<div class="embed-responsive embed-responsive-16by9"></div>'
+        );
+    }
+
+    // > LIGHTBOX Gallery Popup function	by = lc_lightbox.lite.js =========================== //
+    function lightbox_popup() {
+        lc_lightbox('.elem', {
+            wrap_class: 'lcl_fade_oc',
+            gallery: true,
+            thumb_attr: 'data-lcl-thumb',
+
+            skin: 'minimal',
+            radius: 0,
+            padding: 0,
+            border_w: 0,
+        });
+    }
+
+    // > magnificPopup for video function	by = magnific-popup.js ===================== //
+    function magnific_video() {
+        $('.mfp-video').magnificPopup({
+            type: 'iframe',
+        });
+    }
+
+    // Vertically center Bootstrap modal popup function by = custom.js ==============//
+    function popup_vertical_center() {
+        $(function () {
+            function reposition() {
+                var modal = $(this),
+                    dialog = modal.find('.modal-dialog');
+                modal.css('display', 'block');
+
+                // Dividing by two centers the modal exactly, but dividing by three
+                // or four works better for larger screens.
+                dialog.css(
+                    'margin-top',
+                    Math.max(0, ($(window).height() - dialog.height()) / 2)
+                );
+            }
+
+            // Reposition when a modal is shown
+            $('.modal').on('show.bs.modal', reposition);
+            // Reposition when the window is resized
+            $(window).on('resize', function () {
+                $('.modal:visible').each(reposition);
+            });
+        });
+    }
+
+    // > Main menu sticky on top  when scroll down function by = custom.js ========== //
+    function sticky_header() {
+        if ($('.sticky-header').length) {
+            new Waypoint.Sticky({
+                element: $('.sticky-header'),
+            });
+        }
+    }
+
+    // > Sidebar sticky  when scroll down function by = theia-sticky-sidebar.js ========== //
+    function sticky_sidebar() {
+        $('.rightSidebar').theiaStickySidebar({
+            additionalMarginTop: 100,
+        });
+    }
+
+    // > page scroll top on button click function by = custom.js ===================== //
+    function scroll_top() {
+        $('button.scroltop').on('click', function () {
+            $('html, body').animate(
+                {
+                    scrollTop: 0,
+                },
+                1000
+            );
+            return false;
+        });
+
+        $(window).on('scroll', function () {
+            var scroll = $(window).scrollTop();
+            if (scroll > 900) {
+                $('button.scroltop').fadeIn(1000);
+            } else {
+                $('button.scroltop').fadeOut(1000);
+            }
+        });
+    }
+
+    // > input type file function by = custom.js ========================== //
+    function input_type_file_form() {
+        $(document).on('change', '.btn-file :file', function () {
+            var input = $(this),
+                numFiles = input.get(0).files ? input.get(0).files.length : 1,
+                label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+            input.trigger('fileselect', [numFiles, label]);
+        });
+
+        $('.btn-file :file').on(
+            'fileselect',
+            function (event, numFiles, label) {
+                var input = $(this).parents('.input-group').find(':text'),
+                    log = numFiles > 10 ? numFiles + ' files selected' : label;
+                if (input.length) {
+                    input.val(log);
+                } else {
+                    if (log) alert(log);
+                }
+            }
+        );
+    }
+
+    // > input Placeholder in IE9 function by = custom.js ======================== //
+    function placeholderSupport() {
+        /* input placeholder for ie9 & ie8 & ie7 */
+        jQuery.support.placeholder =
+            'placeholder' in document.createElement('input');
+        /* input placeholder for ie9 & ie8 & ie7 end*/
+        /*fix for IE7 and IE8  */
+        if (!jQuery.support.placeholder) {
+            $('[placeholder]')
+                .on('focus', function () {
+                    if ($(this).val() === $(this).attr('placeholder'))
+                        $(this).val('');
+                })
+                .blur(function () {
+                    if ($(this).val() === '')
+                        $(this).val($(this).attr('placeholder'));
+                })
+                .blur();
+
+            $('[placeholder]')
+                .parents('form')
+                .on('submit', function () {
+                    $(this)
+                        .find('[placeholder]')
+                        .each(function () {
+                            if (
+                                $(this).val() ===
+                                $(this).attr('placeholder')
+                            ) {
+                                $(this).val('');
+                            }
+                        });
+                });
+        }
+        /*fix for IE7 and IE8 end */
+    }
+
+    // > Nav submenu show hide on mobile by = custom.js
+    function mobile_nav() {
+        $('.sub-menu').parent('li').addClass('has-child');
+        $(
+            "<div class='fa fa-angle-right submenu-toogle'></div>"
+        ).insertAfter('.has-child > a');
+
+        $('.has-child a+.submenu-toogle').on('click', function (ev) {
+            $(this)
+                .parent()
+                .siblings('.has-child ')
+                .children('.sub-menu')
+                .slideUp(500, function () {
+                    $(this).parent().removeClass('nav-active');
+                });
+
+            $(this)
+                .next($('.sub-menu'))
+                .slideToggle(500, function () {
+                    $(this).parent().toggleClass('nav-active');
+                });
+
+            ev.stopPropagation();
+        });
+    }
+
+    // Mobile side drawer function by = custom.js
+    function mobile_side_drawer() {
+        $('#mobile-side-drawer').on('click', function () {
+            $('.mobile-sider-drawer-menu').toggleClass('active');
+        });
+    }
+
+    //  > Top Search bar Show Hide function by = custom.js =================== //
+
+    function site_search() {
+        $('a[href="#search"]').on('click', function (event) {
+            $('#search').addClass('open');
+            $('#search > form > input[type="search"]').focus();
+        });
+
+        $('#search, #search button.close').on(
+            'click keyup',
+            function (event) {
+                if (
+                    event.target === this ||
+                    event.target.className === 'close'
+                ) {
+                    $(this).removeClass('open');
+                }
+            }
+        );
+    }
+
+    //  Client logo Carousel function by = owl.carousel.js ========================== //
+    function home_client_carousel() {
+        $('.home-client-carousel').owlCarousel({
+            loop: true,
+            nav: false,
+            dots: true,
+            margin: 5,
+            autoplay: true,
+            navText: [
+                '<i class="fa fa-angle-left"></i>',
+                '<i class="fa fa-angle-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 2,
+                },
+                480: {
+                    items: 3,
+                },
+                767: {
+                    items: 4,
+                },
+                1000: {
+                    items: 4,
+                },
+            },
+        });
+    }
+
+    //  Client logo Carousel function by = owl.carousel.js ========================== //
+    function home_client_carousel_2() {
+        $('.home-client-carousel2').owlCarousel({
+            loop: true,
+            nav: true,
+            dots: false,
+            margin: 30,
+            autoplay: true,
+            navText: [
+                '<i class="fa fa-angle-left"></i>',
+                '<i class="fa fa-angle-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 2,
+                },
+                480: {
+                    items: 3,
+                },
+                767: {
+                    items: 4,
+                },
+                1000: {
+                    items: 6,
+                },
+            },
+        });
+    }
+
+    //  Client logo Carousel function by = owl.carousel.js ========================== //
+    function home_client_carousel_3() {
+        $('.home-client-carousel3').owlCarousel({
+            loop: true,
+            nav: false,
+            dots: false,
+            margin: 30,
+            autoplay: true,
+            autoplayTimeout: 1500,
+            navText: [
+                '<i class="fa fa-angle-left"></i>',
+                '<i class="fa fa-angle-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 2,
+                },
+                480: {
+                    items: 3,
+                },
+                767: {
+                    items: 4,
+                },
+                1000: {
+                    items: 5,
+                },
+            },
+        });
+    }
+
+    //  Related jobs Carousel function by = owl.carousel.js ========================== //
+    function twm_related_jobs_carousel() {
+        $('.twm-related-jobs-carousel').owlCarousel({
+            loop: true,
+            nav: false,
+            dots: true,
+            margin: 30,
+            //autoplay:true,
+            autoplayTimeout: 3000,
+            navText: [
+                '<i class="fa fa-angle-left"></i>',
+                '<i class="fa fa-angle-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 1,
+                },
+                480: {
+                    items: 1,
+                },
+                767: {
+                    items: 2,
+                },
+                1000: {
+                    items: 3,
+                },
+            },
+        });
+    }
+
+    //  Client logo Carousel function by = owl.carousel.js ========================== //
+    function home_client_carousel_4() {
+        $('.home-client-carousel4').owlCarousel({
+            loop: true,
+            nav: false,
+            dots: false,
+            margin: 0,
+            autoplay: true,
+            autoplayTimeout: 1500,
+            navText: [
+                '<i class="fa fa-angle-left"></i>',
+                '<i class="fa fa-angle-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 2,
+                },
+                480: {
+                    items: 3,
+                },
+                767: {
+                    items: 4,
+                },
+                1000: {
+                    items: 5,
+                },
+            },
+        });
+    }
+
+    //  Trusted logo Carousel function by = owl.carousel.js ========================== //
+    function trusted_logo() {
+        $('.trusted-logo').owlCarousel({
+            loop: true,
+            nav: false,
+            dots: false,
+            margin: 5,
+            autoplay: true,
+            navText: [
+                '<i class="fa fa-angle-left"></i>',
+                '<i class="fa fa-angle-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 1,
+                },
+                480: {
+                    items: 2,
+                },
+                767: {
+                    items: 2,
+                },
+                991: {
+                    items: 2,
+                },
+            },
+        });
+    }
+
+    //  Testimonial Carousel function by = owl.carousel.js ========================== //
+    function twm_testimonial_1_carousel() {
+        $('.twm-testimonial-1-carousel').owlCarousel({
+            loop: true,
+            nav: true,
+            dots: false,
+            margin: 30,
+            autoplay: true,
+            navText: [
+                '<i class="fa fa-angle-left"></i>',
+                '<i class="fa fa-angle-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 1,
+                },
+                480: {
+                    items: 1,
+                },
+                991: {
+                    items: 1,
+                },
+            },
+        });
+    }
+
+    //  Testimonial Carousel function by = owl.carousel.js ========================== //
+    function twm_testimonial_2_carousel() {
+        $('.twm-testimonial-2-carousel').owlCarousel({
+            loop: true,
+            nav: true,
+            dots: false,
+            margin: 5,
+            autoplay: true,
+            navText: [
+                '<i class="fa fa-angle-left"></i>',
+                '<i class="fa fa-angle-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 1,
+                },
+                480: {
+                    items: 1,
+                },
+                991: {
+                    items: 1,
+                },
+                1199: {
+                    items: 1,
+                },
+            },
+        });
+    }
+
+    //  Latest Article Blogs Carousel function by = owl.carousel.js ========================== //
+    function twm_la_home_blog() {
+        $('.twm-la-home-blog').owlCarousel({
+            loop: true,
+            nav: true,
+            dots: false,
+            margin: 30,
+            autoplay: false,
+            navText: [
+                '<i class="fa fa-angle-left"></i>',
+                '<i class="fa fa-angle-right"></i>',
+            ],
+            responsive: {
+                0: {
+                    items: 1,
+                },
+                480: {
+                    items: 1,
+                },
+                991: {
+                    items: 2,
+                },
+                1199: {
+                    items: 3,
+                },
+            },
+        });
+    }
+
+    //  Counter Section function by = counterup.min.js
+    function counter_section() {
+        $('.counter').counterUp({
+            delay: 10,
+            time: 3000,
+        });
+    }
+
+    // sidebarCollapse function by = custom.js
+    function msg_user_list_slide() {
+        $('.user-msg-list-btn-open, .user-msg-list-btn-close').on(
+            'click',
+            function () {
+                $('.wt-admin-dashboard-msg-2').toggleClass('active');
+            }
+        );
+    }
+
+    // sidebarCollapse function by = custom.js
+    function sidebarCollapse() {
+        $('#sidebarCollapse').on('click', function () {
+            $(
+                '#header-admin, #sidebar-admin-wraper, #content'
+            ).toggleClass('active');
+        });
+    }
+
+    // dashboard Notification function by = custom.js
+    function dashboard_noti_dropdown() {
+        $('.dashboard-noti-dropdown').on('click', function () {
+            $('.dashboard-noti-panel').toggleClass('active');
+        });
+    }
+
+    // dashboard Message function by = custom.js
+    function dashboard_message_dropdown() {
+        $('.dashboard-message-dropdown').on('click', function () {
+            $('.dashboard-message-panel').toggleClass('active');
+        });
+    }
+
+    // CustomScrollbar function by = jquery.scrollbar.js
+    function scroll_bar_custome() {
+        $('.scrollbar-macosx').scrollbar();
+    }
+
+    // Jobs Bookmark table function by = dataTables.bootstrap5.js
+    function jobs_bookmark_table() {
+        if ($.DataTable) {
+            $('#jobs_bookmark_table').DataTable({
+                aLengthMenu: [
+                    [3, 5, 10, -1],
+                    [3, 5, 10, 'All'],
+                ],
+                iDisplayLength: 3,
+            });
+        }
+    }
+
+    // candidate_data_table function by = dataTables.bootstrap5.js
+    function candidate_data_table() {
+        if ($.DataTable) {
+            $('#candidate_data_table').DataTable({
+                aLengthMenu: [
+                    [5, 8, 10, -1],
+                    [5, 8, 10, 'All'],
+                ],
+                iDisplayLength: 5,
+            });
+        }
+
+        function checkAll(bx) {
+            var cbs = document.getElementsByTagName('input');
+            for (var i = 0; i < cbs.length; i++) {
+                if (cbs[i].type == 'checkbox') {
+                    cbs[i].checked = bx.checked;
+                }
+            }
+        }
+    }
+
+    // datepicker function by = dbootstrap-datepicker.js
+    function datepicker_function() {
+        $('.datepicker').datepicker({
+            format: 'dd/mm/yyyy',
+        });
+    }
+
+    // profile-chart function by = chart.js
+    function profile_chart() {
+        if ($('#profileViewChart').length) {
+            var profileViewChart = document
+                .getElementById('profileViewChart')
+                .getContext('2d');
+            var profileViewChart = new Chart(profileViewChart, {
+                type: 'line',
+                data: {
+                    labels: [
+                        'January',
+                        'February',
+                        'March',
+                        'April',
+                        'May',
+                        'June',
+                    ],
+                    datasets: [
+                        {
+                            label: 'Viewers',
+                            data: [200, 250, 350, 200, 250, 150],
+                            pointHoverBorderColor: '#1967d2',
+                            pointBorderWidth: 10,
+                            pointHoverBorderWidth: 3,
+                            pointHitRadius: 20,
+                            borderWidth: 3,
+                            borderColor: '#1967d2',
+                            pointBackgroundColor: 'rgba(255, 255, 255, 0)',
+                            pointHoverBackgroundColor: 'rgba(255, 255, 255, 1)',
+                            pointBorderColor: 'rgba(66, 133, 244, 0)',
+                            cubicInterpolationMode: 'monotone',
+                            fill: true,
+                            backgroundColor: 'rgba(212, 230, 255, 0.2)',
+                        },
+                    ],
+                },
+            });
+        }
+    }
+
+    // view map sidebar function by = custom.js
+    function view_map_sidebar() {
+        $('.map-show-btn-open, .map-show-btn-close').on(
+            'click',
+            function () {
+                $('.half-map-section').toggleClass('active');
+            }
+        );
+    }
+
+    //  Radius Range Slider function by = bootstrap-slider.min.js ========================== //
+    function radius_range() {
+        $('#ex2').slider({});
+    }
+
+    //DropZone File Uploading Function Start=========================//
+    function Dropzone_infut_file() {
+        if ($('#demo-upload').length) {
+            var dropzone = new Dropzone('#demo-upload', {
+                previewTemplate:
+                document.querySelector('#preview-template').innerHTML,
+                parallelUploads: 2,
+                thumbnailHeight: 120,
+                thumbnailWidth: 120,
+                maxFilesize: 3,
+                filesizeBase: 1000,
+                thumbnail: function (file, dataUrl) {
+                    if (file.previewElement) {
+                        file.previewElement.classList.remove('dz-file-preview');
+                        var images = file.previewElement.querySelectorAll(
+                            '[data-dz-thumbnail]'
+                        );
+                        for (var i = 0; i < images.length; i++) {
+                            var thumbnailElement = images[i];
+                            thumbnailElement.alt = file.name;
+                            thumbnailElement.src = dataUrl;
+                        }
+                        setTimeout(function () {
+                            file.previewElement.classList.add(
+                                'dz-image-preview'
+                            );
+                        }, 1);
+                    }
+                },
+            });
+
+            // Now fake the file upload, since GitHub does not handle file uploads
+            // and returns a 404
+
+            var minSteps = 6,
+                maxSteps = 60,
+                timeBetweenSteps = 100,
+                bytesPerStep = 100000;
+
+            dropzone.uploadFiles = function (files) {
+                var self = this;
+
+                for (var i = 0; i < files.length; i++) {
+                    var file = files[i];
+                    totalSteps = Math.round(
+                        Math.min(
+                            maxSteps,
+                            Math.max(minSteps, file.size / bytesPerStep)
+                        )
+                    );
+
+                    for (var step = 0; step < totalSteps; step++) {
+                        var duration = timeBetweenSteps * (step + 1);
+                        setTimeout(
+                            (function (file, totalSteps, step) {
+                                return function () {
+                                    file.upload = {
+                                        progress:
+                                            (100 * (step + 1)) / totalSteps,
+                                        total: file.size,
+                                        bytesSent:
+                                            ((step + 1) * file.size) /
+                                            totalSteps,
+                                    };
+
+                                    self.emit(
+                                        'uploadprogress',
+                                        file,
+                                        file.upload.progress,
+                                        file.upload.bytesSent
+                                    );
+                                    if (file.upload.progress == 100) {
+                                        file.status = Dropzone.SUCCESS;
+                                        self.emit(
+                                            'success',
+                                            file,
+                                            'success',
+                                            null
+                                        );
+                                        self.emit('complete', file);
+                                        self.processQueue();
+                                        //document.getElementsByClassName("dz-success-mark").style.opacity = "1";
+                                    }
+                                };
+                            })(file, totalSteps, step),
+                            duration
+                        );
+                    }
+                }
+            };
+        }
+    }
+
+    //DropZone File Uploading Function End =========================//
+
+    //Maximum input box fields function Start by custom.js==============//
+
+    var max_fields = 100; //maximum input boxes allowed
+    var wrapper = $('.input_fields_youtube'); //Fields wrapper
+    var wrapper_2 = $('.input_fields_vimeo'); //Fields wrapper
+    var wrapper_3 = $('.input_fields_custom'); //Fields wrapper
+    var add_button_youtube = $('.add_field_youtube'); //Add button ID
+    var add_button_vimeo = $('.add_field_vimeo'); //Add button ID
+    var add_custom_field = $('.add_field_custom'); //Add button ID
+
+    var x = 1; //initlal text box count
+    $(add_button_youtube).click(function (e) {
+        //on add input button click
+        e.preventDefault();
+        if (x < max_fields) {
+            //max input box allowed
+            x++; //text box increment
+            $(wrapper).append(
+                '<div class="ls-inputicon-box"><input class="form-control wt-form-control m-tb10" name="mytext[]" type="text" placeholder="https://www.youtube.com/"><i class="fs-input-icon fab fa-youtube"></i><a href="#" class="remove_field"><i class="fa fa-times"></i></a></div>'
+            ); //add input box
+        }
+    });
+
+    var x = 1; //initlal text box count
+    $(add_button_vimeo).click(function (e) {
+        //on add input button click
+        e.preventDefault();
+        if (x < max_fields) {
+            //max input box allowed
+            x++; //text box increment
+            $(wrapper_2).append(
+                '<div class="ls-inputicon-box"><input class="form-control m-tb10 wt-form-control" name="mytext[]" type="text" placeholder="https://vimeo.com/"><i class="fs-input-icon fab fa-vimeo-v"></i><a href="#" class="remove_field"><i class="fa fa-times"></i></a></div>'
+            ); //add input box
+        }
+    });
+
+    var x = 1; //initlal text box count
+    $(add_custom_field).click(function (e) {
+        //on add input button click
+        e.preventDefault();
+        if (x < max_fields) {
+            //max input box allowed
+            x++; //text box increment
+            $(wrapper_3).append(
+                '<div class="ls-inputicon-box"><input class="form-control m-tb10 wt-form-control" name="mytext[]" type="text" placeholder="Selet the role that you work in"><i class="fs-input-icon fa fa-user"></i><a href="#" class="remove_field"><i class="fa fa-times"></i></a></div>'
+            ); //add input box
+        }
+    });
+
+    $(wrapper).on('click', '.remove_field', function (e) {
+        //user click on remove text
+        e.preventDefault();
+        $(this).parent('div').remove();
+        x--;
+    });
+    $(wrapper_2).on('click', '.remove_field', function (e) {
+        //user click on remove text
+        e.preventDefault();
+        $(this).parent('div').remove();
+        x--;
+    });
+    $(wrapper_3).on('click', '.remove_field', function (e) {
+        //user click on remove text
+        e.preventDefault();
+        $(this).parent('div').remove();
+        x--;
+    });
+
+    //Maximum input box fields function End by custom.js==============//
+
+    // > Tooltip function by = isotope.pkgd.min.js ========================= //
+    var tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    /*--------------------------------------------------------------------------------------------
+	Window on load ALL FUNCTION START
+---------------------------------------------------------------------------------------------*/
+
+    // > masonry function function by = isotope.pkgd.min.js ========================= //
+
+    function masonryBox() {
+        if ($().isotope) {
+            var $container = $('.masonry-wrap');
+            $container.isotope({
+                itemSelector: '.masonry-item',
+                transitionDuration: '1s',
+                originLeft: true,
+                stamp: '.stamp',
+            });
+
+            $container.imagesLoaded().progress(function () {
+                $container.isotope('layout');
+            });
+
+            $('.masonry-filter li').on('click', function () {
+                var selector = $(this).find('a').attr('data-filter');
+                $('.masonry-filter li').removeClass('active');
+                $(this).addClass('active');
+                $container.isotope({filter: selector});
+                return false;
+            });
+        }
+    }
+
+    // > page loader function by = custom.js ========================= //
+    function page_loader() {
+        $('.loading-area').fadeOut(1000);
+    }
+
+    /*--------------------------------------------------------------------------------------------
+    Window on scroll ALL FUNCTION START
+---------------------------------------------------------------------------------------------*/
+
+    function color_fill_header() {
+        var scroll = $(window).scrollTop();
+        if (scroll >= 100) {
+            $('.main-bar').addClass('color-fill');
+        } else {
+            scroll = 100;
+            $('.main-bar').removeClass('color-fill');
+        }
+    }
+
+    /*--------------------------------------------------------------------------------------------
+	document.ready ALL FUNCTION START
+---------------------------------------------------------------------------------------------*/
+    $(document).ready(function () {
+        //  selectpicker function by = bootstrap-select.min.js ========================== //
+        select_picker_select(),
+            //  Home City Search Autocomplete function ========================== //
+            home_city_search(),
+            //  Home 1 Banner Carousel function by = owl.carousel.js ========================== //
+            twm_h1_bnr_carousal(),
+            //  Job Categories Carousel function by = owl.carousel.js ========================== //
+            job_categories_carousel(),
+            // > Top Search bar Show Hide function by = custom.js
+            site_search(),
+            // > Video responsive function by = custom.js
+            video_responsive(),
+            // > LIGHTBOX Gallery Popup function	by = lc_lightbox.lite.js =========================== //
+            lightbox_popup(),
+            // > magnificPopup for video function	by = magnific-popup.js
+            magnific_video(),
+            // > Vertically center Bootstrap modal popup function by = custom.js
+            popup_vertical_center();
+        // > Main menu sticky on top  when scroll down function by = custom.js
+        sticky_header(),
+            // > Sidebar sticky  when scroll down function by = theia-sticky-sidebar.js ========== //
+            sticky_sidebar(),
+            // > page scroll top on button click function by = custom.js
+            scroll_top(),
+            // > input type file function by = custom.js
+            input_type_file_form(),
+            // > input Placeholder in IE9 function by = custom.js
+            placeholderSupport(),
+            // > Nav submenu on off function by = custome.js ===================//
+            mobile_nav(),
+            // Mobile side drawer function by = custom.js
+            mobile_side_drawer(),
+            //  Client logo Carousel function by = owl.carousel.js ========================== //
+            home_client_carousel(),
+            //  Client logo Carousel function by = owl.carousel.js ========================== //
+            home_client_carousel_2(),
+            //  Client logo Carousel function by = owl.carousel.js ========================== //
+            home_client_carousel_3(),
+            //  Related jobs Carousel function by = owl.carousel.js ========================== //
+            twm_related_jobs_carousel(),
+            //  Client logo Carousel function by = owl.carousel.js ========================== //
+            home_client_carousel_4(),
+            //  Trusted logo Carousel function by = owl.carousel.js ========================== //
+            trusted_logo(),
+            //  Testimonial Carousel function by = owl.carousel.js ========================== //
+            twm_testimonial_1_carousel(),
+            //  Testimonial Carousel function by = owl.carousel.js ========================== //
+            twm_testimonial_2_carousel(),
+            //  Latest Article Blogs Carousel function by = owl.carousel.js ========================== //
+            twm_la_home_blog(),
+            //  Counter Section function by = counterup.min.js ========================== //
+            counter_section(),
+            //massage user list show hide function by = custom.js	 ========================== //
+            msg_user_list_slide(),
+            // sidebarCollapse function by = custom.js
+            sidebarCollapse(),
+            // dashboard Notification function by = custom.js
+            dashboard_noti_dropdown(),
+            // dashboard Message function by = custom.js
+            dashboard_message_dropdown(),
+            // CustomScrollbar function by = jquery.scrollbar.js
+            scroll_bar_custome(),
+            // Jobs Bookmark table function by = dataTables.bootstrap5.js
+            jobs_bookmark_table(),
+            // candidate_data_table function by = dataTables.bootstrap5.js
+            candidate_data_table(),
+            // datepicker function by = dbootstrap-datepicker.js
+            datepicker_function(),
+            // profile-chart function by = chart.js
+            profile_chart(),
+            // view map sidebar function by = custom.js
+            view_map_sidebar(),
+            //  Radius Range Slider function by = bootstrap-slider.min.js ========================== //
+            radius_range(),
+            //DropZone File Uploading Function Start=========================//
+            Dropzone_infut_file();
+    });
+
+    /*--------------------------------------------------------------------------------------------
+	Window Load START
+---------------------------------------------------------------------------------------------*/
+    $(window).on('load', function () {
+        // > masonry function function by = isotope.pkgd.min.js
+        masonryBox(),
+            color_fill_header(),
+            // > page loader function by = custom.js
+            page_loader();
+    });
+
+    /*===========================
+	Window Scroll ALL FUNCTION START
+===========================*/
+
+    $(window).on('scroll', function () {
+        // > Window on scroll header color fill
+        color_fill_header();
+    });
+
+    /*upload profile pic function*/
+
+    const fileUploader = document.getElementById('file-uploader');
+    const reader = new FileReader();
+    const imageGrid = document.getElementById('upload-image-grid');
+    if (fileUploader) {
+        fileUploader.addEventListener('change', (event) => {
+            const files = event.target.files;
+            const file = files[0];
+
+            const img = document.createElement('img');
+            imageGrid.appendChild(img);
+            img.src = URL.createObjectURL(file);
+            img.alt = file.name;
+        });
+    }
+
+    function category_5_slider() {
+        new Swiper('.category-5-slider', {
+            slidesPerView: 6,
+            spaceBetween: 30,
+            grid: {
+                rows: 2,
+                fill: "row",
+            },
+            pagination: {
+                el: '.swiper-pagination',
+            },
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+
+
+            breakpoints: {
+                0: {
+                    slidesPerView: 1,
+                    grid: {
+                        rows: 2,
+                        fill: "row",
+                    },
+                },
+                360: {
+                    slidesPerView: 1,
+                    grid: {
+                        rows: 2,
+                        fill: "row",
+                    },
+                },
+                640: {
+                    slidesPerView: 2,
+                    grid: {
+                        rows: 2,
+                        fill: "row",
+                    },
+                },
+                991: {
+                    slidesPerView: 3,
+                    grid: {
+                        rows: 2,
+                        fill: "row",
+                    },
+                },
+                1366: {
+                    slidesPerView: 4,
+                    grid: {
+                        rows: 2,
+                        fill: "row",
+                    },
+                },
+                1440: {
+                    slidesPerView: 5,
+                    grid: {
+                        rows: 2,
+                        fill: "row",
+                    },
+                },
+                1720: {
+                    slidesPerView: 5,
+                    grid: {
+                        rows: 2,
+                        fill: "row",
+                    },
+                },
+                1721: {
+                    slidesPerView: 6,
+                    grid: {
+                        rows: 2,
+                        fill: "row",
+                    },
+                }
+            },
+        })
+    }
+
+    function home_client_carousel_6() {
+        $('.home-client-carousel6').owlCarousel({
+            loop: true,
+            nav: false,
+            dots: false,
+            center: false,
+            margin: 30,
+            autoplay: true,
+            autoplayTimeout: 1500,
+            navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+            responsive: {
+                0: {
+                    items: 1,
+                },
+                480: {
+                    items: 2,
+                },
+                767: {
+                    items: 2,
+                },
+                991: {
+                    items: 3,
+                },
+                1366: {
+                    items: 3
+                }
+            }
+        });
+    }
+
+    function v_testimonial_slider() {
+        const swiper = new Swiper('.v-testimonial-slider', {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            loop: true,
+            autoplay: {
+                delay: 2500,
+                disableOnInteraction: false,
+            },
+            direction: "horizontal",
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+                type: "bullets",
+            },
+            breakpoints: {
+                0: {
+                    direction: "horizontal",
+                    slidesPerView: 1,
+                },
+                767: {
+                    direction: "horizontal",
+                    slidesPerView: 1,
+                }
+
+            },
+
+        })
+    }
+
+    function applied_jobs_table() {
+        $('#applied_jobs_table').DataTable(
+            {
+                destroy: true,
+                searching: false
+            }
+        );
+    }
+
+    if ($('.category-5-slider').length) {
+        category_5_slider()
+    }
+
+    if ($('.home-client-carousel6').length) {
+        home_client_carousel_6()
+    }
+
+    if ($('.v-testimonial-slider').length) {
+        v_testimonial_slider()
+    }
+
+    //________ Jobs Filter carousel  function by = owl.carousel.js________//
+
+    function job_type_filter() {
+        const owl = $('.owl-carousel-filter').owlCarousel({
+            loop: false,
+            autoplay: false,
+            margin: 30,
+            nav: true,
+            dots: false,
+            navText: ['<i class="feather-chevron-left"></i>', '<i class="feather-chevron-right"></i>'],
+            responsive: {
+                0: {
+                    items: 1,
+                },
+                540: {
+                    items: 2,
+                },
+                768: {
+                    items: 2,
+                },
+                1024: {
+                    items: 3
+                },
+                1136: {
+                    items: 3
+                },
+                1366: {
+                    items: 3
+                }
+            }
+        })
+
+        /* Filter Nav */
+
+        $('.btn-filter-wrap').on('click', '.btn-filter', function (e) {
+            const filter_data = $(this).data('filter');
+
+            /* return if current */
+            if ($(this).hasClass('btn-active')) return;
+
+            /* active current */
+            $(this).addClass('btn-active').siblings().removeClass('btn-active');
+
+            /* Filter */
+            owl.owlFilter(filter_data, function (_owl) {
+                $(_owl).find('.item').each(owlAnimateFilter);
+                
+                // Check if any items are visible after filtering
+                const $carousel = $('.owl-carousel-filter');
+                const $sectionContent = $carousel.closest('.section-content');
+                const $noJobsMessage = $sectionContent.find('.no-jobs-message');
+                
+                // Wait for filter animation to complete
+                setTimeout(function() {
+                    // Count items that match the filter
+                    let visibleItems = 0;
+                    
+                    if (filter_data === '*') {
+                        // Show all items
+                        visibleItems = $carousel.find('.item').length;
+                    } else {
+                        // Count items that match the filter class
+                        // filter_data is like ".123", items have class "123"
+                        const filterClass = filter_data.replace('.', '');
+                        $carousel.find('.item').each(function() {
+                            const $item = $(this);
+                            // Check if item has the filter class (items have classes like "123", "456" etc)
+                            const itemClasses = $item.attr('class') || '';
+                            if (itemClasses.indexOf(filterClass) !== -1 || $item.hasClass(filterClass)) {
+                                visibleItems++;
+                            }
+                        });
+                    }
+                    
+                    if (visibleItems === 0) {
+                        // Hide carousel and show no jobs message
+                        $carousel.hide();
+                        $noJobsMessage.show();
+                    } else {
+                        // Show carousel and hide no jobs message
+                        $carousel.show();
+                        $noJobsMessage.hide();
+                    }
+                }, 400);
+            });
+        })
+
+
+    }
+
+    if ($('.owl-carousel-filter').length) {
+        job_type_filter();
+    }
+
+    //________ h-page7-jobs-slider carousel  function by = owl.carousel.js________//
+    function h_page7_jobs_slider() {
+        const swiper = new Swiper(".h-page7-jobs-slider", {
+            slidesPerView: 8,
+            spaceBetween: 30,
+            loop: true,
+            centeredSlides: true,
+            freeMode: true,
+            grabCursor: true,
+            //slidesPerView: "auto",
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            autoplay: {
+                delay: 2500,
+                disableOnInteraction: false,
+            },
+            breakpoints: {
+                0: {
+                    slidesPerView: 1,
+                    centeredSlides: false,
+                },
+                420: {
+                    slidesPerView: 2,
+                    centeredSlides: false,
+                },
+                640: {
+                    slidesPerView: 3,
+                    centeredSlides: true,
+                },
+                768: {
+                    slidesPerView: 3,
+                    centeredSlides: true,
+                },
+                1024: {
+                    slidesPerView: 4,
+                    centeredSlides: true,
+                },
+                1366: {
+                    slidesPerView: 6,
+                    centeredSlides: true,
+                },
+                1440: {
+                    slidesPerView: 6,
+                    centeredSlides: true,
+                },
+
+                1800: {
+                    slidesPerView: 8,
+                    centeredSlides: true,
+                },
+            },
+        });
+    }
+
+    if ($('.h-page7-jobs-slider').length) {
+        h_page7_jobs_slider();
+    }
+
+    // Testimonial Thumb slider function by = swiper-bundle.min.js
+    function thumb_testimonial_slider() {
+        const swiper = new Swiper(".testimonial-thumbpic-1", {
+            loop: true,
+            spaceBetween: 10,
+            slidesPerView: 3,
+            freeMode: true,
+            watchSlidesProgress: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+        });
+        const swiper2 = new Swiper(".testimonial-thumb-1", {
+            loop: true,
+            spaceBetween: 10,
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+            thumbs: {
+                swiper: swiper,
+            },
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+        });
+    }
+
+    if ($('.testimonial-thumbpic-1').length) {
+        thumb_testimonial_slider();
+    }
+
+    //  Job Categories Carousel function by = owl.carousel.js ========================== //
+    function job_categories_carousel_hpage8() {
+        $('.h-page8-jobs-slider').owlCarousel({
+            loop: true,
+            nav: false,
+            dots: true,
+            center: false,
+            margin: 30,
+            autoplay: true,
+            navText: ['<i class="feather-chevron-left"></i>', '<i class="feather-chevron-right"></i>'],
+            responsive: {
+                0: {
+                    items: 1,
+                },
+                480: {
+                    items: 2,
+                },
+                575: {
+                    items: 2,
+                },
+                991: {
+                    items: 3,
+
+                },
+                1024: {
+                    items: 4,
+                },
+                1200: {
+                    items: 5
+                }
+            }
+        });
+    }
+
+    if ($('.h-page8-jobs-slider').length) {
+        job_categories_carousel_hpage8();
+    }
+
+    if ($('#applied_jobs_table').length) {
+        applied_jobs_table()
+    }
+
+    $('.apply-job-option').on('change', '.option-order-by', function () {
+        $('.apply-job-option').submit()
+    })
+
+    let rating = $('.review-listing').find('.rating');
+    if (rating.length) {
+        rating.barrating({
+            theme: 'css-stars'
+        });
+    }
+
+    window.jobBoardMaps = {};
+
+    function setJobBoardMap($el) {
+
+        if (! $el.data('center')) {
+            return
+        }
+
+        let uid = $el.data('uid');
+        if (!uid) {
+            uid = (Math.random() + 1).toString(36).substring(7) + (new Date().getTime());
+            $el.data('uid', uid);
+        }
+        if (jobBoardMaps[uid]) {
+            jobBoardMaps[uid].off();
+            jobBoardMaps[uid].remove();
+        }
+
+        jobBoardMaps[uid] = L.map($el[0], {
+            zoomControl: false,
+            scrollWheelZoom: true,
+            dragging: true,
+            maxZoom: $el.data('max-zoom') || 20
+        }).setView($el.data('center'), $el.data('zoom') || 14);
+
+        let myIcon = L.divIcon({
+            className: 'boxmarker',
+            iconSize: L.point(50, 20),
+            html: $el.data('map-icon')
+        });
+        L.tileLayer($el.data('tile-layer') ? $el.data('tile-layer') : 'https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}').addTo(jobBoardMaps[uid]);
+
+        L.marker($el.data('center'), {icon: myIcon})
+            .addTo(jobBoardMaps[uid])
+            .bindPopup($($el.data('popup-id')).html())
+            .openPopup();
+    }
+
+    let $jobMaps = $('.job-board-street-map');
+
+    if ($jobMaps.length) {
+        $jobMaps.each(function (i, e) {
+            setJobBoardMap($(e));
+        });
+    }
+
+    // Initialize category search on document ready
+    // Only initialize if we're NOT on the jobs page (jobs page has its own handler)
+    $(document).ready(function() {
+        // Check if we're on jobs page - if so, skip this handler completely
+        const isJobsPage = window.location.pathname.includes('/jobs') || $('#jobs-top-filter-form').length > 0 || $('#home_category_search').closest('.jobs-top-filter').length > 0;
+        
+        if (!isJobsPage) {
+            // Wait a bit for window.jobCategories to be set from inline script
+            setTimeout(function() {
+                home_category_search();
+            }, 100);
+        } else {
+            console.log('[JOB_ROLES] Skipping main.js handler - jobs page has its own handler');
+            // Also remove any handlers that might have been attached
+            $('#home_category_search').off('input focus keydown');
+        }
+    });
+
+})(window.jQuery);

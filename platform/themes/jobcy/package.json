@@ -1,0 +1,7 @@
+{
+    "name": "@packages/jobcy",
+    "version": "1.0.0",
+    "dependencies": {
+        "rtlcss": "^4.1.0"
+    }
+}

@@ -1,0 +1,717 @@
+<?php
+
+namespace Botble\JobBoard\Models;
+
+use Botble\Base\Casts\SafeContent;
+use Botble\Base\Models\BaseModel;
+use Botble\Base\Models\BaseQueryBuilder;
+use Botble\JobBoard\Enums\JobStatusEnum;
+use Botble\JobBoard\Enums\ModerationStatusEnum;
+use Botble\JobBoard\Enums\SalaryRangeEnum;
+use Botble\JobBoard\Enums\SalaryTypeEnum;
+use Botble\JobBoard\Facades\JobBoardHelper;
+use Botble\JobBoard\Models\Builders\FilterJobsBuilder;
+use Botble\JobBoard\Models\Concerns\UniqueId;
+use Botble\Media\Facades\RvMedia;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+class Job extends BaseModel
+{
+    use UniqueId;
+
+    protected $table = 'jb_jobs';
+
+    protected $fillable = [
+        'name',
+        'description',
+        'content',
+        'company_id',
+        'job_type_category',
+        'address',
+        'status',
+        'apply_url',
+        'apply_type',
+        'apply_other_email',
+        'apply_internal_emails',
+        'external_apply_behavior',
+        'is_freelance',
+        'is_remote',
+        'career_level_id',
+        'salary_from',
+        'salary_to',
+        'salary_range',
+        'salary_type',
+        'currency_id',
+        'degree_level_id',
+        'required_certifications',
+        'job_shift_id',
+        'job_experience_id',
+        'functional_area_id',
+        'hide_salary',
+        'number_of_positions',
+        'gender_preference',
+        'application_location_type',
+        'application_locations',
+        'hiring_institution_type',
+        'hiring_school_name',
+        'hide_hiring_school_name',
+        'marital_status_preference',
+        'language_proficiency',
+        'expire_date',
+        'author_id',
+        'author_type',
+        'views',
+        'number_of_applied',
+        'hide_company',
+        'latitude',
+        'longitude',
+        'auto_renew',
+        'is_featured',
+        'external_apply_clicks',
+        'country_id',
+        'state_id',
+        'city_id',
+        'employer_colleagues',
+        'start_date',
+        'application_closing_date',
+        'zip_code',
+        'unique_id',
+        'apply_internal_phones',
+        'enable_whatsapp_notifications',
+    ];
+
+    protected $casts = [
+        'status' => JobStatusEnum::class,
+        'moderation_status' => ModerationStatusEnum::class,
+        'salary_range' => SalaryRangeEnum::class,
+        'salary_type' => SalaryTypeEnum::class,
+        'expire_date' => 'datetime',
+        'start_date' => 'date',
+        'application_closing_date' => 'datetime',
+        'name' => SafeContent::class,
+        'description' => SafeContent::class,
+        'content' => SafeContent::class,
+        'address' => SafeContent::class,
+        'apply_url' => SafeContent::class,
+        'is_remote' => 'boolean',
+        'apply_internal_emails' => 'array',
+        'apply_internal_phones' => 'array',
+        'enable_whatsapp_notifications' => 'boolean',
+        'hide_hiring_school_name' => 'boolean',
+    ];
+
+    public function skills(): BelongsToMany
+    {
+        return $this->belongsToMany(JobSkill::class, 'jb_jobs_skills', 'job_id', 'job_skill_id');
+    }
+
+    public function careerLevel(): BelongsTo
+    {
+        return $this->belongsTo(CareerLevel::class, 'career_level_id')->withDefault();
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class)->withDefault();
+    }
+
+    public function degreeLevel(): BelongsTo
+    {
+        return $this->belongsTo(DegreeLevel::class, 'degree_level_id')->withDefault();
+    }
+
+    public function jobShift(): BelongsTo
+    {
+        return $this->belongsTo(JobShift::class, 'job_shift_id')->withDefault();
+    }
+
+    public function jobExperience(): BelongsTo
+    {
+        return $this->belongsTo(JobExperience::class, 'job_experience_id')->withDefault();
+    }
+
+    public function functionalArea(): BelongsTo
+    {
+        return $this->belongsTo(FunctionalArea::class, 'functional_area_id')->withDefault();
+    }
+
+    public function jobTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(JobType::class, 'jb_jobs_types', 'job_id', 'job_type_id');
+    }
+
+    public function jobAlerts(): BelongsToMany
+    {
+        return $this->belongsToMany(JobAlert::class, 'jb_job_alert_jobs', 'job_id', 'job_alert_id')
+            ->withPivot('sent_at')
+            ->withTimestamps();
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id')->withDefault();
+    }
+
+    public function author(): MorphTo
+    {
+        return $this->morphTo()->withDefault();
+    }
+
+    protected function salaryText(): Attribute
+    {
+        return Attribute::make(
+            get: function ($_, array $attributes = []) {
+                if ($attributes['hide_salary']) {
+                    return trans('plugins/job-board::messages.attractive');
+                }
+
+                $salaryType = $attributes['salary_type'] ?? SalaryTypeEnum::FIXED;
+
+                // Handle different salary types
+                switch ($salaryType) {
+                    case SalaryTypeEnum::NEGOTIABLE:
+                        return trans('plugins/job-board::messages.negotiable');
+                    case SalaryTypeEnum::COMPETITIVE:
+                        return trans('plugins/job-board::messages.competitive');
+                    case SalaryTypeEnum::HIDDEN:
+                        return trans('plugins/job-board::messages.attractive');
+                    case SalaryTypeEnum::FIXED:
+                    default:
+                        // Original logic for fixed salary
+                        $salaryRange = strtolower($this->salary_range->label());
+                        $from = (float) $attributes['salary_from'];
+                        $to = (float) $attributes['salary_to'];
+                        $currency = $this->currency->getKey() ? $this->currency : get_application_currency();
+
+                        if ($from || $to) {
+                            if ($from && $to) {
+                                return trans('plugins/job-board::messages.salary_range_format', ['from' => format_price($from, $currency), 'to' => format_price($to, $currency), 'range' => $salaryRange]);
+                            }
+
+                            if ($from) {
+                                return trans('plugins/job-board::messages.salary_from_format', ['price' => format_price($from, $currency), 'range' => $salaryRange]);
+                            }
+
+                            return trans('plugins/job-board::messages.salary_upto_format', ['price' => format_price($to, $currency), 'range' => $salaryRange]);
+                        }
+
+                        return trans('plugins/job-board::messages.attractive');
+                }
+            }
+        );
+    }
+
+    /**
+     * Raw SQL: job row is still within effective deadline (closing date first, else listing expire_date).
+     */
+    public static function sqlNotPastEffectiveDeadline(string $tableAlias = 'jb_jobs'): string
+    {
+        return "(
+            ({$tableAlias}.application_closing_date IS NOT NULL AND {$tableAlias}.application_closing_date >= NOW())
+            OR (
+                {$tableAlias}.application_closing_date IS NULL
+                AND (
+                    {$tableAlias}.never_expired = 1
+                    OR {$tableAlias}.expire_date IS NULL
+                    OR {$tableAlias}.expire_date >= NOW()
+                )
+            )
+        )";
+    }
+
+    /**
+     * Application / listing deadline for display: closing date first, else expire_date (when listing can expire).
+     */
+    public function effectiveApplicationDeadline(): ?Carbon
+    {
+        if ($this->application_closing_date) {
+            return $this->application_closing_date instanceof Carbon
+                ? $this->application_closing_date
+                : Carbon::parse($this->application_closing_date);
+        }
+
+        if ($this->never_expired) {
+            return null;
+        }
+
+        if ($this->expire_date) {
+            return $this->expire_date instanceof Carbon
+                ? $this->expire_date
+                : Carbon::parse($this->expire_date);
+        }
+
+        return null;
+    }
+
+    /**
+     * Admin / dashboard job preview: same date as {@see effectiveApplicationDeadline()}.
+     */
+    public function displayClosingOrExpiryDate(): ?Carbon
+    {
+        return $this->effectiveApplicationDeadline();
+    }
+
+    public function displayClosingOrExpiryDateLabel(): string
+    {
+        if ($this->application_closing_date) {
+            return (string) trans('plugins/job-board::forms.application_closing_date');
+        }
+
+        return (string) trans('plugins/job-board::messages.expire_date');
+    }
+
+    public function isPastEffectiveDeadline(?Carbon $now = null): bool
+    {
+        $now = $now ?? Carbon::now();
+
+        if ($this->application_closing_date) {
+            return $now->greaterThan(Carbon::parse($this->application_closing_date));
+        }
+
+        if ($this->never_expired) {
+            return false;
+        }
+
+        if ($this->expire_date) {
+            return $now->greaterThan(Carbon::parse($this->expire_date));
+        }
+
+        return false;
+    }
+
+    /**
+     * Jobs still within the effective deadline (application_closing_date if set, else expire_date rules).
+     */
+    public function scopeNotPastEffectiveDeadline(Builder $query): Builder
+    {
+        $now = Carbon::now()->toDateTimeString();
+
+        return $query->where(function ($q) use ($now): void {
+            $q->where(function ($q2) use ($now): void {
+                $q2->whereNotNull('application_closing_date')
+                    ->where('application_closing_date', '>=', $now);
+            })->orWhere(function ($q2) use ($now): void {
+                $q2->whereNull('application_closing_date')
+                    ->where(function ($q3) use ($now): void {
+                        $q3->where('never_expired', true)
+                            ->orWhereNull('expire_date')
+                            ->orWhere('expire_date', '>=', $now);
+                    });
+            });
+        });
+    }
+
+    public function scopeNotExpired(Builder $query): Builder
+    {
+        return $query->notPastEffectiveDeadline();
+    }
+
+    public function scopeNotClosed(Builder $query): Builder
+    {
+        return $query->notPastEffectiveDeadline();
+    }
+
+    public function scopeExpired(Builder $query): Builder
+    {
+        $now = Carbon::now()->toDateTimeString();
+
+        return $query->where(function ($q) use ($now): void {
+            $q->where(function ($q2) use ($now): void {
+                $q2->whereNotNull('application_closing_date')
+                    ->where('application_closing_date', '<', $now);
+            })->orWhere(function ($q2) use ($now): void {
+                $q2->whereNull('application_closing_date')
+                    ->where('never_expired', false)
+                    ->whereNotNull('expire_date')
+                    ->where('expire_date', '<', $now);
+            });
+        });
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        // @phpstan-ignore-next-line
+        return $query
+            ->where(JobBoardHelper::getJobDisplayQueryConditions())
+            ->notExpired();
+    }
+
+    public function scopeAddSavedApplied(Builder $query): Builder
+    {
+        if (auth('account')->check()) {
+            // @phpstan-ignore-next-line
+            $query->addApplied()->addSaved();
+        }
+
+        return $query;
+    }
+
+    public function scopeAddApplied(Builder $query): Builder
+    {
+        if (! auth('account')->check() || auth('account')->user()->isEmployer()) {
+            return $query;
+        }
+
+        $accountId = auth('account')->id();
+
+        return $query
+            ->leftJoin('jb_applications', function ($join) use ($accountId): void {
+                $join
+                    ->on('jb_applications.job_id', '=', 'jb_jobs.id')
+                    ->where('jb_applications.account_id', $accountId);
+            })
+            ->addSelect(DB::raw('IF(jb_applications.job_id IS NULL, 0, jb_applications.job_id) AS is_applied'))
+            ->addSelect('jb_jobs.*');
+    }
+
+    public function scopeAddSaved(Builder $query): Builder
+    {
+        if (! auth('account')->check() || auth('account')->user()->isEmployer()) {
+            return $query;
+        }
+
+        $accountId = auth('account')->id();
+
+        return $query
+            ->leftJoin('jb_saved_jobs', function ($join) use ($accountId): void {
+                $join
+                    ->on('jb_saved_jobs.job_id', '=', 'jb_jobs.id')
+                    ->where('jb_saved_jobs.account_id', $accountId);
+            })
+            ->addSelect(DB::raw('IF(jb_saved_jobs.job_id IS NULL, 0, jb_saved_jobs.job_id) AS is_saved'))
+            ->addSelect('jb_jobs.*');
+    }
+
+    public function scopeByAccount(Builder $query, int $accountId): Builder
+    {
+        return $query->where(function (Builder $query) use ($accountId): void {
+            $query->where([
+                'jb_jobs.author_id' => $accountId,
+                'jb_jobs.author_type' => Account::class,
+            ])
+                ->orWhereHas('company.accounts', function (Builder $query) use ($accountId): void {
+                    $query->where('jb_companies_accounts.account_id', $accountId);
+                });
+        });
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'jb_jobs_categories', 'job_id', 'category_id');
+    }
+
+    public function savedJobs(): BelongsToMany
+    {
+        return $this->belongsToMany(Account::class, 'jb_saved_jobs', 'job_id', 'account_id');
+    }
+
+    public function applicants(): HasMany
+    {
+        return $this->hasMany(JobApplication::class, 'job_id');
+    }
+
+    public function analytics(): HasMany
+    {
+        return $this->hasMany(Analytics::class, 'job_id');
+    }
+
+    public function canShowSavedJob(): bool
+    {
+        if (! auth('account')->check() || auth('account')->user()->isEmployer()) {
+            return false;
+        }
+
+        return $this->is_saved !== -1;
+    }
+
+    public function canShowApplyJob(): bool
+    {
+        // Hide apply when job is not published or past effective deadline (closing date, else expire_date)
+        if (! $this->isJobOpen()) {
+            return false;
+        }
+
+        if (! auth('account')->check()) {
+            return true;
+        }
+
+        if (auth('account')->user()->isEmployer()) {
+            return false;
+        }
+
+        return $this->is_applied !== -1;
+    }
+
+    public function getApplicantsCountAttribute(): int
+    {
+        return (int) $this->number_of_applied;
+    }
+
+    public function getHasCompanyAttribute(): bool
+    {
+        return ! $this->hide_company && $this->company->id;
+    }
+
+    public function getCompanyLogoThumbAttribute(): string
+    {
+        if ($this->has_company) {
+            return $this->company->logo_thumb;
+        }
+
+        $logo = theme_option('default_company_logo', theme_option('logo'));
+
+        return RvMedia::getImageUrl($logo, null, false, RvMedia::getDefaultImage());
+    }
+
+    public function getCompanyNameAttribute(): ?string
+    {
+        if ($this->has_company) {
+            return $this->company->name;
+        }
+
+        return null;
+    }
+
+    public function getCompanyUrlAttribute(): ?string
+    {
+        if ($this->has_company) {
+            return $this->company->url;
+        }
+
+        return null;
+    }
+
+    public function getIsExpiredAttribute(): bool
+    {
+        return $this->isPastEffectiveDeadline();
+    }
+
+    public function isJobOpen(): bool
+    {
+        if ($this->status != JobStatusEnum::PUBLISHED) {
+            return false;
+        }
+
+        return ! $this->isPastEffectiveDeadline();
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Tag::class,
+            'jb_jobs_tags',
+            'job_id',
+            'tag_id'
+        );
+    }
+
+    public function getEmployerColleaguesAttribute(?string $value): array
+    {
+        return json_decode((string) $value, true) ?: [];
+    }
+
+    public function setEmployerColleaguesAttribute(array $employerColleagues): void
+    {
+        $this->attributes['employer_colleagues'] = $employerColleagues ? json_encode($employerColleagues) : '';
+    }
+
+    public function getEffectiveExternalApplyBehavior(): string
+    {
+        // If job has specific setting, use it; otherwise use global setting
+        return $this->external_apply_behavior ?: setting('job_board_external_apply_url_behavior', 'disabled');
+    }
+
+    public function shouldOpenExternalApplyUrlDirectly(): bool
+    {
+        return $this->getEffectiveExternalApplyBehavior() !== 'disabled';
+    }
+
+    public function getExternalApplyUrlTarget(): string
+    {
+        $behavior = $this->getEffectiveExternalApplyBehavior();
+
+        return match ($behavior) {
+            'new_tab' => '_blank',
+            'current_tab' => '_self',
+            default => '',
+        };
+    }
+
+    public function getEmployerEmailsAttribute(): array
+    {
+        $emails = [];
+
+        if ($this->author && $this->author->email) {
+            $emails[] = $this->author->email;
+        }
+
+        if (! empty($this->employer_colleagues)) {
+            $emails = array_merge($emails, (array) $this->employer_colleagues);
+        }
+
+        if (! empty($this->apply_internal_emails)) {
+            $emails = array_merge($emails, array_filter((array) $this->apply_internal_emails));
+        }
+
+        return array_values(array_unique(array_filter($emails)));
+    }
+
+    public function getLocationAttribute(): ?string
+    {
+        $displayType = setting('job_board_job_location_display', 'state_and_country');
+
+        return match ($displayType) {
+            'city_state_and_country' => ($this->city_name ? $this->city_name . ', ' : '') . ($this->state_name ? $this->state_name . ', ' : '') . $this->country->code,
+            'city_and_state' => ($this->city_name ? $this->city_name . ', ' : '') . $this->state_name,
+            default => ($this->state_name ? $this->state_name . ', ' : '') . $this->country->code,
+        };
+    }
+
+    public function screeningQuestions(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ScreeningQuestion::class,
+            'jb_jobs_screening_questions',
+            'job_id',
+            'screening_question_id'
+        )->withPivot('order', 'is_required', 'question_override', 'options_override', 'correct_answer')->orderByPivot('order');
+    }
+
+    /**
+     * Job-specific screening questions (employer-added for this job only, not in admin pool).
+     */
+    public function jobScreeningQuestions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(JobScreeningQuestion::class, 'job_id')->orderBy('order')->orderBy('id');
+    }
+
+    /**
+     * All screening questions for this job (admin pool + job-specific) for apply flow.
+     * Each item: id (e.g. sq_1 or jq_5), question, question_type, options, is_required, correct_answer.
+     */
+    public function getAllScreeningQuestionsForApply(): \Illuminate\Support\Collection
+    {
+        // Load relationships safely - check if table exists
+        try {
+            if (Schema::hasTable('jb_job_screening_questions')) {
+        $this->loadMissing(['screeningQuestions', 'jobScreeningQuestions']);
+            } else {
+                // Table doesn't exist, only load admin pool questions
+                $this->loadMissing(['screeningQuestions']);
+            }
+        } catch (\Exception $e) {
+            // If there's any error, just load admin pool questions
+            $this->loadMissing(['screeningQuestions']);
+        }
+        
+$replacements = \Botble\JobBoard\Support\ScreeningQuestionPlaceholder::jobToReplacements($this);
+            $list = collect();
+
+        foreach ($this->screeningQuestions->sortBy('pivot.order') as $q) {
+            $questionText = $q->pivot->question_override
+                ?: \Botble\JobBoard\Support\ScreeningQuestionPlaceholder::resolve($q->question, $replacements);
+            $opts = $q->pivot->options_override;
+            if ($opts !== null && $opts !== '') {
+                $optsArray = array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $opts))));
+            } else {
+                $resolved = \Botble\JobBoard\Support\ScreeningQuestionPlaceholder::resolve(
+                    implode("\n", $q->options_array),
+                    $replacements
+                );
+                $optsArray = array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $resolved))));
+            }
+            $list->push((object) [
+                'id' => 'sq_' . $q->id,
+                'question' => $questionText,
+                'question_type' => $q->question_type,
+                'options' => $optsArray,
+                'is_required' => (bool) ($q->pivot->is_required ?? false),
+                'correct_answer' => $q->pivot->correct_answer ?: $q->correct_answer,
+            ]);
+        }
+
+        // Only process job-specific questions if relationship is loaded and table exists
+        if (isset($this->jobScreeningQuestions) && $this->relationLoaded('jobScreeningQuestions')) {
+        foreach ($this->jobScreeningQuestions as $jq) {
+            $optsArray = $jq->options_array;
+            $list->push((object) [
+                'id' => 'jq_' . $jq->id,
+                'question' => $jq->question,
+                'question_type' => $jq->question_type,
+                'options' => $optsArray,
+                'is_required' => (bool) $jq->is_required,
+                'correct_answer' => $jq->correct_answer,
+            ]);
+            }
+        }
+
+        return $list;
+    }
+
+    public function customFields(): MorphMany
+    {
+        return $this->morphMany(CustomFieldValue::class, 'reference', 'reference_type', 'reference_id')->with('customField.options');
+    }
+
+    public function slugSourceWithUniqueId(): string
+    {
+        $base = trim((string) ($this->name ?: 'job'));
+        $suffix = trim((string) ($this->unique_id ?: $this->id ?: (string) (time() . mt_rand(1000, 9999))));
+
+        return trim($base . '-' . $suffix, '- ');
+    }
+
+    protected function customFieldsArray(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                return CustomFieldValue::getCustomFieldValuesArray($this);
+            },
+        );
+    }
+
+    protected static function booted(): void
+    {
+        self::deleting(function (Job $job): void {
+            $job->analytics()->delete();
+            $job->applicants()->delete();
+            $job->savedJobs()->detach();
+            $job->skills()->detach();
+            $job->jobTypes()->detach();
+            $job->categories()->detach();
+            $job->tags()->detach();
+            $job->customFields()->delete();
+            $job->screeningQuestions()->detach();
+            $job->jobScreeningQuestions()->delete();
+        });
+
+        self::updating(function (): void {
+            JobBoardHelper::clearJobMaxPriceCache();
+        });
+
+        // Published jobs past effective deadline → pending (frontend lists use published only; moderation untouched)
+        self::saving(function (Job $job): void {
+            if ($job->status !== JobStatusEnum::PUBLISHED) {
+                return;
+            }
+
+            if ($job->isPastEffectiveDeadline()) {
+                $job->status = JobStatusEnum::PENDING;
+            }
+        });
+    }
+
+    public function newEloquentBuilder($query): BaseQueryBuilder
+    {
+        return new FilterJobsBuilder($query);
+    }
+}

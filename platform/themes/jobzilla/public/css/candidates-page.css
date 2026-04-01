@@ -1,0 +1,274 @@
+/**
+ * Candidates Page Styles for Employer Dashboard
+ */
+
+.emp-main-content .candidates-wrapper {
+    background: #fff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06) !important;
+    border: 1px solid #eef2f6 !important;
+    padding: 24px !important;
+}
+
+.emp-main-content .candidates-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 16px !important;
+    border-bottom: 1px solid #eef2f6 !important;
+}
+
+.emp-main-content .candidates-header h2 {
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.emp-main-content .candidates-header h2 i {
+    color: #0073d1 !important;
+    font-size: 24px !important;
+}
+
+.emp-main-content .candidates-actions {
+    display: flex !important;
+    gap: 12px !important;
+    align-items: center !important;
+}
+
+.emp-main-content .candidates-search-wrapper {
+    position: relative !important;
+    width: 300px !important;
+}
+
+.emp-main-content .candidates-search-wrapper input {
+    width: 100% !important;
+    padding: 10px 40px 10px 14px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    height: 42px !important;
+}
+
+.emp-main-content .candidates-search-wrapper input:focus {
+    border-color: #0073d1 !important;
+    box-shadow: 0 0 0 3px rgba(0,115,209,.1) !important;
+    outline: none !important;
+}
+
+.emp-main-content .candidates-search-wrapper .search-icon {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #64748b !important;
+    font-size: 18px !important;
+    pointer-events: none !important;
+}
+
+.emp-main-content .btn-filter {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 10px 16px !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.emp-main-content .btn-filter:hover {
+    background: #e2e8f0 !important;
+    color: #334155 !important;
+}
+
+.emp-main-content .btn-reload {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 10px 16px !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.emp-main-content .btn-reload:hover {
+    background: #e2e8f0 !important;
+    color: #334155 !important;
+}
+
+.emp-main-content .candidates-filters-panel {
+    background: #f8fafc !important;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+    border: 1px solid #e2e8f0 !important;
+    display: none !important;
+}
+
+.emp-main-content .candidates-filters-panel.show {
+    display: block !important;
+}
+
+.emp-main-content .candidates-filters-panel .filters-row {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    gap: 15px !important;
+    margin-bottom: 15px !important;
+}
+
+.emp-main-content .candidates-filters-panel .filter-group {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.emp-main-content .candidates-filters-panel .filter-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    margin-bottom: 6px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.emp-main-content .candidates-filters-panel .form-control,
+.emp-main-content .candidates-filters-panel select {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    height: 38px !important;
+    transition: all 0.2s !important;
+}
+
+.emp-main-content .candidates-filters-panel .form-control:focus,
+.emp-main-content .candidates-filters-panel select:focus {
+    border-color: #0073d1 !important;
+    box-shadow: 0 0 0 3px rgba(0,115,209,.1) !important;
+    outline: none !important;
+}
+
+.emp-main-content .candidates-filters-panel .btn-apply-filters {
+    background: linear-gradient(135deg, #0073d1 0%, #005bb5 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.emp-main-content .candidates-filters-panel .btn-apply-filters:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0,115,209,0.3) !important;
+}
+
+.emp-main-content .candidates-filters-panel .btn-clear-filters {
+    background: #fff !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.emp-main-content .candidates-filters-panel .btn-clear-filters:hover {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+}
+
+.emp-main-content .candidates-content {
+    margin-top: 20px !important;
+}
+
+.emp-main-content .candidates-toolbar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid #eef2f6 !important;
+}
+
+.emp-main-content .candidates-result-count {
+    font-size: 14px !important;
+    color: #64748b !important;
+}
+
+.emp-main-content .candidates-sort-controls {
+    display: flex !important;
+    gap: 10px !important;
+    align-items: center !important;
+}
+
+.emp-main-content .candidates-sort-controls select {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+    min-width: 140px !important;
+    height: 36px !important;
+}
+
+.emp-main-content .candidates-listing {
+    margin-top: 20px !important;
+}
+
+@media (max-width: 768px) {
+    .emp-main-content .candidates-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+    }
+    .emp-main-content .candidates-actions {
+        width: 100% !important;
+        flex-wrap: wrap !important;
+    }
+    .emp-main-content .candidates-search-wrapper {
+        width: 100% !important;
+    }
+    .emp-main-content .candidates-filters-panel .filters-row {
+        grid-template-columns: 1fr !important;
+    }
+    .emp-main-content .candidates-toolbar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    .emp-main-content .candidates-sort-controls {
+        width: 100% !important;
+        flex-wrap: wrap !important;
+    }
+    .emp-main-content .candidates-sort-controls select {
+        flex: 1 !important;
+        min-width: 120px !important;
+    }
+}

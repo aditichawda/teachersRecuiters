@@ -1,0 +1,9 @@
+{
+    "id": "botble/jobzilla",
+    "name": "Jobzilla",
+    "namespace": "Theme\\Jobzilla\\",
+    "description": "Laravel Job Board script",
+    "author": "https://botble.com",
+    "version": "1.0.0",
+    "required_plugins": ["job-board"]
+}
